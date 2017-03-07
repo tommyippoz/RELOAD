@@ -1,0 +1,15 @@
+ippoz.multilayer.detector.algorithm
+ippoz.multilayer.detector.configuration
+ippoz.multilayer.detector.data
+ippoz.multilayer.detector.datafetcher
+ippoz.multilayer.detector.datafetcher.database
+ippoz.multilayer.detector.executable
+ippoz.multilayer.detector.failure
+ippoz.multilayer.detector.graphics
+ippoz.multilayer.detector.manager
+ippoz.multilayer.detector.metric
+ippoz.multilayer.detector.performance
+ippoz.multilayer.detector.reputation
+ippoz.multilayer.detector.service
+ippoz.multilayer.detector.support
+ippoz.multilayer.detector.trainer

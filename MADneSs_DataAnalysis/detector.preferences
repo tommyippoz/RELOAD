@@ -1,0 +1,19 @@
+DB_USERNAME = root
+DB_PASSWORD = matilde
+
+TRAIN_FLAG = 0
+TRAIN_RUN_IDS = 1825 - 1934
+VALIDATION_RUN_IDS = 2115 - 2145
+OUTPUT_TYPE = null
+OUTPUT_FOLDER = ../../git_data/MLAD
+
+METRIC = FSCORE(2)
+VALID_AFTER_INJECTION = false
+REPUTATION = 1.0
+INV_DOMAIN = SPECIFIC
+
+CONF_FILE_FOLDER = files\configurations\
+SCORES_FILE_FOLDER = files\scores\
+SETUP_FILE_FOLDER = files\setup\
+
+DETECTION_PREFERENCES_FILE = files\detectionPreferences.preferences

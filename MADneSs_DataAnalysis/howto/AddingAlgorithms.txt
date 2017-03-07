@@ -1,0 +1,29 @@
+===========================================================================================================
+									ADDING ALGORITHMS TO THE FRAMEWORK
+===========================================================================================================
+
+0. Choose an identifier for your algorithm (e.g., "SPS" for the SPS algorithm)
+
+1. Create a new class which extends the "DataSeriesDetectionAlgorithm" class.
+
+2. You should build the logic of your algorithm into the "evaluateDataSeriesSnapshot" method. This is used to evaluate a snapshot (i.e., the observation of the state of an indicator the system at a given time) for anomaly detection purposes. In fact, you have to answer with a number [0 - 1] that says
+- no anomalies detected (answer 0)
+- anomalies detected (answer 1)
+- not sure (answer > 0 and < 1)
+
+3a. If your algorithm can be trained using fixed configurations (e.g., SPS has different possible setups that are known) you should add a .conf file in the "/files/configurations" directory in which you list all the possible configurations of the parameters of the algorithm (see example below).
+
+		SPS.conf    -->  	pdv,pov,pds,pos,m,n,dweight
+							0.9999,0.9999,0.9999,0.9999,10,10,0
+							0.999,0.999,0.999,0.999,40,40,1
+							..............
+							
+3b. Otherwise, this means that the training phase of your algorithm is more complex and it is not based on fixed possible configurations (e.g., clustering, decision tree ...). To deal with it, the class of your algorithm should implement the interface "AutomaticTrainingAlgorithm", which calls for an abstract method "automaticTraining". Here you can implement your training logic, putting all the informations you need in the "AlgorithmConfiguration" object, who essentially wraps an HashMap.  
+
+4. In both cases (3a and 3b) during the evaluation phase the best configuration selected during the training is available in the costructor of each DetectionAlgorithm ("conf" parameter) and you can use it to retrieve some data that you saved there
+
+5. You have to add a constant in the enum type "AlgorithmType" with the code of your algorithm
+
+6. You have to ad an "if" case in the buildAlgorithm method of the DetectionAlgorithm class
+
+7. Update the file "files/setup/detectionAlgorithms.preferences" by adding the code of your algorithm if you want to use it for the evaluation  
