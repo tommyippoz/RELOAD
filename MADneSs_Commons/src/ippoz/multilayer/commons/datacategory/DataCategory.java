@@ -17,5 +17,5 @@ public enum DataCategory {
 	DIFFERENCE,
 	 
 	/** The default - null - data category. */
-	NULL
+	NULL 
 }
