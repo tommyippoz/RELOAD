@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.manager;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
@@ -18,6 +18,7 @@ import ippoz.multilayer.detector.trainer.AlgorithmTrainer;
 import ippoz.multilayer.detector.trainer.ConfigurationFinderTrainer;
 import ippoz.multilayer.detector.trainer.ConfigurationSelectorTrainer;
 import ippoz.multilayer.detector.trainer.FixedConfigurationTrainer;
+import ippoz.multilayer.detector.trainer.TrainingType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -39,6 +40,8 @@ public class TrainerManager extends ThreadScheduler {
 	
 	/** The preference manager. */
 	private PreferencesManager prefManager;
+	
+	private TrainingType tType;
 	
 	/** The timing manager. */
 	private TimingsManager pManager;
@@ -74,12 +77,12 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param confList the configuration list
 	 * @param metric the chosen metric
 	 * @param reputation the chosen reputation metric
-	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, AlgorithmType[] algTypes) {
-		super(1);
+	private TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, AlgorithmType[] algTypes) {
+		super(2);
 		this.prefManager = prefManager;
+		this.tType = tType;
 		this.pManager = pManager;
 		this.expList = expList;
 		this.confList = confList;
@@ -87,9 +90,77 @@ public class TrainerManager extends ThreadScheduler {
 		this.reputation = reputation;
 		this.algTypes = algTypes;
 		tTiming = new TrainingTiming();
-		seriesList = generateDataSeries(dataTypes);
 	}
 	
+	/**
+	 * Instantiates a new trainer manager.
+	 *
+	 * @param prefManager the preference manager
+	 * @param pManager the timing manager
+	 * @param expList the experiment list
+	 * @param confList the configuration list
+	 * @param metric the chosen metric
+	 * @param reputation the chosen reputation metric
+	 * @param dataTypes the data types
+	 * @param algTypes the algorithm types
+	 */
+	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, AlgorithmType[] algTypes) {
+		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+		seriesList = generateDataSeries(dataTypes);
+		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
+	}
+	
+	/**
+	 * Instantiates a new trainer manager.
+	 *
+	 * @param prefManager the preference manager
+	 * @param pManager the timing manager
+	 * @param expList the experiment list
+	 * @param confList the configuration list
+	 * @param metric the chosen metric
+	 * @param reputation the chosen reputation metric
+	 * @param dataTypes the data types
+	 * @param algTypes the algorithm types
+	 */
+	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, AlgorithmType[] algTypes, LinkedList<DataSeries> selectedSeries) {
+		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+		seriesList = selectedSeries;
+		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
+	}
+	
+	/**
+	 * Instantiates a new trainer manager.
+	 *
+	 * @param prefManager the preference manager
+	 * @param pManager the timing manager
+	 * @param expList the experiment list
+	 * @param confList the configuration list
+	 * @param metric the chosen metric
+	 * @param reputation the chosen reputation metric
+	 * @param dataTypes the data types
+	 * @param algTypes the algorithm types
+	 */
+	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, AlgorithmType[] algTypes, String[] selectedSeriesString) {
+		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
+		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
+	}
+	
+	private LinkedList<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
+		LinkedList<DataSeries> finalDs = new LinkedList<DataSeries>();
+		LinkedList<DataSeries> all = generateDataSeries(dataTypes);
+		for(String dsString : selectedSeriesString){
+			for(DataSeries ds : all){
+				if(ds.toString().equals(dsString)) {
+					finalDs.add(ds);
+					break;
+				}
+			}
+		}
+		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
+		return finalDs;
+	}
+
 	private HashMap<String, String> readPossibleIndCombinations(){
 		return readIndCombinations("indicatorCouples.csv");	
 	}
@@ -134,6 +205,40 @@ public class TrainerManager extends ThreadScheduler {
 	 * The scores are saved in a file specified in the preferences.
 	 */
 	@SuppressWarnings("unchecked")
+	public LinkedList<DataSeries> filter(){
+		LinkedList<DataSeries> filteredSeries = null;
+		long start = System.currentTimeMillis();
+		try {
+			start();
+			join();
+			Collections.sort((LinkedList<AlgorithmTrainer>)getThreadList());
+			AppLogger.logInfo(getClass(), "Filtering executed in " + (System.currentTimeMillis() - start) + "ms");
+			filteredSeries = selectDataSeries((LinkedList<AlgorithmTrainer>)filterTrainers(getThreadList()));
+			saveFilteredSeries(filteredSeries, "filtered.csv");
+			AppLogger.logInfo(getClass(), "Filtered Checkers Saved");
+		} catch (InterruptedException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
+		}
+		return filteredSeries;
+	}
+	
+	private LinkedList<DataSeries> selectDataSeries(LinkedList<AlgorithmTrainer> atList) {
+		LinkedList<DataSeries> result = new LinkedList<DataSeries>();
+		for(AlgorithmTrainer at : atList){
+			if(at.getMetricScore() < 0.1){
+				if(!result.contains(at.getDataSeries()))
+					result.add(at.getDataSeries());
+			}
+		}
+		AppLogger.logInfo(getClass(), "Filtered Data Series are " + result.size() + " out of the possible " + seriesList.size());
+		return result;
+	}
+
+	/**
+	 * Starts the train process. 
+	 * The scores are saved in a file specified in the preferences.
+	 */
+	@SuppressWarnings("unchecked")
 	public void train(){
 		long start = System.currentTimeMillis();
 		try {
@@ -145,7 +250,7 @@ public class TrainerManager extends ThreadScheduler {
 			pManager.addTiming(TimingsManager.AVG_TRAIN_TIME, ((System.currentTimeMillis() - start)/threadNumber()*1.0));
 			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
 			saveTrainingTimes(filterTrainers(getThreadList()));
-			saveScores(filterTrainers(getThreadList()));
+			saveScores(filterTrainers(getThreadList()), "scores.csv");
 			AppLogger.logInfo(getClass(), "Training scores saved");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
@@ -248,26 +353,52 @@ public class TrainerManager extends ThreadScheduler {
 	 *
 	 * @param list the list of algorithm trainers
 	 */
-	private void saveScores(LinkedList<? extends Thread> list) {
+	private void saveScores(LinkedList<? extends Thread> list, String filename) {
 		BufferedWriter writer;
 		AlgorithmTrainer trainer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + "scores.csv")));
+			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + filename)));
 			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
-				if(trainer.isValidTrain()) {
-					writer.write(trainer.getSeriesDescription() + "§" + 
-							trainer.getAlgType() + "§" +
-							trainer.getReputationScore() + "§" + 
-							trainer.getMetricScore() + "§" +  
-							trainer.getBestConfiguration().toFileRow(false) + "\n");
-				}
+				switch(tType){
+					case TRAIN:
+						if(trainer.isValidTrain()){
+							writer.write(trainer.getSeriesDescription() + "§" + 
+									trainer.getAlgType() + "§" +
+									trainer.getReputationScore() + "§" + 
+									trainer.getMetricScore() + "§" +  
+									trainer.getBestConfiguration().toFileRow(false) + "\n");
+						}
+						break;
+					case FILTERING:
+						writer.write(trainer.getSeriesDescription());
+						break;
+				}			
 			}
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}
-	}	
+	}
+	
+	/**
+	 * Saves scores related to the executed AlgorithmTrainers.
+	 *
+	 * @param list the list of algorithm trainers
+	 */
+	private void saveFilteredSeries(LinkedList<DataSeries> list, String filename) {
+		BufferedWriter writer;
+		try {
+			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + filename)));
+			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
+			for(DataSeries ds : list){
+				writer.write(ds.toString() + "\n");			
+			}
+			writer.close();
+		} catch(IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to write series");
+		}
+	}
 	
 }

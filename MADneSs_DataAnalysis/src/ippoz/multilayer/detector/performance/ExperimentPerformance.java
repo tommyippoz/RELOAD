@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.performance;
 
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 

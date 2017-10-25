@@ -38,7 +38,7 @@ public abstract class BinaryClassificationMetric extends BetterMaxMetric {
 		InjectedElement injEl = null; 
 		for(int i=0;i<snapList.size();i++){
 			snap = snapList.get(i);
-			if(injEl == null && snap.getInjectedElement() != null)
+			if(snap.getInjectedElement() != null)
 				injEl = snap.getInjectedElement();
 			if(isValidSnapshot(snap, injEl)){
 				if(classifyMetric(snap, anomalyEvaluations.get(snap.getTimestamp())))
@@ -51,6 +51,28 @@ public abstract class BinaryClassificationMetric extends BetterMaxMetric {
 			else return detectionHits;
 		} else return 0.0;
 	}
+	
+/*	@Override
+	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
+		int detectionHits = 0;
+		int undetectable = 0;
+		Snapshot snap;
+		InjectedElement injEl = null; 
+		for(int i=0;i<snapList.size();i++){
+			snap = snapList.get(i);
+			if(injEl == null && snap.getInjectedElement() != null)
+				injEl = snap.getInjectedElement();
+			if(isValidSnapshot(snap, injEl)){
+				if(classifyMetric(snap, anomalyEvaluations.get(snap.getTimestamp())))
+					detectionHits++;
+			} else undetectable++;
+		}
+		if(snapList.size() > 0){
+			if(!absolute)
+				return 1.0*detectionHits/(snapList.size()-undetectable);
+			else return detectionHits;
+		} else return 0.0;
+	}*/
 
 	protected abstract boolean classifyMetric(Snapshot snap, Double anEvaluation);
 

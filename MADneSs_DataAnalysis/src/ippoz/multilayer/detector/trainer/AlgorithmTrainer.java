@@ -3,8 +3,8 @@
  */
 package ippoz.multilayer.detector.trainer;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
@@ -13,6 +13,7 @@ import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
+import ippoz.multilayer.detector.metric.BetterMaxMetric;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.performance.TrainingTiming;
 import ippoz.multilayer.detector.reputation.Reputation;
@@ -294,7 +295,9 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
-		return Double.compare(other.getMetricScore(), getMetricScore());
+		if(metric instanceof BetterMaxMetric)
+			return Double.compare(other.getMetricScore(), getMetricScore());
+		else return -1*Double.compare(other.getMetricScore(), getMetricScore());
 	}
 
 	/**

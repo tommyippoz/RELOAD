@@ -47,9 +47,11 @@ public class Snapshot {
 	
 	private LinkedList<ServiceCall> filterCalls(LinkedList<ServiceCall> currentCalls) {
 		LinkedList<ServiceCall> okCalls = new LinkedList<ServiceCall>();
-		for(ServiceCall sCall : currentCalls){
-			if(sCall.isAliveAt(timestamp))
-				okCalls.add(sCall);
+		if(currentCalls != null){
+			for(ServiceCall sCall : currentCalls){
+				if(sCall.isAliveAt(timestamp))
+					okCalls.add(sCall);
+			}
 		}
 		return okCalls;
 	}

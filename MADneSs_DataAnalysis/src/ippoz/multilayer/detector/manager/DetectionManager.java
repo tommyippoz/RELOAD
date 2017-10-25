@@ -3,18 +3,23 @@
  */
 package ippoz.multilayer.detector.manager;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
+import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
+import ippoz.multilayer.detector.loader.CSVPreLoader;
+import ippoz.multilayer.detector.loader.Loader;
+import ippoz.multilayer.detector.loader.MySQLLoader;
 import ippoz.multilayer.detector.metric.Custom_Metric;
 import ippoz.multilayer.detector.metric.FMeasure_Metric;
 import ippoz.multilayer.detector.metric.FN_Metric;
 import ippoz.multilayer.detector.metric.FP_Metric;
 import ippoz.multilayer.detector.metric.FScore_Metric;
+import ippoz.multilayer.detector.metric.FalsePositiveRate_Metric;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.metric.Precision_Metric;
 import ippoz.multilayer.detector.metric.Recall_Metric;
@@ -24,6 +29,7 @@ import ippoz.multilayer.detector.reputation.BetaReputation;
 import ippoz.multilayer.detector.reputation.ConstantReputation;
 import ippoz.multilayer.detector.reputation.MetricReputation;
 import ippoz.multilayer.detector.reputation.Reputation;
+import ippoz.multilayer.detector.trainer.TrainingType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -43,11 +49,20 @@ import java.util.LinkedList;
  */
 public class DetectionManager {
 	
+	/** The Constant LOADER_TYPE. */
+	private static final String LOADER_TYPE = "LOADER_TYPE";
+	
+	/** The Constant DB_USERNAME. */
+	private static final String DB_NAME = "DB_NAME";
+	
 	/** The Constant DB_USERNAME. */
 	private static final String DB_USERNAME = "DB_USERNAME";
 	
 	/** The Constant DB_PASSWORD. */
 	private static final String DB_PASSWORD = "DB_PASSWORD";
+	
+	/** The Constant FILTERING_RUN_PREFERENCE. */
+	private static final String FILTERING_RUN_PREFERENCE = "GOLDEN_RUN_IDS";
 	
 	/** The Constant TRAIN_RUN_PREFERENCE. */
 	private static final String TRAIN_RUN_PREFERENCE = "TRAIN_RUN_IDS";
@@ -65,7 +80,12 @@ public class DetectionManager {
 	public static final String OUTPUT_FOLDER = "OUTPUT_FOLDER";
 	
 	/** The Constant METRIC_TYPE. */
-	private static final String METRIC_TYPE = "METRIC"; 
+	private static final String METRIC = "METRIC"; 
+	
+	/** The Constant METRIC_TYPE. */
+	private static final String METRIC_TYPE = "METRIC_TYPE"; 
+	
+	private static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
 	
 	/** The Constant REPUTATION_TYPE. */
 	private static final String REPUTATION_TYPE = "REPUTATION";
@@ -84,6 +104,9 @@ public class DetectionManager {
 	/** The Constant TRAIN_NEEDED_FLAG. */
 	private static final String TRAIN_NEEDED_FLAG = "TRAIN_FLAG";
 	
+	/** The Constant FILTERING_NEEDED_FLAG. */
+	private static final String FILTERING_NEEDED_FLAG = "FILTERING_FLAG";
+	
 	/** The Constant DETECTION_PREFERENCES_FILE. */
 	private static final String DETECTION_PREFERENCES_FILE = "DETECTION_PREFERENCES_FILE";
 	
@@ -95,6 +118,8 @@ public class DetectionManager {
 	
 	/** The Constant DM_CONVERGENCE_TIME. */
 	private static final String DM_CONVERGENCE_TIME = "CONVERGENCE_TIME";
+
+	private static final String LOADER_PREF_FILE = "LOADER_PREF_FILE";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -117,6 +142,8 @@ public class DetectionManager {
 	/** The algorithm types (SPS, Historical...). */
 	private AlgorithmType[] algTypes;
 	
+	private LinkedList<DataSeries> selectedDataSeries;
+	
 	/**
 	 * Instantiates a new detection manager.
 	 *
@@ -135,13 +162,24 @@ public class DetectionManager {
 		pManager.addTiming(TimingsManager.EXECUTION_TIME, new Date().toString());
 	}
 	
+	private Loader buildLoader(String loaderTag){
+		if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("MYSQL"))
+			return new MySQLLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), loaderTag, pManager, prefManager.getPreference(DB_NAME), prefManager.getPreference(DB_USERNAME), prefManager.getPreference(DB_PASSWORD));
+		else if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("CSVALL"))
+			return new CSVPreLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), loaderTag, Integer.parseInt(prefManager.getPreference(ANOMALY_WINDOW)));
+		else {
+			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + prefManager.getPreference(LOADER_TYPE) + "'");
+			return null;
+		} 
+	}
+	
 	/**
 	 * Check premises for the execution, such as MySQL server status.
 	 *
 	 * @return true, if premises are satisfied
 	 */
 	public boolean checkPremises(){
-		if(!AppUtility.isServerUp(3306)){
+		if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("MYSQL") && !AppUtility.isServerUp(3306)){
 			AppLogger.logError(getClass(), "MySQLException", "MySQL is not running. Please activate it");
 			return false;
 		}
@@ -181,11 +219,33 @@ public class DetectionManager {
 	/**
 	 * Starts the train process.
 	 */
+	public void filterIndicators(){
+		TrainerManager tManager;
+		try {
+			if(needFiltering()) {
+				tManager = new TrainerManager(prefManager, TrainingType.FILTERING, pManager, buildLoader("filter").fetch(), loadConfigurations(), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes);
+				selectedDataSeries = tManager.filter();
+				tManager.flush();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
+		}
+	}	
+	
+	/**
+	 * Starts the train process.
+	 */
 	public void train(){
 		TrainerManager tManager;
 		try {
 			if(needTest()) {
-				tManager = new TrainerManager(prefManager, pManager, new LoaderManager(readRunIds(TRAIN_RUN_PREFERENCE), "train", pManager, prefManager.getPreference(DB_USERNAME), prefManager.getPreference(DB_PASSWORD)).fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes);
+				if(selectedDataSeries == null && !new File(prefManager.getPreference(SCORES_FILE_FOLDER) + "filtered.csv").exists())
+					tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes);
+				else {
+					if(selectedDataSeries == null){
+						tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
+					} else tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, algTypes, selectedDataSeries); 
+				}
 				tManager.train();
 				tManager.flush();
 			}
@@ -193,7 +253,30 @@ public class DetectionManager {
 			AppLogger.logException(getClass(), ex, "Unable to train detector");
 		}
 	}
-	
+
+	private String[] loadSelectedDataSeriesString() {
+		LinkedList<String> sSeries = new LinkedList<String>();
+		String readed;
+		BufferedReader reader = null;
+		File dsF = new File(prefManager.getPreference(SCORES_FILE_FOLDER) + "filtered.csv");
+		try {
+			reader = new BufferedReader(new FileReader(dsF));
+			while(reader.ready()){
+				readed = reader.readLine();
+				if(readed != null){
+					readed = readed.trim();
+					if(readed.length() > 0 && !readed.trim().startsWith("*")){
+						sSeries.add(readed.trim());
+					}
+				}
+			}
+			reader.close();
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read Selected data Series");
+		} 
+		return sSeries.toArray(new String[sSeries.size()]);
+	}
+
 	/**
 	 * Starts the evaluation process.
 	 */
@@ -202,7 +285,7 @@ public class DetectionManager {
 		boolean printOutput = prefManager.getPreference(OUTPUT_FORMAT) != null && !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
 		Metric[] metList = loadValidationMetrics();
 		HashMap<String, Integer> nVoters = new HashMap<String, Integer>();
-		LinkedList<ExperimentData> expList = new LoaderManager(readRunIds(VALIDATION_RUN_PREFERENCE), "validation", pManager, prefManager.getPreference(DB_USERNAME), prefManager.getPreference(DB_PASSWORD)).fetch();
+		LinkedList<ExperimentData> expList = buildLoader("validation").fetch();
 		HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations = new HashMap<String, HashMap<String,LinkedList<HashMap<Metric,Double>>>>();
 		try {
 			pManager.setupExpTimings(new File(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv"));
@@ -227,6 +310,8 @@ public class DetectionManager {
 	private void summarizeEvaluations(HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, HashMap<String, Integer> nVoters) {
 		BufferedWriter writer;
 		BufferedWriter compactWriter;
+		double score;
+		double bestScore = 0;
 		try {
 			compactWriter = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/tableSummary.csv")));
 			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/summary.csv")));
@@ -235,7 +320,7 @@ public class DetectionManager {
 				compactWriter.write(anomalyTreshold + ",");
 			}
 			compactWriter.write("\n");
-			writer.write("voter,anomaly,");
+			writer.write("voter,anomaly,checkers,");
 			for(Metric met : metList){
 				writer.write(met.getMetricName() + ",");
 			}
@@ -243,11 +328,16 @@ public class DetectionManager {
 			for(String voterTreshold : evaluations.keySet()){
 				compactWriter.write(voterTreshold + "," + nVoters.get(voterTreshold.trim()) + ",");
 				for(String anomalyTreshold : anomalyTresholds){
-					writer.write(voterTreshold + "," + anomalyTreshold.trim() + ",");
+					writer.write(voterTreshold + "," + anomalyTreshold.trim() + "," + nVoters.get(voterTreshold.trim()) + ",");
 					for(Metric met : metList){
-						if(met.equals(metric))
-							compactWriter.write(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met) + ",");
-						writer.write(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met) + ",");
+						score = Double.parseDouble(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
+						if(met.equals(metric)){
+							if(score > bestScore) {
+								bestScore = score;
+							}
+							compactWriter.write(score + ",");
+						}
+						writer.write(score + ",");
 					}
 					writer.write("\n");
 				}
@@ -255,6 +345,7 @@ public class DetectionManager {
 			}
 			compactWriter.close();
 			writer.close();
+			AppLogger.logInfo(getClass(), "Best score obtained is '" + bestScore + "'");
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
@@ -449,19 +540,19 @@ public class DetectionManager {
 	 * @param runTag the run tag
 	 * @return the list of IDs
 	 */
-	private LinkedList<String> readRunIds(String runTag){
+	private LinkedList<Integer> readRunIds(String runTag){
 		String from, to;
 		String idPref = prefManager.getPreference(runTag).trim();
-		LinkedList<String> idList = new LinkedList<String>();
+		LinkedList<Integer> idList = new LinkedList<Integer>();
 		if(idPref != null && idPref.length() > 0){
 			for(String id : idPref.split(",")){
 				if(id.contains("-")){
 					from = id.split("-")[0].trim();
 					to = id.split("-")[1].trim();
 					for(int i=Integer.parseInt(from);i<=Integer.parseInt(to);i++){
-						idList.add(String.valueOf(i));
+						idList.add(i);
 					}
-				} else idList.add(id.trim());
+				} else idList.add(Integer.parseInt(id.trim()));
 			}
 		}
 		return idList;
@@ -496,6 +587,7 @@ public class DetectionManager {
 	 */
 	private Metric getMetric(String metricType){
 		String param = null;
+		boolean absolute = prefManager.getPreference(METRIC_TYPE).equals("absolute") ? true : false;
 		boolean validAfter = Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION));
 		if(metricType.contains("(")){
 			param = metricType.substring(metricType.indexOf("(")+1, metricType.indexOf(")"));
@@ -504,16 +596,16 @@ public class DetectionManager {
 		switch(metricType.toUpperCase()){
 			case "TP":
 			case "TRUEPOSITIVE":
-				return new TP_Metric(false, validAfter);
+				return new TP_Metric(absolute, validAfter);
 			case "TN":
 			case "TRUENEGATIVE":
-				return new TN_Metric(false, validAfter);
+				return new TN_Metric(absolute, validAfter);
 			case "FN":
 			case "FALSENEGATIVE":
-				return new FN_Metric(false, validAfter);
+				return new FN_Metric(absolute, validAfter);
 			case "FP":
 			case "FALSEPOSITIVE":
-				return new FP_Metric(false, validAfter);
+				return new FP_Metric(absolute, validAfter);
 			case "PRECISION":
 				return new Precision_Metric(validAfter);
 			case "RECALL":
@@ -537,7 +629,7 @@ public class DetectionManager {
 	 * @return the metric
 	 */
 	private Metric getMetric() {
-		return getMetric(prefManager.getPreference(METRIC_TYPE));
+		return getMetric(prefManager.getPreference(METRIC));
 	}
 	
 	/**
@@ -547,6 +639,10 @@ public class DetectionManager {
 	 */
 	public boolean needTest(){
 		return !prefManager.getPreference(TRAIN_NEEDED_FLAG).equals("0");
+	}
+	
+	public boolean needFiltering() {
+		return !prefManager.getPreference(FILTERING_NEEDED_FLAG).equals("0");
 	}
 	
 }

@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.voter;
 
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.data.Snapshot;
@@ -247,7 +247,7 @@ public class ExperimentVoter extends Thread {
 		for(HashMap<AlgorithmVoter, Snapshot> map : expSnapMap){
 			if(map.get(algList.getFirst()).getInjectedElement() != null){
 				treeMap.put(map.get(algList.getFirst()).getTimestamp(), 1.0);
-				for(int i=1;i<map.get(algList.getFirst()).getInjectedElement().getDuration();i++){
+				for(int i=1;i<=map.get(algList.getFirst()).getInjectedElement().getDuration();i++){
 					treeMap.put(new Date(map.get(algList.getFirst()).getTimestamp().getTime() + i*1000), -1.0);
 				}
 			}

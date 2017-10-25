@@ -3,8 +3,8 @@
  */
 package ippoz.multilayer.detector.commons.data;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
-import ippoz.multilayer.commons.indicator.Indicator;
+import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.commons.indicator.Indicator;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 
@@ -32,6 +32,16 @@ public class Observation {
 	 */
 	public Observation(String timestamp){
 		this.timestamp = AppUtility.convertStringToDate(timestamp);
+		observedIndicators = new HashMap<Indicator, IndicatorData>();
+	}
+	
+	/**
+	 * Instantiates a new observation.
+	 *
+	 * @param timestamp the timestamp
+	 */
+	public Observation(long timestampMs){
+		timestamp = new Date(timestampMs);
 		observedIndicators = new HashMap<Indicator, IndicatorData>();
 	}
 	

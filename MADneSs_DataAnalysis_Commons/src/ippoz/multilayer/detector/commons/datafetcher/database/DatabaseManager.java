@@ -3,9 +3,9 @@
  */
 package ippoz.multilayer.detector.commons.datafetcher.database;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
-import ippoz.multilayer.commons.indicator.Indicator;
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.commons.indicator.Indicator;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.IndicatorData;
 import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;

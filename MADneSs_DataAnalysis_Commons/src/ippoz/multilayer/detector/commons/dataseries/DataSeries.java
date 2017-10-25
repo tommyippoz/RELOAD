@@ -3,9 +3,9 @@
  */
 package ippoz.multilayer.detector.commons.dataseries;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
-import ippoz.multilayer.commons.indicator.Indicator;
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.commons.indicator.Indicator;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.service.IndicatorStat;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
@@ -65,14 +65,19 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 	
 	public Double getSeriesValue(Observation obs){
-		switch(dataCategory){
-		case PLAIN:
-			return getPlainSeriesValue(obs);
-		case DIFFERENCE:
-			return getDiffSeriesValue(obs);
-		default:
-			return null;
+		try {
+			switch(dataCategory){
+				case PLAIN:
+					return getPlainSeriesValue(obs);
+				case DIFFERENCE:
+					return getDiffSeriesValue(obs);
+				default:
+					return null;
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "CastError");
 		}
+		return null;
 	}
 
 	public abstract LayerType getLayerType();
@@ -136,7 +141,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
-		for(String firstString : possibleCouples.keySet()){
+		/*for(String firstString : possibleCouples.keySet()){
 			firstDS = DataSeries.fromList(simpleInd, firstString);
 			secondDS = DataSeries.fromList(simpleInd, possibleCouples.get(firstString));
 			for(DataCategory dCat : dataTypes){
@@ -144,7 +149,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
 				complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
 			}
-		}
+		}*/
 		outList.addAll(simpleInd);
 		outList.addAll(complexInd);
 		return outList;

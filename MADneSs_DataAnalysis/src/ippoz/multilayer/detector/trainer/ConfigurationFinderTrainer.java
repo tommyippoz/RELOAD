@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.trainer;
 
-import ippoz.multilayer.commons.support.AppLogger;
+import ippoz.madness.commons.support.AppLogger;
 import ippoz.multilayer.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;

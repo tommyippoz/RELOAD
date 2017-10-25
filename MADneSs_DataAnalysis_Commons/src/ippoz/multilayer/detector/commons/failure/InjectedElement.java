@@ -66,7 +66,11 @@ public class InjectedElement {
 	}
 
 	public boolean happensAt(Date refTime) {
-		return timestamp.equals(refTime);
+		return timestamp.equals(refTime);// && (timestamp.getTime() <= refTime.getTime() && refTime.getTime() <= timestamp.getTime() + duration*1000);
+	}
+
+	public Date getFinalTimestamp() {
+		return new Date(timestamp.getTime() + duration*1000);
 	}
 
 }

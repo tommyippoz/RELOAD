@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.commons.data;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.util.HashMap;

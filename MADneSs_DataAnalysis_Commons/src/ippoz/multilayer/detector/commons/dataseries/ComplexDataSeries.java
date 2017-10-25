@@ -5,8 +5,8 @@ package ippoz.multilayer.detector.commons.dataseries;
 
 import java.util.Date;
 
-import ippoz.multilayer.commons.datacategory.DataCategory;
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;

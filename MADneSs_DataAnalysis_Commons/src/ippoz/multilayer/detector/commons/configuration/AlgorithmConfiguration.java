@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.commons.configuration;
 
-import ippoz.multilayer.commons.support.AppLogger;
+import ippoz.madness.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.invariants.Invariant;
 

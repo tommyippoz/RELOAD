@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.voter;
 
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.algorithm.DataSeriesDetectionAlgorithm;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;

@@ -115,7 +115,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for(String seriesName : data.keySet()){
 			if(seriesName.equals(ExperimentVoter.ANOMALY_SCORE_LABEL)){
-				current = new XYSeries(seriesName);
+				current = new XYSeries(seriesName + " (B:Normal, R:Fault, Y:LastingEffect)");
 				for(Double key : data.get(seriesName).keySet()){
 					current.add(key, data.get(seriesName).get(key));
 				}

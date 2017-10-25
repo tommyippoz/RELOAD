@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.commons.datafetcher;
 
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.datafetcher.database.DatabaseManager;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
@@ -28,6 +28,8 @@ public class DatabaseFetcher extends DataFetcher {
 	
 	private String runId;
 	
+	private String dbName;
+	
 	private String username;
 	
 	private String password;
@@ -38,15 +40,17 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @param runId the runID
 	 * @param username the database username
 	 * @param password the database password
+	 * @param dbPassword 
 	 */
-	public DatabaseFetcher(String runId, String username, String password){
+	public DatabaseFetcher(String runId, String dbName, String username, String password){
 		this.runId = runId;
+		this.dbName = dbName;
 		this.username = username;
 		this.password = password;
 	}
 	
 	public void openConnection() {
-		dbManager = new DatabaseManager("experiment", username, password, runId);	
+		dbManager = new DatabaseManager(dbName, username, password, runId);	
 	}
 
 	/* (non-Javadoc)

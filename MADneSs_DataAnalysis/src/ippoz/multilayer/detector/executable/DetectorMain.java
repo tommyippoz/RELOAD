@@ -29,6 +29,10 @@ public class DetectorMain {
 			AppLogger.logInfo(DetectorMain.class, "Preferences Loaded");
 			dManager = new DetectionManager(prefManager);
 			if(dManager.checkPremises()){
+				if(dManager.needFiltering()){
+					AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
+					dManager.filterIndicators();
+				}
 				if(dManager.needTest()) {
 					AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 					dManager.train();

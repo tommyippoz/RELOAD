@@ -3,8 +3,8 @@
  */
 package ippoz.multilayer.detector.commons.data;
 
-import ippoz.multilayer.commons.indicator.Indicator;
-import ippoz.multilayer.commons.layers.LayerType;
+import ippoz.madness.commons.indicator.Indicator;
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
@@ -64,6 +64,18 @@ public class ExperimentData implements Cloneable {
 	}
 	
 	/**
+	 * Instantiates a new experiment data without stats.
+	 *
+	 * @param expID the experiment id
+	 * @param obsList the observation list
+	 * @param injList the injections list
+	 * @param timings the timings
+	 */
+	public ExperimentData(String expID, LinkedList<Observation> obsList, LinkedList<InjectedElement> injList, HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings){
+		this(expID, obsList, null, injList, null, timings);
+	}
+	
+	/**
 	 * Instantiates a new experiment data.
 	 *
 	 * @param expID the experiment id
@@ -111,9 +123,11 @@ public class ExperimentData implements Cloneable {
 		ArrayList<Snapshot> builtSnap = new ArrayList<Snapshot>();
 		for(Observation obs : obsList){
 			currentCalls = new LinkedList<ServiceCall>();
-			for(ServiceCall call : callList){
-				if(call.isAliveAt(obs.getTimestamp()))
-					currentCalls.add(call);
+			if(callList != null) {
+				for(ServiceCall call : callList){
+					if(call.isAliveAt(obs.getTimestamp()))
+						currentCalls.add(call);
+				}
 			}
 			while(injList.size() > injIndex && injList.get(injIndex).getTimestamp().before(obs.getTimestamp())){
 				injIndex++;
