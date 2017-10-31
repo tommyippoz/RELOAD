@@ -52,15 +52,6 @@ public class DetectionManager {
 	/** The Constant LOADER_TYPE. */
 	private static final String LOADER_TYPE = "LOADER_TYPE";
 	
-	/** The Constant DB_USERNAME. */
-	private static final String DB_NAME = "DB_NAME";
-	
-	/** The Constant DB_USERNAME. */
-	private static final String DB_USERNAME = "DB_USERNAME";
-	
-	/** The Constant DB_PASSWORD. */
-	private static final String DB_PASSWORD = "DB_PASSWORD";
-	
 	/** The Constant FILTERING_RUN_PREFERENCE. */
 	private static final String FILTERING_RUN_PREFERENCE = "GOLDEN_RUN_IDS";
 	
@@ -164,7 +155,7 @@ public class DetectionManager {
 	
 	private Loader buildLoader(String loaderTag){
 		if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("MYSQL"))
-			return new MySQLLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), loaderTag, pManager, prefManager.getPreference(DB_NAME), prefManager.getPreference(DB_USERNAME), prefManager.getPreference(DB_PASSWORD));
+			return new MySQLLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), loaderTag, pManager);
 		else if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("CSVALL"))
 			return new CSVPreLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), loaderTag, Integer.parseInt(prefManager.getPreference(ANOMALY_WINDOW)));
 		else {

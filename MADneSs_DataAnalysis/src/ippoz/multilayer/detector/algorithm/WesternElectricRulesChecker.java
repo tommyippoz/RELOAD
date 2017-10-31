@@ -3,14 +3,14 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.StatPair;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * @author Tommy

@@ -3,11 +3,11 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.Snapshot;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * The Interface AutomaticTrainingAlgorithm.

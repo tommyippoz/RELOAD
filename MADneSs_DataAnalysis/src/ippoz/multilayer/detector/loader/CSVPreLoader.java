@@ -3,13 +3,6 @@
  */
 package ippoz.multilayer.detector.loader;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
@@ -17,6 +10,13 @@ import ippoz.multilayer.detector.commons.data.IndicatorData;
 import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * @author Tommy

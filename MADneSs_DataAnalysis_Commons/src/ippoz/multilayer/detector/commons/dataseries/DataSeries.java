@@ -141,7 +141,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
-		/*for(String firstString : possibleCouples.keySet()){
+		for(String firstString : possibleCouples.keySet()){
 			firstDS = DataSeries.fromList(simpleInd, firstString);
 			secondDS = DataSeries.fromList(simpleInd, possibleCouples.get(firstString));
 			for(DataCategory dCat : dataTypes){
@@ -149,7 +149,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
 				complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
 			}
-		}*/
+		}
 		outList.addAll(simpleInd);
 		outList.addAll(complexInd);
 		return outList;

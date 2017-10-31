@@ -3,7 +3,10 @@
  */
 package ippoz.multilayer.detector.metric;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.failure.InjectedElement;
+
+import java.util.Date;
+import java.util.LinkedList;
 
 /**
  * The Class FP_Metric.
@@ -11,7 +14,7 @@ import ippoz.multilayer.detector.commons.data.Snapshot;
  *
  * @author Tommy
  */
-public class FP_Metric extends BinaryClassificationMetric {
+public class FP_Metric extends ClassificationMetric {
 	
 	/**
 	 * Instantiates a new fp_ metric.
@@ -31,12 +34,10 @@ public class FP_Metric extends BinaryClassificationMetric {
 	}
 
 	@Override
-	protected boolean classifyMetric(Snapshot snap, Double anEvaluation) {
-		if(snap.getInjectedElement() == null || !snap.getInjectedElement().happensAt(snap.getTimestamp())){
-			if(Metric.anomalyTrueFalse(anEvaluation))
-				return true;
-		}
-		return false;
+	protected int classifyMetric(Date snapTime, Double anEvaluation, LinkedList<InjectedElement> injList) {
+		if(injList.isEmpty() && Metric.anomalyTrueFalse(anEvaluation)){
+			return 1;
+		} else return 0;
 	}
 
 }

@@ -64,6 +64,12 @@ public class InjectedElement {
 	public boolean compliesWith(Date refTime) {
 		return timestamp.getTime() <= refTime.getTime() && refTime.getTime() <= timestamp.getTime() + duration*1000;
 	}
+	
+	public boolean compliesWith(InjectedElement el) {
+		if(el.getTimestamp().getTime() <= timestamp.getTime()){
+			return el.compliesWith(timestamp);
+		} else return compliesWith(el.getTimestamp());
+	}
 
 	public boolean happensAt(Date refTime) {
 		return timestamp.equals(refTime);// && (timestamp.getTime() <= refTime.getTime() && refTime.getTime() <= timestamp.getTime() + duration*1000);

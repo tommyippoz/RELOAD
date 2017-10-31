@@ -7,6 +7,7 @@ import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.datafetcher.DataFetcher;
 import ippoz.multilayer.detector.commons.datafetcher.DatabaseFetcher;
 import ippoz.multilayer.detector.commons.support.AppLogger;
+import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.manager.TimingsManager;
 
@@ -19,6 +20,15 @@ import java.util.LinkedList;
  * @author Tommy
  */
 public class MySQLLoader extends ThreadScheduler implements Loader {
+	
+	/** The Constant DB_USERNAME. */
+	private static final String DB_NAME = "DB_NAME";
+	
+	/** The Constant DB_USERNAME. */
+	private static final String DB_USERNAME = "DB_USERNAME";
+	
+	/** The Constant DB_PASSWORD. */
+	private static final String DB_PASSWORD = "DB_PASSWORD";
 	
 	/** The experiment tag. */
 	private String tag;
@@ -50,12 +60,12 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 * @param dbUsername the database username
 	 * @param dbPassword the database password
 	 */
-	public MySQLLoader(LinkedList<Integer> expIDs, String tag, TimingsManager pManager, String dbName, String dbUsername, String dbPassword) {
+	public MySQLLoader(LinkedList<Integer> expIDs, PreferencesManager preferencesManager, String tag, TimingsManager pManager) {
 		super();
 		this.tag = tag;
-		this.dbName = dbName;
-		this.dbUsername = dbUsername;
-		this.dbPassword = dbPassword;
+		dbName = preferencesManager.getPreference(DB_NAME);
+		dbUsername = preferencesManager.getPreference(DB_USERNAME);
+		dbPassword = preferencesManager.getPreference(DB_PASSWORD);
 		this.pManager = pManager;
 		this.expIDs = expIDs;
 		readData = new LinkedList<ExperimentData>();

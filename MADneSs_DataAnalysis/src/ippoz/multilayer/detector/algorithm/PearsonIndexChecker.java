@@ -3,15 +3,15 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
-import java.util.LinkedList;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.MultipleSnapshot;
 import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+
+import java.util.LinkedList;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 /**
  * @author Tommy

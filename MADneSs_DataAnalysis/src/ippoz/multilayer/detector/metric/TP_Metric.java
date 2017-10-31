@@ -3,7 +3,10 @@
  */
 package ippoz.multilayer.detector.metric;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.failure.InjectedElement;
+
+import java.util.Date;
+import java.util.LinkedList;
 
 /**
  * The Class TP_Metric.
@@ -11,7 +14,7 @@ import ippoz.multilayer.detector.commons.data.Snapshot;
  *
  * @author Tommy
  */
-public class TP_Metric extends BinaryClassificationMetric {
+public class TP_Metric extends ClassificationMetric {
 
 	/**
 	 * Instantiates a new tp_ metric.
@@ -31,12 +34,13 @@ public class TP_Metric extends BinaryClassificationMetric {
 	}
 
 	@Override
-	protected boolean classifyMetric(Snapshot snap, Double anEvaluation) {
-		if(snap.getInjectedElement() != null && snap.getInjectedElement().happensAt(snap.getTimestamp())){
-			if(Metric.anomalyTrueFalse(anEvaluation))
-				return true;
+	protected int classifyMetric(Date snapTime, Double anEvaluation, LinkedList<InjectedElement> injList) {
+		int count = 0;
+		if(!injList.isEmpty() && Metric.anomalyTrueFalse(anEvaluation)){
+			count = injList.size();
+			injList.clear();
 		}
-		return false;
+		return count;
 	}
 
 }
