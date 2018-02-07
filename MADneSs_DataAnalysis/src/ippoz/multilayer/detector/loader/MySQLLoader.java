@@ -3,6 +3,7 @@
  */
 package ippoz.multilayer.detector.loader;
 
+import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.datafetcher.DataFetcher;
 import ippoz.multilayer.detector.commons.datafetcher.DatabaseFetcher;
@@ -51,26 +52,48 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	/** The data read by the loader. */
 	private LinkedList<ExperimentData> readData;
 	
+	private LinkedList<LayerType> selectedLayers;
+	
 	/**
 	 * Instantiates a new loader manager.
 	 *
-	 * @param expIDs the experiments IDs
+	 * @param list the experiments IDs
 	 * @param tag the loader tag
 	 * @param pManager the timings manager
 	 * @param dbUsername the database username
 	 * @param dbPassword the database password
 	 */
-	public MySQLLoader(LinkedList<Integer> expIDs, PreferencesManager preferencesManager, String tag, TimingsManager pManager) {
+	public MySQLLoader(LinkedList<Integer> list, PreferencesManager preferencesManager, String tag, String layersString, TimingsManager pManager) {
 		super();
 		this.tag = tag;
+		this.pManager = pManager;
+		this.expIDs = list;
 		dbName = preferencesManager.getPreference(DB_NAME);
 		dbUsername = preferencesManager.getPreference(DB_USERNAME);
 		dbPassword = preferencesManager.getPreference(DB_PASSWORD);
-		this.pManager = pManager;
-		this.expIDs = expIDs;
 		readData = new LinkedList<ExperimentData>();
+		loadLayers(layersString);
 	}
 	
+	private void loadLayers(String layersString) {
+		selectedLayers = new LinkedList<LayerType>();
+		if(layersString != null && layersString.length() > 0){
+			for(String str : layersString.split(",")){
+				str = str.trim();
+				try {
+					selectedLayers.add(LayerType.valueOf(str));
+				} catch(Exception ex){
+					AppLogger.logError(getClass(), "UnrecognizedLayer", "Unable to parse '" + str + "' layer");
+				}
+			}
+		} else {
+			for(LayerType lt : LayerType.values()){
+				selectedLayers.add(lt);
+			}
+			AppLogger.logInfo(getClass(), selectedLayers.size() + " Default Layers Loaded");
+		}
+	}
+
 	/**
 	 * Starts fetching data.
 	 * For all the experiment IDs, launch a fetching on the specified DataFetcher.
@@ -83,15 +106,17 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		try {
 			start();
 			join();
-			if(tag.equals("train")){
-				pManager.addTiming(TimingsManager.LOAD_TRAIN_TIME, (double)(System.currentTimeMillis() - start));
-				pManager.addTiming(TimingsManager.AVG_LOAD_TRAIN_TIME, (double)((System.currentTimeMillis() - start)/threadNumber()));
-			} else {
-				pManager.addTiming(TimingsManager.LOAD_VALIDATION_TIME, (double)(System.currentTimeMillis() - start));
-				pManager.addTiming(TimingsManager.AVG_LOAD_VALIDATION_TIME, (double)((System.currentTimeMillis() - start)/threadNumber()));	
+			if(pManager != null){
+				if(tag.equals("train")){
+					pManager.addTiming(TimingsManager.LOAD_TRAIN_TIME, (double)(System.currentTimeMillis() - start));
+					pManager.addTiming(TimingsManager.AVG_LOAD_TRAIN_TIME, (double)((System.currentTimeMillis() - start)/threadNumber()));
+				} else {
+					pManager.addTiming(TimingsManager.LOAD_VALIDATION_TIME, (double)(System.currentTimeMillis() - start));
+					pManager.addTiming(TimingsManager.AVG_LOAD_VALIDATION_TIME, (double)((System.currentTimeMillis() - start)/threadNumber()));	
+				}
+				AppLogger.logInfo(getClass(), "'" + tag + "' data loaded in " + (System.currentTimeMillis() - start) + " ms");
+				AppLogger.logInfo(getClass(), "Average per run: " + ((System.currentTimeMillis() - start)/threadNumber()) + " ms");
 			}
-			AppLogger.logInfo(getClass(), "'" + tag + "' data loaded in " + (System.currentTimeMillis() - start) + " ms");
-			AppLogger.logInfo(getClass(), "Average per run: " + ((System.currentTimeMillis() - start)/threadNumber()) + " ms");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
 		}
@@ -105,7 +130,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	protected void initRun() {
 		LinkedList<DataFetcher> fetchList = new LinkedList<DataFetcher>();
 		for(Integer runId : expIDs){
-			fetchList.add(new DatabaseFetcher(runId.toString(), dbName, dbUsername, dbPassword));
+			fetchList.add(new DatabaseFetcher(runId.toString(), dbName, dbUsername, dbPassword, selectedLayers));
 		}
 		setThreadList(fetchList);
 	}
@@ -127,6 +152,11 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		if(data.getSnapshotNumber() > 5)
 			readData.add(data);
 		((DataFetcher)t).flush();
+	}
+
+	@Override
+	public String getRuns() {
+		return expIDs.getFirst() + " - " + expIDs.getLast();
 	}
 
 }

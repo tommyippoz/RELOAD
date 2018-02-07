@@ -19,21 +19,21 @@ import java.util.LinkedList;
 public class DataSeriesSnapshot extends Snapshot {
 
 	private DataSeries dataSeries;
-	private Double snapValue;
+	private SnapshotValue snapValue;
 	
 	public DataSeriesSnapshot(Observation obs, LinkedList<ServiceCall> currentCalls, InjectedElement injEl, HashMap<String, ServiceStat> ssList, DataSeries dataSeries) {
 		super(obs.getTimestamp(), currentCalls, injEl, ssList);
 		this.dataSeries = dataSeries;
 		if(dataSeries != null)
 			snapValue = dataSeries.getSeriesValue(obs);
-		else snapValue = Double.NaN;
+		else snapValue = new SnapshotValue(Double.NaN);
 	}
 
 	public DataSeries getDataSeries() {
 		return dataSeries;
 	}
 
-	public Double getSnapValue() {
+	public SnapshotValue getSnapValue() {
 		return snapValue;
 	}
 

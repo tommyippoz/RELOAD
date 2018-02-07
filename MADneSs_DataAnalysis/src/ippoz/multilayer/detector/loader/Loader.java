@@ -15,4 +15,6 @@ public interface Loader {
 	
 	public abstract LinkedList<ExperimentData> fetch();
 	
+	public abstract String getRuns();
+	
 }

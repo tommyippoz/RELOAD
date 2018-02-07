@@ -29,7 +29,6 @@ import ippoz.multilayer.detector.reputation.BetaReputation;
 import ippoz.multilayer.detector.reputation.ConstantReputation;
 import ippoz.multilayer.detector.reputation.MetricReputation;
 import ippoz.multilayer.detector.reputation.Reputation;
-import ippoz.multilayer.detector.trainer.TrainingType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,6 +36,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -61,8 +61,11 @@ public class DetectionManager {
 	/** The Constant VALIDATION_RUN_PREFERENCE. */
 	private static final String VALIDATION_RUN_PREFERENCE = "VALIDATION_RUN_IDS";
 	
+	/** The Constant CONSIDERED_LAYERS. */
+	private static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
+	
 	/** The Constant INV_DOMAIN. */
-	public static final String INV_DOMAIN = "INV_DOMAIN";
+	public static final String DATA_SERIES_DOMAIN = "DATA_SERIES_DOMAIN";
 	
 	/** The Constant OUTPUT_FORMAT. */
 	public static final String OUTPUT_FORMAT = "OUTPUT_TYPE";
@@ -76,6 +79,9 @@ public class DetectionManager {
 	/** The Constant METRIC_TYPE. */
 	private static final String METRIC_TYPE = "METRIC_TYPE"; 
 	
+	/** The Constant FILTERING_TRESHOLD. */
+	private static final String FILTERING_TRESHOLD = "FILTERING_TRESHOLD"; 
+	
 	private static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
 	
 	/** The Constant REPUTATION_TYPE. */
@@ -88,6 +94,9 @@ public class DetectionManager {
 	
 	/** The Constant SCORES_FILE_FOLDER. */
 	public static final String SCORES_FILE_FOLDER = "SCORES_FILE_FOLDER";
+	
+	/** The Constant SCORES_FILE_FOLDER. */
+	public static final String SCORES_FILE = "SCORES_FILE";
 	
 	/** The Constant SETUP_FILE_FOLDER. */
 	public static final String SETUP_FILE_FOLDER = "SETUP_FILE_FOLDER";
@@ -131,7 +140,7 @@ public class DetectionManager {
 	private DataCategory[] dataTypes;
 	
 	/** The algorithm types (SPS, Historical...). */
-	private AlgorithmType[] algTypes;
+	private LinkedList<AlgorithmType> algTypes;
 	
 	private LinkedList<DataSeries> selectedDataSeries;
 	
@@ -153,11 +162,40 @@ public class DetectionManager {
 		pManager.addTiming(TimingsManager.EXECUTION_TIME, new Date().toString());
 	}
 	
-	private Loader buildLoader(String loaderTag){
-		if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("MYSQL"))
-			return new MySQLLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), loaderTag, pManager);
-		else if(prefManager.getPreference(LOADER_TYPE).toUpperCase().equals("CSVALL"))
-			return new CSVPreLoader(readRunIds(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), loaderTag, Integer.parseInt(prefManager.getPreference(ANOMALY_WINDOW)));
+	private LinkedList<Loader> buildLoader(String loaderTag){
+		if(prefManager.getPreference(LOADER_TYPE) != null){
+			return buildLoaderList(loaderTag, prefManager.getPreference(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? FILTERING_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE)), new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE)), Integer.parseInt(prefManager.getPreference(ANOMALY_WINDOW)));
+		} else return new LinkedList<Loader>();
+	}
+	
+	private LinkedList<Loader> buildLoaderList(String loaderTag, String runsString, PreferencesManager loaderPrefManager, int anomalyWindow){
+		LinkedList<Loader> lList = new LinkedList<Loader>();
+		Loader newLoader;
+		LinkedList<Integer> runs;
+		int nRuns;
+		if(runsString != null && runsString.length() > 0){
+			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
+				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf("@")+1, runsString.indexOf("(")));
+				runs = readRunIds(runsString.substring(runsString.indexOf("(")+1, runsString.indexOf(")")));
+				for(int i=0;i<runs.size();i=i+nRuns){
+					newLoader = buildSingleLoader(new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderPrefManager, loaderTag, anomalyWindow);
+					if(newLoader != null)
+						lList.add(newLoader);
+				}
+			} else {
+				newLoader = buildSingleLoader(readRunIds(runsString), loaderPrefManager, loaderTag, anomalyWindow);
+				if(newLoader != null)
+					lList.add(newLoader);
+			}
+		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
+		return lList;
+	}
+	
+	private Loader buildSingleLoader(LinkedList<Integer> list, PreferencesManager loaderPrefManager, String loaderTag, int anomalyWindow){
+		if(prefManager.getPreference(LOADER_TYPE).equalsIgnoreCase("MYSQL"))
+			return new MySQLLoader(list, loaderPrefManager, loaderTag, prefManager.getPreference(CONSIDERED_LAYERS), null);
+		else if(prefManager.getPreference(LOADER_TYPE).equalsIgnoreCase("CSVALL"))
+			return new CSVPreLoader(list, loaderPrefManager, loaderTag, anomalyWindow);
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + prefManager.getPreference(LOADER_TYPE) + "'");
 			return null;
@@ -211,12 +249,12 @@ public class DetectionManager {
 	 * Starts the train process.
 	 */
 	public void filterIndicators(){
-		TrainerManager tManager;
+		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				tManager = new TrainerManager(prefManager, TrainingType.FILTERING, pManager, buildLoader("filter").fetch(), loadConfigurations(), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes);
-				selectedDataSeries = tManager.filter();
-				tManager.flush();
+				fManager = new FilterManager(prefManager, pManager, buildLoader("filter").getFirst().fetch(), loadConfigurations(), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes, Double.parseDouble(prefManager.getPreference(FILTERING_TRESHOLD)));
+				selectedDataSeries = fManager.filter();
+				fManager.flush();
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
@@ -231,11 +269,11 @@ public class DetectionManager {
 		try {
 			if(needTest()) {
 				if(selectedDataSeries == null && !new File(prefManager.getPreference(SCORES_FILE_FOLDER) + "filtered.csv").exists())
-					tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes);
+					tManager = new TrainerManager(prefManager, pManager, buildLoader("train").getFirst().fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes);
 				else {
 					if(selectedDataSeries == null){
-						tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
-					} else tManager = new TrainerManager(prefManager, TrainingType.TRAIN, pManager, buildLoader("train").fetch(), loadConfigurations(), metric, reputation, algTypes, selectedDataSeries); 
+						tManager = new TrainerManager(prefManager, pManager, buildLoader("train").getFirst().fetch(), loadConfigurations(), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
+					} else tManager = new TrainerManager(prefManager, pManager, buildLoader("train").getFirst().fetch(), loadConfigurations(), metric, reputation, algTypes, selectedDataSeries); 
 				}
 				tManager.train();
 				tManager.flush();
@@ -272,37 +310,87 @@ public class DetectionManager {
 	 * Starts the evaluation process.
 	 */
 	public void evaluate(){
-		EvaluatorManager eManager;
-		boolean printOutput = prefManager.getPreference(OUTPUT_FORMAT) != null && !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
 		Metric[] metList = loadValidationMetrics();
-		HashMap<String, Integer> nVoters = new HashMap<String, Integer>();
-		LinkedList<ExperimentData> expList = buildLoader("validation").fetch();
-		HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations = new HashMap<String, HashMap<String,LinkedList<HashMap<Metric,Double>>>>();
+		boolean printOutput = prefManager.getPreference(OUTPUT_FORMAT) != null && !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
+		LinkedList<Loader> lList = buildLoader("validation");
+		LinkedList<ExperimentData> bestExpList = null;
+		LinkedList<ExperimentData> expList;
+		String bestRuns = null;
+		double bestScore = 0;
+		double score;
+		int index = 0;
 		try {
-			pManager.setupExpTimings(new File(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv"));
-			for(String voterTreshold : parseVoterTresholds()){
-				evaluations.put(voterTreshold.trim(), new HashMap<String, LinkedList<HashMap<Metric,Double>>>());
-				for(String anomalyTreshold : parseAnomalyTresholds()){
-					eManager = new EvaluatorManager(prefManager, pManager, expList, metList, anomalyTreshold.trim(), Double.parseDouble(detectionManager.getPreference(DM_CONVERGENCE_TIME)), voterTreshold.trim(), printOutput);
-					if(eManager.detectAnomalies()) {
-						evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
-						eManager.printTimings(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv");
+			if(lList.size() > 1){
+				for(Loader l : lList){
+					expList = l.fetch();
+					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
+					score = singleEvaluation(metList, expList, printOutput, false);
+					if(score > bestScore){
+						bestRuns = l.getRuns();
+						bestExpList = expList;
+						bestScore = score;
 					}
-					nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
-					eManager.flush();
+					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 				}
+			} else {
+				bestExpList = lList.getFirst().fetch();
 			}
-			summarizeEvaluations(evaluations, metList, parseAnomalyTresholds(), nVoters);
+			pManager.setupExpTimings(new File(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv"));
+			singleEvaluation(metList, bestExpList, printOutput, true);
+			AppLogger.logInfo(getClass(), "Final score is " + new DecimalFormat("#.##").format(bestScore) + ", runs (" + bestRuns + ")");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
 		}
 	}
 	
-	private void summarizeEvaluations(HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, HashMap<String, Integer> nVoters) {
+	private double singleEvaluation(Metric[] metList, LinkedList<ExperimentData> expList, boolean printOutput, boolean summaryFlag){
+		EvaluatorManager eManager;
+		double bestScore;
+		String[] anomalyTresholds = parseAnomalyTresholds();
+		String[] voterTresholds = parseVoterTresholds();
+		HashMap<String, Integer> nVoters = new HashMap<String, Integer>();
+		HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations = new HashMap<String, HashMap<String,LinkedList<HashMap<Metric,Double>>>>();
+		for(String voterTreshold : voterTresholds){
+			evaluations.put(voterTreshold.trim(), new HashMap<String, LinkedList<HashMap<Metric,Double>>>());
+			for(String anomalyTreshold : anomalyTresholds){
+				eManager = new EvaluatorManager(prefManager, summaryFlag ? pManager : null, expList, metList, anomalyTreshold.trim(), Double.parseDouble(detectionManager.getPreference(DM_CONVERGENCE_TIME)), voterTreshold.trim(), printOutput);
+				if(eManager.detectAnomalies()) {
+					evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
+					eManager.printTimings(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv");
+				}
+				nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
+				eManager.flush();
+			}
+		}
+		bestScore = getBestScore(evaluations, metList, anomalyTresholds);
+		if(summaryFlag) {
+			summarizeEvaluations(evaluations, metList, parseAnomalyTresholds(), nVoters, bestScore);
+		}
+		return bestScore;
+	}
+	
+	private double getBestScore(HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
+		double score;
+		double bestScore = 0;
+		for(String voterTreshold : evaluations.keySet()){
+			for(String anomalyTreshold : anomalyTresholds){
+				for(Metric met : metList){
+					score = Double.parseDouble(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
+					if(met.equals(metric)){
+						if(score > bestScore) {
+							bestScore = score;
+						}
+					}
+				}
+			}
+		}
+		return bestScore;
+	}
+
+	private void summarizeEvaluations(HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, HashMap<String, Integer> nVoters, double bestScore) {
 		BufferedWriter writer;
 		BufferedWriter compactWriter;
 		double score;
-		double bestScore = 0;
 		try {
 			compactWriter = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/tableSummary.csv")));
 			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/summary.csv")));
@@ -323,9 +411,6 @@ public class DetectionManager {
 					for(Metric met : metList){
 						score = Double.parseDouble(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
 						if(met.equals(metric)){
-							if(score > bestScore) {
-								bestScore = score;
-							}
 							compactWriter.write(score + ",");
 						}
 						writer.write(score + ",");
@@ -401,7 +486,7 @@ public class DetectionManager {
 	 *
 	 * @return the algorithm types
 	 */
-	private AlgorithmType[] getAlgTypes() {
+	private LinkedList<AlgorithmType> getAlgTypes() {
 		File algTypeFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "detectionAlgorithms.preferences");
 		LinkedList<AlgorithmType> algTypeList = new LinkedList<AlgorithmType>();
 		BufferedReader reader;
@@ -423,7 +508,7 @@ public class DetectionManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
-		return algTypeList.toArray(new AlgorithmType[algTypeList.size()]);
+		return algTypeList;
 	}
 
 	/**
@@ -494,29 +579,31 @@ public class DetectionManager {
 			for(File confFile : confFolder.listFiles()){
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
 					algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
-					reader = new BufferedReader(new FileReader(confFile));
-					readed = reader.readLine();
-					if(readed != null){
-						header = readed.split(",");
-						while(reader.ready()){
-							readed = reader.readLine();
-							if(readed != null){
-								readed = readed.trim();
-								if(readed.length() > 0){
-									i = 0;
-									alConf = AlgorithmConfiguration.getConfiguration(algType, null);
-									for(String element : readed.split(",")){
-										alConf.addItem(header[i++], element);
+					if(algType != null && algTypes.contains(algType)) {
+						reader = new BufferedReader(new FileReader(confFile));
+						readed = reader.readLine();
+						if(readed != null){
+							header = readed.split(",");
+							while(reader.ready()){
+								readed = reader.readLine();
+								if(readed != null){
+									readed = readed.trim();
+									if(readed.length() > 0){
+										i = 0;
+										alConf = AlgorithmConfiguration.getConfiguration(algType, null);
+										for(String element : readed.split(",")){
+											alConf.addItem(header[i++], element);
+										}
+										if(confList.get(algType) == null)
+											confList.put(algType, new LinkedList<AlgorithmConfiguration>());
+										confList.get(algType).add(alConf);
 									}
-									if(confList.get(algType) == null)
-										confList.put(algType, new LinkedList<AlgorithmConfiguration>());
-									confList.get(algType).add(alConf);
 								}
 							}
+							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 						}
-						AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
+						reader.close();
 					}
-					reader.close();
 				} 
 			}
 		} catch(Exception ex){
@@ -531,9 +618,8 @@ public class DetectionManager {
 	 * @param runTag the run tag
 	 * @return the list of IDs
 	 */
-	private LinkedList<Integer> readRunIds(String runTag){
+	private LinkedList<Integer> readRunIds(String idPref){
 		String from, to;
-		String idPref = prefManager.getPreference(runTag).trim();
 		LinkedList<Integer> idList = new LinkedList<Integer>();
 		if(idPref != null && idPref.length() > 0){
 			for(String id : idPref.split(",")){
@@ -607,6 +693,8 @@ public class DetectionManager {
 			case "F-SCORE":
 			case "FSCORE":
 				return new FScore_Metric(Double.valueOf(param), validAfter);
+			case "FPR":
+				return new FalsePositiveRate_Metric(validAfter);
 			case "CUSTOM":
 				return new Custom_Metric(validAfter);
 			default:

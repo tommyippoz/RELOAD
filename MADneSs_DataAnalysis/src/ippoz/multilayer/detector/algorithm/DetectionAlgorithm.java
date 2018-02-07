@@ -8,6 +8,7 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.ComplexDataSeries;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
@@ -62,7 +63,12 @@ public abstract class DetectionAlgorithm {
 			case WER:
 				return new WesternElectricRulesChecker(dataSeries, conf);
 			case INV:
-				return new InvariantChecker(conf);
+				if(dataSeries instanceof MultipleDataSeries)
+					return new InvariantChecker((MultipleDataSeries)dataSeries, conf);
+				else {
+					AppLogger.logError(DetectionAlgorithm.class, "DataSeriesError", "Cannot create INV checker with just simple data series '" + dataSeries.getName() + "'");
+					return null;
+				}
 			case PEA:
 				return new PearsonIndexChecker(conf);
 			case KMEANS:
@@ -70,6 +76,10 @@ public abstract class DetectionAlgorithm {
 			default:
 				return null;
 		}
+	}
+	
+	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
+		return dataSeries instanceof MultipleDataSeries && algType == AlgorithmType.INV || !(dataSeries instanceof MultipleDataSeries) && algType != AlgorithmType.INV;
 	}
 	
 	/**
@@ -91,7 +101,7 @@ public abstract class DetectionAlgorithm {
 			else if(getAlgorithmType().equals(AlgorithmType.PEA))
 				return ((PearsonIndexChecker)this).getDs1().contains(serie) || ((PearsonIndexChecker)this).getDs2().contains(serie);
 			else if(getAlgorithmType().equals(AlgorithmType.INV))
-				return ((InvariantChecker)this).getInvariant().contains(serie);
+				return false;
 			else return false;
 		} else {
 			return container.contains(serie);

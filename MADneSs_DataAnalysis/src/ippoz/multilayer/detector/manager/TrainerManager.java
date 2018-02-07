@@ -4,6 +4,7 @@
 package ippoz.multilayer.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
@@ -15,10 +16,8 @@ import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.performance.TrainingTiming;
 import ippoz.multilayer.detector.reputation.Reputation;
 import ippoz.multilayer.detector.trainer.AlgorithmTrainer;
-import ippoz.multilayer.detector.trainer.ConfigurationFinderTrainer;
 import ippoz.multilayer.detector.trainer.ConfigurationSelectorTrainer;
 import ippoz.multilayer.detector.trainer.FixedConfigurationTrainer;
-import ippoz.multilayer.detector.trainer.TrainingType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,9 +25,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 /**
  * The Class TrainerManager.
@@ -40,8 +41,6 @@ public class TrainerManager extends ThreadScheduler {
 	
 	/** The preference manager. */
 	private PreferencesManager prefManager;
-	
-	private TrainingType tType;
 	
 	/** The timing manager. */
 	private TimingsManager pManager;
@@ -62,7 +61,7 @@ public class TrainerManager extends ThreadScheduler {
 	private LinkedList<DataSeries> seriesList;
 	
 	/** The algorithm types. */
-	private AlgorithmType[] algTypes;
+	private LinkedList<AlgorithmType> algTypes;
 	
 	private TrainingTiming tTiming;
 	
@@ -79,10 +78,9 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, AlgorithmType[] algTypes) {
+	private TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, LinkedList<AlgorithmType> algTypes) {
 		super(2);
 		this.prefManager = prefManager;
-		this.tType = tType;
 		this.pManager = pManager;
 		this.expList = expList;
 		this.confList = confList;
@@ -104,8 +102,8 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, AlgorithmType[] algTypes) {
-		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LinkedList<AlgorithmType> algTypes) {
+		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
 		seriesList = generateDataSeries(dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -122,8 +120,8 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, AlgorithmType[] algTypes, LinkedList<DataSeries> selectedSeries) {
-		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, LinkedList<AlgorithmType> algTypes, LinkedList<DataSeries> selectedSeries) {
+		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -140,8 +138,8 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TrainingType tType, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, AlgorithmType[] algTypes, String[] selectedSeriesString) {
-		this(prefManager, tType, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LinkedList<AlgorithmType> algTypes, String[] selectedSeriesString) {
+		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -161,16 +159,43 @@ public class TrainerManager extends ThreadScheduler {
 		return finalDs;
 	}
 
-	private HashMap<String, String> readPossibleIndCombinations(){
+	private LinkedList<Entry<String, String>> readPossibleIndCombinations(){
 		return readIndCombinations("indicatorCouples.csv");	
 	}
+	
+	private LinkedList<Entry<String, String>> readPearsonCombinations(double treshold){
+		LinkedList<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
+		File pFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+		BufferedReader reader;
+		String readed;
+		try {
+			if(pFile.exists()){
+				reader = new BufferedReader(new FileReader(pFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
+							if(Math.abs(Double.valueOf(readed.split(",")[2].trim())) >= treshold)
+								comb.add(new SimpleEntry<String, String>(readed.split(",")[0].trim(), readed.split(",")[1].trim()));
+						}
+					}
+				}
+				reader.close();
+			} 
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
+		}
+		return comb;
+	}
 
-	private HashMap<String, String> readIndCombinations(String filename){
+	private LinkedList<Entry<String, String>> readIndCombinations(String filename){
 		return readIndCombinations(new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + filename));
 	}
 	
-	private HashMap<String, String> readIndCombinations(File indCoupleFile){
-		HashMap<String, String> comb = new HashMap<String, String>();
+	private LinkedList<Entry<String, String>> readIndCombinations(File indCoupleFile){
+		LinkedList<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
 		BufferedReader reader;
 		String readed;
 		try {
@@ -181,7 +206,7 @@ public class TrainerManager extends ThreadScheduler {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
-							comb.put(readed.split(";")[0].trim(), readed.split(";")[1].trim());
+							comb.add(new SimpleEntry<String, String>(readed.split(";")[0].trim(), readed.split(";")[1].trim()));
 						}
 					}
 				}
@@ -194,10 +219,14 @@ public class TrainerManager extends ThreadScheduler {
 	}
 
 	private LinkedList<DataSeries> generateDataSeries(DataCategory[] dataTypes) {
-		String complexDataPreference = prefManager.getPreference(DetectionManager.INV_DOMAIN);
-		if(complexDataPreference.equals("ALL"))
+		String complexDataPreference = prefManager.getPreference(DetectionManager.DATA_SERIES_DOMAIN);
+		if(complexDataPreference.equals("ALL")){
 			return DataSeries.allCombinations(expList.getFirst().getIndicators(), dataTypes);
-		else return DataSeries.selectedCombinations(expList.getFirst().getIndicators(), dataTypes, readPossibleIndCombinations());
+		} else if(complexDataPreference.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(expList.getFirst().getIndicators(), dataTypes);
+		} else if(complexDataPreference.contains("PEARSON") && complexDataPreference.contains("(") && complexDataPreference.contains(")")){
+			return DataSeries.selectedCombinations(expList.getFirst().getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(complexDataPreference.substring(complexDataPreference.indexOf("(")+1, complexDataPreference.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(expList.getFirst().getIndicators(), dataTypes, readPossibleIndCombinations());
 	}
 
 	/**
@@ -293,22 +322,13 @@ public class TrainerManager extends ThreadScheduler {
 						break;
 					default:
 						for(DataSeries dataSeries : seriesList){
-							trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, metric, reputation, tTiming, expList, confList.get(algType)));
+							if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, metric, reputation, tTiming, expList, confList.get(algType)));
 						}
 						break;
 				}
 			} else {
-				switch(algType){
-					case INV:
-						iManager = new InvariantManager(seriesList, tTiming, expList, metric, reputation, readPossibleIndCombinations());
-						trainerList.addAll(iManager.getInvariants(prefManager.getPreference(DetectionManager.INV_DOMAIN).equals("ALL")));
-						break;
-					default:
-						for(DataSeries dataSeries : seriesList){
-							trainerList.add(new ConfigurationFinderTrainer(algType, dataSeries, metric, reputation, tTiming, expList));
-						}
-						break;
-				}
+				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration");
 			}	
 		}
 		setThreadList(trainerList);
@@ -361,19 +381,12 @@ public class TrainerManager extends ThreadScheduler {
 			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
-				switch(tType){
-					case TRAIN:
-						if(trainer.isValidTrain()){
-							writer.write(trainer.getSeriesDescription() + "§" + 
-									trainer.getAlgType() + "§" +
-									trainer.getReputationScore() + "§" + 
-									trainer.getMetricScore() + "§" +  
-									trainer.getBestConfiguration().toFileRow(false) + "\n");
-						}
-						break;
-					case FILTERING:
-						writer.write(trainer.getSeriesDescription());
-						break;
+				if(trainer.isValidTrain()){
+					writer.write(trainer.getSeriesDescription() + "§" + 
+							trainer.getAlgType() + "§" +
+							trainer.getReputationScore() + "§" + 
+							trainer.getMetricScore() + "§" +  
+							trainer.getBestConfiguration().toFileRow(false) + "\n");
 				}			
 			}
 			writer.close();

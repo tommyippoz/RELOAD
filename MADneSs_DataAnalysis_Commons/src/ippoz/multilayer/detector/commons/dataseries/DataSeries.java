@@ -6,7 +6,9 @@ package ippoz.multilayer.detector.commons.dataseries;
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
+import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.data.Observation;
+import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.IndicatorStat;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
@@ -14,8 +16,8 @@ import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 /**
  * @author Tommy
@@ -64,7 +66,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return seriesName.equals(other.getName()) && dataCategory.equals(other.getDataCategory()) ? 0 : 1;
 	}
 	
-	public Double getSeriesValue(Observation obs){
+	public SnapshotValue getSeriesValue(Observation obs){
 		try {
 			switch(dataCategory){
 				case PLAIN:
@@ -82,9 +84,11 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 
 	public abstract LayerType getLayerType();
 	
-	protected abstract Double getPlainSeriesValue(Observation obs);
+	public abstract boolean compliesWith(AlgorithmType algType);
 	
-	protected abstract Double getDiffSeriesValue(Observation obs);
+	protected abstract SnapshotValue getPlainSeriesValue(Observation obs);
+	
+	protected abstract SnapshotValue getDiffSeriesValue(Observation obs);
 	
 	// Sincronizza anche se è all'inizio, nel corpo o alla fine.
 	public abstract StatPair getSeriesServiceStat(Date timestamp, ServiceCall sCall, ServiceStat sStat);
@@ -127,27 +131,41 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				return new SumDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")+(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")+(")+3, seriesName.length()-1).trim(), true), dataType);
 			} else if(seriesName.contains(")-(")){
 				return new DiffDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")-(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")-(")+3, seriesName.length()-1).trim(), true), dataType);
+			} else if(seriesName.contains("@")){
+				return new MultipleDataSeries(DataSeries.fromString(seriesName.substring(0,  seriesName.indexOf("@")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf("@")+1, seriesName.length()).trim(), true));
 			} else return null;
 		} else return new IndicatorDataSeries(new Indicator(seriesName, layerType, Double.class), dataType);
 	}
 	
-	public static LinkedList<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, HashMap<String, String> possibleCouples) {
+	public static LinkedList<DataSeries> simpleCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		for(Indicator ind : indicators){
+			for(DataCategory dCat : dataTypes){
+				simpleInd.add(new IndicatorDataSeries(ind, dCat));
+			}
+		}
+		return simpleInd;
+	}
+	
+	public static LinkedList<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, LinkedList<Entry<String, String>> couples) {
 		DataSeries firstDS, secondDS;
 		LinkedList<DataSeries> outList = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		LinkedList<IndicatorDataSeries> simpleInd = new LinkedList<IndicatorDataSeries>();
 		LinkedList<DataSeries> complexInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
-		for(String firstString : possibleCouples.keySet()){
-			firstDS = DataSeries.fromList(simpleInd, firstString);
-			secondDS = DataSeries.fromList(simpleInd, possibleCouples.get(firstString));
-			for(DataCategory dCat : dataTypes){
-				complexInd.add(new SumDataSeries(firstDS, secondDS, dCat));
-				complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
-				complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
+		for(Entry<String, String> cEntry : couples){
+			firstDS = DataSeries.fromList(simpleInd, cEntry.getKey());
+			secondDS = DataSeries.fromList(simpleInd, cEntry.getValue());
+			if(firstDS != null && secondDS != null){
+				for(DataCategory dCat : dataTypes){
+					complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
+					complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
+				}
+				complexInd.add(new MultipleDataSeries(firstDS, secondDS));
 			}
 		}
 		outList.addAll(simpleInd);
@@ -164,12 +182,13 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
-		for(DataSeries firstDS : simpleInd){
-			for(DataSeries secondDS : simpleInd){
-				for(DataCategory dCat : dataTypes){
-					complexInd.add(new SumDataSeries(firstDS, secondDS, dCat));
-					complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
-					complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
+		for(int i=0;i<simpleInd.size();i++){
+			for(int j=i+1;j<simpleInd.size();j++){
+				if(!simpleInd.get(i).getName().equals(simpleInd.get(j).getName())){
+					for(DataCategory dCat : dataTypes){
+						complexInd.add(new DiffDataSeries(simpleInd.get(i), simpleInd.get(j), dCat));
+						complexInd.add(new FractionDataSeries(simpleInd.get(i), simpleInd.get(j), dCat));
+					}
 				}
 			}
 		}
@@ -178,7 +197,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return outList;
 	}
 
-	public static DataSeries fromList(LinkedList<DataSeries> seriesList, String newSeriesName) {
+	public static DataSeries fromList(LinkedList<IndicatorDataSeries> seriesList, String newSeriesName) {
 		for(DataSeries ds : seriesList){
 			if(ds.toString().equals(newSeriesName)) {
 				return ds;

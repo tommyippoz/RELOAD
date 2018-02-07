@@ -41,7 +41,7 @@ public class PearsonIndexChecker extends DetectionAlgorithm {
 	}
 
 	private void parseVars(AlgorithmConfiguration conf) {
-		String[] splittedDetail = conf.getItem(AlgorithmConfiguration.PEARSON_DETAIL).split(";");
+		String[] splittedDetail = conf.getItem(AlgorithmConfiguration.DETAIL).split(";");
 		times = Double.parseDouble(conf.getItem(AlgorithmConfiguration.PEARSON_TOLERANCE));
 		windowSize = Integer.parseInt(conf.getItem(AlgorithmConfiguration.PEARSON_WINDOW));
 		ds1 = DataSeries.fromString(splittedDetail[0], true);
@@ -66,8 +66,8 @@ public class PearsonIndexChecker extends DetectionAlgorithm {
 			secondList.removeFirst();
 		}
 		if(sysSnapshot instanceof MultipleSnapshot) {
-			firstList.add(((MultipleSnapshot)sysSnapshot).getSnapshot(ds1).getSnapValue());
-			secondList.add(((MultipleSnapshot)sysSnapshot).getSnapshot(ds2).getSnapValue());
+			firstList.add(((MultipleSnapshot)sysSnapshot).getSnapshot(ds1).getSnapValue().getFirst());
+			secondList.add(((MultipleSnapshot)sysSnapshot).getSnapshot(ds2).getSnapValue().getFirst());
 		} else {
 			firstList.add(Double.MIN_VALUE);
 			secondList.add(Double.MIN_VALUE);

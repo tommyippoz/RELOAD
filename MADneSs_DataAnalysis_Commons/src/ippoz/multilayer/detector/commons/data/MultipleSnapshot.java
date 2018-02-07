@@ -9,6 +9,7 @@ import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
@@ -41,6 +42,25 @@ public class MultipleSnapshot extends Snapshot {
 			}
 		} else return out;
 		return null;
+	}
+	
+	public SnapshotValue getFirstSeriesValue(){
+		return getSeriesValue(0);
+	}
+	
+	public SnapshotValue getLastSeriesValue(){
+		return getSeriesValue(dsMap.size()-1);
+	}
+	
+	private SnapshotValue getSeriesValue(int index){
+		Iterator<DataSeries> iterator = dsMap.keySet().iterator();
+		if(index < dsMap.size()){
+			while(index > 0){
+				index--;
+				iterator.next();
+			}
+			return dsMap.get(iterator.next()).getSnapValue();
+		} else return null;
 	}
 
 }

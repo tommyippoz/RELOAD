@@ -34,6 +34,8 @@ public class DatabaseFetcher extends DataFetcher {
 	
 	private String password;
 	
+	private LinkedList<LayerType> selectedLayers;
+	
 	/**
 	 * Instantiates a new database fetcher.
 	 *
@@ -42,15 +44,16 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @param password the database password
 	 * @param dbPassword 
 	 */
-	public DatabaseFetcher(String runId, String dbName, String username, String password){
+	public DatabaseFetcher(String runId, String dbName, String username, String password, LinkedList<LayerType> selectedLayers){
 		this.runId = runId;
 		this.dbName = dbName;
 		this.username = username;
 		this.password = password;
+		this.selectedLayers = selectedLayers;
 	}
 	
 	public void openConnection() {
-		dbManager = new DatabaseManager(dbName, username, password, runId);	
+		dbManager = new DatabaseManager(dbName, username, password, runId, selectedLayers);	
 	}
 
 	/* (non-Javadoc)

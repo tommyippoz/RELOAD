@@ -8,6 +8,7 @@ import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
 import ippoz.multilayer.detector.commons.invariants.DataSeriesMember;
 import ippoz.multilayer.detector.commons.invariants.Invariant;
@@ -213,13 +214,13 @@ public class ExperimentData implements Cloneable {
 		return new MultipleSnapshot(obsList.get(index), callList, snapList.get(index).getInjectedElement(), ssList, sList.toArray(new DataSeries[sList.size()]));
 	}
 	
-	private MultipleSnapshot getMultipleSnapshot(int index, Invariant inv) {
-		LinkedList<DataSeries> sList = new LinkedList<DataSeries>();
-		if(inv.getFirstMember() instanceof DataSeriesMember)
-			sList.add(((DataSeriesMember)inv.getFirstMember()).getDataSeries());
-		if(inv.getSecondMember() instanceof DataSeriesMember)
-			sList.add(((DataSeriesMember)inv.getSecondMember()).getDataSeries());
-		return new MultipleSnapshot(obsList.get(index), callList, snapList.get(index).getInjectedElement(), ssList, sList.toArray(new DataSeries[sList.size()]));
+	public MultipleSnapshot getMultipleSnapshot(int index, MultipleDataSeries invDs) {
+		return new MultipleSnapshot(obsList.get(index), callList, snapList.get(index).getInjectedElement(), ssList, invDs.getSeriesList());
+		
+	}
+	
+	public MultipleSnapshot getMultipleSnapshot(int index, DataSeries[] dss) {
+		return new MultipleSnapshot(obsList.get(index), callList, snapList.get(index).getInjectedElement(), ssList, dss);
 	}
 
 	public DataSeriesSnapshot getDataSeriesSnapshot(DataSeries dataSeries, int index) {
@@ -239,24 +240,20 @@ public class ExperimentData implements Cloneable {
 	}
 	
 	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries, AlgorithmConfiguration conf){
-		Invariant inv;
 		switch(algType){
 			case RCC:
 				return getSnapshot(index);
 			case INV:
-				inv = (Invariant)conf.getRawItem(AlgorithmConfiguration.INVARIANT);
-				return getMultipleSnapshot(index, inv);
-			case PEA:
-				return getMultipleSnapshot(index, conf.getItem(AlgorithmConfiguration.PEARSON_DETAIL));
+				if(dataSeries instanceof MultipleDataSeries)
+					return getMultipleSnapshot(index, (MultipleDataSeries)dataSeries);
+				else return null;
 			default:
 				return getDataSeriesSnapshot(dataSeries, index);
 		}
 	}
-	
-	
 
-	public double[] getDataSeriesValue(DataSeries ds){
-		double[] outList = new double[obsList.size()];
+	public SnapshotValue[] getDataSeriesValue(DataSeries ds){
+		SnapshotValue[] outList = new SnapshotValue[obsList.size()];
 		for(int i=0;i<obsList.size();i++){
 			outList[i] = ds.getSeriesValue(obsList.get(i));
 		}

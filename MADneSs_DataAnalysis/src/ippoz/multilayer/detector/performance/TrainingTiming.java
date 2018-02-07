@@ -62,11 +62,13 @@ public class TrainingTiming {
 
 	public String toFileRow(AlgorithmType algType) {
 		String row = algType + ",";
-		for(String tag : trainingAttr){
-			row = row + statMap.get(algType).getStat(tag) + ",";
-		}
-		for(String tag : scoresAttr){
-			row = row + statMap.get(algType).getStat(tag) + ",";
+		if(statMap.containsKey(algType)){
+			for(String tag : trainingAttr){
+				row = row + statMap.get(algType).getStat(tag) + ",";
+			}
+			for(String tag : scoresAttr){
+				row = row + statMap.get(algType).getStat(tag) + ",";
+			}
 		}
 		return row;
 	}

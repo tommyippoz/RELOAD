@@ -55,7 +55,10 @@ public class PearsonCombinationManager {
 			if(ds instanceof IndicatorDataSeries) { 
 				map = new HashMap<String, double[]>();
 				for(ExperimentData expData : expList){
-					map.put(expData.getName(), expData.getDataSeriesValue(ds));
+					map.put(expData.getName(), new double[expData.getDataSeriesValue(ds).length]);
+					for(int i=0;i<expData.getDataSeriesValue(ds).length;i++){
+						map.get(expData.getName())[i] = expData.getDataSeriesValue(ds)[i].getFirst();
+					}
 				}
 				seriesExpData.put(ds, map);
 			}
@@ -131,7 +134,7 @@ public class PearsonCombinationManager {
 	
 	private HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> adaptConf(HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, PearsonResult pr) {
 		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){
-			ac.addItem(AlgorithmConfiguration.PEARSON_DETAIL, pr.getDs1().toString() + ";" + pr.getDs2().toString() + ";" + String.valueOf(pr.getAvg()) + ";" + String.valueOf(pr.getStd()));
+			ac.addItem(AlgorithmConfiguration.DETAIL, pr.getDs1().toString() + ";" + pr.getDs2().toString() + ";" + String.valueOf(pr.getAvg()) + ";" + String.valueOf(pr.getStd()));
 		}
 		return confList;
 	}

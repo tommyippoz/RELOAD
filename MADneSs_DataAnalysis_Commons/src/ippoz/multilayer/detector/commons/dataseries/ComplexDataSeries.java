@@ -7,7 +7,9 @@ import java.util.Date;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.layers.LayerType;
+import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.data.Observation;
+import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.service.StatPair;
@@ -41,12 +43,17 @@ public abstract class ComplexDataSeries extends DataSeries {
 	}
 	
 	@Override
-	protected Double getPlainSeriesValue(Observation obs) {
+	public boolean compliesWith(AlgorithmType algType) {
+		return !algType.equals(AlgorithmType.INV);
+	}
+
+	@Override
+	protected SnapshotValue getPlainSeriesValue(Observation obs) {
 		return composePlain(obs);
 	}
 
 	@Override
-	protected Double getDiffSeriesValue(Observation obs) {
+	protected SnapshotValue getDiffSeriesValue(Observation obs) {
 		return composeDiff(obs);
 	}
 
@@ -55,9 +62,9 @@ public abstract class ComplexDataSeries extends DataSeries {
 		return composeStat(firstOperand.getSeriesServiceStat(timestamp, sCall, sStat), secondOperand.getSeriesServiceStat(timestamp, sCall, sStat));
 	}
 	
-	protected abstract Double composePlain(Observation obs);
+	protected abstract SnapshotValue composePlain(Observation obs);
 	
-	protected abstract Double composeDiff(Observation obs);
+	protected abstract SnapshotValue composeDiff(Observation obs);
 	
 	protected abstract StatPair composeStat(StatPair s1stat, StatPair s2stat);
 	

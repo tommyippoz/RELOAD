@@ -86,7 +86,8 @@ public class EvaluatorManager extends ThreadScheduler {
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
 		eTiming = new EvaluationTiming(voterTreshold, anTresholdString, detectorScoreTreshold, anomalyTreshold, loadTrainScores().size());
 		outputFolder = prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/" + voterTreshold + "_" + anTresholdString;
-		AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+		if(pManager != null)
+			AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
 		
 	}
 	
@@ -113,12 +114,14 @@ public class EvaluatorManager extends ThreadScheduler {
 		try {
 			start();
 			join();
-			if(getThreadList().size() > 0) {
-				pManager.addTiming(TimingsManager.VALIDATION_RUNS, Double.valueOf(expList.size()));
-				pManager.addTiming(TimingsManager.VALIDATION_TIME, (double)(System.currentTimeMillis() - start));
-				pManager.addTiming(TimingsManager.AVG_VALIDATION_TIME, (System.currentTimeMillis() - start)/threadNumber()*1.0);
-				AppLogger.logInfo(getClass(), "Detection executed in " + (System.currentTimeMillis() - start) + " ms");
-			} else AppLogger.logInfo(getClass(), "Detection not executed");
+			if(pManager != null) {
+				if(getThreadList().size() > 0) {
+					pManager.addTiming(TimingsManager.VALIDATION_RUNS, Double.valueOf(expList.size()));
+					pManager.addTiming(TimingsManager.VALIDATION_TIME, (double)(System.currentTimeMillis() - start));
+					pManager.addTiming(TimingsManager.AVG_VALIDATION_TIME, (System.currentTimeMillis() - start)/threadNumber()*1.0);
+					AppLogger.logInfo(getClass(), "Detection executed in " + (System.currentTimeMillis() - start) + " ms");
+				} else AppLogger.logInfo(getClass(), "Detection not executed");
+			}
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete evaluation phase");
 		}
@@ -164,7 +167,8 @@ public class EvaluatorManager extends ThreadScheduler {
 			}
 		}
 		setThreadList(voterList);
-		pManager.addTiming(TimingsManager.SELECTED_ANOMALY_CHECKERS, Double.valueOf(voterList.size()));
+		if(pManager != null)
+			pManager.addTiming(TimingsManager.SELECTED_ANOMALY_CHECKERS, Double.valueOf(voterList.size()));
 	}
 
 	/* (non-Javadoc)
@@ -190,7 +194,8 @@ public class EvaluatorManager extends ThreadScheduler {
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
 	private LinkedList<AlgorithmVoter> loadTrainScores() {
-		File asFile = new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + "scores.csv");
+		String filename = prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + prefManager.getPreference(DetectionManager.SCORES_FILE);
+		File asFile = new File(filename);
 		BufferedReader reader;
 		AlgorithmConfiguration conf;
 		String[] splitted;
@@ -211,15 +216,9 @@ public class EvaluatorManager extends ThreadScheduler {
 								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 4 ? splitted[4] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
-									case INV:
 									case PEA:
 										seriesString = null;
 										break;
-									case HIST:
-									case WER:
-									case SPS:
-									case CONF:
-									case TEST:
 									default:
 										seriesString = splitted[0];
 										break;
@@ -234,7 +233,7 @@ public class EvaluatorManager extends ThreadScheduler {
 					}
 				}
 				reader.close();
-			} 
+			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + filename + "'");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}

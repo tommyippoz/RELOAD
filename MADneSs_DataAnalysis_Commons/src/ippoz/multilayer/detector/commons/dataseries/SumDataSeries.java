@@ -5,6 +5,7 @@ package ippoz.multilayer.detector.commons.dataseries;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.data.Observation;
+import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.StatPair;
 
 /**
@@ -18,15 +19,15 @@ public class SumDataSeries extends ComplexDataSeries {
 	}
 
 	@Override
-	protected Double composePlain(Observation obs) {
-		return firstOperand.getSeriesValue(obs) + secondOperand.getSeriesValue(obs);
+	protected SnapshotValue composePlain(Observation obs) {
+		return new SnapshotValue(firstOperand.getSeriesValue(obs).getFirst() + secondOperand.getSeriesValue(obs).getFirst());
 	}
 
 	@Override
-	protected Double composeDiff(Observation obs) {
-		double d1 = firstOperand.getDiffSeriesValue(obs);
-		double d2 = secondOperand.getDiffSeriesValue(obs);
-		return d1 + d2;
+	protected SnapshotValue composeDiff(Observation obs) {
+		double d1 = firstOperand.getDiffSeriesValue(obs).getFirst();
+		double d2 = secondOperand.getDiffSeriesValue(obs).getFirst();
+		return new SnapshotValue(d1 + d2);
 	}
 
 	@Override

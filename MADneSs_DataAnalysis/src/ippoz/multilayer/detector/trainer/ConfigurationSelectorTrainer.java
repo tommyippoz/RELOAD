@@ -3,6 +3,7 @@
  */
 package ippoz.multilayer.detector.trainer;
 
+import ippoz.multilayer.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
@@ -74,6 +75,9 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			for(AlgorithmConfiguration conf : configurations){
 				metricResults = new LinkedList<Double>();
 				algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), conf);
+				if(algorithm instanceof AutomaticTrainingAlgorithm) {
+					((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getExpList());
+				}
 				for(ExperimentData expData : getExpList()){
 					metricResults.add(getMetric().evaluateMetric(algorithm, algExpSnapshots.get(expData.getName()))[0]);
 				}

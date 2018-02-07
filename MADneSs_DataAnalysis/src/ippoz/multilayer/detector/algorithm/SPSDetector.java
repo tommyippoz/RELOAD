@@ -104,7 +104,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	@Override
 	protected double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
 		double anomalyScore;
-		observations.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue());
+		observations.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
 		if(newTresholds != null) {
 			lowerTreshold.put(sysSnapshot.getTimestamp(), newTresholds[0]);
 			upperTreshold.put(sysSnapshot.getTimestamp(), newTresholds[1]);
@@ -114,9 +114,9 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		}
 		anomalyScore = calculateAnomalyScore(sysSnapshot);
 		if(anomalyScore >= 1.0)
-			anomalies.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue());
+			anomalies.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
 		if(sysSnapshot.getInjectedElement() != null && sysSnapshot.getInjectedElement().getTimestamp().compareTo(sysSnapshot.getTimestamp()) == 0)
-			failures.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue());
+			failures.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
 		newTresholds = calculator.calculateTreshold(sysSnapshot);
 		return anomalyScore;
 	}
@@ -129,7 +129,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	 */
 	private double calculateAnomalyScore(DataSeriesSnapshot sysSnapshot){
 		if(lowerTreshold.size() > 0 && upperTreshold.size() > 0) {
-			if(sysSnapshot.getSnapValue() <= upperTreshold.get(upperTreshold.lastKey()) && sysSnapshot.getSnapValue() >= lowerTreshold.get(lowerTreshold.lastKey()))
+			if(sysSnapshot.getSnapValue().getFirst() <= upperTreshold.get(upperTreshold.lastKey()) && sysSnapshot.getSnapValue().getFirst() >= lowerTreshold.get(lowerTreshold.lastKey()))
 				return 0;
 			else return 1;
 		} else return 0;
@@ -225,7 +225,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		 */
 		public double[] calculateTreshold(DataSeriesSnapshot sysSnapshot){
 			double calcTreshold = 0;
-			addSPSBlock(sysSnapshot.getSnapValue(), sysSnapshot.getTimestamp());
+			addSPSBlock(sysSnapshot.getSnapValue().getFirst(), sysSnapshot.getTimestamp());
 			if(observedValues.size() > 1)
 				calcTreshold = computeThreshold();
 			else calcTreshold = observedValues.getLast().getObs();

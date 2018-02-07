@@ -30,7 +30,7 @@ public class WesternElectricRulesChecker extends DataSeriesDetectionAlgorithm {
 		double anomalyRate = 0.0;
 		if(sysSnapshot.getServiceCalls().size() > 0){
 			for(ServiceCall sCall : sysSnapshot.getServiceCalls()){
-				anomalyRate = anomalyRate + evaluateZones(updateHistZones(sCall, sysSnapshot.getSnapValue(), sysSnapshot.getSnapStat(sCall)));
+				anomalyRate = anomalyRate + evaluateZones(updateHistZones(sCall, sysSnapshot.getSnapValue().getFirst(), sysSnapshot.getSnapStat(sCall)));
 			}
 			return anomalyRate / sysSnapshot.getServiceCalls().size();
 		} else return 0;

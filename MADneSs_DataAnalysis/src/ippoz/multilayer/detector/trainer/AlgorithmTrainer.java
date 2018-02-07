@@ -89,7 +89,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private HashMap<String, LinkedList<Snapshot>> loadAlgExpSnapshots() {
 		HashMap<String, LinkedList<Snapshot>> expAlgMap = new HashMap<String, LinkedList<Snapshot>>();
 		for(ExperimentData expData : expList){
-			//System.out.println(expData.getName());
 			expAlgMap.put(expData.getName(), expData.buildSnapshotsFor(algTag, dataSeries, bestConf));
 		}
 		return expAlgMap;

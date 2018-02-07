@@ -6,6 +6,7 @@ import ippoz.multilayer.detector.commons.algorithm.KMeansData;
 import ippoz.multilayer.detector.commons.algorithm.Point;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
+import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
@@ -32,7 +33,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 	@Override
 	protected double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
 
-		if (Double.isNaN(sysSnapshot.getSnapValue())) {
+		if (Double.isNaN(sysSnapshot.getSnapValue().getFirst())) {
 			return 0;
 		}
 
@@ -69,7 +70,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 			int count = 0;
 
 			Point p = null;
-			double value = sysSnapshot.getSnapValue();
+			double value = sysSnapshot.getSnapValue().getFirst();
 
 			for (int i = 0; i < tClusters.length; i++) {
 
@@ -125,7 +126,6 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 
 	}
 
-	@Override
 	public AlgorithmConfiguration automaticTraining(HashMap<String, LinkedList<Snapshot>> algExpSnapshots) {
 
 		AlgorithmConfiguration ac = new AlgorithmConfiguration(AlgorithmType.KMEANS);
@@ -214,5 +214,11 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 			}
 		}
 
+	}
+
+	@Override
+	public void automaticTraining(LinkedList<ExperimentData> expList) {
+		// TODO Auto-generated method stub
+		
 	}
 }

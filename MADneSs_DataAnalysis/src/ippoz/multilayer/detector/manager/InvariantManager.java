@@ -7,6 +7,7 @@ import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.dataseries.IndicatorDataSeries;
 import ippoz.multilayer.detector.commons.invariants.DataSeriesMember;
 import ippoz.multilayer.detector.commons.invariants.Invariant;
 import ippoz.multilayer.detector.metric.Metric;
@@ -26,14 +27,14 @@ public class InvariantManager {
 	
 	private final String[] invariantOperandList = {">"};
 	
-	private LinkedList<DataSeries> seriesList;
+	private LinkedList<IndicatorDataSeries> seriesList;
 	private TrainingTiming tTiming;
 	private HashMap<String, String> invCombinations;
 	private LinkedList<ExperimentData> expList;
 	private Metric metric;
 	private Reputation reputation;
 	
-	public InvariantManager(LinkedList<DataSeries> seriesList, TrainingTiming tTiming, LinkedList<ExperimentData> expList, Metric metric, Reputation reputation, HashMap<String, String> invCombinations) {
+	public InvariantManager(LinkedList<IndicatorDataSeries> seriesList, TrainingTiming tTiming, LinkedList<ExperimentData> expList, Metric metric, Reputation reputation, HashMap<String, String> invCombinations) {
 		this.seriesList = seriesList;
 		this.tTiming = tTiming;
 		this.invCombinations = invCombinations;
@@ -46,7 +47,7 @@ public class InvariantManager {
 		Invariant invariant;
 		LinkedList<AlgorithmTrainer> filtered = new LinkedList<AlgorithmTrainer>();
 		for(AlgorithmTrainer invTrainer : allInv){
-			invariant = (Invariant)invTrainer.getBestConfiguration().getRawItem(AlgorithmConfiguration.INVARIANT);
+			invariant = (Invariant)invTrainer.getBestConfiguration().getRawItem(AlgorithmConfiguration.INVARIANT, false);
 			if(!invariant.getFirstMember().getMemberName().equals(invariant.getSecondMember().getMemberName())){	
 				filtered.add(invTrainer);
 			}
@@ -59,7 +60,7 @@ public class InvariantManager {
 		LinkedList<AlgorithmTrainer> toRemove = new LinkedList<AlgorithmTrainer>();
 		LinkedList<String> foundMembers = new LinkedList<String>();
 		for(AlgorithmTrainer invTrainer : allInv){
-			invariant = (Invariant)invTrainer.getBestConfiguration().getRawItem(AlgorithmConfiguration.INVARIANT);
+			invariant = (Invariant)invTrainer.getBestConfiguration().getRawItem(AlgorithmConfiguration.INVARIANT, false);
 			if(invariant.getFirstMember() instanceof DataSeriesMember){
 				if(!foundMembers.contains(invariant.getFirstMember().toString()))
 					foundMembers.add(invariant.getFirstMember().toString());

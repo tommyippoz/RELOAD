@@ -45,11 +45,11 @@ public class DatabaseManager {
 	 * @param password the database password
 	 * @param runId the runID
 	 */
-	public DatabaseManager(String dbName, String username, String password, String runId){
+	public DatabaseManager(String dbName, String username, String password, String runId, LinkedList<LayerType> selectedLayers){
 		try {
 			this.runId = runId;
 			connector = new DatabaseConnector(dbName, username, password, false);
-			loadSystemLayers();
+			loadSystemLayers(selectedLayers);
 		} catch(Exception ex){
 			AppLogger.logInfo(getClass(), "Need to start MySQL Server...");
 		}
@@ -57,11 +57,13 @@ public class DatabaseManager {
 
 	/**
 	 * Load system layers.
+	 * @param selectedLayers 
 	 */
-	private void loadSystemLayers() {
+	private void loadSystemLayers(LinkedList<LayerType> selectedLayers) {
 		layers = new HashMap<String, LayerType>();
 		for(HashMap<String, String> ptMap : connector.executeCustomQuery(null, "select * from probe_type")){
-			layers.put(ptMap.get("probe_type_id"), LayerType.valueOf(ptMap.get("pt_description")));
+			if(selectedLayers.contains(LayerType.valueOf(ptMap.get("pt_description"))))
+				layers.put(ptMap.get("probe_type_id"), LayerType.valueOf(ptMap.get("pt_description")));
 		}
 	}
 
@@ -87,11 +89,13 @@ public class DatabaseManager {
 		for(HashMap<String, String> obsMap : connector.executeCustomQuery(null, "select observation_id, ob_time from observation where run_id = " + runId)){
 			obs = new Observation(obsMap.get("ob_time"));
 			for(HashMap<String, String> indObs : connector.executeCustomQuery(null, "select indicator_observation_id, probe_type_id, in_tag from indicator natural join indicator_observation where observation_id = " + obsMap.get("observation_id"))) {
-				indData = new HashMap<DataCategory, String>();
-				for(HashMap<String, String> indValues : connector.executeCustomQuery(null, "select vc_description, ioc_value from indicator_observation_category natural join value_category where indicator_observation_id = " + indObs.get("indicator_observation_id"))) {
-					indData.put(DataCategory.valueOf(indValues.get("vc_description").toUpperCase()), indValues.get("ioc_value"));
+				if(layers.get(indObs.get("probe_type_id")) != null){
+					indData = new HashMap<DataCategory, String>();
+					for(HashMap<String, String> indValues : connector.executeCustomQuery(null, "select vc_description, ioc_value from indicator_observation_category natural join value_category where indicator_observation_id = " + indObs.get("indicator_observation_id"))) {
+						indData.put(DataCategory.valueOf(indValues.get("vc_description").toUpperCase()), indValues.get("ioc_value"));
+					}
+					obs.addIndicator(new Indicator(indObs.get("in_tag"), layers.get(indObs.get("probe_type_id")), String.class), new IndicatorData(indData));
 				}
-				obs.addIndicator(new Indicator(indObs.get("in_tag"), layers.get(indObs.get("probe_type_id")), String.class), new IndicatorData(indData));
 			}
 			obsList.add(obs);
 		}

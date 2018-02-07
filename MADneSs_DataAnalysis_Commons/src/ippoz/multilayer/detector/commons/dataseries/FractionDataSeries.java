@@ -5,6 +5,7 @@ package ippoz.multilayer.detector.commons.dataseries;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.data.Observation;
+import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.StatPair;
 
 /**
@@ -18,21 +19,21 @@ public class FractionDataSeries extends ComplexDataSeries {
 	}
 
 	@Override
-	protected Double composePlain(Observation obs) {
-		if(secondOperand.getSeriesValue(obs) != 0)
-			return firstOperand.getSeriesValue(obs) / secondOperand.getSeriesValue(obs);
-		else return Double.NaN;	
+	protected SnapshotValue composePlain(Observation obs) {
+		if(secondOperand.getSeriesValue(obs).getFirst() != 0)
+			return new SnapshotValue(firstOperand.getSeriesValue(obs).getFirst() / secondOperand.getSeriesValue(obs).getFirst());
+		else return new SnapshotValue(Double.NaN);	
 	}
 
 	@Override
-	protected Double composeDiff(Observation obs) {
-		double p1 = firstOperand.getPlainSeriesValue(obs);
-		double p2 = secondOperand.getPlainSeriesValue(obs);
-		double d1 = firstOperand.getDiffSeriesValue(obs);
-		double d2 = secondOperand.getDiffSeriesValue(obs);
+	protected SnapshotValue composeDiff(Observation obs) {
+		double p1 = firstOperand.getPlainSeriesValue(obs).getFirst();
+		double p2 = secondOperand.getPlainSeriesValue(obs).getFirst();
+		double d1 = firstOperand.getDiffSeriesValue(obs).getFirst();
+		double d2 = secondOperand.getDiffSeriesValue(obs).getFirst();
 		if(p2 != 0 && (p2-d2) != 0)
-			return p1/p2 - (p1-d1)/(p2-d2);
-		else return Double.NaN;
+			return new SnapshotValue(p1/p2 - (p1-d1)/(p2-d2));
+		else return new SnapshotValue(Double.NaN);
 	}
 
 	@Override

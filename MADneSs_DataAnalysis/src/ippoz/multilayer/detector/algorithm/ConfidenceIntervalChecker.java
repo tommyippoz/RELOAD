@@ -58,7 +58,7 @@ public class ConfidenceIntervalChecker extends DataSeriesDetectionAlgorithm {
 			for(ServiceCall sCall : sysSnapshot.getServiceCalls()){
 				seriesStat = sysSnapshot.getSnapStat(sCall);
 				if(seriesStat != null)
-					anomalyRate = anomalyRate + evaluateConfInterval(sysSnapshot.getSnapValue(), z, sysSnapshot.getServiceObsStat(sCall.getServiceName()).getAvg(), seriesStat.getAvg(), seriesStat.getStd());
+					anomalyRate = anomalyRate + evaluateConfInterval(sysSnapshot.getSnapValue().getFirst(), z, sysSnapshot.getServiceObsStat(sCall.getServiceName()).getAvg(), seriesStat.getAvg(), seriesStat.getStd());
 				else AppLogger.logError(getClass(), "StatError", "Unable to find Stat for " + sCall.getServiceName() + ":" + dataSeries.getName());
 			}
 			return anomalyRate / sysSnapshot.getServiceCalls().size();

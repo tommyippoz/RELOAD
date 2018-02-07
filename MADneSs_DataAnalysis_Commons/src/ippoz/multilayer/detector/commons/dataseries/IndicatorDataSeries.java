@@ -8,7 +8,9 @@ import java.util.Date;
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
+import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.data.Observation;
+import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.service.StatPair;
@@ -30,6 +32,11 @@ public class IndicatorDataSeries extends DataSeries {
 	public LayerType getLayerType() {
 		return indicator.getLayer();
 	}
+	
+	@Override
+	public boolean compliesWith(AlgorithmType algType) {
+		return !algType.equals(AlgorithmType.INV);
+	}
 
 	@Override
 	public StatPair getSeriesServiceStat(Date timestamp, ServiceCall sCall, ServiceStat sStat) {
@@ -37,13 +44,13 @@ public class IndicatorDataSeries extends DataSeries {
 	}
 
 	@Override
-	protected Double getPlainSeriesValue(Observation obs) {
-		return Double.valueOf(obs.getValue(indicator.getName(), DataCategory.PLAIN));
+	protected SnapshotValue getPlainSeriesValue(Observation obs) {
+		return new SnapshotValue(Double.valueOf(obs.getValue(indicator.getName(), DataCategory.PLAIN)));
 	}
 
 	@Override
-	protected Double getDiffSeriesValue(Observation obs) {
-		return Double.valueOf(obs.getValue(indicator.getName(), DataCategory.DIFFERENCE));
+	protected SnapshotValue getDiffSeriesValue(Observation obs) {
+		return new SnapshotValue(Double.valueOf(obs.getValue(indicator.getName(), DataCategory.DIFFERENCE)));
 	}
 
 }

@@ -3,10 +3,8 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
-import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.data.ExperimentData;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -20,9 +18,9 @@ public interface AutomaticTrainingAlgorithm {
 	/**
 	 * Automatic training.
 	 *
-	 * @param algExpSnapshots the training data, formatted as an hashmap with experimentName -> list of snapshots
+	 * @param expList the training data, formatted as an hashmap with experimentName -> list of snapshots
 	 * @return the chosen algorithm configuration
 	 */
-	public AlgorithmConfiguration automaticTraining(HashMap<String, LinkedList<Snapshot>> algExpSnapshots);
+	public void automaticTraining(LinkedList<ExperimentData> expList);
 	
 }

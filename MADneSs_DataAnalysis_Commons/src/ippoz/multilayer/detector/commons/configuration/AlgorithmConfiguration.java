@@ -25,7 +25,7 @@ public class AlgorithmConfiguration implements Cloneable {
 
 	public static final String INVARIANT = "invariant";
 	
-	public static final String PEARSON_DETAIL = "pi_detail";
+	public static final String DETAIL = "detail";
 
 	public static final String PEARSON_TOLERANCE = "pi_tolerance";
 
@@ -67,8 +67,6 @@ public class AlgorithmConfiguration implements Cloneable {
 	
 	public static AlgorithmConfiguration getConfiguration(AlgorithmType algType, AlgorithmConfiguration oldConf) {
 		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
-		if(algType.equals(AlgorithmType.INV))
-			conf.addRawItem("invariant", oldConf.getRawItem("invariant"));
 		return conf;
 	}
 
@@ -99,9 +97,19 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public String getItem(String tag){
+		return getItem(tag, true);
+	}
+	
+	/**
+	 * Gets the item.
+	 *
+	 * @param tag the item tag
+	 * @return the item
+	 */
+	public String getItem(String tag, boolean flag){
 		if(!confMap.containsKey(tag)){
-			if(!tag.equals("weight"))
-				AppLogger.logError(getClass(), "TagNotFound", "Unable to find tag '" + tag + "'");
+			if(flag && !tag.equals("weight"))
+				AppLogger.logInfo(getClass(), "Unable to find tag '" + tag + "'");
 			return null;
 		} else return confMap.get(tag).toString();
 	}
@@ -113,8 +121,19 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public Object getRawItem(String tag){
+		return getRawItem(tag, true);
+	}
+	
+	/**
+	 * Gets the raw item.
+	 *
+	 * @param tag the item tag
+	 * @return the item
+	 */
+	public Object getRawItem(String tag, boolean flag){
 		if(!confMap.containsKey(tag)){
-			AppLogger.logError(getClass(), "TagNotFound", "Unable to find tag '" + tag + "'");
+			if(flag)
+				AppLogger.logInfo(getClass(), "Unable to find tag '" + tag + "'");
 			return null;
 		} else return confMap.get(tag);
 	}
@@ -144,7 +163,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 */
 	public String toFileRow(boolean complete){
 		if(complete)
-			return getItem(WEIGHT) + ", " + getItem(SCORE) + ", " + getSpecificItems();
+			return getItem(WEIGHT, false) + ", " + getItem(SCORE, false) + ", " + getSpecificItems();
 		else return getSpecificItems();
 	}
 
@@ -152,7 +171,7 @@ public class AlgorithmConfiguration implements Cloneable {
 		String all = "";
 		for(String itemTag : confMap.keySet()){
 			if(!itemTag.equals(SCORE) && !itemTag.equals(WEIGHT)){
-				all = all + itemTag + "=" + getRawItem(itemTag).toString() + "&";
+				all = all + itemTag + "=" + getRawItem(itemTag, false).toString() + "&";
 			}
 		}
 		return all;
@@ -162,33 +181,11 @@ public class AlgorithmConfiguration implements Cloneable {
 		String tag, value;
 		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
 		if(descRow != null){
-			switch(algType){
-				case INV:
-					for(String splitted : descRow.split("&")){
-						if(splitted.contains("=")){
-							tag = splitted.split("=")[0].trim();
-							value = splitted.split("=")[1].trim();
-							conf.addRawItem(tag, new Invariant(value));
-						}
-					}
-					break;
-				default:
-					for(String splitted : descRow.split("&")){
-						if(splitted.contains("=")){
-							tag = splitted.split("=")[0].trim();
-							value = splitted.split("=")[1].trim();
-							conf.addItem(tag, value);
-						}
-					}
-					break;
-			}
 			for(String splitted : descRow.split("&")){
 				if(splitted.contains("=")){
 					tag = splitted.split("=")[0].trim();
 					value = splitted.split("=")[1].trim();
-					if(algType.equals(AlgorithmType.INV))
-						conf.addRawItem(tag, new Invariant(value));
-					else conf.addItem(tag, value);
+					conf.addItem(tag, value);
 				}
 			}
 		}
