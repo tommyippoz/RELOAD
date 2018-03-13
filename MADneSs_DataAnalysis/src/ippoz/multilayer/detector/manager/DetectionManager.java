@@ -20,6 +20,7 @@ import ippoz.multilayer.detector.metric.FN_Metric;
 import ippoz.multilayer.detector.metric.FP_Metric;
 import ippoz.multilayer.detector.metric.FScore_Metric;
 import ippoz.multilayer.detector.metric.FalsePositiveRate_Metric;
+import ippoz.multilayer.detector.metric.Matthews_Coefficient;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.metric.Precision_Metric;
 import ippoz.multilayer.detector.metric.Recall_Metric;
@@ -332,11 +333,13 @@ public class DetectionManager {
 					}
 					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 				}
+				singleEvaluation(metList, bestExpList, printOutput, true);
 			} else {
+				bestRuns = "all";
 				bestExpList = lList.getFirst().fetch();
+				bestScore = singleEvaluation(metList, bestExpList, printOutput, true);
 			}
-			pManager.setupExpTimings(new File(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv"));
-			singleEvaluation(metList, bestExpList, printOutput, true);
+			pManager.setupExpTimings(new File(prefManager.getPreference(OUTPUT_FOLDER) + "/evaluationTimings.csv"));	
 			AppLogger.logInfo(getClass(), "Final score is " + new DecimalFormat("#.##").format(bestScore) + ", runs (" + bestRuns + ")");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
@@ -366,7 +369,7 @@ public class DetectionManager {
 		if(summaryFlag) {
 			summarizeEvaluations(evaluations, metList, parseAnomalyTresholds(), nVoters, bestScore);
 		}
-		return bestScore;
+		return Double.isFinite(bestScore) ? bestScore : 0.0;
 	}
 	
 	private double getBestScore(HashMap<String, HashMap<String, LinkedList<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
@@ -695,8 +698,10 @@ public class DetectionManager {
 				return new FScore_Metric(Double.valueOf(param), validAfter);
 			case "FPR":
 				return new FalsePositiveRate_Metric(validAfter);
+			case "MATTHEWS":
+				return new Matthews_Coefficient(validAfter);
 			case "CUSTOM":
-				return new Custom_Metric(validAfter);
+				return new Custom_Metric(validAfter);	
 			default:
 				return null;
 		}

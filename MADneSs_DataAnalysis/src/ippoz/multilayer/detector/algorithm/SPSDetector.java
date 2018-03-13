@@ -3,6 +3,7 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
+import ippoz.madness.commons.support.CustomArrayList;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
@@ -13,7 +14,6 @@ import ippoz.multilayer.detector.graphics.XYChartDrawer;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.TreeMap;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
@@ -130,9 +130,9 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	private double calculateAnomalyScore(DataSeriesSnapshot sysSnapshot){
 		if(lowerTreshold.size() > 0 && upperTreshold.size() > 0) {
 			if(sysSnapshot.getSnapValue().getFirst() <= upperTreshold.get(upperTreshold.lastKey()) && sysSnapshot.getSnapValue().getFirst() >= lowerTreshold.get(lowerTreshold.lastKey()))
-				return 0;
-			else return 1;
-		} else return 0;
+				return 0.0;
+			else return 1.0;
+		} else return 0.0;
 	}
 	
 	/* (non-Javadoc)
@@ -179,7 +179,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	private class SPSCalculator {
 		
 		/** The observed values. */
-		private LinkedList<SPSBlock> observedValues;
+		private CustomArrayList<SPSBlock> observedValues;
 		
 		/** The pdv. */
 		private double pdv;
@@ -194,10 +194,10 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		private double pos;
 		
 		/** The m. */
+		@SuppressWarnings("unused")
 		private double m;
 		
 		/** The n. */
-		@SuppressWarnings("unused")
 		private double n;
 		
 		/** The dynamic weights. */
@@ -207,7 +207,6 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		 * Instantiates a new SPS calculator.
 		 */
 		public SPSCalculator(){
-			observedValues = new LinkedList<SPSBlock>();
 			pdv = Double.parseDouble(conf.getItem(SPS_PDV));
 			pov = Double.parseDouble(conf.getItem(SPS_POV));
 			pds = Double.parseDouble(conf.getItem(SPS_PDS));
@@ -215,6 +214,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 			m = Double.parseDouble(conf.getItem(SPS_M));
 			n = Double.parseDouble(conf.getItem(SPS_N));
 			dynamicWeights = (Double.parseDouble(conf.getItem(SPS_DYN_WEIGHT)) == 1.0);		
+			observedValues = new CustomArrayList<SPSBlock>(n);
 		}
 		
 		/**
@@ -238,77 +238,45 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		 * @return the computed threshold
 		 */
 		private double computeThreshold() {
-			double driftBound = driftUpperBound();
-			double offsetBound = offsetUpperBound();
-			double pred = Erf.erf(pdv)*Math.sqrt(2.0*driftBound)*(2.0/3)*Math.pow(observedValues.getLast().getTimeDiff(), (3/2));
-			double sm = Erf.erf(pov)*Math.sqrt(2.0*offsetBound);
+			double bounds[] = calculateBounds();
+			double pred = Erf.erf(pdv)*Math.sqrt(2.0*bounds[0])*(2.0/3)*Math.pow(observedValues.getLast().getTimeDiff(), (3/2));
+			double sm = Erf.erf(pov)*Math.sqrt(2.0*bounds[1]);
 			return pred + sm;
 		}
 		
-		/**
-		 * Calculates the drift upper bound.
-		 *
-		 * @return the double
-		 */
-		private double driftUpperBound(){
+		private double[] calculateBounds(){
 			int dof = observedValues.size() - 1;
 			ChiSquaredDistribution chiSq = new ChiSquaredDistribution(dof);
-			return weightedDriftVariance()*(dof/chiSq.inverseCumulativeProbability(pds));
-		}
-		
-		/**
-		 * Calculates the offset upper bound.
-		 *
-		 * @return the double
-		 */
-		private double offsetUpperBound(){
-			int dof = observedValues.size() - 1;
-			ChiSquaredDistribution chiSq = new ChiSquaredDistribution(dof);
-			return weightedOffsetVariance()*(dof/chiSq.inverseCumulativeProbability(pos));
-		}
-		
-		/**
-		 * Calculates the weighted drift variance.
-		 *
-		 * @return the double
-		 */
-		private double weightedDriftVariance(){
-			double wdf = 0;
+			double wdf = 0, wof = 0;
 			double weigthSum = getWeightSum();
-			double nWeightSum = 0;
-			double weigthDMean = 0;
+			double nWeightSum = getWeigthQuadraticSum() / Math.pow(weigthSum, 2);
+			double weigthDMean = 0, weigthOMean = 0;
+			
 			for(int i=0;i<observedValues.size();i++){
 				weigthDMean = weigthDMean + getWeigth(i)*observedValues.get(i).getDrift();
-				nWeightSum = nWeightSum + Math.pow(getWeigth(i)/weigthSum, 2);
-			}
-			weigthDMean = weigthDMean/weigthSum;
-			for(int i=0;i<observedValues.size();i++){
-				wdf = wdf + (getWeigth(i)/weigthSum)*Math.pow(observedValues.get(i).getDrift() - weigthDMean, 2);
-			}
-			return wdf/(1-nWeightSum);
-		}
-		
-		/**
-		 * Calculates the weighted offset variance.
-		 *
-		 * @return the double
-		 */
-		private double weightedOffsetVariance(){
-			double wof = 0;
-			double weigthSum = getWeightSum();
-			double nWeightSum = 0;
-			double weigthOMean = 0;
-			for(int i=0;i<observedValues.size();i++){
 				weigthOMean = weigthOMean + getWeigth(i)*observedValues.get(i).getOffset();
-				nWeightSum = nWeightSum + Math.pow(getWeigth(i)/weigthSum, 2);
 			}
+			
+			weigthDMean = weigthDMean/weigthSum;
 			weigthOMean = weigthOMean/weigthSum;
 			for(int i=0;i<observedValues.size();i++){
+				wdf = wdf + (getWeigth(i)/weigthSum)*Math.pow(observedValues.get(i).getDrift() - weigthDMean, 2);
 				wof = wof + (getWeigth(i)/weigthSum)*Math.pow(observedValues.get(i).getOffset() - weigthOMean, 2);
 			}
-			return wof/(1-nWeightSum);
+			
+			double result[] = new double[2];
+			if(pds == pos){
+				double den = dof/chiSq.inverseCumulativeProbability(pds);
+				result[0] = wdf/(1-nWeightSum)*den;
+				result[1] = wof/(1-nWeightSum)*den;
+			} else {
+				result[0] = wdf/(1-nWeightSum)*(dof/chiSq.inverseCumulativeProbability(pds));
+				result[1] = wof/(1-nWeightSum)*(dof/chiSq.inverseCumulativeProbability(pos));
+			}
+			
+			return result;
 		}
-
+		
 		/**
 		 * Adds an SPS block.
 		 *
@@ -316,9 +284,9 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		 * @param timestamp the new timestamp
 		 */
 		private void addSPSBlock(double newValue, Date timestamp){
-			observedValues.add(new SPSBlock(newValue, timestamp));
-			if(observedValues.size() > m)
+			if(observedValues.isFull())
 				observedValues.removeFirst();
+			observedValues.add(new SPSBlock(newValue, timestamp));
 		}
 		
 		/**
@@ -334,17 +302,26 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 		}
 		
 		/**
+		 * Gets the weight of each observation in the sliding window.
+		 *
+		 * @param obsIndex the observation index
+		 * @return the weight
+		 */
+		private double getWeigthQuadraticSum(){
+			int nEl = observedValues.size();
+			if(dynamicWeights)
+				return (nEl+1)*(2*nEl+1)/(6*nEl);
+			else return nEl;
+		}
+		
+		/**
 		 * Gets the weight sum.
 		 *
 		 * @return the weight sum
 		 */
 		private double getWeightSum(){
-			double tot = 0.0;
 			if(dynamicWeights){
-				for(int i=0;i<observedValues.size();i++){
-					tot = tot + getWeigth(i);
-				}
-				return tot;
+				return (observedValues.size() + 1.0)/2.0;
 			} else return 1.0*observedValues.size();
 		}
 		
@@ -377,7 +354,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 			public SPSBlock(double obs, Date timestamp) {
 				this.obs = obs;
 				this.timestamp = timestamp;
-				if(observedValues.size() > 0){
+				if(!observedValues.isEmpty()){
 					drift = (obs - observedValues.getLast().getDrift())/2;
 					offset = obs - observedValues.getLast().getObs();
 					timeDiff = (int) ((timestamp.getTime() - observedValues.getLast().getTimestamp().getTime())/1000);
