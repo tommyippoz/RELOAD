@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class EvaluatorManager.
@@ -50,7 +51,7 @@ public class EvaluatorManager extends ThreadScheduler {
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
-	private List<HashMap<Metric, Double>> expMetricEvaluations;
+	private List<Map<Metric, Double>> expMetricEvaluations;
 	
 	private EvaluationTiming eTiming;
 	
@@ -152,7 +153,7 @@ public class EvaluatorManager extends ThreadScheduler {
 	protected void initRun() {
 		List<AlgorithmVoter> algVoters = loadTrainScores();
 		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(expList.size());
-		expMetricEvaluations = new ArrayList<HashMap<Metric,Double>>(voterList.size());
+		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
 		if(printOutput){
 			setupResultsFile();
 		}
@@ -289,7 +290,7 @@ public class EvaluatorManager extends ThreadScheduler {
 		}
 	}
 
-	public List<HashMap<Metric, Double>> getMetricsEvaluations() {
+	public List<Map<Metric, Double>> getMetricsEvaluations() {
 		return expMetricEvaluations;
 	}
 	

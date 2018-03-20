@@ -9,6 +9,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.jfree.chart.ChartFactory;
@@ -45,12 +46,12 @@ public class HistogramChartDrawer extends ChartDrawer {
 	 * @param chartTitle the chart title
 	 * @param xLabel the x-axis label
 	 * @param yLabel the y-axis label
-	 * @param data the series data
+	 * @param voterMap the series data
 	 * @param anomalyTreshold the anomaly threshold
 	 * @param algConvTime the algorithm convergence time
 	 */
-	public HistogramChartDrawer(String chartTitle, String xLabel, String yLabel, HashMap<String, TreeMap<Double, Double>> data, double anomalyTreshold, double algConvTime) {
-		super(chartTitle, xLabel, yLabel, data);
+	public HistogramChartDrawer(String chartTitle, String xLabel, String yLabel, Map<String, Map<Double, Double>> voterMap, double anomalyTreshold, double algConvTime) {
+		super(chartTitle, xLabel, yLabel, voterMap);
 		this.anomalyTreshold = anomalyTreshold;
 		this.algConvTime = algConvTime;
 		addAnomalyTreshold();
@@ -61,7 +62,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 	 * @see ippoz.multilayer.detector.graphics.ChartDrawer#setupChart(java.util.HashMap)
 	 */
 	@Override
-	protected void setupChart(HashMap<String, TreeMap<Double, Double>> data) {
+	protected void setupChart(Map<String, Map<Double, Double>> data) {
 		XYBarRenderer renderer = new CustomRenderer(new Paint[] {Color.BLUE, Color.RED, Color.YELLOW}, data.get(ExperimentVoter.FAILURE_LABEL));
         renderer.setBaseItemLabelGenerator(new StandardXYItemLabelGenerator());
         renderer.setBaseItemLabelsVisible(true);
@@ -110,7 +111,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 	 * @see ippoz.multilayer.detector.graphics.ChartDrawer#createDataset(java.util.HashMap)
 	 */
 	@Override
-	protected Dataset createDataset(HashMap<String, TreeMap<Double, Double>> data) {
+	protected Dataset createDataset(Map<String, Map<Double, Double>> data) {
 		XYSeries current;
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for(String seriesName : data.keySet()){
@@ -133,7 +134,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 	private class CustomRenderer extends XYBarRenderer {
 
 		/** The failure map. */
-		private TreeMap<Double, Double> failureMap;
+		private Map<Double, Double> failureMap;
         
         /** The colours. */
         private Paint[] colors;
@@ -144,7 +145,7 @@ public class HistogramChartDrawer extends ChartDrawer {
          * @param colors the colours
          * @param failureMap the failure map
          */
-        public CustomRenderer(final Paint[] colors, TreeMap<Double, Double> failureMap) {
+        public CustomRenderer(final Paint[] colors, Map<Double, Double> failureMap) {
             this.colors = colors;
             this.failureMap = failureMap;
         }

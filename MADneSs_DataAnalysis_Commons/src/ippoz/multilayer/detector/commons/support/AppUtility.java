@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -156,18 +157,18 @@ public class AppUtility {
 		else return Double.MAX_VALUE;
 	}
 	
-	public static TreeMap<Double, Double> convertMapTimestamps(Date firstTimestamp, TreeMap<Date, Double> toConvert){
-		TreeMap<Double, Double> convertedMap = new TreeMap<Double, Double>();
-		if(toConvert.size() > 0) {
-			for(Date key : toConvert.keySet()){
-				convertedMap.put(AppUtility.getSecondsBetween(key, firstTimestamp), toConvert.get(key));
+	public static Map<Double, Double> convertMapTimestamps(Date firstTimestamp, Map<Date, Double> resultMap){
+		Map<Double, Double> convertedMap = new TreeMap<Double, Double>();
+		if(resultMap.size() > 0) {
+			for(Date key : resultMap.keySet()){
+				convertedMap.put(AppUtility.getSecondsBetween(key, firstTimestamp), resultMap.get(key));
 			}
 		}
 		return convertedMap;
 	}
 
-	public static TreeMap<Double, Double> convertMapSnapshots(TreeMap<Date, Double> resultMap) {
-		return convertMapTimestamps(resultMap.firstKey(), resultMap);
+	public static Map<Double, Double> convertMapSnapshots(Date firstDate, Map<Date, Double> resultMap) {
+		return convertMapTimestamps(firstDate, resultMap);
 	}
 
 	public static Double calcMedian(Double[] timeSingle) {

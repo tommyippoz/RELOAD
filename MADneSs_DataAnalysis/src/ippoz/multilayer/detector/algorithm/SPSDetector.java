@@ -14,6 +14,7 @@ import ippoz.multilayer.detector.graphics.XYChartDrawer;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
@@ -153,9 +154,9 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	 *
 	 * @return the dataset
 	 */
-	private HashMap<String, TreeMap<Double, Double>> getDataset() {
+	private Map<String, Map<Double, Double>> getDataset() {
 		Date refDate = observations.firstKey();
-		HashMap<String, TreeMap<Double, Double>> dataset = new HashMap<String, TreeMap<Double, Double>>();
+		Map<String, Map<Double, Double>> dataset = new HashMap<String, Map<Double, Double>>();
 		dataset.put(SPS_OBSERVATION, AppUtility.convertMapTimestamps(refDate, observations));
 		dataset.put(SPS_UPPER_BOUND, AppUtility.convertMapTimestamps(refDate, upperTreshold));
 		dataset.put(SPS_LOWER_BOUND, AppUtility.convertMapTimestamps(refDate, lowerTreshold));

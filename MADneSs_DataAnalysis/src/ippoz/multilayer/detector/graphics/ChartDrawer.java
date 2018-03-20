@@ -8,6 +8,7 @@ import ippoz.multilayer.detector.commons.support.AppLogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.jfree.chart.ChartUtilities;
@@ -31,11 +32,11 @@ public abstract class ChartDrawer {
 	 * @param chartTitle the chart title
 	 * @param xLabel the x-axis label
 	 * @param yLabel the y-axis label
-	 * @param data the series data
+	 * @param voterMap the series data
 	 */
-	public ChartDrawer(String chartTitle, String xLabel, String yLabel, HashMap<String, TreeMap<Double, Double>> data){
-		chart = createChart(chartTitle, xLabel, yLabel, createDataset(data), true, true);
-		setupChart(data);
+	public ChartDrawer(String chartTitle, String xLabel, String yLabel, Map<String, Map<Double, Double>> voterMap){
+		chart = createChart(chartTitle, xLabel, yLabel, createDataset(voterMap), true, true);
+		setupChart(voterMap);
 	}
 
 	/**
@@ -43,7 +44,7 @@ public abstract class ChartDrawer {
 	 *
 	 * @param data the series data
 	 */
-	protected abstract void setupChart(HashMap<String, TreeMap<Double, Double>> data);
+	protected abstract void setupChart(Map<String, Map<Double, Double>> data);
 
 	/**
 	 * Creates the chart.
@@ -64,7 +65,7 @@ public abstract class ChartDrawer {
 	 * @param data the series data
 	 * @return the dataset
 	 */
-	protected abstract Dataset createDataset(HashMap<String, TreeMap<Double, Double>> data);
+	protected abstract Dataset createDataset(Map<String, Map<Double, Double>> data);
 	
 	/**
 	 * Saves chart to file.

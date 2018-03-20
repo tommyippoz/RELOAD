@@ -8,6 +8,7 @@ import ippoz.multilayer.detector.algorithm.SPSDetector;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.jfree.chart.ChartFactory;
@@ -37,7 +38,7 @@ public class XYChartDrawer extends ChartDrawer {
 	 * @param yLabel the y-axis label
 	 * @param data the series data
 	 */
-	public XYChartDrawer(String chartTitle, String xLabel, String yLabel, HashMap<String, TreeMap<Double, Double>> data) {
+	public XYChartDrawer(String chartTitle, String xLabel, String yLabel, Map<String, Map<Double, Double>> data) {
 		super(chartTitle, xLabel, yLabel, data);
 	}
 
@@ -45,7 +46,7 @@ public class XYChartDrawer extends ChartDrawer {
 	 * @see ippoz.multilayer.detector.graphics.ChartDrawer#setupChart(java.util.HashMap)
 	 */
 	@Override
-	protected void setupChart(HashMap<String, TreeMap<Double, Double>> data) {
+	protected void setupChart(Map<String, Map<Double, Double>> data) {
 		XYPlot plot = chart.getXYPlot( );
 	     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 	     int i = 0;
@@ -99,7 +100,7 @@ public class XYChartDrawer extends ChartDrawer {
 	 * @see ippoz.multilayer.detector.graphics.ChartDrawer#createDataset(java.util.HashMap)
 	 */
 	@Override
-	protected Dataset createDataset(HashMap<String, TreeMap<Double, Double>> data) {
+	protected Dataset createDataset(Map<String, Map<Double, Double>> data) {
 		XYSeries current;
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for(String seriesName : data.keySet()){

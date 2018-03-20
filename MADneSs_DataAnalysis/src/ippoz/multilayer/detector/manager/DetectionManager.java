@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DetectionManager.
@@ -238,10 +239,10 @@ public class DetectionManager {
 		double bestScore;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
 		String[] voterTresholds = iManager.parseVoterTresholds();
-		HashMap<String, Integer> nVoters = new HashMap<String, Integer>();
-		HashMap<String, HashMap<String, List<HashMap<Metric, Double>>>> evaluations = new HashMap<String, HashMap<String, List<HashMap<Metric,Double>>>>();
+		Map<String, Integer> nVoters = new HashMap<String, Integer>();
+		Map<String, Map<String, List<Map<Metric, Double>>>> evaluations = new HashMap<String, Map<String, List<Map<Metric,Double>>>>();
 		for(String voterTreshold : voterTresholds){
-			evaluations.put(voterTreshold.trim(), new HashMap<String, List<HashMap<Metric,Double>>>());
+			evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
 			for(String anomalyTreshold : anomalyTresholds){
 				eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(), expList, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
 				if(eManager.detectAnomalies()) {
@@ -259,7 +260,7 @@ public class DetectionManager {
 		return Double.isFinite(bestScore) ? bestScore : 0.0;
 	}
 	
-	private double getBestScore(HashMap<String, HashMap<String, List<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
+	private double getBestScore(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
 		double score;
 		double bestScore = 0;
 		for(String voterTreshold : evaluations.keySet()){
@@ -277,7 +278,7 @@ public class DetectionManager {
 		return bestScore;
 	}
 
-	private void summarizeEvaluations(HashMap<String, HashMap<String, List<HashMap<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, HashMap<String, Integer> nVoters, double bestScore) {
+	private void summarizeEvaluations(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, Map<String, Integer> nVoters, double bestScore) {
 		BufferedWriter writer;
 		BufferedWriter compactWriter;
 		double score;
@@ -317,10 +318,10 @@ public class DetectionManager {
 		}
 	}
 
-	private String getAverageMetricValue(List<HashMap<Metric, Double>> list, Metric met) {
+	private String getAverageMetricValue(List<Map<Metric, Double>> list, Metric met) {
 		List<Double> dataList = new ArrayList<Double>();
 		if(list != null){
-			for(HashMap<Metric, Double> map : list){
+			for(Map<Metric, Double> map : list){
 				dataList.add(map.get(met));
 			}
 			return String.valueOf(AppUtility.calcAvg(dataList));

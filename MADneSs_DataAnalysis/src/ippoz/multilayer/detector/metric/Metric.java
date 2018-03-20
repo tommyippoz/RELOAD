@@ -6,10 +6,12 @@ package ippoz.multilayer.detector.metric;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.support.AppUtility;
+import ippoz.multilayer.detector.voter.VotingResult;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -53,7 +55,7 @@ public abstract class Metric {
 	 * @param anomalyEvaluations the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(List<Snapshot> snapList, Map<Date, Double> anomalyEvaluations);
 
 	/**
 	 * Returns the anomaly evaluation for the given input data.
@@ -63,10 +65,10 @@ public abstract class Metric {
 	 * @param anomalyTreshold the anomaly threshold
 	 * @return the global anomaly evaluation
 	 */
-	public double evaluateAnomalyResults(List<Snapshot> customArrayList, TreeMap<Date, Double> voting, double anomalyTreshold) {
-		HashMap<Date, Double> convertedMap = new HashMap<Date, Double>(); 
-		for(Date date : voting.keySet()){
-			convertedMap.put(date, voting.get(date)/anomalyTreshold*1.0);
+	public double evaluateAnomalyResults(List<Snapshot> customArrayList, List<VotingResult> voting, double anomalyTreshold) {
+		Map<Date, Double> convertedMap = new HashMap<Date, Double>(); 
+		for(VotingResult vResult : voting){
+			convertedMap.put(vResult.getDate(), vResult.getValue()/anomalyTreshold*1.0);
 		}
 		return evaluateAnomalyResults(customArrayList, convertedMap);
 	}
