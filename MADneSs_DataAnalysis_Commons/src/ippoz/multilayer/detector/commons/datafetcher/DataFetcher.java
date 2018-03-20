@@ -11,7 +11,7 @@ import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class DataFetcher.
@@ -53,14 +53,14 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the observations
 	 */
-	protected abstract LinkedList<Observation> getObservations();
+	protected abstract List<Observation> getObservations();
 
 	/**
 	 * Gets the experiment service calls.
 	 *
 	 * @return the service calls
 	 */
-	protected abstract LinkedList<ServiceCall> getServiceCalls();
+	protected abstract List<ServiceCall> getServiceCalls();
 
 	/**
 	 * Gets the experiment service stats.
@@ -74,14 +74,14 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the injections
 	 */
-	protected abstract LinkedList<InjectedElement> getInjections();
+	protected abstract List<InjectedElement> getInjections();
 
 	/**
 	 * Gets the experiment performance timings.
 	 *
 	 * @return the performance timings
 	 */
-	protected abstract HashMap<String, HashMap<LayerType, LinkedList<Integer>>> getPerformanceTimings();
+	protected abstract HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings();
 	
 	/**
 	 * Flushes the fetcher.

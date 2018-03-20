@@ -12,7 +12,9 @@ import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.manager.TimingsManager;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class LoaderManager.
@@ -47,12 +49,12 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	private TimingsManager pManager;
 	
 	/** The list of experiment IDs. */
-	private LinkedList<Integer> expIDs;
+	private List<Integer> expIDs;
 	
 	/** The data read by the loader. */
-	private LinkedList<ExperimentData> readData;
+	private List<ExperimentData> readData;
 	
-	private LinkedList<LayerType> selectedLayers;
+	private List<LayerType> selectedLayers;
 	
 	/**
 	 * Instantiates a new loader manager.
@@ -63,7 +65,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 * @param dbUsername the database username
 	 * @param dbPassword the database password
 	 */
-	public MySQLLoader(LinkedList<Integer> list, PreferencesManager preferencesManager, String tag, String layersString, TimingsManager pManager) {
+	public MySQLLoader(List<Integer> list, PreferencesManager preferencesManager, String tag, String layersString, TimingsManager pManager) {
 		super();
 		this.tag = tag;
 		this.pManager = pManager;
@@ -101,7 +103,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 * @return the linked list
 	 */
 	@Override
-	public LinkedList<ExperimentData> fetch(){
+	public List<ExperimentData> fetch(){
 		long start = System.currentTimeMillis();
 		try {
 			start();
@@ -128,7 +130,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 */
 	@Override
 	protected void initRun() {
-		LinkedList<DataFetcher> fetchList = new LinkedList<DataFetcher>();
+		List<DataFetcher> fetchList = new ArrayList<DataFetcher>(expIDs.size());
 		for(Integer runId : expIDs){
 			fetchList.add(new DatabaseFetcher(runId.toString(), dbName, dbUsername, dbPassword, selectedLayers));
 		}
@@ -156,7 +158,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 
 	@Override
 	public String getRuns() {
-		return expIDs.getFirst() + " - " + expIDs.getLast();
+		return expIDs.get(0) + " - " + expIDs.get(expIDs.size() - 1);
 	}
 
 }

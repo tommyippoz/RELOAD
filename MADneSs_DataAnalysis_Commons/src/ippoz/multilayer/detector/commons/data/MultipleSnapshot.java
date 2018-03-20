@@ -10,7 +10,7 @@ import ippoz.multilayer.detector.commons.service.ServiceStat;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -20,8 +20,8 @@ public class MultipleSnapshot extends Snapshot {
 
 	private HashMap<DataSeries, DataSeriesSnapshot> dsMap;
 	
-	public MultipleSnapshot(Observation obs, LinkedList<ServiceCall> currentCalls, InjectedElement injEl, HashMap<String, ServiceStat> ssList, DataSeries[] seriesList) {
-		super(obs.getTimestamp(), currentCalls, injEl, ssList);
+	public MultipleSnapshot(Observation obs, List<ServiceCall> callList, InjectedElement injEl, HashMap<String, ServiceStat> ssList, DataSeries[] seriesList) {
+		super(obs.getTimestamp(), callList, injEl, ssList);
 		dsMap = generateMultipleSnapshots(obs, seriesList);
 	}
 

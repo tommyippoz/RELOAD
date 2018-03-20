@@ -49,4 +49,8 @@ public class PreferencesManager {
 		return preferences.get(tag);
 	}
 
+	public boolean hasPreference(String loaderPrefFile) {
+		return preferences.containsKey(loaderPrefFile);
+	}
+
 }

@@ -10,7 +10,6 @@ import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
-import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.performance.EvaluationTiming;
@@ -23,8 +22,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class EvaluatorManager.
@@ -34,22 +35,22 @@ import java.util.LinkedList;
  */
 public class EvaluatorManager extends ThreadScheduler {
 	
-	/** The preference manager. */
-	private PreferencesManager prefManager;
-	
 	/** The output folder. */
 	private String outputFolder;
 	
-	/** The timings manager. */
-	private TimingsManager pManager;
+	/** The output format. */
+	private String outputFormat;
+	
+	/** The scores file. */
+	private String scoresFile;
 	
 	/** The experiments list. */
-	private LinkedList<ExperimentData> expList;
+	private List<ExperimentData> expList;
 	
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
-	private LinkedList<HashMap<Metric, Double>> expMetricEvaluations;
+	private List<HashMap<Metric, Double>> expMetricEvaluations;
 	
 	private EvaluationTiming eTiming;
 	
@@ -75,9 +76,9 @@ public class EvaluatorManager extends ThreadScheduler {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
-		this.prefManager = prefManager;
-		this.pManager = pManager;
+	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, List<ExperimentData> expList, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
+		this.scoresFile = scoresFile;
+		this.outputFormat = outputFormat;
 		this.expList = expList;
 		this.validationMetrics = validationMetrics;
 		this.algConvergence = algConvergence;
@@ -85,9 +86,8 @@ public class EvaluatorManager extends ThreadScheduler {
 		detectorScoreTreshold = getVoterTreshold(voterTreshold);
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
 		eTiming = new EvaluationTiming(voterTreshold, anTresholdString, detectorScoreTreshold, anomalyTreshold, loadTrainScores().size());
-		outputFolder = prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/" + voterTreshold + "_" + anTresholdString;
-		if(pManager != null)
-			AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
+		AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
 		
 	}
 	
@@ -114,14 +114,9 @@ public class EvaluatorManager extends ThreadScheduler {
 		try {
 			start();
 			join();
-			if(pManager != null) {
-				if(getThreadList().size() > 0) {
-					pManager.addTiming(TimingsManager.VALIDATION_RUNS, Double.valueOf(expList.size()));
-					pManager.addTiming(TimingsManager.VALIDATION_TIME, (double)(System.currentTimeMillis() - start));
-					pManager.addTiming(TimingsManager.AVG_VALIDATION_TIME, (System.currentTimeMillis() - start)/threadNumber()*1.0);
-					AppLogger.logInfo(getClass(), "Detection executed in " + (System.currentTimeMillis() - start) + " ms");
-				} else AppLogger.logInfo(getClass(), "Detection not executed");
-			}
+			if(getThreadList().size() > 0) {
+				AppLogger.logInfo(getClass(), "Detection executed in " + (System.currentTimeMillis() - start) + " ms");
+			} else AppLogger.logInfo(getClass(), "Detection not executed");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete evaluation phase");
 		}
@@ -155,20 +150,18 @@ public class EvaluatorManager extends ThreadScheduler {
 	 */
 	@Override
 	protected void initRun() {
-		LinkedList<AlgorithmVoter> algVoters = loadTrainScores();
-		LinkedList<ExperimentVoter> voterList = new LinkedList<ExperimentVoter>();
-		expMetricEvaluations = new LinkedList<HashMap<Metric,Double>>();
+		List<AlgorithmVoter> algVoters = loadTrainScores();
+		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(expList.size());
+		expMetricEvaluations = new ArrayList<HashMap<Metric,Double>>(voterList.size());
 		if(printOutput){
 			setupResultsFile();
 		}
-		if(algVoters.size() > 0){
+		if(algVoters != null && algVoters.size() > 0){
 			for(ExperimentData expData : expList){
 				voterList.add(new ExperimentVoter(expData, algVoters, eTiming));
 			}
 		}
 		setThreadList(voterList);
-		if(pManager != null)
-			pManager.addTiming(TimingsManager.SELECTED_ANOMALY_CHECKERS, Double.valueOf(voterList.size()));
 	}
 
 	/* (non-Javadoc)
@@ -184,7 +177,7 @@ public class EvaluatorManager extends ThreadScheduler {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		expMetricEvaluations.add(((ExperimentVoter)t).printVoting(prefManager.getPreference(DetectionManager.OUTPUT_FORMAT), outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+		expMetricEvaluations.add(((ExperimentVoter)t).printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
 	}
 	
 	/**
@@ -194,8 +187,7 @@ public class EvaluatorManager extends ThreadScheduler {
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
 	private LinkedList<AlgorithmVoter> loadTrainScores() {
-		String filename = prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + prefManager.getPreference(DetectionManager.SCORES_FILE);
-		File asFile = new File(filename);
+		File asFile = new File(scoresFile);
 		BufferedReader reader;
 		AlgorithmConfiguration conf;
 		String[] splitted;
@@ -212,7 +204,7 @@ public class EvaluatorManager extends ThreadScheduler {
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = readed.split("§");
-							if(splitted.length > 3 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList)){
+							if(splitted.length > 3 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
 								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 4 ? splitted[4] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
@@ -233,7 +225,7 @@ public class EvaluatorManager extends ThreadScheduler {
 					}
 				}
 				reader.close();
-			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + filename + "'");
+			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + scoresFile + "'");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}
@@ -256,9 +248,9 @@ public class EvaluatorManager extends ThreadScheduler {
 		}
 	}
 	
-	private boolean checkAnomalyTreshold(Double newMetricValue, LinkedList<AlgorithmVoter> voterList) {
+	private boolean checkAnomalyTreshold(Double newMetricValue, int nVoters) {
 		if(Math.abs(detectorScoreTreshold) > 1)
-			return voterList.size() < Math.abs(detectorScoreTreshold);
+			return nVoters < Math.abs(detectorScoreTreshold);
 		else return newMetricValue >= detectorScoreTreshold;
 	}
 
@@ -297,7 +289,7 @@ public class EvaluatorManager extends ThreadScheduler {
 		}
 	}
 
-	public LinkedList<HashMap<Metric, Double>> getMetricsEvaluations() {
+	public List<HashMap<Metric, Double>> getMetricsEvaluations() {
 		return expMetricEvaluations;
 	}
 	

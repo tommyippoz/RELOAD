@@ -9,6 +9,7 @@ import ippoz.multilayer.detector.commons.failure.InjectedElement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -31,7 +32,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
 		int detectionHits = 0;
 		Snapshot snap;
 		LinkedList<InjectedElement> overallInj = new LinkedList<InjectedElement>(); 

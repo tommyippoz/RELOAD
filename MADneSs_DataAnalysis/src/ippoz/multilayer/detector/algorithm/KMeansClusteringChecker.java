@@ -217,7 +217,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 	}
 
 	@Override
-	public void automaticTraining(LinkedList<ExperimentData> expList) {
+	public void automaticTraining(List<ExperimentData> expList) {
 		// TODO Auto-generated method stub
 		
 	}

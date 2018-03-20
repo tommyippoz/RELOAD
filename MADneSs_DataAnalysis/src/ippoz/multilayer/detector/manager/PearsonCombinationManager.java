@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -34,17 +35,17 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 public class PearsonCombinationManager {
 	
 	private File indexesFile;
-	private LinkedList<DataSeries> seriesList;
+	private List<DataSeries> seriesList;
 	private TrainingTiming tTiming;
-	private LinkedList<ExperimentData> expList;
+	private List<ExperimentData> expList;
 	private HashMap<DataSeries, HashMap<String, double[]>> seriesExpData;
 	private LinkedList<PearsonResult> pResults;
 	
-	public PearsonCombinationManager(File indexesFile, LinkedList<DataSeries> seriesList, TrainingTiming tTiming, LinkedList<ExperimentData> expList){
+	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, TrainingTiming tTiming, List<ExperimentData> expList2){
 		this.indexesFile = indexesFile;
 		this.seriesList = seriesList;
 		this.tTiming = tTiming;
-		this.expList = expList;
+		this.expList = expList2;
 		initExpData();
 	}
 	

@@ -9,7 +9,6 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
-import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.performance.TrainingTiming;
@@ -28,6 +27,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -36,14 +36,17 @@ import java.util.Map.Entry;
  */
 public class FilterManager extends ThreadScheduler {
 	
-	/** The preference manager. */
-	private PreferencesManager prefManager;
+	/** The setup folder. */
+	private String setupFolder;
 	
-	/** The timing manager. */
-	private TimingsManager pManager;
+	/** The data series domain. */
+	private String dsDomain;
+	
+	/** The scores folder. */
+	private String scoresFolder;
 	
 	/** The experiments list. */
-	private LinkedList<ExperimentData> goldenExps;
+	private List<ExperimentData> goldenExps;
 	
 	/** The possible configurations. */
 	private HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList;
@@ -55,10 +58,10 @@ public class FilterManager extends ThreadScheduler {
 	private Reputation reputation;
 	
 	/** The list of indicators. */
-	private LinkedList<DataSeries> seriesList;
+	private List<DataSeries> seriesList;
 	
 	/** The algorithm types. */
-	private LinkedList<AlgorithmType> algTypes;
+	private List<AlgorithmType> algTypes;
 	
 	private TrainingTiming tTiming;
 	
@@ -75,10 +78,11 @@ public class FilterManager extends ThreadScheduler {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private FilterManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, LinkedList<AlgorithmType> algTypes, double ftreshold) {
-		super(2);
-		this.prefManager = prefManager;
-		this.pManager = pManager;
+	private FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, double ftreshold) {
+		super();
+		this.setupFolder = setupFolder;
+		this.dsDomain = dsDomain;
+		this.scoresFolder = scoresFolder;
 		this.goldenExps = expList;
 		this.confList = confList;
 		this.metric = metric;
@@ -93,17 +97,17 @@ public class FilterManager extends ThreadScheduler {
 	 *
 	 * @param prefManager the preference manager
 	 * @param pManager the timing manager
-	 * @param expList the experiment list
+	 * @param list the experiment list
 	 * @param confList the configuration list
 	 * @param metric the chosen metric
 	 * @param reputation the chosen reputation metric
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public FilterManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LinkedList<AlgorithmType> algTypes, double ftreshold) {
-		this(prefManager, pManager, expList, confList, metric, reputation, algTypes, ftreshold);
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<ExperimentData> list, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double ftreshold) {
+		this(setupFolder, dsDomain, scoresFolder, list, confList, metric, reputation, algTypes, ftreshold);
 		if(!checkCorrelationInfo()){
-			pearsonCorrelation(DataSeries.simpleCombinations(goldenExps.getFirst().getIndicators(), dataTypes));
+			pearsonCorrelation(DataSeries.simpleCombinations(goldenExps.get(0).getIndicators(), dataTypes));
 		}
 		seriesList = generateDataSeries(dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
@@ -111,14 +115,14 @@ public class FilterManager extends ThreadScheduler {
 	
 	private void pearsonCorrelation(LinkedList<DataSeries> list) {
 		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+		File pearsonFile = new File(setupFolder + "pearsonCombinations.csv");
 		pcManager = new PearsonCombinationManager(pearsonFile, list, tTiming, goldenExps);
 		pcManager.calculatePearsonIndexes();
 		pcManager.flush();
 	}
 
 	private boolean checkCorrelationInfo() {
-		return new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv").exists();
+		return new File(setupFolder + "pearsonCombinations.csv").exists();
 	}
 
 	private LinkedList<Entry<String, String>> readPossibleIndCombinations(){
@@ -127,7 +131,7 @@ public class FilterManager extends ThreadScheduler {
 	
 	private LinkedList<Entry<String, String>> readPearsonCombinations(double treshold){
 		LinkedList<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
-		File pFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+		File pFile = new File(setupFolder + "pearsonCombinations.csv");
 		BufferedReader reader;
 		String readed;
 		try {
@@ -153,7 +157,7 @@ public class FilterManager extends ThreadScheduler {
 	}
 
 	private LinkedList<Entry<String, String>> readIndCombinations(String filename){
-		return readIndCombinations(new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + filename));
+		return readIndCombinations(new File(setupFolder + filename));
 	}
 	
 	private LinkedList<Entry<String, String>> readIndCombinations(File indCoupleFile){
@@ -181,14 +185,13 @@ public class FilterManager extends ThreadScheduler {
 	}
 
 	private LinkedList<DataSeries> generateDataSeries(DataCategory[] dataTypes) {
-		String complexDataPreference = prefManager.getPreference(DetectionManager.DATA_SERIES_DOMAIN);
-		if(complexDataPreference.equals("ALL")){
-			return DataSeries.allCombinations(goldenExps.getFirst().getIndicators(), dataTypes);
-		} else if(complexDataPreference.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(goldenExps.getFirst().getIndicators(), dataTypes);
-		} else if(complexDataPreference.contains("PEARSON") && complexDataPreference.contains("(") && complexDataPreference.contains(")")){
-			return DataSeries.selectedCombinations(goldenExps.getFirst().getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(complexDataPreference.substring(complexDataPreference.indexOf("(")+1, complexDataPreference.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(goldenExps.getFirst().getIndicators(), dataTypes, readPossibleIndCombinations());
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(goldenExps.get(0).getIndicators(), dataTypes);
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(goldenExps.get(0).getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			return DataSeries.selectedCombinations(goldenExps.get(0).getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(goldenExps.get(0).getIndicators(), dataTypes, readPossibleIndCombinations());
 	}
 
 	/**
@@ -230,7 +233,6 @@ public class FilterManager extends ThreadScheduler {
 	 */
 	@Override
 	protected void initRun(){
-		long initStartTime = System.currentTimeMillis();
 		AppLogger.logInfo(getClass(), "Train Started");
 		LinkedList<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		for(AlgorithmType algType : algTypes){
@@ -241,7 +243,7 @@ public class FilterManager extends ThreadScheduler {
 						break;
 					case PEA:
 						PearsonCombinationManager pcManager;
-						File pearsonFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+						File pearsonFile = new File(setupFolder + "pearsonCombinations.csv");
 						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, tTiming, goldenExps);
 						pcManager.calculatePearsonIndexes();
 						trainerList.addAll(pcManager.getTrainers(metric, reputation, confList));
@@ -257,8 +259,6 @@ public class FilterManager extends ThreadScheduler {
 			} else AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration");	
 		}
 		setThreadList(trainerList);
-		pManager.addTiming(TimingsManager.TRAIN_INIT_TIME, Double.valueOf(System.currentTimeMillis() - initStartTime));
-		pManager.addTiming(TimingsManager.ANOMALY_CHECKERS, Double.valueOf(trainerList.size()));
 	}
 
 	/* (non-Javadoc)
@@ -286,7 +286,7 @@ public class FilterManager extends ThreadScheduler {
 	private void saveFilteredSeries(LinkedList<DataSeries> list, String filename) {
 		BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(scoresFolder + filename)));
 			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
 			for(DataSeries ds : list){
 				writer.write(ds.toString() + "\n");			

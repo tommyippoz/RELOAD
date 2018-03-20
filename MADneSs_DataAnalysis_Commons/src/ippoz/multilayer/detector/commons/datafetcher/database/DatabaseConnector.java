@@ -17,6 +17,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ibatis.common.jdbc.ScriptRunner;
 
@@ -100,7 +101,7 @@ public class DatabaseConnector {
 	 * @param query the SQL query
 	 * @return the array list containing the results of the query
 	 */
-	protected ArrayList<HashMap<String, String>> executeQuery(String query){
+	protected List<HashMap<String, String>> executeQuery(String query){
 		Statement stmt = null;
 		ResultSet rs = null;
 		try {
@@ -130,7 +131,7 @@ public class DatabaseConnector {
 	 * @param query the query
 	 * @return the resulting arraylist
 	 */
-	public ArrayList<HashMap<String, String>> executeCustomQuery(String[] params, String query){
+	public List<HashMap<String, String>> executeCustomQuery(String[] params, String query){
 		int i = 0;
 		while(query.indexOf("?") != -1){
 			if(params.length <= i){
@@ -150,7 +151,7 @@ public class DatabaseConnector {
 	 * @param orders the order clauses
 	 * @return the resulting arraylist
 	 */
-	public ArrayList<HashMap<String, String>> executeBuildedQuery(String[] params, String[] tables, String filter, String[] orders){
+	public List<HashMap<String, String>> executeBuildedQuery(String[] params, String[] tables, String filter, String[] orders){
 		return executeQuery(buildQuery(params, tables, filter, orders));
 	}
 	
@@ -190,9 +191,9 @@ public class DatabaseConnector {
 	 * @param rs the result set
 	 * @return the array list
 	 */
-	protected static ArrayList<HashMap<String, String>> parseResultSet(ResultSet rs){
+	protected static List<HashMap<String, String>> parseResultSet(ResultSet rs){
 		HashMap<String, String> partial;
-		ArrayList<HashMap<String, String>> list = null;
+		List<HashMap<String, String>> list = null;
 		try {
 			list = new ArrayList<HashMap<String, String>>();
 			rs.beforeFirst();

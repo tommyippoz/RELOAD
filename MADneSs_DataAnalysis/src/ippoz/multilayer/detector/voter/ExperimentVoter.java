@@ -4,6 +4,7 @@
 package ippoz.multilayer.detector.voter;
 
 import ippoz.madness.commons.layers.LayerType;
+import ippoz.madness.commons.support.CustomArrayList;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.data.Snapshot;
@@ -21,9 +22,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -49,7 +51,7 @@ public class ExperimentVoter extends Thread {
 	private String expName;
 	
 	/** The algorithm list. */
-	private LinkedList<AlgorithmVoter> algList;
+	private CustomArrayList<AlgorithmVoter> algList;
 	
 	/** The complete results of the voting. */
 	private TreeMap<Date, HashMap<AlgorithmVoter, Double>> partialVoting;
@@ -58,7 +60,7 @@ public class ExperimentVoter extends Thread {
 	private TreeMap<Date, Double> voting;
 	
 	/** The list of the snapshots for each voter */
-	private LinkedList<HashMap<AlgorithmVoter, Snapshot>> expSnapMap;
+	private CustomArrayList<HashMap<AlgorithmVoter, Snapshot>> expSnapMap;
 	
 	private EvaluationTiming eTiming;
 	
@@ -66,20 +68,20 @@ public class ExperimentVoter extends Thread {
 	 * Instantiates a new experiment voter.
 	 *
 	 * @param expData the experiment data
-	 * @param algList the algorithm list
+	 * @param algVoters the algorithm list
 	 * @param pManager 
 	 */
-	public ExperimentVoter(ExperimentData expData, LinkedList<AlgorithmVoter> algList, EvaluationTiming eTiming) {
+	public ExperimentVoter(ExperimentData expData, List<AlgorithmVoter> algVoters, EvaluationTiming eTiming) {
 		super();
 		this.expName = expData.getName();
-		this.algList = deepClone(algList);
+		this.algList = deepClone(algVoters);
 		this.eTiming = eTiming;
 		expSnapMap = loadExpAlgSnapshots(expData);
 	}
 	
-	private LinkedList<HashMap<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
+	private CustomArrayList<HashMap<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
 		HashMap<AlgorithmVoter, Snapshot> newMap;
-		LinkedList<HashMap<AlgorithmVoter, Snapshot>> expAlgMap = new LinkedList<HashMap<AlgorithmVoter, Snapshot>>();
+		CustomArrayList<HashMap<AlgorithmVoter, Snapshot>> expAlgMap = new CustomArrayList<HashMap<AlgorithmVoter, Snapshot>>(expData.getSnapshotNumber());
 		for(int i=0;i<expData.getSnapshotNumber();i++){
 			newMap = new HashMap<AlgorithmVoter, Snapshot>();
 			for(AlgorithmVoter aVoter : algList){
@@ -93,13 +95,13 @@ public class ExperimentVoter extends Thread {
 	/**
 	 * Deep clone of the voters' list.
 	 *
-	 * @param algorithms the algorithms
+	 * @param algVoters the algorithms
 	 * @return the deep-cloned list
 	 */
-	private LinkedList<AlgorithmVoter> deepClone(LinkedList<AlgorithmVoter> algorithms) {
-		LinkedList<AlgorithmVoter> list = new LinkedList<AlgorithmVoter>();
+	private CustomArrayList<AlgorithmVoter> deepClone(List<AlgorithmVoter> algVoters) {
+		CustomArrayList<AlgorithmVoter> list = new CustomArrayList<AlgorithmVoter>(algVoters.size());
 		try {
-			for(AlgorithmVoter aVoter : algorithms){
+			for(AlgorithmVoter aVoter : algVoters){
 				list.add(aVoter.clone());
 			}
 		} catch (CloneNotSupportedException ex) {
@@ -218,8 +220,8 @@ public class ExperimentVoter extends Thread {
 		return metResults;
 	}
 
-	private LinkedList<Snapshot> getSimpleSnapshotList() {
-		LinkedList<Snapshot> simpleList = new LinkedList<Snapshot>();
+	private List<Snapshot> getSimpleSnapshotList() {
+		List<Snapshot> simpleList = new ArrayList<Snapshot>(expSnapMap.size());
 		for(HashMap<AlgorithmVoter, Snapshot> map : expSnapMap){
 			simpleList.add(map.get(algList.getFirst()));
 		}
@@ -242,7 +244,7 @@ public class ExperimentVoter extends Thread {
 		hist.saveToFile(outFolderName + "/voter/graphic/" + expName + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
 	
-	private TreeMap<Double, Double> convertFailures(LinkedList<HashMap<AlgorithmVoter, Snapshot>> expSnapMap) {
+	private TreeMap<Double, Double> convertFailures(CustomArrayList<HashMap<AlgorithmVoter, Snapshot>> expSnapMap) {
 		TreeMap<Date, Double> treeMap = new TreeMap<Date, Double>();
 		for(HashMap<AlgorithmVoter, Snapshot> map : expSnapMap){
 			if(map.get(algList.getFirst()).getInjectedElement() != null){

@@ -9,7 +9,7 @@ import ippoz.multilayer.detector.commons.support.AppUtility;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -27,7 +27,7 @@ public abstract class Metric {
 	 * @param expData the experiment data
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, LinkedList<Snapshot> snapList){
+	public double[] evaluateMetric(DetectionAlgorithm alg, List<Snapshot> snapList){
 		Snapshot currentSnapshot;
 		double average;
 		HashMap<Date, Double> anomalyEvaluations = new HashMap<Date, Double>();
@@ -46,8 +46,6 @@ public abstract class Metric {
 		else return super.equals(obj);
 	}
 
-
-
 	/**
 	 * Evaluates anomaly results coming from evaluations of all the snapshot of an experiment.
 	 *
@@ -55,7 +53,7 @@ public abstract class Metric {
 	 * @param anomalyEvaluations the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(List<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations);
 
 	/**
 	 * Returns the anomaly evaluation for the given input data.
@@ -65,12 +63,12 @@ public abstract class Metric {
 	 * @param anomalyTreshold the anomaly threshold
 	 * @return the global anomaly evaluation
 	 */
-	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, TreeMap<Date, Double> voting, double anomalyTreshold) {
+	public double evaluateAnomalyResults(List<Snapshot> customArrayList, TreeMap<Date, Double> voting, double anomalyTreshold) {
 		HashMap<Date, Double> convertedMap = new HashMap<Date, Double>(); 
 		for(Date date : voting.keySet()){
 			convertedMap.put(date, voting.get(date)/anomalyTreshold*1.0);
 		}
-		return evaluateAnomalyResults(snapList, convertedMap);
+		return evaluateAnomalyResults(customArrayList, convertedMap);
 	}
 	
 	/**

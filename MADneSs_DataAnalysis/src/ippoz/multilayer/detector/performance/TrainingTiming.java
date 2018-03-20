@@ -10,6 +10,7 @@ import ippoz.multilayer.detector.trainer.AlgorithmTrainer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -34,7 +35,7 @@ public class TrainingTiming {
 		algTrainingTimes.get(algType).add(new TrainingDetail(confNumber, time));
 	}
 	
-	public void addAlgorithmScores(LinkedList<? extends Thread> list) {
+	public void addAlgorithmScores(List<? extends Thread> list) {
 		AlgorithmTrainer trainer;
 		resList = new LinkedList<TrainingResult>();
 		for(Thread tThread : list){
@@ -42,7 +43,7 @@ public class TrainingTiming {
 			resList.add(new TrainingResult(trainer.getAlgType(), trainer.getMetricScore()));
 		}
 		Collections.sort(resList);
-		computeStats(((AlgorithmTrainer)list.getFirst()).getExpNumber());
+		computeStats(((AlgorithmTrainer)list.iterator().next()).getExpNumber());
 	}
 	
 	public String getHeader() {

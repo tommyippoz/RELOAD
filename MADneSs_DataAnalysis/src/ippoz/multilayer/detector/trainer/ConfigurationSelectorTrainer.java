@@ -18,6 +18,7 @@ import ippoz.multilayer.detector.reputation.Reputation;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class ConfigurationSelectorTrainer.
@@ -38,10 +39,10 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param dataSeries the chosen data series
 	 * @param metric the used metric
 	 * @param reputation the used reputation metric
-	 * @param trainData the considered train data
+	 * @param expList the considered train data
 	 */
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, LinkedList<ExperimentData> trainData, LinkedList<AlgorithmConfiguration> basicConfigurations) {
-		super(algTag, dataSeries, metric, reputation, tTiming, trainData);
+	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, List<ExperimentData> expList, LinkedList<AlgorithmConfiguration> basicConfigurations) {
+		super(algTag, dataSeries, metric, reputation, tTiming, expList);
 		configurations = confClone(basicConfigurations);
 	}
 	

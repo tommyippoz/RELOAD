@@ -5,7 +5,7 @@ package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Interface AutomaticTrainingAlgorithm.
@@ -18,9 +18,9 @@ public interface AutomaticTrainingAlgorithm {
 	/**
 	 * Automatic training.
 	 *
-	 * @param expList the training data, formatted as an hashmap with experimentName -> list of snapshots
+	 * @param list the training data, formatted as an hashmap with experimentName -> list of snapshots
 	 * @return the chosen algorithm configuration
 	 */
-	public void automaticTraining(LinkedList<ExperimentData> expList);
+	public void automaticTraining(List<ExperimentData> list);
 	
 }

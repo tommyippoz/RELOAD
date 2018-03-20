@@ -7,7 +7,7 @@ import ippoz.multilayer.detector.commons.data.Snapshot;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class Recall_Metric.
@@ -25,7 +25,7 @@ public class Recall_Metric extends BetterMaxMetric {
 	 * @see ippoz.multilayer.detector.metric.Metric#evaluateAnomalyResults(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
 		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
 		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
 		if(tp + fn > 0)

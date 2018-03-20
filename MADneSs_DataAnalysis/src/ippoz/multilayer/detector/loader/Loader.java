@@ -5,7 +5,7 @@ package ippoz.multilayer.detector.loader;
 
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -13,7 +13,7 @@ import java.util.LinkedList;
  */
 public interface Loader {
 	
-	public abstract LinkedList<ExperimentData> fetch();
+	public abstract List<ExperimentData> fetch();
 	
 	public abstract String getRuns();
 	

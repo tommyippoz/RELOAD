@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -140,7 +140,7 @@ public class AppUtility {
 		return calcStd(values.toArray(new Double[values.size()]), mean);
 	}
 	
-	public static Double calcStd(LinkedList<Integer> values, Double mean){
+	public static Double calcStd(List<Integer> values, Double mean){
 		double std = 0;
 		for(Integer d : values){
 			std = std + Math.pow(d-mean, 2);

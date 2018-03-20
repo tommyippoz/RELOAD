@@ -17,8 +17,10 @@ import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class DatabaseManager.
@@ -45,7 +47,7 @@ public class DatabaseManager {
 	 * @param password the database password
 	 * @param runId the runID
 	 */
-	public DatabaseManager(String dbName, String username, String password, String runId, LinkedList<LayerType> selectedLayers){
+	public DatabaseManager(String dbName, String username, String password, String runId, List<LayerType> selectedLayers){
 		try {
 			this.runId = runId;
 			connector = new DatabaseConnector(dbName, username, password, false);
@@ -59,7 +61,7 @@ public class DatabaseManager {
 	 * Load system layers.
 	 * @param selectedLayers 
 	 */
-	private void loadSystemLayers(LinkedList<LayerType> selectedLayers) {
+	private void loadSystemLayers(List<LayerType> selectedLayers) {
 		layers = new HashMap<String, LayerType>();
 		for(HashMap<String, String> ptMap : connector.executeCustomQuery(null, "select * from probe_type")){
 			if(selectedLayers.contains(LayerType.valueOf(ptMap.get("pt_description"))))
@@ -82,11 +84,12 @@ public class DatabaseManager {
 	 *
 	 * @return the run observations
 	 */
-	public LinkedList<Observation> getRunObservations() {
+	public List<Observation> getRunObservations() {
 		Observation obs;
-		LinkedList<Observation> obsList = new LinkedList<Observation>();
 		HashMap<DataCategory, String> indData;
-		for(HashMap<String, String> obsMap : connector.executeCustomQuery(null, "select observation_id, ob_time from observation where run_id = " + runId)){
+		List<HashMap<String, String>> queryMap = connector.executeCustomQuery(null, "select observation_id, ob_time from observation where run_id = " + runId);
+		List<Observation> obsList = new ArrayList<Observation>(queryMap.size());
+		for(HashMap<String, String> obsMap : queryMap){
 			obs = new Observation(obsMap.get("ob_time"));
 			for(HashMap<String, String> indObs : connector.executeCustomQuery(null, "select indicator_observation_id, probe_type_id, in_tag from indicator natural join indicator_observation where observation_id = " + obsMap.get("observation_id"))) {
 				if(layers.get(indObs.get("probe_type_id")) != null){
@@ -138,9 +141,10 @@ public class DatabaseManager {
 	 *
 	 * @return the injections
 	 */
-	public LinkedList<InjectedElement> getInjections() {
-		LinkedList<InjectedElement> injList = new LinkedList<InjectedElement>();
-		for(HashMap<String, String> injInfo : connector.executeCustomQuery(null, "select * from failure natural join failure_type where run_id = " + runId + " order by fa_time")){
+	public List<InjectedElement> getInjections() {
+		List<HashMap<String, String>> queryMap = connector.executeCustomQuery(null, "select * from failure natural join failure_type where run_id = " + runId + " order by fa_time");
+		List<InjectedElement> injList = new ArrayList<InjectedElement>(queryMap.size());
+		for(HashMap<String, String> injInfo : queryMap){
 			injList.add(new InjectedElement(AppUtility.convertStringToDate(injInfo.get("fa_time")), injInfo.get("fa_description"), Integer.parseInt(injInfo.get("fa_duration"))));
 		}
 		return injList;
@@ -160,12 +164,12 @@ public class DatabaseManager {
 	 *
 	 * @return the performance timings
 	 */
-	public HashMap<String, HashMap<LayerType, LinkedList<Integer>>> getPerformanceTimings() {
+	public HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings() {
 		String perfType;
-		HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings = new HashMap<String, HashMap<LayerType, LinkedList<Integer>>>();
+		HashMap<String, HashMap<LayerType, List<Integer>>> timings = new HashMap<String, HashMap<LayerType, List<Integer>>>();
 		for(HashMap<String, String> perfIndexes : connector.executeCustomQuery(null, "select * from performance_type")){
 			perfType = perfIndexes.get("pet_description");
-			timings.put(perfType, new HashMap<LayerType, LinkedList<Integer>>());
+			timings.put(perfType, new HashMap<LayerType, List<Integer>>());
 			for(HashMap<String, String> timing : connector.executeCustomQuery(null, "select * from performance where run_id = " + runId + " and performance_type_id = " + perfIndexes.get("performance_type_id"))){
 				if(timings.get(perfType).get(layers.get(timing.get("probe_type_id"))) == null){
 					timings.get(perfType).put(layers.get(timing.get("probe_type_id")), new LinkedList<Integer>());

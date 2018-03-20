@@ -13,7 +13,7 @@ import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class DatabaseFetcher.
@@ -34,7 +34,7 @@ public class DatabaseFetcher extends DataFetcher {
 	
 	private String password;
 	
-	private LinkedList<LayerType> selectedLayers;
+	private List<LayerType> selectedLayers;
 	
 	/**
 	 * Instantiates a new database fetcher.
@@ -44,7 +44,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @param password the database password
 	 * @param dbPassword 
 	 */
-	public DatabaseFetcher(String runId, String dbName, String username, String password, LinkedList<LayerType> selectedLayers){
+	public DatabaseFetcher(String runId, String dbName, String username, String password, List<LayerType> selectedLayers){
 		this.runId = runId;
 		this.dbName = dbName;
 		this.username = username;
@@ -60,7 +60,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getObservations()
 	 */
 	@Override
-	protected LinkedList<Observation> getObservations() {
+	protected List<Observation> getObservations() {
 		return dbManager.getRunObservations();
 	}
 
@@ -68,7 +68,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getServiceCalls()
 	 */
 	@Override
-	protected LinkedList<ServiceCall> getServiceCalls() {
+	protected List<ServiceCall> getServiceCalls() {
 		return dbManager.getServiceCalls();
 	}
 
@@ -84,7 +84,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getInjections()
 	 */
 	@Override
-	protected LinkedList<InjectedElement> getInjections() {
+	protected List<InjectedElement> getInjections() {
 		return dbManager.getInjections();
 	}
 
@@ -113,7 +113,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getPerformanceTimings()
 	 */
 	@Override
-	protected HashMap<String, HashMap<LayerType, LinkedList<Integer>>> getPerformanceTimings() {
+	protected HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings() {
 		return dbManager.getPerformanceTimings();
 	}
 

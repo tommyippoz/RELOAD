@@ -10,8 +10,6 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
-import ippoz.multilayer.detector.commons.invariants.DataSeriesMember;
-import ippoz.multilayer.detector.commons.invariants.Invariant;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 
@@ -19,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class ExperimentData.
@@ -32,36 +31,36 @@ public class ExperimentData implements Cloneable {
 	private String expName; 
 	
 	/** The service call list. */
-	private LinkedList<ServiceCall> callList;
+	private List<ServiceCall> callList;
 	
 	/** The injections list. */
-	private LinkedList<InjectedElement> injList;
+	private List<InjectedElement> injList;
 	
 	/** The service statistics list. */
 	private HashMap<String, ServiceStat> ssList;
 	
 	/** The timings. */
-	private HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings;
+	private HashMap<String, HashMap<LayerType, List<Integer>>> timings;
 	
 	/** The observation list. */
-	private LinkedList<Observation> obsList;
+	private List<Observation> obsList;
 	
 	/** The snapshot list. */
-	private ArrayList<Snapshot> snapList;
+	private List<Snapshot> snapList;
 	
 	/**
 	 * Instantiates a new experiment data.
 	 *
 	 * @param expID the experiment id
-	 * @param obsList the observation list
-	 * @param callList the service call list
-	 * @param injList the injections list
+	 * @param oList the observation list
+	 * @param sList the service call list
+	 * @param iList the injections list
 	 * @param ssList the service stats list
-	 * @param timings the timings
+	 * @param hashMap the timings
 	 */
-	public ExperimentData(String expID, LinkedList<Observation> obsList, LinkedList<ServiceCall> callList, LinkedList<InjectedElement> injList, HashMap<String, ServiceStat> ssList, HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings){
-		this(expID, obsList, new ArrayList<Snapshot>(), callList, injList, ssList, timings);
-		snapList = buildSnapshots(obsList);
+	public ExperimentData(String expID, List<Observation> oList, List<ServiceCall> sList, List<InjectedElement> iList, HashMap<String, ServiceStat> ssList, HashMap<String, HashMap<LayerType, List<Integer>>> timings){
+		this(expID, oList, new ArrayList<Snapshot>(), sList, iList, ssList, timings);
+		snapList = buildSnapshots(oList);
 	}
 	
 	/**
@@ -72,7 +71,7 @@ public class ExperimentData implements Cloneable {
 	 * @param injList the injections list
 	 * @param timings the timings
 	 */
-	public ExperimentData(String expID, LinkedList<Observation> obsList, LinkedList<InjectedElement> injList, HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings){
+	public ExperimentData(String expID, LinkedList<Observation> obsList, LinkedList<InjectedElement> injList, HashMap<String, HashMap<LayerType, List<Integer>>> timings){
 		this(expID, obsList, null, injList, null, timings);
 	}
 	
@@ -86,7 +85,7 @@ public class ExperimentData implements Cloneable {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public ExperimentData(String expID, LinkedList<Observation> obsList, ArrayList<Snapshot> snapList, LinkedList<ServiceCall> callList, LinkedList<InjectedElement> injList, HashMap<String, ServiceStat> ssList, HashMap<String, HashMap<LayerType, LinkedList<Integer>>> timings){
+	public ExperimentData(String expID, List<Observation> obsList, List<Snapshot> snapList, List<ServiceCall> callList, List<InjectedElement> injList, HashMap<String, ServiceStat> ssList, HashMap<String, HashMap<LayerType, List<Integer>>> timings){
 		expName = "exp" + expID;
 		this.obsList = obsList;
 		this.snapList = snapList;
@@ -117,11 +116,11 @@ public class ExperimentData implements Cloneable {
 	/**
 	 * Builds the snapshots of the experiment depending on the observations.
 	 */
-	private ArrayList<Snapshot> buildSnapshots(LinkedList<Observation> obsList) {
+	private List<Snapshot> buildSnapshots(List<Observation> obsList) {
 		int injIndex = 0;
-		LinkedList<ServiceCall> currentCalls;
+		List<ServiceCall> currentCalls;
 		InjectedElement currentInj;
-		ArrayList<Snapshot> builtSnap = new ArrayList<Snapshot>();
+		List<Snapshot> builtSnap = new ArrayList<Snapshot>(obsList.size());
 		for(Observation obs : obsList){
 			currentCalls = new LinkedList<ServiceCall>();
 			if(callList != null) {
@@ -164,7 +163,7 @@ public class ExperimentData implements Cloneable {
 	 *
 	 * @return the injections
 	 */
-	public LinkedList<InjectedElement> getInjections() {
+	public List<InjectedElement> getInjections() {
 		return injList;
 	}
 	
@@ -182,7 +181,7 @@ public class ExperimentData implements Cloneable {
 	 *
 	 * @return the monitor performance indexes
 	 */
-	public HashMap<String, HashMap<LayerType, LinkedList<Integer>>> getMonitorPerformanceIndexes() {
+	public HashMap<String, HashMap<LayerType, List<Integer>>> getMonitorPerformanceIndexes() {
 		return timings;
 	}
 
@@ -208,7 +207,7 @@ public class ExperimentData implements Cloneable {
 	}
 	
 	private MultipleSnapshot getMultipleSnapshot(int index, String textItem) {
-		LinkedList<DataSeries> sList = new LinkedList<DataSeries>();
+		List<DataSeries> sList = new LinkedList<DataSeries>();
 		sList.add(DataSeries.fromString(textItem.split(";")[0], true));
 		sList.add(DataSeries.fromString(textItem.split(";")[1], true));
 		return new MultipleSnapshot(obsList.get(index), callList, snapList.get(index).getInjectedElement(), ssList, sList.toArray(new DataSeries[sList.size()]));

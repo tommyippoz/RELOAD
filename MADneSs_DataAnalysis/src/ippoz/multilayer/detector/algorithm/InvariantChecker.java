@@ -12,6 +12,7 @@ import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
@@ -115,7 +116,7 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 		return cScore;
 	}
 
-	private double[][] buildMatrix(LinkedList<ExperimentData> expList){
+	private double[][] buildMatrix(List<ExperimentData> expList){
 		int count = 0;
 		for(ExperimentData ed : expList){
 			if(ed.getSnapshotNumber() > window)
@@ -125,7 +126,7 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 	}
 
 	@Override
-	public void automaticTraining(LinkedList<ExperimentData> expList) {
+	public void automaticTraining(List<ExperimentData> expList) {
 		int rowIndex = 0;
 		double[][] x = buildMatrix(expList);
 		double[] y = new double[x.length];

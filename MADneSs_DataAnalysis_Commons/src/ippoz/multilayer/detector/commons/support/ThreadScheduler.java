@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.commons.support;
 
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class ThreadScheduler.
@@ -14,7 +14,7 @@ import java.util.LinkedList;
 public abstract class ThreadScheduler extends Thread {
 	
 	/** The thread list. */
-	private LinkedList<? extends Thread> tList;
+	private List<? extends Thread> tList;
 	
 	/** The load factor. */
 	private int loadFactor;
@@ -23,10 +23,10 @@ public abstract class ThreadScheduler extends Thread {
 	private int nProc;
 	
 	/**
-	 * Instantiates a new thread scheduler with a default load factor.
+	 * Instantiates a new thread scheduler with a default load factor (2*logical cores).
 	 */
 	public ThreadScheduler(){
-		this(null, 4);
+		this(null, 2*Runtime.getRuntime().availableProcessors());
 	}
 	
 	/**
@@ -44,7 +44,7 @@ public abstract class ThreadScheduler extends Thread {
 	 * @param tList the thread list
 	 * @param loadFactor the load factor
 	 */
-	public ThreadScheduler(LinkedList<? extends Thread> tList, int loadFactor){
+	public ThreadScheduler(List<? extends Thread> tList, int loadFactor){
 		this.tList = tList;
 		this.loadFactor = loadFactor;
 		nProc = Runtime.getRuntime().availableProcessors();
@@ -53,10 +53,10 @@ public abstract class ThreadScheduler extends Thread {
 	/**
 	 * Sets the thread list.
 	 *
-	 * @param tList the new thread list
+	 * @param trainerList the new thread list
 	 */
-	public void setThreadList(LinkedList<? extends Thread> tList){
-		this.tList = tList;
+	public void setThreadList(List<? extends Thread> trainerList){
+		this.tList = trainerList;
 	}
 	
 	/**
@@ -64,7 +64,7 @@ public abstract class ThreadScheduler extends Thread {
 	 *
 	 * @return the thread list
 	 */
-	public LinkedList<? extends Thread> getThreadList() {
+	public List<? extends Thread> getThreadList() {
 		return tList;
 	}
 	

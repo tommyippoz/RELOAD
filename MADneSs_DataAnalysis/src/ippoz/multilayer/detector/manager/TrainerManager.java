@@ -10,7 +10,6 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.support.AppLogger;
-import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.metric.Metric;
 import ippoz.multilayer.detector.performance.TrainingTiming;
@@ -29,6 +28,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -39,14 +39,20 @@ import java.util.Map.Entry;
  */
 public class TrainerManager extends ThreadScheduler {
 	
-	/** The preference manager. */
-	private PreferencesManager prefManager;
+	/** The setup folder. */
+	private String setupFolder;
 	
-	/** The timing manager. */
-	private TimingsManager pManager;
+	/** The data series domain. */
+	private String dsDomain;
+	
+	/** The scores folder. */
+	private String scoresFolder;
+	
+	/** The output folder. */
+	private String outputFolder;
 	
 	/** The experiments list. */
-	private LinkedList<ExperimentData> expList;
+	private List<ExperimentData> expList;
 	
 	/** The possible configurations. */
 	private HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList;
@@ -58,10 +64,10 @@ public class TrainerManager extends ThreadScheduler {
 	private Reputation reputation;
 	
 	/** The list of indicators. */
-	private LinkedList<DataSeries> seriesList;
+	private List<DataSeries> seriesList;
 	
 	/** The algorithm types. */
-	private LinkedList<AlgorithmType> algTypes;
+	private List<AlgorithmType> algTypes;
 	
 	private TrainingTiming tTiming;
 	
@@ -78,10 +84,12 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, LinkedList<AlgorithmType> algTypes) {
-		super(2);
-		this.prefManager = prefManager;
-		this.pManager = pManager;
+	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
+		super();
+		this.setupFolder = setupFolder;
+		this.dsDomain = dsDomain;
+		this.scoresFolder = scoresFolder;
+		this.outputFolder = outputFolder;
 		this.expList = expList;
 		this.confList = confList;
 		this.metric = metric;
@@ -100,10 +108,10 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param metric the chosen metric
 	 * @param reputation the chosen reputation metric
 	 * @param dataTypes the data types
-	 * @param algTypes the algorithm types
+	 * @param algTypes2 the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LinkedList<AlgorithmType> algTypes) {
-		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes2) {
+		this(setupFolder, dsDomain, scoresFolder, outputFolder, expList, confList, metric, reputation, algTypes2);
 		seriesList = generateDataSeries(dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -120,8 +128,8 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, LinkedList<AlgorithmType> algTypes, LinkedList<DataSeries> selectedSeries) {
-		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
+		this(setupFolder, dsDomain, scoresFolder, outputFolder, expList, confList, metric, reputation, algTypes);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -138,13 +146,13 @@ public class TrainerManager extends ThreadScheduler {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(PreferencesManager prefManager, TimingsManager pManager, LinkedList<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LinkedList<AlgorithmType> algTypes, String[] selectedSeriesString) {
-		this(prefManager, pManager, expList, confList, metric, reputation, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<ExperimentData> expList, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString) {
+		this(setupFolder, dsDomain, scoresFolder, outputFolder, expList, confList, metric, reputation, algTypes);
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	private LinkedList<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
+	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		LinkedList<DataSeries> finalDs = new LinkedList<DataSeries>();
 		LinkedList<DataSeries> all = generateDataSeries(dataTypes);
 		for(String dsString : selectedSeriesString){
@@ -165,7 +173,7 @@ public class TrainerManager extends ThreadScheduler {
 	
 	private LinkedList<Entry<String, String>> readPearsonCombinations(double treshold){
 		LinkedList<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
-		File pFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+		File pFile = new File(setupFolder + "pearsonCombinations.csv");
 		BufferedReader reader;
 		String readed;
 		try {
@@ -191,7 +199,7 @@ public class TrainerManager extends ThreadScheduler {
 	}
 
 	private LinkedList<Entry<String, String>> readIndCombinations(String filename){
-		return readIndCombinations(new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + filename));
+		return readIndCombinations(new File(setupFolder + filename));
 	}
 	
 	private LinkedList<Entry<String, String>> readIndCombinations(File indCoupleFile){
@@ -219,14 +227,13 @@ public class TrainerManager extends ThreadScheduler {
 	}
 
 	private LinkedList<DataSeries> generateDataSeries(DataCategory[] dataTypes) {
-		String complexDataPreference = prefManager.getPreference(DetectionManager.DATA_SERIES_DOMAIN);
-		if(complexDataPreference.equals("ALL")){
-			return DataSeries.allCombinations(expList.getFirst().getIndicators(), dataTypes);
-		} else if(complexDataPreference.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(expList.getFirst().getIndicators(), dataTypes);
-		} else if(complexDataPreference.contains("PEARSON") && complexDataPreference.contains("(") && complexDataPreference.contains(")")){
-			return DataSeries.selectedCombinations(expList.getFirst().getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(complexDataPreference.substring(complexDataPreference.indexOf("(")+1, complexDataPreference.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(expList.getFirst().getIndicators(), dataTypes, readPossibleIndCombinations());
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(expList.iterator().next().getIndicators(), dataTypes);
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(expList.iterator().next().getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			return DataSeries.selectedCombinations(expList.iterator().next().getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(expList.iterator().next().getIndicators(), dataTypes, readPossibleIndCombinations());
 	}
 
 	/**
@@ -273,10 +280,7 @@ public class TrainerManager extends ThreadScheduler {
 		try {
 			start();
 			join();
-			Collections.sort((LinkedList<AlgorithmTrainer>)getThreadList());
-			pManager.addTiming(TimingsManager.TRAIN_RUNS, Double.valueOf(expList.size()));
-			pManager.addTiming(TimingsManager.TRAIN_TIME, (double)(System.currentTimeMillis() - start));
-			pManager.addTiming(TimingsManager.AVG_TRAIN_TIME, ((System.currentTimeMillis() - start)/threadNumber()*1.0));
+			Collections.sort((List<AlgorithmTrainer>)getThreadList());
 			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
 			saveTrainingTimes(filterTrainers(getThreadList()));
 			saveScores(filterTrainers(getThreadList()), "scores.csv");
@@ -286,7 +290,7 @@ public class TrainerManager extends ThreadScheduler {
 		}
 	}
 
-	private LinkedList<? extends Thread> filterTrainers(LinkedList<? extends Thread> trainerList) {
+	private List<? extends Thread> filterTrainers(List<? extends Thread> trainerList) {
 		LinkedList<AlgorithmTrainer> invList = new LinkedList<AlgorithmTrainer>();
 		if(iManager != null){
 			for(Thread t : trainerList){
@@ -303,9 +307,8 @@ public class TrainerManager extends ThreadScheduler {
 	 */
 	@Override
 	protected void initRun(){
-		long initStartTime = System.currentTimeMillis();
 		AppLogger.logInfo(getClass(), "Train Started");
-		LinkedList<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
+		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		for(AlgorithmType algType : algTypes){
 			if(confList.get(algType) != null){
 				switch(algType){
@@ -314,7 +317,7 @@ public class TrainerManager extends ThreadScheduler {
 						break;
 					case PEA:
 						PearsonCombinationManager pcManager;
-						File pearsonFile = new File(prefManager.getPreference(DetectionManager.SETUP_FILE_FOLDER) + "pearsonCombinations.csv");
+						File pearsonFile = new File(scoresFolder + "pearsonCombinations.csv");
 						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, tTiming, expList);
 						pcManager.calculatePearsonIndexes();
 						trainerList.addAll(pcManager.getTrainers(metric, reputation, confList));
@@ -332,8 +335,6 @@ public class TrainerManager extends ThreadScheduler {
 			}	
 		}
 		setThreadList(trainerList);
-		pManager.addTiming(TimingsManager.TRAIN_INIT_TIME, Double.valueOf(System.currentTimeMillis() - initStartTime));
-		pManager.addTiming(TimingsManager.ANOMALY_CHECKERS, Double.valueOf(trainerList.size()));
 	}
 
 	/* (non-Javadoc)
@@ -353,11 +354,11 @@ public class TrainerManager extends ThreadScheduler {
 		((AlgorithmTrainer)t).flush();
 	}
 	
-	private void saveTrainingTimes(LinkedList<? extends Thread> list) {
+	private void saveTrainingTimes(List<? extends Thread> list) {
 		BufferedWriter writer;
 		try {
 			tTiming.addAlgorithmScores(list);
-			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.OUTPUT_FOLDER) + "/trainingTimings.csv")));
+			writer = new BufferedWriter(new FileWriter(new File(outputFolder + "/trainingTimings.csv")));
 			writer.write(tTiming.getHeader() + "\n");
 			for(AlgorithmType algType : algTypes){
 				writer.write(tTiming.toFileRow(algType) + "\n");
@@ -373,11 +374,11 @@ public class TrainerManager extends ThreadScheduler {
 	 *
 	 * @param list the list of algorithm trainers
 	 */
-	private void saveScores(LinkedList<? extends Thread> list, String filename) {
+	private void saveScores(List<? extends Thread> list, String filename) {
 		BufferedWriter writer;
 		AlgorithmTrainer trainer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(scoresFolder + filename)));
 			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
@@ -403,7 +404,7 @@ public class TrainerManager extends ThreadScheduler {
 	private void saveFilteredSeries(LinkedList<DataSeries> list, String filename) {
 		BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(prefManager.getPreference(DetectionManager.SCORES_FILE_FOLDER) + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(scoresFolder + filename)));
 			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + metric.getMetricName() + "),configuration\n");
 			for(DataSeries ds : list){
 				writer.write(ds.toString() + "\n");			

@@ -3,9 +3,6 @@
  */
 package ippoz.multilayer.detector.commons.dataseries;
 
-import java.util.Date;
-import java.util.LinkedList;
-
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
@@ -14,6 +11,9 @@ import ippoz.multilayer.detector.commons.data.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.service.StatPair;
+
+import java.util.Date;
+import java.util.LinkedList;
 
 /**
  * @author Tommy

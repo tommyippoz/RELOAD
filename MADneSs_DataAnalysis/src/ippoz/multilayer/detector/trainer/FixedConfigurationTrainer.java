@@ -15,6 +15,7 @@ import ippoz.multilayer.detector.reputation.Reputation;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class FixedConfigurationTrainer.
@@ -34,11 +35,11 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	 * @param dataSeries the chosen data series
 	 * @param metric the used metric
 	 * @param reputation the used reputation metric
-	 * @param trainData the considered train data
+	 * @param expList the considered train data
 	 * @param configurations the possible configurations
 	 */
-	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, LinkedList<ExperimentData> trainData, AlgorithmConfiguration configuration) {
-		super(algTag, dataSeries, metric, reputation, tTiming, trainData);
+	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, List<ExperimentData> expList, AlgorithmConfiguration configuration) {
+		super(algTag, dataSeries, metric, reputation, tTiming, expList);
 		try {
 			fixConf = (AlgorithmConfiguration) configuration.clone();
 		} catch (CloneNotSupportedException ex) {

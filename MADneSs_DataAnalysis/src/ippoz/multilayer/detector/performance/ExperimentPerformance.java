@@ -9,6 +9,7 @@ import ippoz.multilayer.detector.commons.support.AppUtility;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class ExperimentPerformance.
@@ -40,7 +41,7 @@ public class ExperimentPerformance {
 	private HashMap<String, Integer> detCategories;
 	
 	/** The monitor time series. */
-	private HashMap<String, HashMap<LayerType, LinkedList<Integer>>> monitorTimeSeries;
+	private HashMap<String, HashMap<LayerType, List<Integer>>> monitorTimeSeries;
 	
 	/** The detection times. */
 	private HashMap<String, LinkedList<Integer>> detectionTimes;
@@ -110,7 +111,7 @@ public class ExperimentPerformance {
 	 */
 	private String seriesSummary(String serieTag) {
 		String sSummary = "";
-		HashMap<LayerType, LinkedList<Integer>> map = monitorTimeSeries.get(serieTag);
+		HashMap<LayerType, List<Integer>> map = monitorTimeSeries.get(serieTag);
 		double[][] layerStats = new double[map.keySet().size()][2];
 		int i = 0;
 		for(LayerType layer : map.keySet()){

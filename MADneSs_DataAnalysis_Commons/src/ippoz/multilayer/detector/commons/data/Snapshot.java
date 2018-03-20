@@ -11,6 +11,7 @@ import ippoz.multilayer.detector.commons.service.StatPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class Snapshot.
@@ -21,7 +22,7 @@ import java.util.LinkedList;
 public class Snapshot {
 	
 	/** The list of services called at that time instant. */
-	private LinkedList<ServiceCall> sCall;
+	private List<ServiceCall> sCall;
 	
 	/** The injection at that time instant. */
 	private InjectedElement injEl;
@@ -38,14 +39,14 @@ public class Snapshot {
 	 * @param currentCalls the current calls
 	 * @param injEl the injection
 	 */
-	public Snapshot(Date timestamp, LinkedList<ServiceCall> currentCalls, InjectedElement injEl, HashMap<String, ServiceStat> ssList) {
+	public Snapshot(Date timestamp, List<ServiceCall> currentCalls, InjectedElement injEl, HashMap<String, ServiceStat> ssList) {
 		this.timestamp = timestamp;
 		this.sCall = filterCalls(currentCalls);
 		this.injEl = injEl;
 		this.ssList = ssList;
 	}
 	
-	private LinkedList<ServiceCall> filterCalls(LinkedList<ServiceCall> currentCalls) {
+	private List<ServiceCall> filterCalls(List<ServiceCall> currentCalls) {
 		LinkedList<ServiceCall> okCalls = new LinkedList<ServiceCall>();
 		if(currentCalls != null){
 			for(ServiceCall sCall : currentCalls){
@@ -88,7 +89,7 @@ public class Snapshot {
 	 *
 	 * @return the service calls
 	 */
-	public LinkedList<ServiceCall> getServiceCalls() {
+	public List<ServiceCall> getServiceCalls() {
 		return sCall;
 	}
 	
@@ -105,7 +106,7 @@ public class Snapshot {
 		return ssList;
 	}
 	
-	public LinkedList<String> getIndicators(){
+	public List<String> getIndicators(){
 		return ssList.get(ssList.keySet().iterator().next()).getIndicators();
 	}
 	

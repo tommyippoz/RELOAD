@@ -7,7 +7,7 @@ import ippoz.multilayer.detector.commons.data.Snapshot;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -26,7 +26,7 @@ public class Custom_Metric extends BetterMaxMetric {
 	 * @see ippoz.multilayer.detector.metric.Metric#evaluateAnomalyResults(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
 		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
 		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
 		if(p + r > 0)
