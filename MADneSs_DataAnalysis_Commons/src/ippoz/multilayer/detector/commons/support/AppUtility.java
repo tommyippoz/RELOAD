@@ -157,25 +157,35 @@ public class AppUtility {
 		else return Double.MAX_VALUE;
 	}
 	
-	public static Map<Double, Double> convertMapTimestamps(Date firstTimestamp, Map<Date, Double> resultMap){
+	public static int getIntSecondsBetween(Date current, Date ref){
+		if(current.after(ref))
+			return (int)((current.getTime() - ref.getTime())/1000);
+		else if(current.compareTo(ref) == 0)
+			return 0;
+		else return Integer.MAX_VALUE;
+	}
+	
+	public static Map<Double, Double> convertMapTimestamps(Date firstTimestamp, List<TimedValue> observations){
 		Map<Double, Double> convertedMap = new TreeMap<Double, Double>();
-		if(resultMap.size() > 0) {
-			for(Date key : resultMap.keySet()){
-				convertedMap.put(AppUtility.getSecondsBetween(key, firstTimestamp), resultMap.get(key));
+		if(observations.size() > 0) {
+			for(TimedValue tv : observations){
+				convertedMap.put(AppUtility.getSecondsBetween(tv.getDate(), firstTimestamp), tv.getValue());
 			}
 		}
 		return convertedMap;
-	}
-
-	public static Map<Double, Double> convertMapSnapshots(Date firstDate, Map<Date, Double> resultMap) {
-		return convertMapTimestamps(firstDate, resultMap);
 	}
 
 	public static Double calcMedian(Double[] timeSingle) {
 		Arrays.sort(timeSingle);
 		return timeSingle[(int)(timeSingle.length/2)];
 	}
-
 	
+	public static double[] toPrimitiveArray(List<Double> toPrim){
+		double[] target = new double[toPrim.size()];
+		for (int i = 0; i < target.length; i++) {
+		   target[i] = toPrim.get(i);                
+		}
+		return target;
+	}
 	
 }

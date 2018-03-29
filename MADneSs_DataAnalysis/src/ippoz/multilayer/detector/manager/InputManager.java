@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tommy
@@ -386,9 +387,9 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes) {
 		File confFolder = new File(getConfigurationFolder());
-		HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>>();
+		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
 		AlgorithmConfiguration alConf;
 		AlgorithmType algType;
 		BufferedReader reader = null;

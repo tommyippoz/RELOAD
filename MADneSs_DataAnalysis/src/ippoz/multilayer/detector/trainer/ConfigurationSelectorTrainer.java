@@ -7,16 +7,14 @@ import ippoz.multilayer.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.metric.Metric;
-import ippoz.multilayer.detector.performance.TrainingTiming;
 import ippoz.multilayer.detector.reputation.Reputation;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,7 +28,7 @@ import java.util.List;
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 
 	/** The possible configurations. */
-	private LinkedList<AlgorithmConfiguration> configurations;
+	private List<AlgorithmConfiguration> configurations;
 	
 	/**
 	 * Instantiates a new algorithm trainer.
@@ -41,8 +39,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param reputation the used reputation metric
 	 * @param expList the considered train data
 	 */
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, List<ExperimentData> expList, LinkedList<AlgorithmConfiguration> basicConfigurations) {
-		super(algTag, dataSeries, metric, reputation, tTiming, expList);
+	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<AlgorithmConfiguration> basicConfigurations) {
+		super(algTag, dataSeries, metric, reputation, kList);
 		configurations = confClone(basicConfigurations);
 	}
 	
@@ -52,8 +50,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param inConf the configurations to clone
 	 * @return the cloned list of configuration
 	 */
-	private LinkedList<AlgorithmConfiguration> confClone(LinkedList<AlgorithmConfiguration> inConf) {
-		LinkedList<AlgorithmConfiguration> list = new LinkedList<AlgorithmConfiguration>();
+	private List<AlgorithmConfiguration> confClone(List<AlgorithmConfiguration> inConf) {
+		List<AlgorithmConfiguration> list = new ArrayList<AlgorithmConfiguration>(inConf.size());
 		try {
 			for(AlgorithmConfiguration conf : inConf){
 				list.add((AlgorithmConfiguration) conf.clone());
@@ -65,22 +63,21 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected AlgorithmConfiguration lookForBestConfiguration(HashMap<String, LinkedList<Snapshot>> algExpSnapshots, TrainingTiming tTiming) {
+	protected AlgorithmConfiguration lookForBestConfiguration() {
 		Double bestMetricValue = Double.NaN;
 		Double currentMetricValue;
 		LinkedList<Double> metricResults;
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
-		long startTime = System.currentTimeMillis();
 		try {
 			for(AlgorithmConfiguration conf : configurations){
 				metricResults = new LinkedList<Double>();
 				algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), conf);
 				if(algorithm instanceof AutomaticTrainingAlgorithm) {
-					((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getExpList());
+					((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList());
 				}
-				for(ExperimentData expData : getExpList()){
-					metricResults.add(getMetric().evaluateMetric(algorithm, algExpSnapshots.get(expData.getName()))[0]);
+				for(Knowledge knowledge : getKnowledgeList()){
+					metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
 				}
 				currentMetricValue = AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
 				if(bestMetricValue.isNaN() || getMetric().compareResults(currentMetricValue, bestMetricValue) == 1){
@@ -88,8 +85,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					bestConf = (AlgorithmConfiguration) conf.clone();
 				}
 			}
-			tTiming.addTrainingTime(getAlgType(), System.currentTimeMillis() - startTime, configurations.size());
-			
+			//tTiming.addTrainingTime(getAlgType(), System.currentTimeMillis() - startTime, configurations.size());
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}

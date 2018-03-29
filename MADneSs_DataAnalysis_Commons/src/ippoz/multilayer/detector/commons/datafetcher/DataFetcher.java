@@ -4,14 +4,14 @@
 package ippoz.multilayer.detector.commons.datafetcher;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DataFetcher.
@@ -22,15 +22,15 @@ import java.util.List;
 public abstract class DataFetcher extends Thread {
 
 	/** The fetched experiment data. */
-	private ExperimentData expData;
+	private MonitoredData mData;
 	
 	/**
 	 * Gets the fetched data.
 	 *
 	 * @return the fetched data
 	 */
-	public ExperimentData getFetchedData(){
-		return expData;
+	public MonitoredData getFetchedData(){
+		return mData;
 	}
 	
 	/* (non-Javadoc)
@@ -38,7 +38,10 @@ public abstract class DataFetcher extends Thread {
 	 */
 	@Override
 	public void run() {
-		expData = new ExperimentData(getID(), getObservations(), getServiceCalls(), getInjections(), getServiceStats(), getPerformanceTimings());
+		List<Observation> obList = getObservations();
+		if(obList != null && !obList.isEmpty())
+			mData = new MonitoredData(getID(), obList, getServiceCalls(), getInjections(), getServiceStats());
+		else mData = null;
 	}
 
 	/**
@@ -67,7 +70,7 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the service stats
 	 */
-	protected abstract HashMap<String, ServiceStat> getServiceStats();
+	protected abstract Map<String, ServiceStat> getServiceStats();
 
 	/**
 	 * Gets the experiment injections.
@@ -81,7 +84,7 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the performance timings
 	 */
-	protected abstract HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings();
+	protected abstract Map<String, Map<LayerType, List<Integer>>> getPerformanceTimings();
 	
 	/**
 	 * Flushes the fetcher.

@@ -4,8 +4,9 @@
 package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 
@@ -47,10 +48,11 @@ public class RemoteCallChecker extends DetectionAlgorithm {
 	 * @see ippoz.multilayer.detector.algorithm.DetectionAlgorithm#evaluateSnapshot(ippoz.multilayer.detector.data.Snapshot)
 	 */
 	@Override
-	public double evaluateSnapshot(Snapshot sysSnapshot) {
+	public double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		double evalResult = 0.0;
+		Snapshot sysSnapshot = knowledge.get(getAlgorithmType(), currentIndex, null);
 		for(ServiceCall call : sysSnapshot.getServiceCalls()){
-			evalResult = evalResult + analyzeServiceCall(sysSnapshot, call);
+			evalResult = evalResult + analyzeServiceCall(knowledge, sysSnapshot, call);
 		}
 		return evalResult / sysSnapshot.getServiceCalls().size();
 	}
@@ -63,12 +65,12 @@ public class RemoteCallChecker extends DetectionAlgorithm {
 	 * @param serviceStat the service stat
 	 * @return the double
 	 */
-	private double analyzeServiceCall(Snapshot snapshot, ServiceCall call) {
+	private double analyzeServiceCall(Knowledge knowledge, Snapshot snapshot, ServiceCall call) {
 		if(call.getEndTime().compareTo(snapshot.getTimestamp()) == 0){
 			if(!call.getResponseCode().equals("200"))
 				return weight;
-			else return evaluateAbsDiff(AppUtility.getSecondsBetween(call.getEndTime(), call.getStartTime()), snapshot.getServiceObsStat(call.getServiceName()), 1.0);
-		} else return evaluateOverDiff(AppUtility.getSecondsBetween(snapshot.getTimestamp(), call.getStartTime()), snapshot.getServiceTimingStat(call.getServiceName()));
+			else return evaluateAbsDiff(AppUtility.getSecondsBetween(call.getEndTime(), call.getStartTime()), knowledge.getServiceObsStat(call.getServiceName()), 1.0);
+		} else return evaluateOverDiff(AppUtility.getSecondsBetween(snapshot.getTimestamp(), call.getStartTime()), knowledge.getServiceTimingStat(call.getServiceName()));
 	}
 
 	/* (non-Javadoc)

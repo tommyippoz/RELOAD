@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.performance;
 
-import ippoz.multilayer.detector.commons.data.ExperimentData;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,7 +16,7 @@ public class PerformanceManager {
 	
 	private static LinkedList<ExperimentPerformance> expPerformances;
 	
-	public static void addExperimentPerformance(ExperimentData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries){
+	public static void addExperimentPerformance(MonitoredData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries){
 		if(expPerformances == null)
 			expPerformances = new LinkedList<ExperimentPerformance>();
 		expPerformances.add(new ExperimentPerformance(expData, algCategories, timeSeries));

@@ -6,7 +6,7 @@ package ippoz.multilayer.detector.metric;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
 
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class FN_Metric.
@@ -34,7 +34,7 @@ public class FN_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(Date snapTime, Double anEvaluation, LinkedList<InjectedElement> injList) {
+	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {
 		int count = 0;
 		if(!injList.isEmpty()){ 
 			if(Metric.anomalyTrueFalse(anEvaluation)){

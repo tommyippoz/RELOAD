@@ -3,8 +3,8 @@
  */
 package ippoz.multilayer.detector.metric;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 
 /**
  * @author Tommy

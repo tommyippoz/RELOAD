@@ -7,8 +7,8 @@ import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 
 /**
  * The Class AlgorithmVoter.
@@ -54,8 +54,8 @@ public class AlgorithmVoter implements Cloneable {
 	 * @param snap the snapshot
 	 * @return the anomaly voting.
 	 */
-	public double voteSnapshot(Snapshot snap){
-		return alg.snapshotAnomalyRate(snap);
+	public Double voteKnowledgeSnapshot(Knowledge knowledge, int i) {
+		return alg.snapshotAnomalyRate(knowledge, i);
 	}
 
 	/**

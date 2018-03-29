@@ -3,12 +3,11 @@
  */
 package ippoz.multilayer.detector.reputation;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 import ippoz.multilayer.detector.metric.TP_Metric;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class BetaReputation.
@@ -34,18 +33,18 @@ public class BetaReputation extends Reputation {
 	 * @see ippoz.multilayer.detector.reputation.Reputation#evaluateExperimentReputation(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateExperimentReputation(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
-		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(snapList, anomalyEvaluations);
-		double nInj = countInjections(snapList);
+	public double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
+		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double nInj = countInjections(knowledge);
 		double alpha = tp + 1;
 		double beta = nInj + 1;
 		return alpha*1.0/(alpha + beta);
 	}
 	
-	private int countInjections(LinkedList<Snapshot> snapList){
+	private int countInjections(Knowledge knowledge){
 		int count = 0;
-		for(Snapshot snap : snapList){
-			if(snap.getInjectedElement() != null)
+		for(int i=0;i<knowledge.size();i++){
+			if(knowledge.getInjection(i) != null)
 				count++;
 		}
 		return count;

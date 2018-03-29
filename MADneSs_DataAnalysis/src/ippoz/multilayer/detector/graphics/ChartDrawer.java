@@ -7,9 +7,7 @@ import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;

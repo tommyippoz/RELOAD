@@ -4,9 +4,10 @@
 package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.MultipleSnapshot;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 
 import java.util.LinkedList;
 
@@ -59,8 +60,9 @@ public class PearsonIndexChecker extends DetectionAlgorithm {
 	}
 
 	@Override
-	protected double evaluateSnapshot(Snapshot sysSnapshot) {
+	protected double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		double pValue;
+		Snapshot sysSnapshot = knowledge.get(getAlgorithmType(), currentIndex, null);
 		if(firstList.size() >= windowSize){
 			firstList.removeFirst();
 			secondList.removeFirst();

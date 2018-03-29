@@ -4,8 +4,8 @@
 package ippoz.multilayer.detector.commons.dataseries;
 
 import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.multilayer.detector.commons.data.Observation;
-import ippoz.multilayer.detector.commons.data.SnapshotValue;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.StatPair;
 
 /**

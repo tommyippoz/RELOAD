@@ -5,13 +5,14 @@ package ippoz.multilayer.detector.manager;
 
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.dataseries.IndicatorDataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
+import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.metric.Metric;
-import ippoz.multilayer.detector.performance.TrainingTiming;
 import ippoz.multilayer.detector.reputation.Reputation;
 import ippoz.multilayer.detector.trainer.AlgorithmTrainer;
 import ippoz.multilayer.detector.trainer.ConfigurationSelectorTrainer;
@@ -22,9 +23,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -35,30 +38,32 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 public class PearsonCombinationManager {
 	
 	private File indexesFile;
-	private List<DataSeries> seriesList;
-	private TrainingTiming tTiming;
-	private List<ExperimentData> expList;
-	private HashMap<DataSeries, HashMap<String, double[]>> seriesExpData;
-	private LinkedList<PearsonResult> pResults;
 	
-	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, TrainingTiming tTiming, List<ExperimentData> expList2){
+	private List<DataSeries> seriesList;
+	
+	private List<Knowledge> kList;
+	
+	private Map<DataSeries, Map<String, List<Double>>> seriesExpData;
+	
+	private List<PearsonResult> pResults;
+	
+	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, List<Knowledge> kList){
 		this.indexesFile = indexesFile;
 		this.seriesList = seriesList;
-		this.tTiming = tTiming;
-		this.expList = expList2;
+		this.kList = kList;
 		initExpData();
 	}
 	
 	private void initExpData(){
-		HashMap<String, double[]> map;
-		seriesExpData = new HashMap<DataSeries, HashMap<String,double[]>>();
+		seriesExpData = new HashMap<DataSeries, Map<String, List<Double>>>();
 		for(DataSeries ds : seriesList){
 			if(ds instanceof IndicatorDataSeries) { 
-				map = new HashMap<String, double[]>();
-				for(ExperimentData expData : expList){
-					map.put(expData.getName(), new double[expData.getDataSeriesValue(ds).length]);
-					for(int i=0;i<expData.getDataSeriesValue(ds).length;i++){
-						map.get(expData.getName())[i] = expData.getDataSeriesValue(ds)[i].getFirst();
+				Map<String, List<Double>> map = new HashMap<String, List<Double>>();
+				for(Knowledge kItem : kList){
+					List<SnapshotValue> dsValue = kItem.getDataSeriesValues(ds);
+					map.put(kItem.getTag(), new ArrayList<Double>(dsValue.size()));
+					for(int i=0;i<dsValue.size();i++){
+						map.get(kItem.getTag()).add(dsValue.get(i).getFirst());
 					}
 				}
 				seriesExpData.put(ds, map);
@@ -91,15 +96,15 @@ public class PearsonCombinationManager {
 	
 	public void calculatePearsonIndexes(){
 		PearsonResult pr;
-		LinkedList<Double> pExp;
+		List<Double> pExp;
 		pResults = new LinkedList<PearsonResult>();
 		AppLogger.logInfo(getClass(), "Calculating Indicator Correlations");
 		for(DataSeries ds1 : seriesExpData.keySet()){
 			for(DataSeries ds2 : seriesExpData.keySet()){
 				if(!ds1.equals(ds2)){
-					pExp = new LinkedList<Double>();
-					for(ExperimentData expData : expList){
-						pExp.add(new PearsonsCorrelation().correlation(seriesExpData.get(ds1).get(expData.getName()), seriesExpData.get(ds2).get(expData.getName())));
+					pExp = new ArrayList<Double>(kList.size());
+					for(Knowledge kItem : kList){
+						pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
 					}
 					pr = new PearsonResult(ds1, ds2, pExp);
 					if(pr.isValid(pResults))
@@ -125,15 +130,15 @@ public class PearsonCombinationManager {
 		} 
 	}
 	
-	public LinkedList<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList) {
-		LinkedList<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
+	public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
+		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>(pResults.size());
 		for(PearsonResult pr : pResults){
-			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, tTiming, expList, adaptConf(confList, pr).get(AlgorithmType.PEA)));
+			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, kList, adaptConf(confList, pr).get(AlgorithmType.PEA)));
 		}
 		return trainerList;
 	}
 	
-	private HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> adaptConf(HashMap<AlgorithmType, LinkedList<AlgorithmConfiguration>> confList, PearsonResult pr) {
+	private Map<AlgorithmType, List<AlgorithmConfiguration>> adaptConf(Map<AlgorithmType, List<AlgorithmConfiguration>> confList, PearsonResult pr) {
 		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){
 			ac.addItem(AlgorithmConfiguration.DETAIL, pr.getDs1().toString() + ";" + pr.getDs2().toString() + ";" + String.valueOf(pr.getAvg()) + ";" + String.valueOf(pr.getStd()));
 		}
@@ -151,7 +156,7 @@ public class PearsonCombinationManager {
 		private DataSeries ds2;
 		private StatPair prStats;
 		
-		public PearsonResult(DataSeries ds1, DataSeries ds2, LinkedList<Double> pCalc) {
+		public PearsonResult(DataSeries ds1, DataSeries ds2, List<Double> pCalc) {
 			this.ds1 = ds1;
 			this.ds2 = ds2;
 			prStats = new StatPair(pCalc);
@@ -179,7 +184,7 @@ public class PearsonCombinationManager {
 			return prStats.getStd();
 		}
 
-		public boolean isValid(LinkedList<PearsonResult> pResults){
+		public boolean isValid(List<PearsonResult> pResults){
 			for(PearsonResult pR : pResults){
 				if((pR.getDs1().equals(ds1) || pR.getDs2().equals(ds1)) && (pR.getDs1().equals(ds2) || pR.getDs2().equals(ds2)))
 					return false;

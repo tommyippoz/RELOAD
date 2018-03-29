@@ -8,10 +8,8 @@ import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
-import ippoz.multilayer.detector.commons.support.AppLogger;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.metric.BetterMaxMetric;
 import ippoz.multilayer.detector.metric.Metric;
@@ -19,8 +17,6 @@ import ippoz.multilayer.detector.performance.TrainingTiming;
 import ippoz.multilayer.detector.reputation.Reputation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -43,8 +39,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** The used reputation metric. */
 	private Reputation reputation;
 	
-	/** The experiments' list. */
-	private List<ExperimentData> expList;
+	/** The algorithm knowledge. */
+	private List<Knowledge> kList;
 	
 	/** The best configuration. */
 	private AlgorithmConfiguration bestConf;
@@ -55,13 +51,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** The reputation score. */
 	private double reputationScore;
 	
-	/** The training timing. */
-	private TrainingTiming tTiming;
-	
 	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
 	private boolean sameResultFlag;
-	
-	private int expNumber;
 	
 	/**
 	 * Instantiates a new algorithm trainer.
@@ -71,16 +62,14 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param metric the used metric
 	 * @param reputation the used reputation metric
 	 * @param tTiming the t timing
-	 * @param expList2 the considered train data
+	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, TrainingTiming tTiming, List<ExperimentData> expList2) {
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
 		this.reputation = reputation;
-		this.tTiming = tTiming;
-		expList = deepClone(expList2);
-		expNumber = expList.size();
+		this.kList = kList;
 	}
 	
 	/**
@@ -88,13 +77,13 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the hash map of the snapshots
 	 */
-	private HashMap<String, LinkedList<Snapshot>> loadAlgExpSnapshots() {
+	/*private HashMap<String, LinkedList<Snapshot>> loadAlgExpSnapshots() {
 		HashMap<String, LinkedList<Snapshot>> expAlgMap = new HashMap<String, LinkedList<Snapshot>>();
 		for(ExperimentData expData : expList){
 			expAlgMap.put(expData.getName(), expData.buildSnapshotsFor(algTag, dataSeries, bestConf));
 		}
 		return expAlgMap;
-	}
+	}*/
 	
 	/**
 	 * Deep clone of the experiment list.
@@ -102,7 +91,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param trainData the train data
 	 * @return the cloned experiment list
 	 */
-	private List<ExperimentData> deepClone(List<ExperimentData> trainData) {
+	/*private List<ExperimentData> deepClone(List<ExperimentData> trainData) {
 		List<ExperimentData> list = new ArrayList<ExperimentData>(trainData.size());
 		try {
 			for(ExperimentData eData : trainData){
@@ -112,7 +101,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			AppLogger.logException(getClass(), ex, "Unable to clone Experiment");
 		}
 		return list;
-	}
+	}*/
 	
 	/**
 	 * Checks if is valid train.
@@ -128,10 +117,13 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
-		HashMap<String, LinkedList<Snapshot>> algExpSnapshots = loadAlgExpSnapshots();
-		bestConf = lookForBestConfiguration(algExpSnapshots, tTiming);
-		metricScore = evaluateMetricScore(getExpList(), algExpSnapshots);
-		reputationScore = evaluateReputationScore(getExpList(), algExpSnapshots);
+		long startTime = System.currentTimeMillis();
+		bestConf = lookForBestConfiguration();
+		System.out.println("T " + (System.currentTimeMillis()-startTime));
+		startTime = System.currentTimeMillis();
+		metricScore = evaluateMetricScore();
+		System.out.println("MS " + (System.currentTimeMillis()-startTime));
+		//reputationScore = evaluateReputationScore();
 		bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 		bestConf.addItem(AlgorithmConfiguration.SCORE, String.valueOf(getMetricScore()));
 	}
@@ -143,7 +135,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @return the algorithm configuration
 	 */
-	protected abstract AlgorithmConfiguration lookForBestConfiguration(HashMap<String, LinkedList<Snapshot>> algExpSnapshots, TrainingTiming tTiming);
+	protected abstract AlgorithmConfiguration lookForBestConfiguration();
 
 	/**
 	 * Evaluates metric score on a specified set of experiments.
@@ -152,13 +144,13 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param algExpSnapshots the alg exp snapshots
 	 * @return the metric score
 	 */
-	private double evaluateMetricScore(List<ExperimentData> list, HashMap<String, LinkedList<Snapshot>> algExpSnapshots){
+	private double evaluateMetricScore(){
 		double[] metricEvaluation = null;
-		LinkedList<Double> metricResults = new LinkedList<Double>();
-		LinkedList<Double> algResults = new LinkedList<Double>();
+		List<Double> metricResults = new ArrayList<Double>(kList.size());
+		List<Double> algResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
-		for(ExperimentData expData : list){
-			metricEvaluation = metric.evaluateMetric(algorithm, algExpSnapshots.get(expData.getName()));
+		for(Knowledge knowledge : kList){
+			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
 			metricResults.add(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
@@ -173,11 +165,11 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param algExpSnapshots the alg exp snapshots
 	 * @return the reputation score
 	 */
-	private double evaluateReputationScore(List<ExperimentData> list, HashMap<String, LinkedList<Snapshot>> algExpSnapshots){
-		LinkedList<Double> reputationResults = new LinkedList<Double>();
+	private double evaluateReputationScore(){
+		List<Double> reputationResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
-		for(ExperimentData expData : list){
-			reputationResults.add(reputation.evaluateReputation(algorithm, algExpSnapshots.get(expData.getName())));
+		for(Knowledge knowledge : kList){
+			reputationResults.add(reputation.evaluateReputation(algorithm, knowledge));
 		}
 		return AppUtility.calcAvg(reputationResults.toArray(new Double[reputationResults.size()]));
 	}
@@ -214,12 +206,12 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the exp list
 	 */
-	protected List<ExperimentData> getExpList() {
-		return expList;
+	protected List<Knowledge> getKnowledgeList() {
+		return kList;
 	}
 	
 	public int getExpNumber(){
-		return expNumber;
+		return kList.size();
 	}
 
 	/**
@@ -313,7 +305,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	public void flush(){
-		expList = null;
+		kList = null;
 	}
 	
 }

@@ -6,9 +6,9 @@ package ippoz.multilayer.detector.commons.datafetcher.database;
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.multilayer.detector.commons.data.IndicatorData;
-import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.data.IndicatorData;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
 import ippoz.multilayer.detector.commons.service.IndicatorStat;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DatabaseManager.
@@ -63,7 +64,7 @@ public class DatabaseManager {
 	 */
 	private void loadSystemLayers(List<LayerType> selectedLayers) {
 		layers = new HashMap<String, LayerType>();
-		for(HashMap<String, String> ptMap : connector.executeCustomQuery(null, "select * from probe_type")){
+		for(Map<String, String> ptMap : connector.executeCustomQuery(null, "select * from probe_type")){
 			if(selectedLayers.contains(LayerType.valueOf(ptMap.get("pt_description"))))
 				layers.put(ptMap.get("probe_type_id"), LayerType.valueOf(ptMap.get("pt_description")));
 		}
@@ -84,22 +85,61 @@ public class DatabaseManager {
 	 *
 	 * @return the run observations
 	 */
-	public List<Observation> getRunObservations() {
+	/*public List<Observation> getRunObservations() {
 		Observation obs;
-		HashMap<DataCategory, String> indData;
-		List<HashMap<String, String>> queryMap = connector.executeCustomQuery(null, "select observation_id, ob_time from observation where run_id = " + runId);
+		Map<DataCategory, String> indData;
+		List<Map<String, String>> queryMap = connector.executeCustomQuery(null, "select observation_id, ob_time from observation where run_id = " + runId);
 		List<Observation> obsList = new ArrayList<Observation>(queryMap.size());
-		for(HashMap<String, String> obsMap : queryMap){
+		for(Map<String, String> obsMap : queryMap){
 			obs = new Observation(obsMap.get("ob_time"));
-			for(HashMap<String, String> indObs : connector.executeCustomQuery(null, "select indicator_observation_id, probe_type_id, in_tag from indicator natural join indicator_observation where observation_id = " + obsMap.get("observation_id"))) {
+			for(Map<String, String> indObs : connector.executeCustomQuery(null, "select indicator_observation_id, probe_type_id, in_tag from indicator natural join indicator_observation where observation_id = " + obsMap.get("observation_id"))) {
 				if(layers.get(indObs.get("probe_type_id")) != null){
 					indData = new HashMap<DataCategory, String>();
-					for(HashMap<String, String> indValues : connector.executeCustomQuery(null, "select vc_description, ioc_value from indicator_observation_category natural join value_category where indicator_observation_id = " + indObs.get("indicator_observation_id"))) {
+					for(Map<String, String> indValues : connector.executeCustomQuery(null, "select vc_description, ioc_value from indicator_observation_category natural join value_category where indicator_observation_id = " + indObs.get("indicator_observation_id"))) {
 						indData.put(DataCategory.valueOf(indValues.get("vc_description").toUpperCase()), indValues.get("ioc_value"));
 					}
 					obs.addIndicator(new Indicator(indObs.get("in_tag"), layers.get(indObs.get("probe_type_id")), String.class), new IndicatorData(indData));
 				}
 			}
+			obsList.add(obs);
+		}
+		return obsList;
+	}*/
+	
+	/**
+	 * Gets the observations for the specific runID.
+	 *
+	 * @return the run observations
+	 */
+	public List<Observation> getRunObservations() {
+		Observation obs = null;
+		Map<String, String> lastObsMap = null;
+		Map<DataCategory, String> indData = null;
+		List<Observation> obsList = new ArrayList<Observation>(Integer.parseInt(DatabaseConnector.getFirstValueByTag(connector.executeCustomQuery(null, "select count(*) as obNumber from observation where run_id = " + runId), "obNumber")));
+		List<Map<String, String>> queryMap = connector.executeCustomQuery(null, "select observation_id, ob_time, indicator_observation_id, probe_type_id, in_tag, vc_description, ioc_value from observation natural join indicator_observation natural join indicator natural join indicator_observation_category natural join value_category where run_id = " + runId + " order by observation_id asc, indicator_observation_id asc, vc_description desc"); 
+		for(Map<String, String> obsMap : queryMap){
+			if(layers.get(obsMap.get("probe_type_id")) != null){
+				// First Iteration
+				if(lastObsMap == null){
+					obs = new Observation(obsMap.get("ob_time"));
+					indData = new HashMap<DataCategory, String>();
+				// New Observation
+				} else if(!obsMap.get("ob_time").equals(lastObsMap.get("ob_time"))){
+					obs.addIndicator(new Indicator(lastObsMap.get("in_tag"), layers.get(lastObsMap.get("probe_type_id")), String.class), new IndicatorData(indData));
+					obsList.add(obs);
+					obs = new Observation(obsMap.get("ob_time"));
+					indData = new HashMap<DataCategory, String>();
+				// New Indicator
+				} else if(!lastObsMap.get("indicator_observation_id").equals(obsMap.get("indicator_observation_id"))){
+					obs.addIndicator(new Indicator(lastObsMap.get("in_tag"), layers.get(lastObsMap.get("probe_type_id")), String.class), new IndicatorData(indData));
+					indData = new HashMap<DataCategory, String>();
+				} 
+				indData.put(DataCategory.valueOf(obsMap.get("vc_description").toUpperCase()), obsMap.get("ioc_value"));
+				lastObsMap = obsMap;
+			}
+		}
+		if(lastObsMap != null) {
+			obs.addIndicator(new Indicator(lastObsMap.get("in_tag"), layers.get(lastObsMap.get("probe_type_id")), String.class), new IndicatorData(indData));
 			obsList.add(obs);
 		}
 		return obsList;
@@ -110,9 +150,9 @@ public class DatabaseManager {
 	 *
 	 * @return the service calls
 	 */
-	public LinkedList<ServiceCall> getServiceCalls() {
+	public List<ServiceCall> getServiceCalls() {
 		LinkedList<ServiceCall> callList = new LinkedList<ServiceCall>();
-		for(HashMap<String, String> callMap : connector.executeCustomQuery(null, "select se_name, min(start_time) as st_time, max(end_time) as en_time, response from service_method_invocation natural join service_method natural join service where run_id = " + runId + " group by se_name order by st_time")){
+		for(Map<String, String> callMap : connector.executeCustomQuery(null, "select se_name, min(start_time) as st_time, max(end_time) as en_time, response from service_method_invocation natural join service_method natural join service where run_id = " + runId + " group by se_name order by st_time")){
 			callList.add(new ServiceCall(callMap.get("se_name"), callMap.get("st_time"), callMap.get("en_time"), callMap.get("response")));
 		}
 		return callList;
@@ -123,12 +163,12 @@ public class DatabaseManager {
 	 *
 	 * @return the service stats
 	 */
-	public HashMap<String, ServiceStat> getServiceStats() {
+	public Map<String, ServiceStat> getServiceStats() {
 		ServiceStat current;
-		HashMap<String, ServiceStat> ssList = new HashMap<String, ServiceStat>();
-		for(HashMap<String, String> ssInfo : connector.executeCustomQuery(null, "select * from service_stat natural join service")){
+		Map<String, ServiceStat> ssList = new HashMap<String, ServiceStat>();
+		for(Map<String, String> ssInfo : connector.executeCustomQuery(null, "select * from service_stat natural join service")){
 			current = new ServiceStat(ssInfo.get("se_name"), new StatPair(ssInfo.get("serv_dur_avg"), ssInfo.get("serv_dur_std")), new StatPair(ssInfo.get("serv_obs_avg"), ssInfo.get("serv_obs_std")));
-			for(HashMap<String, String> isInfo : connector.executeCustomQuery(null, "select * from indicator natural join service_indicator_stat natural join service_stat natural join service where se_name = '" + ssInfo.get("se_name") + "'")){
+			for(Map<String, String> isInfo : connector.executeCustomQuery(null, "select * from indicator natural join service_indicator_stat natural join service_stat natural join service where se_name = '" + ssInfo.get("se_name") + "'")){
 				current.addIndicatorStat(new IndicatorStat(isInfo.get("in_tag"), new StatPair(isInfo.get("si_avg_first"), isInfo.get("si_std_first")), new StatPair(isInfo.get("si_avg_last"), isInfo.get("si_std_last")), new StatPair(isInfo.get("si_all_avg"), isInfo.get("si_all_std"))));
 			}
 			ssList.put(ssInfo.get("se_name"), current);
@@ -142,9 +182,9 @@ public class DatabaseManager {
 	 * @return the injections
 	 */
 	public List<InjectedElement> getInjections() {
-		List<HashMap<String, String>> queryMap = connector.executeCustomQuery(null, "select * from failure natural join failure_type where run_id = " + runId + " order by fa_time");
+		List<Map<String, String>> queryMap = connector.executeCustomQuery(null, "select * from failure natural join failure_type where run_id = " + runId + " order by fa_time");
 		List<InjectedElement> injList = new ArrayList<InjectedElement>(queryMap.size());
-		for(HashMap<String, String> injInfo : queryMap){
+		for(Map<String, String> injInfo : queryMap){
 			injList.add(new InjectedElement(AppUtility.convertStringToDate(injInfo.get("fa_time")), injInfo.get("fa_description"), Integer.parseInt(injInfo.get("fa_duration"))));
 		}
 		return injList;
@@ -164,13 +204,13 @@ public class DatabaseManager {
 	 *
 	 * @return the performance timings
 	 */
-	public HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings() {
+	public Map<String, Map<LayerType, List<Integer>>> getPerformanceTimings() {
 		String perfType;
-		HashMap<String, HashMap<LayerType, List<Integer>>> timings = new HashMap<String, HashMap<LayerType, List<Integer>>>();
-		for(HashMap<String, String> perfIndexes : connector.executeCustomQuery(null, "select * from performance_type")){
+		Map<String, Map<LayerType, List<Integer>>> timings = new HashMap<String, Map<LayerType, List<Integer>>>();
+		for(Map<String, String> perfIndexes : connector.executeCustomQuery(null, "select * from performance_type")){
 			perfType = perfIndexes.get("pet_description");
 			timings.put(perfType, new HashMap<LayerType, List<Integer>>());
-			for(HashMap<String, String> timing : connector.executeCustomQuery(null, "select * from performance where run_id = " + runId + " and performance_type_id = " + perfIndexes.get("performance_type_id"))){
+			for(Map<String, String> timing : connector.executeCustomQuery(null, "select * from performance where run_id = " + runId + " and performance_type_id = " + perfIndexes.get("performance_type_id"))){
 				if(timings.get(perfType).get(layers.get(timing.get("probe_type_id"))) == null){
 					timings.get(perfType).put(layers.get(timing.get("probe_type_id")), new LinkedList<Integer>());
 				}

@@ -4,15 +4,11 @@
 package ippoz.multilayer.detector.metric;
 
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
-import ippoz.multilayer.detector.commons.data.Snapshot;
-import ippoz.multilayer.detector.commons.support.AppUtility;
-import ippoz.multilayer.detector.voter.VotingResult;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 
-import java.util.Date;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * The Class Metric.
@@ -29,16 +25,17 @@ public abstract class Metric {
 	 * @param expData the experiment data
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, List<Snapshot> snapList){
-		Snapshot currentSnapshot;
-		double average;
-		HashMap<Date, Double> anomalyEvaluations = new HashMap<Date, Double>();
-		for(int i=0;i<snapList.size();i++){
-			currentSnapshot = snapList.get(i);
-			anomalyEvaluations.put(currentSnapshot.getTimestamp(), alg.snapshotAnomalyRate(currentSnapshot));
-		}
-		average = AppUtility.calcAvg(anomalyEvaluations.values());
-		return new double[]{evaluateAnomalyResults(snapList, anomalyEvaluations), average, AppUtility.calcStd(anomalyEvaluations.values(), average)};
+	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge knowledge){
+		double average = 0;
+		double std = 0;
+		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
+		for(int i=0;i<knowledge.size();i++){
+			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), alg.snapshotAnomalyRate(knowledge, i)));
+			std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
+		} 
+		average = average / knowledge.size();
+		std = Math.sqrt((std / knowledge.size()) - Math.pow(average, 2));
+		return new double[]{evaluateAnomalyResults(knowledge, anomalyEvaluations), average, std};
 	}
 
 	@Override
@@ -55,7 +52,7 @@ public abstract class Metric {
 	 * @param anomalyEvaluations the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<Snapshot> snapList, Map<Date, Double> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations);
 
 	/**
 	 * Returns the anomaly evaluation for the given input data.
@@ -65,12 +62,12 @@ public abstract class Metric {
 	 * @param anomalyTreshold the anomaly threshold
 	 * @return the global anomaly evaluation
 	 */
-	public double evaluateAnomalyResults(List<Snapshot> customArrayList, List<VotingResult> voting, double anomalyTreshold) {
-		Map<Date, Double> convertedMap = new HashMap<Date, Double>(); 
-		for(VotingResult vResult : voting){
-			convertedMap.put(vResult.getDate(), vResult.getValue()/anomalyTreshold*1.0);
+	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> voting, double anomalyTreshold) {
+		List<TimedValue> votingWithTreshold = new ArrayList<TimedValue>(voting.size());
+		for(TimedValue vResult : voting){
+			votingWithTreshold.add(new TimedValue(vResult.getDate(), vResult.getValue()/anomalyTreshold*1.0));
 		}
-		return evaluateAnomalyResults(customArrayList, convertedMap);
+		return evaluateAnomalyResults(knowledge, votingWithTreshold);
 	}
 	
 	/**
@@ -98,7 +95,5 @@ public abstract class Metric {
 	 * @return the metric name
 	 */
 	public abstract String getMetricName();
-
-	
 
 }

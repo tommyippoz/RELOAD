@@ -4,7 +4,7 @@
 package ippoz.multilayer.detector.performance;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 
 import java.util.HashMap;
@@ -53,11 +53,11 @@ public class ExperimentPerformance {
 	 * @param algCategories the algorithm categories
 	 * @param timeSeries the time series
 	 */
-	public ExperimentPerformance(ExperimentData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries) {
-		expName = expData.getName();
-		expObs = expData.getSnapshotNumber();
-		layerIndicators = expData.getLayerIndicators();
-		monitorTimeSeries = expData.getMonitorPerformanceIndexes();
+	public ExperimentPerformance(MonitoredData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries) {
+		expName = expData.getDataTag();
+		expObs = expData.size();
+		//layerIndicators = expData.getLayerIndicators();
+		//monitorTimeSeries = expData.getMonitorPerformanceIndexes();
 		detCategories = algCategories;
 		detectionTimes = timeSeries;
 	}

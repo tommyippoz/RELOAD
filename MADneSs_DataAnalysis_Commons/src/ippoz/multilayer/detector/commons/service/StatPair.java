@@ -5,7 +5,7 @@ package ippoz.multilayer.detector.commons.service;
 
 import ippoz.multilayer.detector.commons.support.AppUtility;
 
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class StatPair.
@@ -47,7 +47,7 @@ public class StatPair {
 		this.std = std;
 	}
 	
-	public StatPair(LinkedList<Double> pCalc) {
+	public StatPair(List<Double> pCalc) {
 		avg = AppUtility.calcAvg(pCalc);
 		std = AppUtility.calcStd(pCalc, avg);
 	}

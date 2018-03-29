@@ -5,17 +5,20 @@ package ippoz.multilayer.detector.algorithm;
 
 import ippoz.madness.commons.support.CustomArrayList;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.support.AppUtility;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 import ippoz.multilayer.detector.graphics.ChartDrawer;
 import ippoz.multilayer.detector.graphics.XYChartDrawer;
 
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.special.Erf;
@@ -67,19 +70,19 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	private SPSCalculator calculator;
 	
 	/** The map of anomaly scores. */
-	private TreeMap<Date, Double> anomalies;
+	private List<TimedValue> anomalies;
 	
 	/** The map of the failures. */
-	private TreeMap<Date, Double> failures;
+	private List<TimedValue> failures;
 	
 	/** The map of the observations. */
-	private TreeMap<Date, Double> observations;
+	private List<TimedValue> observations;
 	
 	/** The upper threshold. */
-	private TreeMap<Date, Double> upperTreshold;
+	private List<TimedValue> upperTreshold;
 	
 	/** The lower threshold. */
-	private TreeMap<Date, Double> lowerTreshold;
+	private List<TimedValue> lowerTreshold;
 	
 	/** The new thresholds. */
 	private double[] newTresholds;
@@ -94,30 +97,30 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	public SPSDetector(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf);
 		calculator = new SPSCalculator();
-		anomalies = new TreeMap<Date, Double>();
-		failures = new TreeMap<Date, Double>();
-		observations = new TreeMap<Date, Double>();
-		upperTreshold = new TreeMap<Date, Double>();
-		lowerTreshold = new TreeMap<Date, Double>();
+		anomalies = new LinkedList<TimedValue>();
+		failures = new LinkedList<TimedValue>();
+		observations = new LinkedList<TimedValue>();
+		upperTreshold = new LinkedList<TimedValue>();
+		lowerTreshold = new LinkedList<TimedValue>();
 		newTresholds = null;
 	}
 	
 	@Override
-	protected double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
 		double anomalyScore;
-		observations.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
+		observations.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
 		if(newTresholds != null) {
-			lowerTreshold.put(sysSnapshot.getTimestamp(), newTresholds[0]);
-			upperTreshold.put(sysSnapshot.getTimestamp(), newTresholds[1]);
+			lowerTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), newTresholds[0]));
+			upperTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), newTresholds[1]));
 		} else {
-			upperTreshold.put(sysSnapshot.getTimestamp(), 2*observations.get(observations.lastKey()));
-			lowerTreshold.put(sysSnapshot.getTimestamp(), 0.0);
+			upperTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), 2*observations.get(observations.size()-1).getValue()));
+			lowerTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), 0.0));
 		}
 		anomalyScore = calculateAnomalyScore(sysSnapshot);
 		if(anomalyScore >= 1.0)
-			anomalies.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
+			anomalies.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
 		if(sysSnapshot.getInjectedElement() != null && sysSnapshot.getInjectedElement().getTimestamp().compareTo(sysSnapshot.getTimestamp()) == 0)
-			failures.put(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst());
+			failures.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
 		newTresholds = calculator.calculateTreshold(sysSnapshot);
 		return anomalyScore;
 	}
@@ -130,7 +133,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	 */
 	private double calculateAnomalyScore(DataSeriesSnapshot sysSnapshot){
 		if(lowerTreshold.size() > 0 && upperTreshold.size() > 0) {
-			if(sysSnapshot.getSnapValue().getFirst() <= upperTreshold.get(upperTreshold.lastKey()) && sysSnapshot.getSnapValue().getFirst() >= lowerTreshold.get(lowerTreshold.lastKey()))
+			if(sysSnapshot.getSnapValue().getFirst() <= upperTreshold.get(upperTreshold.size()-1).getValue() && sysSnapshot.getSnapValue().getFirst() >= lowerTreshold.get(upperTreshold.size()-1).getValue())
 				return 0.0;
 			else return 1.0;
 		} else return 0.0;
@@ -155,7 +158,7 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	 * @return the dataset
 	 */
 	private Map<String, Map<Double, Double>> getDataset() {
-		Date refDate = observations.firstKey();
+		Date refDate = observations.get(0).getDate();
 		Map<String, Map<Double, Double>> dataset = new HashMap<String, Map<Double, Double>>();
 		dataset.put(SPS_OBSERVATION, AppUtility.convertMapTimestamps(refDate, observations));
 		dataset.put(SPS_UPPER_BOUND, AppUtility.convertMapTimestamps(refDate, upperTreshold));

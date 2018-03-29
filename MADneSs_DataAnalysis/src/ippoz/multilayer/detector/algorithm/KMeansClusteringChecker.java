@@ -5,10 +5,10 @@ import ippoz.multilayer.detector.commons.algorithm.KMeans;
 import ippoz.multilayer.detector.commons.algorithm.KMeansData;
 import ippoz.multilayer.detector.commons.algorithm.Point;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
 
@@ -31,7 +31,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 	}
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
 
 		if (Double.isNaN(sysSnapshot.getSnapValue().getFirst())) {
 			return 0;
@@ -217,7 +217,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 	}
 
 	@Override
-	public void automaticTraining(List<ExperimentData> expList) {
+	public void automaticTraining(List<Knowledge> kList) {
 		// TODO Auto-generated method stub
 		
 	}

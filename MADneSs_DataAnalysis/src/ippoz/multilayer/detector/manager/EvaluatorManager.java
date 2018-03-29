@@ -3,16 +3,17 @@
  */
 package ippoz.multilayer.detector.manager;
 
+import ippoz.madness.commons.indicator.Indicator;
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.KnowledgeType;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
-import ippoz.multilayer.detector.commons.support.ThreadScheduler;
 import ippoz.multilayer.detector.metric.Metric;
-import ippoz.multilayer.detector.performance.EvaluationTiming;
 import ippoz.multilayer.detector.voter.AlgorithmVoter;
 import ippoz.multilayer.detector.voter.ExperimentVoter;
 
@@ -34,7 +35,7 @@ import java.util.Map;
  *
  * @author Tommy
  */
-public class EvaluatorManager extends ThreadScheduler {
+public class EvaluatorManager extends DataManager {
 	
 	/** The output folder. */
 	private String outputFolder;
@@ -45,15 +46,10 @@ public class EvaluatorManager extends ThreadScheduler {
 	/** The scores file. */
 	private String scoresFile;
 	
-	/** The experiments list. */
-	private List<ExperimentData> expList;
-	
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
 	private List<Map<Metric, Double>> expMetricEvaluations;
-	
-	private EvaluationTiming eTiming;
 	
 	/** The anomaly threshold. Votings over that threshold raise alarms. */
 	private double anomalyTreshold;
@@ -77,19 +73,17 @@ public class EvaluatorManager extends ThreadScheduler {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, List<ExperimentData> expList, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
+	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, List<MonitoredData> expList, Indicator[] indicators, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
+		super(indicators, expList);
 		this.scoresFile = scoresFile;
 		this.outputFormat = outputFormat;
-		this.expList = expList;
 		this.validationMetrics = validationMetrics;
 		this.algConvergence = algConvergence;
 		this.printOutput = printOutput;
 		detectorScoreTreshold = getVoterTreshold(voterTreshold);
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
-		eTiming = new EvaluationTiming(voterTreshold, anTresholdString, detectorScoreTreshold, anomalyTreshold, loadTrainScores().size());
 		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
 		AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
-		
 	}
 	
 	private double getVoterTreshold(String voterTreshold) {
@@ -152,14 +146,19 @@ public class EvaluatorManager extends ThreadScheduler {
 	@Override
 	protected void initRun() {
 		List<AlgorithmVoter> algVoters = loadTrainScores();
-		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(expList.size());
+		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(experimentsSize());
+		Map<KnowledgeType, Knowledge> redKMap;
 		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
 		if(printOutput){
 			setupResultsFile();
 		}
 		if(algVoters != null && algVoters.size() > 0){
-			for(ExperimentData expData : expList){
-				voterList.add(new ExperimentVoter(expData, algVoters, eTiming));
+			for(int expN = 0; expN < experimentsSize(); expN++){ 
+				redKMap = new HashMap<KnowledgeType, Knowledge>();
+				for(KnowledgeType kType : getKnowledgeTypes()){
+					redKMap.put(kType, getKnowledge(kType).get(expN));
+				}
+				voterList.add(new ExperimentVoter(algVoters, redKMap));
 			}
 		}
 		setThreadList(voterList);
@@ -279,7 +278,7 @@ public class EvaluatorManager extends ThreadScheduler {
 		} 		
 	}
 	
-	public void printTimings(String filename) {
+	/*public void printTimings(String filename) {
 		PrintWriter pw;
 		try {
 			pw = new PrintWriter(new FileOutputStream(new File(filename), true));
@@ -288,7 +287,7 @@ public class EvaluatorManager extends ThreadScheduler {
 		} catch (FileNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to find experiment timings file");
 		}
-	}
+	}*/
 
 	public List<Map<Metric, Double>> getMetricsEvaluations() {
 		return expMetricEvaluations;

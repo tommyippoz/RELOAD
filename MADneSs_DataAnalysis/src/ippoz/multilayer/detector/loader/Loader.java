@@ -3,7 +3,7 @@
  */
 package ippoz.multilayer.detector.loader;
 
-import ippoz.multilayer.detector.commons.data.ExperimentData;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface Loader {
 	
-	public abstract List<ExperimentData> fetch();
+	public abstract List<MonitoredData> fetch();
 	
 	public abstract String getRuns();
 	

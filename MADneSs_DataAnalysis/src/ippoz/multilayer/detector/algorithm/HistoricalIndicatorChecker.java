@@ -4,8 +4,9 @@
 package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
@@ -32,11 +33,11 @@ public class HistoricalIndicatorChecker extends DataSeriesDetectionAlgorithm {
 	}
 
 	@Override
-	public double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
+	public double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
 		double anomalyRate = 0.0;
 		if(sysSnapshot.getServiceCalls().size() > 0){
 			for(ServiceCall sCall : sysSnapshot.getServiceCalls()){
-				anomalyRate = anomalyRate + analyzeCall(sysSnapshot.getSnapValue().getFirst(), sCall, sysSnapshot.getSnapStat(sCall));
+				anomalyRate = anomalyRate + analyzeCall(sysSnapshot.getSnapValue().getFirst(), sCall, sysSnapshot.getSnapStat(sCall, knowledge.getStats()));
 			}
 			return anomalyRate / sysSnapshot.getServiceCalls().size();
 		} else return 0;

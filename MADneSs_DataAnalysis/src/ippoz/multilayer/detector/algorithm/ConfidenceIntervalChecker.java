@@ -4,8 +4,9 @@
 package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
@@ -50,15 +51,15 @@ public class ConfidenceIntervalChecker extends DataSeriesDetectionAlgorithm {
 	}
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(DataSeriesSnapshot sysSnapshot) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
 		double anomalyRate = 0.0;
 		double z = getZ();
 		StatPair seriesStat;
 		if(sysSnapshot.getServiceCalls().size() > 0){
 			for(ServiceCall sCall : sysSnapshot.getServiceCalls()){
-				seriesStat = sysSnapshot.getSnapStat(sCall);
+				seriesStat = sysSnapshot.getSnapStat(sCall, knowledge.getStats());
 				if(seriesStat != null)
-					anomalyRate = anomalyRate + evaluateConfInterval(sysSnapshot.getSnapValue().getFirst(), z, sysSnapshot.getServiceObsStat(sCall.getServiceName()).getAvg(), seriesStat.getAvg(), seriesStat.getStd());
+					anomalyRate = anomalyRate + evaluateConfInterval(sysSnapshot.getSnapValue().getFirst(), z, knowledge.getServiceObsStat(sCall.getServiceName()).getAvg(), seriesStat.getAvg(), seriesStat.getStd());
 				else AppLogger.logError(getClass(), "StatError", "Unable to find Stat for " + sCall.getServiceName() + ":" + dataSeries.getName());
 			}
 			return anomalyRate / sysSnapshot.getServiceCalls().size();

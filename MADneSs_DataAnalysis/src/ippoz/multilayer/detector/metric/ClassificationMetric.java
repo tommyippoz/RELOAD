@@ -3,14 +3,13 @@
  */
 package ippoz.multilayer.detector.metric;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Tommy
@@ -33,39 +32,37 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<Snapshot> snapList, Map<Date, Double> anomalyEvaluations) {
+	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
 		int detectionHits = 0;
-		Snapshot snap;
-		LinkedList<InjectedElement> overallInj = new LinkedList<InjectedElement>(); 
-		LinkedList<InjectedElement> currentInj = new LinkedList<InjectedElement>(); 
-		for(int i=0;i<snapList.size();i++){
-			snap = snapList.get(i);
-			while(!currentInj.isEmpty() && currentInj.getFirst().getFinalTimestamp().before(snap.getTimestamp())){
-				currentInj.removeFirst();
+		List<InjectedElement> overallInj = new LinkedList<InjectedElement>(); 
+		List<InjectedElement> currentInj = new LinkedList<InjectedElement>(); 
+		for(int i=0;i<knowledge.size();i++){
+			while(!currentInj.isEmpty() && currentInj.get(0).getFinalTimestamp().before(knowledge.getTimestamp(i))){
+				currentInj.remove(0);
 			}
-			if(snap.getInjectedElement() != null){
-				overallInj.add(snap.getInjectedElement());
-				currentInj.add(snap.getInjectedElement());
+			if(knowledge.getInjection(i) != null){
+				overallInj.add(knowledge.getInjection(i));
+				currentInj.add(knowledge.getInjection(i));
 			}
-			detectionHits = detectionHits + classifyMetric(snap.getTimestamp(), anomalyEvaluations.get(snap.getTimestamp()), currentInj);
+			detectionHits = detectionHits + classifyMetric(knowledge.getTimestamp(i), anomalyEvaluations.get(i).getValue(), currentInj);
 		}
-		if(snapList.size() > 0){
+		if(knowledge.size() > 0){
 			if(!absolute)
-				return 1.0*detectionHits/(snapList.size() - getUndetectable(overallInj));
+				return 1.0*detectionHits/(knowledge.size() - getUndetectable(overallInj));
 			else return detectionHits;
 		} else return 0.0;
 	}
 	
-	private int getUndetectable(LinkedList<InjectedElement> injList){
+	private int getUndetectable(List<InjectedElement> injList){
 		int undetectable = 0;
-		LinkedList<InjectedElement> current;
+		List<InjectedElement> current;
 		while(!injList.isEmpty()){
 			current = new LinkedList<InjectedElement>();
-			current.add(injList.removeFirst());
-			while(!injList.isEmpty() && current.getLast().compliesWith(injList.getFirst())){
-				current.add(injList.removeFirst());
+			current.add(injList.remove(0));
+			while(!injList.isEmpty() && current.get(current.size()-1).compliesWith(injList.get(0))){
+				current.add(injList.remove(0));
 			}
-			undetectable = undetectable + ((int)(current.getLast().getFinalTimestamp().getTime() - current.getFirst().getTimestamp().getTime())/1000 - current.size());
+			undetectable = undetectable + ((int)(current.get(current.size()-1).getFinalTimestamp().getTime() - current.get(0).getTimestamp().getTime())/1000 - current.size());
 		}
 		return undetectable;
 	}
@@ -92,6 +89,6 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		} else return 0.0;
 	}*/
 
-	protected abstract int classifyMetric(Date snapTime, Double anEvaluation, LinkedList<InjectedElement> injList);
+	protected abstract int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList);
 
 }

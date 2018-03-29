@@ -4,11 +4,11 @@
 package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.MultipleSnapshot;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.util.LinkedList;
@@ -39,7 +39,7 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 	
 	private double[] coefficients;
 	
-	private LinkedList<Double> winX, winY;
+	private List<Double> winX, winY;
 	
 	public InvariantChecker(MultipleDataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(conf);
@@ -87,16 +87,17 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 	}
 
 	@Override
-	protected double evaluateSnapshot(Snapshot sysSnapshot) {
+	protected double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		double xt, yt;
 		double snapEval = 0.0;
+		Snapshot sysSnapshot = knowledge.get(getAlgorithmType(), currentIndex, null);
 		if(hasCoefficients() && sysSnapshot instanceof MultipleSnapshot){
 			xt = ((MultipleSnapshot)sysSnapshot).getFirstSeriesValue().getFirst();
 			yt = ((MultipleSnapshot)sysSnapshot).getLastSeriesValue().getFirst();
 			if(winX.size() >= window){
 				snapEval = Math.abs(coeffScore(xt) - yt) > tolerance ? 1.0 : 0.0;
-				winX.removeFirst();
-				winY.removeFirst();
+				winX.remove(0);
+				winY.remove(0);
 			} 
 			winX.add(xt);
 			winY.add(yt);
@@ -116,19 +117,19 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 		return cScore;
 	}
 
-	private double[][] buildMatrix(List<ExperimentData> expList){
+	private double[][] buildMatrix(List<Knowledge> kList){
 		int count = 0;
-		for(ExperimentData ed : expList){
-			if(ed.getSnapshotNumber() > window)
-				count = count + ed.getSnapshotNumber() - window;
+		for(Knowledge k : kList){
+			if(k.size() > window)
+				count = count + k.size() - window;
 		}
 		return new double[count][];
 	}
 
 	@Override
-	public void automaticTraining(List<ExperimentData> expList) {
+	public void automaticTraining(List<Knowledge> kList) {
 		int rowIndex = 0;
-		double[][] x = buildMatrix(expList);
+		double[][] x = buildMatrix(kList);
 		double[] y = new double[x.length];
 		double[] current;
 		LinkedList<Double> slidingx = new LinkedList<Double>();
@@ -137,10 +138,9 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 		OLSMultipleLinearRegression sr = new OLSMultipleLinearRegression();
 		try {
 			if(!hasCoefficients()){
-				
-				for(ExperimentData ed : expList){
-					for(int i=0;i<ed.getSnapshotNumber();i++){
-						ms = ed.getMultipleSnapshot(i, invDs);
+				for(Knowledge k : kList){
+					for(int i=0;i<k.size();i++){
+						ms = k.generateMultipleSnapshot(i, invDs);
 						if(i >= window){
 							current = buildArray(slidingy.toArray(new Double[slidingy.size()]), slidingx.toArray(new Double[slidingx.size()]), ms.getLastSeriesValue().getFirst());
 							if(!sumsZero(current)){

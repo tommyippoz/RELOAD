@@ -3,12 +3,10 @@
  */
 package ippoz.multilayer.detector.metric;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Tommy
@@ -24,11 +22,11 @@ public class Matthews_Coefficient extends BetterMaxMetric {
 	 * @see ippoz.multilayer.detector.metric.Metric#evaluateAnomalyResults(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<Snapshot> snapList, Map<Date, Double> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
-		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
-		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(snapList, anomalyEvaluations);
+	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
+		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
 		double num = tp*tn - fp*fn;
 		if(num != 0.0)
 			return 1.0*num/Math.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn));

@@ -4,11 +4,11 @@
 package ippoz.multilayer.detector.reputation;
 
 import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Class Reputation.
@@ -46,23 +46,21 @@ public abstract class Reputation {
 	 * @param expData the experiment data
 	 * @return the computed reputation
 	 */
-	public double evaluateReputation(DetectionAlgorithm alg, LinkedList<Snapshot> snapList){
-		Snapshot currentSnapshot;
-		HashMap<Date, Double> anomalyEvaluations = new HashMap<Date, Double>();
-		for(int i=0;i<snapList.size();i++){
-			currentSnapshot = snapList.get(i);
-			anomalyEvaluations.put(currentSnapshot.getTimestamp(), alg.snapshotAnomalyRate(currentSnapshot));
+	public double evaluateReputation(DetectionAlgorithm alg, Knowledge knowledge){
+		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
+		for(int i=0;i<knowledge.size();i++){
+			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), alg.snapshotAnomalyRate(knowledge, i)));
 		}
-		return evaluateExperimentReputation(snapList, anomalyEvaluations);
+		return evaluateExperimentReputation(knowledge, anomalyEvaluations);
 	}
 
 	/**
 	 * Votes experiment reputation.
 	 *
-	 * @param snapList the list of snapshots
+	 * @param knowledge the list of snapshots
 	 * @param anomalyEvaluations the anomaly evaluations of each snapshot
 	 * @return the final reputation
 	 */
-	protected abstract double evaluateExperimentReputation(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations);
+	protected abstract double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations);
 	
 }

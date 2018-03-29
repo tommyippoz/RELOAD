@@ -4,16 +4,16 @@
 package ippoz.multilayer.detector.commons.datafetcher;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.datafetcher.database.DatabaseManager;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DatabaseFetcher.
@@ -76,7 +76,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getServiceStats()
 	 */
 	@Override
-	protected HashMap<String, ServiceStat> getServiceStats() {
+	protected Map<String, ServiceStat> getServiceStats() {
 		return dbManager.getServiceStats();
 	}
 
@@ -113,7 +113,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getPerformanceTimings()
 	 */
 	@Override
-	protected HashMap<String, HashMap<LayerType, List<Integer>>> getPerformanceTimings() {
+	protected Map<String, Map<LayerType, List<Integer>>> getPerformanceTimings() {
 		return dbManager.getPerformanceTimings();
 	}
 

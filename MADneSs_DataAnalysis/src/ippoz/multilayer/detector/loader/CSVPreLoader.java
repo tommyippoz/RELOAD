@@ -5,10 +5,10 @@ package ippoz.multilayer.detector.loader;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.support.AppLogger;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.IndicatorData;
-import ippoz.multilayer.detector.commons.data.Observation;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
+import ippoz.multilayer.detector.commons.knowledge.data.IndicatorData;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
 
 import java.io.BufferedReader;
@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -38,8 +39,8 @@ public class CSVPreLoader extends CSVLoader {
 	
 	private static final String FAULTY_TAGS = "FAULTY_TAGS";
 	
-	private LinkedList<ExperimentData> dataList;
-	private LinkedList<String> faultyTagList;
+	private List<MonitoredData> dataList;
+	private List<String> faultyTagList;
 	private int anomalyWindow;
 	
 	public CSVPreLoader(LinkedList<Integer> runs, PreferencesManager prefManager, String tag, int anomalyWindow) {
@@ -78,7 +79,7 @@ public class CSVPreLoader extends CSVLoader {
 		Observation current = null;
 		int rowIndex = 0, i;
 		try {
-			dataList = new LinkedList<ExperimentData>();
+			dataList = new LinkedList<MonitoredData>();
 			if(csvFile != null && csvFile.exists()){
 				reader = new BufferedReader(new FileReader(csvFile));
 				readLine = reader.readLine();
@@ -89,7 +90,7 @@ public class CSVPreLoader extends CSVLoader {
 						if(readLine.length() > 0){
 							if(rowIndex % experimentRows == 0){ 
 								if(obList != null && obList.size() > 0){
-									dataList.add(new ExperimentData("Run_" + getRun(rowIndex-1), obList, injList, null));
+									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1), obList, injList));
 								}
 								injList = new LinkedList<InjectedElement>();
 								obList = new LinkedList<Observation>();
@@ -122,7 +123,7 @@ public class CSVPreLoader extends CSVLoader {
 	}
 
 	@Override
-	public LinkedList<ExperimentData> fetch() {
+	public List<MonitoredData> fetch() {
 		return dataList;
 	}
 

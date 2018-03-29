@@ -5,10 +5,11 @@ package ippoz.multilayer.detector.algorithm;
 
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.multilayer.detector.commons.data.Snapshot;
 import ippoz.multilayer.detector.commons.dataseries.ComplexDataSeries;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.dataseries.MultipleDataSeries;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.KnowledgeType;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
@@ -78,6 +79,24 @@ public abstract class DetectionAlgorithm {
 		}
 	}
 	
+	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
+		switch(algType){
+			case SPS:
+				return KnowledgeType.SLIDING;
+			case HIST:
+			case CONF:
+			case WER:
+			case PEA:
+				return KnowledgeType.SINGLE;
+			case INV:
+			case RCC:
+			case KMEANS:
+				return KnowledgeType.GLOBAL;
+			default:
+				return null;
+		}
+	}
+	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
 		return dataSeries instanceof MultipleDataSeries && algType == AlgorithmType.INV || !(dataSeries instanceof MultipleDataSeries) && algType != AlgorithmType.INV;
 	}
@@ -122,21 +141,23 @@ public abstract class DetectionAlgorithm {
 	
 	/**
 	 * Defines the anomaly rate of a given snapshot.
+	 * @param knowledge 
 	 *
 	 * @param sysSnapshot the given snapshot
 	 * @return the anomaly rate of the snapshot
 	 */
-	public double snapshotAnomalyRate(Snapshot snapshot){
-		return anomalyTrueFalse(evaluateSnapshot(snapshot))*getWeight();
+	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
+		return anomalyTrueFalse(evaluateSnapshot(knowledge, currentIndex))*getWeight();
 	}
 	
 	/**
 	 * Evaluates a snapshot.
 	 *
 	 * @param sysSnapshot the snapshot
+	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	protected abstract double evaluateSnapshot(Snapshot sysSnapshot);
+	protected abstract double evaluateSnapshot(Knowledge knowledge, int currentIndex);
 	
 	/**
 	 * Prints the results of the detection.
@@ -146,11 +167,11 @@ public abstract class DetectionAlgorithm {
 	 * @param expTag the experiment tag
 	 */
 	public void printResults(String typeTag, String outFolderName, String expTag){
-		if(typeTag.toUpperCase().equals("TEXT"))
+		if(typeTag.equalsIgnoreCase("TEXT"))
 			printTextResults(outFolderName, expTag);
-		else if(typeTag.toUpperCase().equals("IMAGE"))
+		else if(typeTag.equalsIgnoreCase("IMAGE"))
 			printImageResults(outFolderName, expTag);
-		else if(!typeTag.toUpperCase().equals("NULL")){
+		else if(!typeTag.equalsIgnoreCase("NULL")){
 			AppLogger.logError(getClass(), "OutputTypeError", "Unable to recognize chosen output type");
 		}
 	}

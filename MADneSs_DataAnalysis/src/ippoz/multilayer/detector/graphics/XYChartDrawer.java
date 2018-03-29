@@ -7,9 +7,7 @@ import ippoz.multilayer.detector.algorithm.SPSDetector;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;

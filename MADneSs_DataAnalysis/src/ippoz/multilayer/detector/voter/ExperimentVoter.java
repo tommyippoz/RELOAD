@@ -4,16 +4,16 @@
 package ippoz.multilayer.detector.voter;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.madness.commons.support.CustomArrayList;
+import ippoz.multilayer.detector.algorithm.DetectionAlgorithm;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.knowledge.KnowledgeType;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 import ippoz.multilayer.detector.graphics.HistogramChartDrawer;
 import ippoz.multilayer.detector.metric.Metric;
-import ippoz.multilayer.detector.performance.EvaluationTiming;
-import ippoz.multilayer.detector.performance.ExperimentTiming;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -59,12 +59,12 @@ public class ExperimentVoter extends Thread {
 	private Map<Date, Map<AlgorithmVoter, Double>> partialVoting;
 	
 	/** The contracted results of the voting. */
-	private List<VotingResult> voting;
+	private List<TimedValue> voting;
 	
 	/** The list of the snapshots for each voter */
-	private List<Map<AlgorithmVoter, Snapshot>> expSnapMap;
+	//private List<Map<AlgorithmVoter, Snapshot>> expSnapMap;
 	
-	private EvaluationTiming eTiming;
+	private Map<KnowledgeType, Knowledge> kMap;
 	
 	/**
 	 * Instantiates a new experiment voter.
@@ -73,15 +73,15 @@ public class ExperimentVoter extends Thread {
 	 * @param algVoters the algorithm list
 	 * @param pManager 
 	 */
-	public ExperimentVoter(ExperimentData expData, List<AlgorithmVoter> algVoters, EvaluationTiming eTiming) {
+	public ExperimentVoter(List<AlgorithmVoter> algVoters, Map<KnowledgeType, Knowledge> kMap) {
 		super();
-		this.expName = expData.getName();
 		this.algList = deepClone(algVoters);
-		this.eTiming = eTiming;
-		expSnapMap = loadExpAlgSnapshots(expData);
+		this.kMap = kMap;
+		expName = kMap.get(KnowledgeType.GLOBAL).getTag();
+		//expSnapMap = loadExpAlgSnapshots(expData);
 	}
 	
-	private List<Map<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
+	/*private List<Map<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
 		Map<AlgorithmVoter, Snapshot> newMap;
 		List<Map<AlgorithmVoter, Snapshot>> expAlgMap = new ArrayList<Map<AlgorithmVoter, Snapshot>>(expData.getSnapshotNumber());
 		for(int i=0;i<expData.getSnapshotNumber();i++){
@@ -92,7 +92,7 @@ public class ExperimentVoter extends Thread {
 			expAlgMap.add(newMap);
 		}
 		return expAlgMap;
-	}
+	}*/
 	
 	/**
 	 * Deep clone of the voters' list.
@@ -117,28 +117,21 @@ public class ExperimentVoter extends Thread {
 	 */
 	@Override
 	public void run() {
-		double baseTime;
 		Snapshot snapshot = null;
 		Map<AlgorithmVoter, Double> snapVoting;
-		ExperimentTiming expTiming = new ExperimentTiming(expSnapMap.size());
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
-		voting = new ArrayList<VotingResult>(expSnapMap.size());
+		voting = new ArrayList<TimedValue>(kMap.get(KnowledgeType.GLOBAL).size());
 		if(algList.size() > 0) {
-			for(int i=0;i<expSnapMap.size();i++){
+			for(int i=0;i<kMap.get(KnowledgeType.GLOBAL).size();i++){
 				snapVoting = new HashMap<AlgorithmVoter, Double>();
 				for(AlgorithmVoter aVoter : algList){
-					baseTime = AppUtility.readMillis();
-					snapshot = expSnapMap.get(i).get(aVoter);
-					snapVoting.put(aVoter, aVoter.voteSnapshot(snapshot));
-					expTiming.addExpTiming(aVoter.getAlgorithmType(), AppUtility.readMillis() - baseTime);
+					//snapshot = expSnapMap.get(i).get(aVoter);
+					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
-				baseTime = AppUtility.readMillis();
-				partialVoting.put(snapshot.getTimestamp(), snapVoting);
-				voting.add(new VotingResult(snapshot.getTimestamp(), voteResults(snapVoting)));
-				expTiming.setVotingTime(AppUtility.readMillis() - baseTime);
+				partialVoting.put(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), snapVoting);
+				voting.add(new TimedValue(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), voteResults(snapVoting)));
 			}
 		}
-		eTiming.addExperimentTiming(expTiming);
 	}
 	
 	/**
@@ -205,11 +198,11 @@ public class ExperimentVoter extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(getSimpleSnapshotList(), voting, anomalyTreshold));
+				metResults.put(met, met.evaluateAnomalyResults(kMap.get(KnowledgeType.GLOBAL), voting, anomalyTreshold));
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expName + "," + expSnapMap.size() + ",");
+				pw.append(expName + "," + kMap.get(KnowledgeType.GLOBAL).size() + ",");
 				for(Metric met : validationMetrics){
 					pw.append(String.valueOf(metResults.get(met)) + ",");
 				}
@@ -222,13 +215,13 @@ public class ExperimentVoter extends Thread {
 		return metResults;
 	}
 
-	private List<Snapshot> getSimpleSnapshotList() {
-		List<Snapshot> simpleList = new ArrayList<Snapshot>(expSnapMap.size());
+	/*private List<Snapshot> getSimpleSnapshotList() {
+		List<Snapshot> simpleList = new ArrayList<Snapshot>(kMap.get(KnowledgeType.GLOBAL).size());
 		for(Map<AlgorithmVoter, Snapshot> map : expSnapMap){
 			simpleList.add(map.get(algList.get(0)));
 		}
 		return simpleList;
-	}
+	}*/
 
 	/**
 	 * Prints the graphics.
@@ -239,31 +232,31 @@ public class ExperimentVoter extends Thread {
 	 */
 	private void printGraphics(String outFolderName, double anomalyTreshold, double algConvergence){
 		HistogramChartDrawer hist;
-		Map<String, List<VotingResult>> voterMap = new HashMap<String, List<VotingResult>>();
+		Map<String, List<TimedValue>> voterMap = new HashMap<String, List<TimedValue>>();
 		voterMap.put(ANOMALY_SCORE_LABEL, voting);
-		voterMap.put(FAILURE_LABEL, convertFailures(expSnapMap));
+		//voterMap.put(FAILURE_LABEL, convertFailures(expSnapMap));
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, algConvergence);
 		hist.saveToFile(outFolderName + "/voter/graphic/" + expName + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
 	
-	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<VotingResult>> voterMap) {
+	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<TimedValue>> voterMap) {
 		Map<String, Map<Double, Double>> map = new HashMap<String, Map<Double,Double>>();
 		for(String mapTag : voterMap.keySet()){
 			map.put(mapTag, new TreeMap<Double,Double>());
-			for(VotingResult vr : voterMap.get(mapTag)){
+			for(TimedValue vr : voterMap.get(mapTag)){
 				map.get(mapTag).put(vr.getDateOffset(voterMap.get(mapTag).get(0).getDate()), vr.getValue());
 			}
 		}
 		return map;
 	}
 
-	private List<VotingResult> convertFailures(List<Map<AlgorithmVoter, Snapshot>> expSnapMap) {
-		List<VotingResult> failList = new LinkedList<VotingResult>();
+	private List<TimedValue> convertFailures(List<Map<AlgorithmVoter, Snapshot>> expSnapMap) {
+		List<TimedValue> failList = new LinkedList<TimedValue>();
 		for(Map<AlgorithmVoter, Snapshot> map : expSnapMap){
 			if(map.get(algList.get(0)).getInjectedElement() != null){
-				failList.add(new VotingResult(map.get(algList.get(0)).getTimestamp(), 1.0));
+				failList.add(new TimedValue(map.get(algList.get(0)).getTimestamp(), 1.0));
 				for(int i=1;i<=map.get(algList.get(0)).getInjectedElement().getDuration();i++){
-					failList.add(new VotingResult(new Date(map.get(algList.get(0)).getTimestamp().getTime() + i*1000), -1.0));
+					failList.add(new TimedValue(new Date(map.get(algList.get(0)).getTimestamp().getTime() + i*1000), -1.0));
 				}
 			}
 		}
@@ -301,7 +294,7 @@ public class ExperimentVoter extends Thread {
 						count++;
 					}
 				}
-				writer.write(AppUtility.getSecondsBetween(timestamp, expSnapMap.get(0).get(algList.get(0)).getTimestamp()) + ",");
+				writer.write(AppUtility.getSecondsBetween(timestamp, kMap.get(KnowledgeType.GLOBAL).getTimestamp(0)) + ",");
 				writer.write(count + ",");
 				for(LayerType currentLayer : countMap.keySet()){
 					for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){

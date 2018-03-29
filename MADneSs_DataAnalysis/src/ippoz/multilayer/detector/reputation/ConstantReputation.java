@@ -3,11 +3,10 @@
  */
 package ippoz.multilayer.detector.reputation;
 
-import ippoz.multilayer.detector.commons.data.Snapshot;
+import ippoz.multilayer.detector.commons.knowledge.Knowledge;
+import ippoz.multilayer.detector.commons.support.TimedValue;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class ConstantReputation.
@@ -34,7 +33,7 @@ public class ConstantReputation extends Reputation {
 	 * @see ippoz.multilayer.detector.reputation.Reputation#evaluateExperimentReputation(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	protected double evaluateExperimentReputation(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
+	protected double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
 		return repValue;
 	}
 

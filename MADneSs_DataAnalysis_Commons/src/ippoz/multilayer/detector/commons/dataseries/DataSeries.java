@@ -7,8 +7,8 @@ import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
-import ippoz.multilayer.detector.commons.data.Observation;
-import ippoz.multilayer.detector.commons.data.SnapshotValue;
+import ippoz.multilayer.detector.commons.knowledge.data.Observation;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.multilayer.detector.commons.service.IndicatorStat;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
@@ -17,6 +17,7 @@ import ippoz.multilayer.detector.commons.support.AppLogger;
 
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -137,7 +138,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		} else return new IndicatorDataSeries(new Indicator(seriesName, layerType, Double.class), dataType);
 	}
 	
-	public static LinkedList<DataSeries> simpleCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+	public static List<DataSeries> simpleCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
 		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
@@ -147,7 +148,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return simpleInd;
 	}
 	
-	public static LinkedList<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, LinkedList<Entry<String, String>> couples) {
+	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<Entry<String, String>> couples) {
 		DataSeries firstDS, secondDS;
 		LinkedList<DataSeries> outList = new LinkedList<DataSeries>();
 		LinkedList<IndicatorDataSeries> simpleInd = new LinkedList<IndicatorDataSeries>();
@@ -197,7 +198,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return outList;
 	}
 
-	public static DataSeries fromList(LinkedList<IndicatorDataSeries> seriesList, String newSeriesName) {
+	public static DataSeries fromList(List<IndicatorDataSeries> seriesList, String newSeriesName) {
 		for(DataSeries ds : seriesList){
 			if(ds.toString().equals(newSeriesName)) {
 				return ds;

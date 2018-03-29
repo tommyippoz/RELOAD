@@ -6,7 +6,7 @@ package ippoz.multilayer.detector.metric;
 import ippoz.multilayer.detector.commons.failure.InjectedElement;
 
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class TN_Metric.
@@ -34,7 +34,7 @@ public class TN_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(Date snapTime, Double anEvaluation, LinkedList<InjectedElement> injList) {
+	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {
 		if(injList.isEmpty() && !Metric.anomalyTrueFalse(anEvaluation)){
 			return 1;
 		} else return 0;

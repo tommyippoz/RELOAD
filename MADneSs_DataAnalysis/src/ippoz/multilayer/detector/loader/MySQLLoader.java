@@ -4,9 +4,9 @@
 package ippoz.multilayer.detector.loader;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.datafetcher.DataFetcher;
 import ippoz.multilayer.detector.commons.datafetcher.DatabaseFetcher;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
 import ippoz.multilayer.detector.commons.support.ThreadScheduler;
@@ -52,7 +52,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	private List<Integer> expIDs;
 	
 	/** The data read by the loader. */
-	private List<ExperimentData> readData;
+	private List<MonitoredData> readData;
 	
 	private List<LayerType> selectedLayers;
 	
@@ -73,7 +73,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		dbName = preferencesManager.getPreference(DB_NAME);
 		dbUsername = preferencesManager.getPreference(DB_USERNAME);
 		dbPassword = preferencesManager.getPreference(DB_PASSWORD);
-		readData = new LinkedList<ExperimentData>();
+		readData = new LinkedList<MonitoredData>();
 		loadLayers(layersString);
 	}
 	
@@ -103,7 +103,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 * @return the linked list
 	 */
 	@Override
-	public List<ExperimentData> fetch(){
+	public List<MonitoredData> fetch(){
 		long start = System.currentTimeMillis();
 		try {
 			start();
@@ -150,8 +150,8 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		ExperimentData data = ((DataFetcher)t).getFetchedData();
-		if(data.getSnapshotNumber() > 5)
+		MonitoredData data = ((DataFetcher)t).getFetchedData();
+		if(data != null && data.size() > 5)
 			readData.add(data);
 		((DataFetcher)t).flush();
 	}

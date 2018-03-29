@@ -3,10 +3,11 @@
  */
 package ippoz.multilayer.detector.loader;
 
-import ippoz.multilayer.detector.commons.data.ExperimentData;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -14,22 +15,22 @@ import java.util.LinkedList;
  */
 public abstract class SimpleLoader implements Loader {
 	
-	protected LinkedList<ExperimentData> dataList;
-	private LinkedList<Integer> runs;
+	protected List<MonitoredData> dataList;
+	private List<Integer> runs;
 		
-	public SimpleLoader(LinkedList<Integer> runs){
+	public SimpleLoader(List<Integer> runs){
 		Collections.sort(runs);
 		this.runs = runs;
-		dataList = new LinkedList<ExperimentData>();
+		dataList = new LinkedList<MonitoredData>();
 	}
 	
 	public synchronized boolean canRead(int index){
 		if(runs != null && runs.size() > 0){
-			while(runs.size() > 0 && index > runs.getFirst()){
-				runs.removeFirst();
+			while(runs.size() > 0 && index > runs.get(0)){
+				runs.remove(0);
 			}
 			if(runs.size() > 0)
-				return index == runs.getFirst();
+				return index == runs.get(0);
 			else return false;
 		} else return false;
 	}

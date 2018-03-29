@@ -5,8 +5,8 @@ package ippoz.multilayer.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
-import ippoz.multilayer.detector.commons.data.ExperimentData;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.commons.support.PreferencesManager;
@@ -53,7 +53,7 @@ public class DetectionManager {
 	/** The algorithm types (SPS, Historical...). */
 	private List<AlgorithmType> algTypes;
 	
-	private LinkedList<DataSeries> selectedDataSeries;
+	private List<DataSeries> selectedDataSeries;
 	
 	/**
 	 * Instantiates a new detection manager.
@@ -142,7 +142,7 @@ public class DetectionManager {
 		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").iterator().next().fetch(), iManager.loadConfigurations(algTypes), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes, iManager.getFilteringTreshold());
+				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").get(0).fetch(), iManager.loadConfigurations(algTypes), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes, iManager.getFilteringTreshold());
 				selectedDataSeries = fManager.filter();
 				fManager.flush();
 			}
@@ -203,8 +203,8 @@ public class DetectionManager {
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		List<Loader> lList = buildLoader("validation");
-		List<ExperimentData> bestExpList = null;
-		List<ExperimentData> expList;
+		List<MonitoredData> bestExpList = null;
+		List<MonitoredData> expList;
 		String bestRuns = null;
 		double bestScore = 0;
 		double score;
@@ -234,7 +234,7 @@ public class DetectionManager {
 		}
 	}
 	
-	private double singleEvaluation(Metric[] metList, List<ExperimentData> expList, boolean printOutput, boolean summaryFlag){
+	private double singleEvaluation(Metric[] metList, List<MonitoredData> expList, boolean printOutput, boolean summaryFlag){
 		EvaluatorManager eManager;
 		double bestScore;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
@@ -244,10 +244,10 @@ public class DetectionManager {
 		for(String voterTreshold : voterTresholds){
 			evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
 			for(String anomalyTreshold : anomalyTresholds){
-				eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(), expList, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
+				eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(), expList, expList.get(0).getIndicators(), metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
 				if(eManager.detectAnomalies()) {
 					evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
-					eManager.printTimings(iManager.getOutputFolder() + "evaluationTimings.csv");
+					//eManager.printTimings(iManager.getOutputFolder() + "evaluationTimings.csv");
 				}
 				nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
 				eManager.flush();
