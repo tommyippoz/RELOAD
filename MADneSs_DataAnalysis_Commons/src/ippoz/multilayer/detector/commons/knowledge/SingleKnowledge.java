@@ -3,8 +3,11 @@
  */
 package ippoz.multilayer.detector.commons.knowledge;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
+import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 
@@ -20,14 +23,17 @@ public class SingleKnowledge extends Knowledge {
 	}
 
 	@Override
-	public List<Snapshot> toArray() {
-		// TODO Auto-generated method stub
-		return null;
+	public KnowledgeType getKnowledgeType() {
+		return KnowledgeType.SINGLE;
 	}
 
 	@Override
-	public KnowledgeType getKnowledgeType() {
-		return KnowledgeType.SINGLE;
+	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
+		List<Snapshot> snapArray = new ArrayList<Snapshot>(baseData.size());
+		for(int i=0;i<baseData.size();i++){
+			snapArray.add(buildSnapshotFor(algType, i, dataSeries));
+		}
+		return snapArray;
 	}
 
 }

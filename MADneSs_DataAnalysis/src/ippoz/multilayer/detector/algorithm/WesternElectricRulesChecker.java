@@ -7,6 +7,7 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.StatPair;
 
@@ -27,11 +28,12 @@ public class WesternElectricRulesChecker extends DataSeriesDetectionAlgorithm {
 	}
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double anomalyRate = 0.0;
+		DataSeriesSnapshot dsSnapshot = (DataSeriesSnapshot) sysSnapshot;
 		if(sysSnapshot.getServiceCalls().size() > 0){
 			for(ServiceCall sCall : sysSnapshot.getServiceCalls()){
-				anomalyRate = anomalyRate + evaluateZones(updateHistZones(sCall, sysSnapshot.getSnapValue().getFirst(), sysSnapshot.getSnapStat(sCall, knowledge.getStats())));
+				anomalyRate = anomalyRate + evaluateZones(updateHistZones(sCall, dsSnapshot.getSnapValue().getFirst(), dsSnapshot.getSnapStat(sCall, knowledge.getStats())));
 			}
 			return anomalyRate / sysSnapshot.getServiceCalls().size();
 		} else return 0;

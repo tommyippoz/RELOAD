@@ -5,6 +5,8 @@ package ippoz.multilayer.detector.commons.knowledge;
 
 import java.util.List;
 
+import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
+import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 
@@ -25,7 +27,7 @@ public class GlobalKnowledge extends Knowledge {
 	}
 
 	@Override
-	public List<Snapshot> toArray() {
+	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -117,14 +117,12 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
-		long startTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
-		System.out.println("T " + (System.currentTimeMillis()-startTime));
-		startTime = System.currentTimeMillis();
 		metricScore = evaluateMetricScore();
-		System.out.println("MS " + (System.currentTimeMillis()-startTime));
 		//reputationScore = evaluateReputationScore();
-		bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
+		if(getReputationScore() > 0.0)
+			bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
+		else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
 		bestConf.addItem(AlgorithmConfiguration.SCORE, String.valueOf(getMetricScore()));
 	}
 	
@@ -154,7 +152,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			metricResults.add(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
-		sameResultFlag = AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
+		sameResultFlag = kList.size() > 1 && AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
 		return AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
 	}
 	

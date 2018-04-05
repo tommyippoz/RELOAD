@@ -24,6 +24,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,10 +74,11 @@ public class PearsonCombinationManager {
 	}
 	
 	public void loadPearsonResults(File pearsonFile) {
-		pResults = new LinkedList<PearsonResult>();
+		List<DataSeries> nList;
 		BufferedReader reader;
 		String readed;
 		try {
+			pResults = new LinkedList<PearsonResult>();
 			if(pearsonFile.exists()){
 				reader = new BufferedReader(new FileReader(pearsonFile));
 				while(reader.ready()){
@@ -83,7 +86,18 @@ public class PearsonCombinationManager {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
-							pResults.add(new PearsonResult(DataSeries.fromString(readed.split(",")[0], true), DataSeries.fromString(readed.split(",")[1], true), Double.parseDouble(readed.split(",")[2]), Double.parseDouble(readed.split(",")[3])));
+							if(readed.split(",").length > 0){
+								if(readed.split(",")[0].contains("@")){
+									nList = new ArrayList<DataSeries>(readed.split(",")[0].split("@").length);
+									for(String sName : readed.split(",")[0].split("@")){
+										nList.add(DataSeries.fromString(sName.trim(), true));
+									}
+								} else {
+									nList = new ArrayList<DataSeries>(1);
+									nList.add(DataSeries.fromString(readed.split(",")[0].trim(), true));
+								}
+								pResults.add(new PearsonResult(nList, Double.parseDouble(readed.split(",")[1]), Double.parseDouble(readed.split(",")[2])));
+							}
 						}
 					}
 				}
@@ -95,32 +109,78 @@ public class PearsonCombinationManager {
 	}
 	
 	public void calculatePearsonIndexes(){
+		Integer correlationSize = 2;
 		PearsonResult pr;
 		List<Double> pExp;
-		pResults = new LinkedList<PearsonResult>();
-		AppLogger.logInfo(getClass(), "Calculating Indicator Correlations");
-		for(DataSeries ds1 : seriesExpData.keySet()){
-			for(DataSeries ds2 : seriesExpData.keySet()){
-				if(!ds1.equals(ds2)){
-					pExp = new ArrayList<Double>(kList.size());
-					for(Knowledge kItem : kList){
-						pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
+		List<DataSeries> dsList;
+		Map<Integer, List<PearsonResult>> pMap;
+		try {
+			AppLogger.logInfo(getClass(), "Calculating Indicator Correlations");
+			pMap = new HashMap<Integer, List<PearsonResult>>();
+			pMap.put(2, new LinkedList<PearsonResult>());
+			for(DataSeries ds1 : seriesExpData.keySet()){
+				for(DataSeries ds2 : seriesExpData.keySet()){
+					if(!ds1.equals(ds2)){
+						pExp = new ArrayList<Double>(kList.size());
+						for(Knowledge kItem : kList){
+							pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
+						}
+						dsList = new ArrayList<DataSeries>(2);
+						dsList.add(ds1);
+						dsList.add(ds2);
+						pr = new PearsonResult(dsList, pExp);
+						if(pr.isValid(pMap.get(2), 0.90))
+							pMap.get(2).add(pr);
 					}
-					pr = new PearsonResult(ds1, ds2, pExp);
-					if(pr.isValid(pResults))
-						pResults.add(pr);
 				}
 			}
+			while(pMap.get(correlationSize) != null && pMap.get(correlationSize).size() > 1){
+				
+				correlationSize++;
+				pMap.put(correlationSize, new LinkedList<PearsonResult>());
+				
+				for(int i=0;i<pMap.get(correlationSize-1).size();i++){
+					PearsonResult res = pMap.get(correlationSize-1).get(i);
+					for(int j=i+1;j<pMap.get(correlationSize-1).size();j++){
+						PearsonResult otherRes = pMap.get(correlationSize-1).get(j);
+						if(!res.equals(otherRes) && match(res, otherRes)){
+							dsList = merge(res, otherRes);
+							if(dsList.size() >= correlationSize){
+								if(!pMap.containsKey(dsList.size()))
+									pMap.put(dsList.size(), new LinkedList<PearsonResult>());
+								pr = new PearsonResult(dsList, Math.abs(res.getAvg()) <= Math.abs(otherRes.getAvg()) ? res.getAvg() : otherRes.getAvg(), res.getStd() + otherRes.getStd());
+								if(pr.isValid(pMap.get(dsList.size()), 0.99))
+									pMap.get(dsList.size()).add(pr);
+							}
+						}
+					}
+				}
+				
+				AppLogger.logInfo(getClass(), "Found " + pMap.get(correlationSize).size() + " valid " + correlationSize + "-uples correlations");
+				
+			}
+			
+			pResults = new LinkedList<PearsonResult>();
+			List<Integer> keys = new ArrayList<Integer>(pMap.keySet());
+			Collections.sort(keys);
+			for(Integer cIndex : keys){
+				if(pMap.get(cIndex) != null && pMap.get(cIndex).size() > 0) {
+					pResults.addAll(pMap.get(cIndex));
+				}
+			}
+			AppLogger.logInfo(getClass(), "Found " + pResults.size() + " valid correlations");
+			
+			printPearsonResults();
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Error while calculating pearson correlations");
 		}
-		printPearsonResults();
-		AppLogger.logInfo(getClass(), "Found " + pResults.size() + " valid correlations");
 	}
 	
 	private void printPearsonResults() {
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(indexesFile));
-			writer.write("data_series,data_series,avg,std\n");
+			writer.write("data_series,avg,std\n");
 			for(PearsonResult pr : pResults){
 				writer.write(pr.toFileRow() + "\n");
 			}
@@ -140,7 +200,7 @@ public class PearsonCombinationManager {
 	
 	private Map<AlgorithmType, List<AlgorithmConfiguration>> adaptConf(Map<AlgorithmType, List<AlgorithmConfiguration>> confList, PearsonResult pr) {
 		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){
-			ac.addItem(AlgorithmConfiguration.DETAIL, pr.getDs1().toString() + ";" + pr.getDs2().toString() + ";" + String.valueOf(pr.getAvg()) + ";" + String.valueOf(pr.getStd()));
+			ac.addItem(AlgorithmConfiguration.DETAIL, pr.toFileRow());
 		}
 		return confList;
 	}
@@ -152,50 +212,85 @@ public class PearsonCombinationManager {
 	
 	private class PearsonResult {
 		
-		private DataSeries ds1;
-		private DataSeries ds2;
+		private List<DataSeries> dsList;
 		private StatPair prStats;
 		
-		public PearsonResult(DataSeries ds1, DataSeries ds2, List<Double> pCalc) {
-			this.ds1 = ds1;
-			this.ds2 = ds2;
+		public PearsonResult(List<DataSeries> dsList, List<Double> pCalc) {
+			this.dsList = dsList;
 			prStats = new StatPair(pCalc);
 		}
 
-		public PearsonResult(DataSeries ds1, DataSeries ds2, double avg, double std) {
-			this.ds1 = ds1;
-			this.ds2 = ds2;
+		public PearsonResult(List<DataSeries> dsList, double avg, double std) {
+			this.dsList = dsList;
 			prStats = new StatPair(avg, std);
 		}
-
-		public DataSeries getDs1() {
-			return ds1;
-		}
-
-		public DataSeries getDs2() {
-			return ds2;
-		}
-
-		public double getAvg() {
+		
+		public double getAvg(){
 			return prStats.getAvg();
 		}
-		
-		public double getStd() {
+
+		public double getStd(){
 			return prStats.getStd();
 		}
-
-		public boolean isValid(List<PearsonResult> pResults){
+		
+		public DataSeries getDataSeries(int index) {
+			return dsList.get(index);
+		}
+		
+		private List<DataSeries> getDataSeries() {
+			return dsList;
+		}
+		
+		public boolean isValid(List<PearsonResult> pResults, double minAvg){
+			boolean foundFlag;
 			for(PearsonResult pR : pResults){
-				if((pR.getDs1().equals(ds1) || pR.getDs2().equals(ds1)) && (pR.getDs1().equals(ds2) || pR.getDs2().equals(ds2)))
+				foundFlag = true;
+				for(DataSeries ds : dsList){
+					if(!pR.containsSeries(ds)){
+						foundFlag = false;
+						break;
+					}
+				}
+				if(foundFlag)
 					return false;
 			}
-			return Math.abs(prStats.getAvg()) > 0.9 && Math.abs(prStats.getAvg()) < 1; 
+			return Math.abs(prStats.getAvg()) >= minAvg && Math.abs(prStats.getAvg()) < 1; 
+		}
+		
+		private boolean containsSeries(DataSeries otherDs){
+			for(DataSeries ds : dsList){
+				if(ds.equals(otherDs))
+					return true;
+			}
+			return false;
 		}
 		
 		public String toFileRow(){
-			return ds1.toString() + "," + ds2.toString() + "," + prStats.getAvg() + "," + prStats.getStd();
-		}	
+			String fileRow = "";
+			for(DataSeries ds : dsList) {
+				fileRow = fileRow + ds.toString() + "@";
+			}
+			return fileRow.substring(0, fileRow.length()-1) + "," + prStats.getAvg() + "," + prStats.getStd();
+		}
 		
+	}
+	
+	public static List<DataSeries> merge(PearsonResult pr1, PearsonResult pr2){
+		List<DataSeries> mergedList = new LinkedList<DataSeries>();
+		mergedList.addAll(pr1.getDataSeries());
+		for(DataSeries ds : pr2.getDataSeries()){
+			if(!pr1.containsSeries(ds))
+				mergedList.add(ds);
+		}
+		return mergedList;
+	}
+	
+	public static boolean match(PearsonResult pr1, PearsonResult pr2){
+		for(DataSeries ds : pr2.getDataSeries()){
+			if(pr1.containsSeries(ds))
+				return true;
+		}
+		return false;
 	}
 	
 }

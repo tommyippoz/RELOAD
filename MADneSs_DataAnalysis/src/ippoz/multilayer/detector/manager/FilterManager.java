@@ -42,21 +42,6 @@ public class FilterManager extends TrainDataManager {
 	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double filteringThreshold) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes);
 		this.filteringThreshold = filteringThreshold;
-		if(!checkCorrelationInfo()){
-			pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes));
-		}
-	}
-	
-	private void pearsonCorrelation(List<DataSeries> list) {
-		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(KnowledgeType.GLOBAL));
-		pcManager.calculatePearsonIndexes();
-		pcManager.flush();
-	}
-
-	private boolean checkCorrelationInfo() {
-		return new File(getSetupFolder() + "pearsonCombinations.csv").exists();
 	}
 
 	/**

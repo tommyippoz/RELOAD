@@ -8,6 +8,7 @@ import ippoz.madness.commons.indicator.Indicator;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
+import ippoz.multilayer.detector.commons.knowledge.KnowledgeType;
 import ippoz.multilayer.detector.commons.knowledge.data.MonitoredData;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 import ippoz.multilayer.detector.metric.Metric;
@@ -17,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -89,16 +91,32 @@ public abstract class TrainDataManager extends DataManager {
 		} else if(dsDomain.equals("SIMPLE")){
 			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			if(!checkCorrelationInfo()){
+				pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes));
+			}
 			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
 		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
 	}
 	
-	private List<Entry<String, String>> readIndCombinations(String filename){
+	private void pearsonCorrelation(List<DataSeries> list) {
+		PearsonCombinationManager pcManager;
+		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(KnowledgeType.GLOBAL));
+		pcManager.calculatePearsonIndexes();
+		pcManager.flush();
+	}
+
+	private boolean checkCorrelationInfo() {
+		return new File(getSetupFolder() + "pearsonCombinations.csv").exists();
+	}
+	
+	private List<List<String>> readIndCombinations(String filename){
 		return readIndCombinations(new File(setupFolder + filename));
 	}
 	
-	private List<Entry<String, String>> readIndCombinations(File indCoupleFile){
-		List<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
+	private List<List<String>> readIndCombinations(File indCoupleFile){
+		List<List<String>> comb = new LinkedList<List<String>>();
+		List<String> nList;
 		BufferedReader reader;
 		String readed;
 		try {
@@ -109,7 +127,18 @@ public abstract class TrainDataManager extends DataManager {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
-							comb.add(new SimpleEntry<String, String>(readed.split(";")[0].trim(), readed.split(";")[1].trim()));
+							if(readed.split(",").length > 0){
+								if(readed.split(",")[0].contains("@")){
+									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
+									for(String sName : readed.split(",")[0].split("@")){
+										nList.add(sName.trim());
+									}
+								} else {
+									nList = new ArrayList<String>(1);
+									nList.add(readed.split(",")[0].trim());
+								}
+								comb.add(nList);
+							}
 						}
 					}
 				}
@@ -121,13 +150,14 @@ public abstract class TrainDataManager extends DataManager {
 		return comb;
 	}
 	
-	public List<Entry<String, String>> readPossibleIndCombinations(){
+	public List<List<String>> readPossibleIndCombinations(){
 		return readIndCombinations("indicatorCouples.csv");	
 	}
 	
-	public List<Entry<String, String>> readPearsonCombinations(double treshold){
-		List<Entry<String, String>> comb = new LinkedList<Entry<String,String>>();
+	public List<List<String>> readPearsonCombinations(double treshold){
+		List<List<String>> comb = new LinkedList<List<String>>();
 		File pFile = new File(setupFolder + "pearsonCombinations.csv");
+		List<String> nList;
 		BufferedReader reader;
 		String readed;
 		try {
@@ -139,8 +169,18 @@ public abstract class TrainDataManager extends DataManager {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							if(Math.abs(Double.valueOf(readed.split(",")[2].trim())) >= treshold)
-								comb.add(new SimpleEntry<String, String>(readed.split(",")[0].trim(), readed.split(",")[1].trim()));
+							if(readed.split(",").length > 0 && Math.abs(Double.valueOf(readed.split(",")[1].trim())) >= treshold){
+								if(readed.split(",")[0].contains("@")){
+									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
+									for(String sName : readed.split(",")[0].split("@")){
+										nList.add(sName.trim());
+									}
+								} else {
+									nList = new ArrayList<String>(1);
+									nList.add(readed.split(",")[0].trim());
+								}
+								comb.add(nList);
+							}
 						}
 					}
 				}

@@ -3,6 +3,8 @@
  */
 package ippoz.multilayer.detector.algorithm;
 
+import ippoz.multilayer.detector.algorithm.elki.FastABODELKI;
+import ippoz.multilayer.detector.algorithm.elki.KMeansELKI;
 import ippoz.multilayer.detector.commons.algorithm.AlgorithmType;
 import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.ComplexDataSeries;
@@ -72,8 +74,10 @@ public abstract class DetectionAlgorithm {
 				}
 			case PEA:
 				return new PearsonIndexChecker(conf);
-			case KMEANS:
-				return new KMeansClusteringChecker(dataSeries, conf);
+			case ELKI_KMEANS:
+				return new KMeansELKI(dataSeries, conf);
+			case ELKI_ABOD:
+				return new FastABODELKI(dataSeries, conf);
 			default:
 				return null;
 		}
@@ -87,18 +91,22 @@ public abstract class DetectionAlgorithm {
 			case CONF:
 			case WER:
 			case PEA:
+			case ELKI_KMEANS:
+			case ELKI_ABOD:
 				return KnowledgeType.SINGLE;
 			case INV:
 			case RCC:
-			case KMEANS:
 				return KnowledgeType.GLOBAL;
-			default:
-				return null;
+
 		}
+		return null;
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
-		return dataSeries instanceof MultipleDataSeries && algType == AlgorithmType.INV || !(dataSeries instanceof MultipleDataSeries) && algType != AlgorithmType.INV;
+		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
+				(dataSeries.size() == 1 && (algType == AlgorithmType.SPS || algType == AlgorithmType.HIST)) ||
+				(algType == AlgorithmType.ELKI_KMEANS) || 
+				(algType == AlgorithmType.ELKI_ABOD && dataSeries.size() > 1);
 	}
 	
 	/**
@@ -147,7 +155,7 @@ public abstract class DetectionAlgorithm {
 	 * @return the anomaly rate of the snapshot
 	 */
 	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
-		return anomalyTrueFalse(evaluateSnapshot(knowledge, currentIndex))*getWeight();
+		return anomalyTrueFalse(evaluateSnapshot(knowledge, currentIndex));//*getWeight();
 	}
 	
 	/**

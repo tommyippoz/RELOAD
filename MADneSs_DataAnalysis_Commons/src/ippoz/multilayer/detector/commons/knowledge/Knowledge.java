@@ -64,7 +64,9 @@ public abstract class Knowledge {
 					return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
 				else return null;
 			default:
-				return baseData.generateDataSeriesSnapshot(dataSeries, index);
+				if(dataSeries.size() == 1)
+					return baseData.generateDataSeriesSnapshot(dataSeries, index);
+				else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
 		}
 	}
 
@@ -92,7 +94,7 @@ public abstract class Knowledge {
 		return baseData.getDataTag();
 	}
 	
-	public abstract List<Snapshot> toArray();
+	public abstract List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries);
 	
 	public abstract KnowledgeType getKnowledgeType();
 
@@ -117,5 +119,20 @@ public abstract class Knowledge {
 	public StatPair getServiceTimingStat(String serviceName){
 		return getStats().get(serviceName).getTimeStat();
 	}
+	
+	public static int goldenPointsSize(List<Snapshot> knowledgeSnapshots) {
+		return knowledgeSnapshots.size() - faultyPointsSize(knowledgeSnapshots);
+	}
+
+	public static int faultyPointsSize(List<Snapshot> knowledgeSnapshots) {
+		int count = 0;
+		for(Snapshot snap : knowledgeSnapshots){
+			if(snap.getInjectedElement() != null)
+				count++;
+		}
+		return count;
+	}
+	
+	
 
 }

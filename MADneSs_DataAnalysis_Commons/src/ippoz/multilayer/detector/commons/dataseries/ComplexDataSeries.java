@@ -62,6 +62,11 @@ public abstract class ComplexDataSeries extends DataSeries {
 		return composeStat(firstOperand.getSeriesServiceStat(timestamp, sCall, sStat), secondOperand.getSeriesServiceStat(timestamp, sCall, sStat));
 	}
 	
+	@Override
+	public String toCompactString() {
+		return toString();
+	}
+
 	protected abstract SnapshotValue composePlain(Observation obs);
 	
 	protected abstract SnapshotValue composeDiff(Observation obs);

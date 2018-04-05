@@ -117,7 +117,6 @@ public class ExperimentVoter extends Thread {
 	 */
 	@Override
 	public void run() {
-		Snapshot snapshot = null;
 		Map<AlgorithmVoter, Double> snapVoting;
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
 		voting = new ArrayList<TimedValue>(kMap.get(KnowledgeType.GLOBAL).size());
@@ -125,7 +124,6 @@ public class ExperimentVoter extends Thread {
 			for(int i=0;i<kMap.get(KnowledgeType.GLOBAL).size();i++){
 				snapVoting = new HashMap<AlgorithmVoter, Double>();
 				for(AlgorithmVoter aVoter : algList){
-					//snapshot = expSnapMap.get(i).get(aVoter);
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
 				partialVoting.put(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), snapVoting);
@@ -143,7 +141,9 @@ public class ExperimentVoter extends Thread {
 	private double voteResults(Map<AlgorithmVoter, Double> algResults){
 		double snapScore = 0.0;
 		for(AlgorithmVoter aVoter : algList){
-			snapScore = snapScore + 1.0*aVoter.getReputationScore()*algResults.get(aVoter);
+			if(aVoter.getReputationScore() > 0)
+				snapScore = snapScore + 1.0*aVoter.getReputationScore()*algResults.get(aVoter);
+			else snapScore = snapScore + 1.0*algResults.get(aVoter);
 		}
 		return snapScore;
 	}

@@ -25,8 +25,6 @@ public class DataSeriesSnapshot extends Snapshot {
 	public DataSeriesSnapshot(Observation obs, List<ServiceCall> list, InjectedElement injEl, DataSeries dataSeries) {
 		super(obs.getTimestamp(), list, injEl);
 		this.dataSeries = dataSeries;
-		if(dataSeries.getName().equalsIgnoreCase("Tcp_Established"))
-			snapValue = null;
 		if(dataSeries != null)
 			snapValue = dataSeries.getSeriesValue(obs);
 		else snapValue = new SnapshotValue(Double.NaN);

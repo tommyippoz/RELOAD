@@ -31,6 +31,7 @@ public abstract class Metric {
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
 			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), alg.snapshotAnomalyRate(knowledge, i)));
+			average = average + anomalyEvaluations.get(i).getValue();
 			std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
 		} 
 		average = average / knowledge.size();

@@ -53,4 +53,9 @@ public class IndicatorDataSeries extends DataSeries {
 		return new SnapshotValue(Double.valueOf(obs.getValue(indicator.getName(), DataCategory.DIFFERENCE)));
 	}
 
+	@Override
+	public String toCompactString() {
+		return toString();
+	}
+
 }

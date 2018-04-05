@@ -12,8 +12,10 @@ import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.service.StatPair;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -21,30 +23,24 @@ import java.util.LinkedList;
  */
 public class MultipleDataSeries extends DataSeries {
 	
-	private LinkedList<DataSeries> dsList;
+	private List<DataSeries> dsList;
 
-	public MultipleDataSeries(IndicatorDataSeries[] ids) {
-		super(aggregateSeriesName(ids), DataCategory.PLAIN);
-		dsList = new LinkedList<DataSeries>();
-		for(IndicatorDataSeries is : ids){
+	public MultipleDataSeries(List<DataSeries> pList) {
+		super(aggregateSeriesName(pList), DataCategory.PLAIN);
+		dsList = new ArrayList<DataSeries>(pList.size());
+		for(DataSeries is : pList){
 			dsList.add(is);
 		}
 	}
 	
-	public MultipleDataSeries(DataSeries firstDS, DataSeries secondDS) {
-		super(aggregateSeriesName(firstDS, secondDS), DataCategory.PLAIN);
-		dsList = new LinkedList<DataSeries>();
-		dsList.add(firstDS);
-		dsList.add(secondDS);
-	}
-	
-	private static String aggregateSeriesName(DataSeries firstDS, DataSeries secondDS) {
-		return firstDS.toString() + "@" + secondDS.toString();
-	}
-
-	private static String aggregateSeriesName(IndicatorDataSeries[] ids){
-		if(ids != null && ids.length >= 2)
-			return aggregateSeriesName(ids[0], ids[1]);
+	private static String aggregateSeriesName(List<DataSeries> pList){
+		String aggName = "";
+		if(pList != null && pList.size() >= 2){
+			for(DataSeries id : pList){
+				aggName = aggName + id.toString() + "@";
+			}
+			return aggName.substring(0, aggName.length()-1);
+		}	
 		else return null;
 	}
 
@@ -59,7 +55,9 @@ public class MultipleDataSeries extends DataSeries {
 	
 	@Override
 	public boolean compliesWith(AlgorithmType algType) {
-		return algType.equals(AlgorithmType.INV);
+		if(dsList != null && dsList.size() > 0){
+			return (dsList.size() == 2 && algType.equals(AlgorithmType.INV)) || algType.equals(AlgorithmType.ELKI_KMEANS);
+		} else return false;
 	}
 
 	@Override
@@ -77,11 +75,11 @@ public class MultipleDataSeries extends DataSeries {
 		return null;
 	}
 
-	public DataSeries[] getSeriesList() {
+	public DataSeries[] getSeriesArray() {
 		return dsList.toArray(new DataSeries[dsList.size()]);
 	}
 	
-	public LinkedList<DataSeries> getSeriesLinkedList() {
+	public List<DataSeries> getSeriesList() {
 		return dsList;
 	}
 
@@ -92,5 +90,25 @@ public class MultipleDataSeries extends DataSeries {
 		}
 		return string.substring(0, string.length()-1);
 	}
+
+	@Override
+	public int size() {
+		return dsList.size();
+	}
+
+	public DataSeries getSeries(int j) {
+		return dsList.get(j);
+	}
+
+	@Override
+	public String toCompactString() {
+		String string = "";
+		for(DataSeries ds : dsList){
+			string = string + ds.getName().substring(0, 3) + ds.getDataCategory().name().substring(0, 1) + ";";
+		}
+		return string.substring(0, string.length()-1);
+	}
+	
+	
 
 }

@@ -76,7 +76,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @param value the itam value
 	 */
 	public void addItem(String item, String value){
-		confMap.put(item, value);
+		confMap.put(item.trim(), value.trim());
 	}
 	
 	/**
@@ -86,7 +86,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @param value the item value
 	 */
 	public void addRawItem(String item, Object value){
-		confMap.put(item, value);
+		confMap.put(item.trim(), value);
 	}
 	
 	/**
@@ -96,7 +96,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public String getItem(String tag){
-		return getItem(tag, true);
+		return getItem(tag.trim(), true);
 	}
 	
 	/**
@@ -106,7 +106,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public String getItem(String tag, boolean flag){
-		if(!confMap.containsKey(tag)){
+		if(!confMap.containsKey(tag.trim())){
 			if(flag && !tag.equals("weight"))
 				AppLogger.logInfo(getClass(), "Unable to find tag '" + tag + "'");
 			return null;
@@ -120,7 +120,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public Object getRawItem(String tag){
-		return getRawItem(tag, true);
+		return getRawItem(tag.trim(), true);
 	}
 	
 	/**
@@ -130,7 +130,7 @@ public class AlgorithmConfiguration implements Cloneable {
 	 * @return the item
 	 */
 	public Object getRawItem(String tag, boolean flag){
-		if(!confMap.containsKey(tag)){
+		if(!confMap.containsKey(tag.trim())){
 			if(flag)
 				AppLogger.logInfo(getClass(), "Unable to find tag '" + tag + "'");
 			return null;
@@ -189,6 +189,10 @@ public class AlgorithmConfiguration implements Cloneable {
 			}
 		}
 		return conf;
+	}
+
+	public boolean hasItem(String tag) {
+		return confMap != null && confMap.containsKey(tag.trim());
 	}
 	
 }

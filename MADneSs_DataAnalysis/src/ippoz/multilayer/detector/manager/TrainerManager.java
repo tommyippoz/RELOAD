@@ -122,28 +122,6 @@ public class TrainerManager extends TrainDataManager {
 		return finalDs;
 	}
 
-	/**
-	 * Starts the train process. 
-	 * The scores are saved in a file specified in the preferences.
-	 */
-	@SuppressWarnings("unchecked")
-	public LinkedList<DataSeries> filter(){
-		LinkedList<DataSeries> filteredSeries = null;
-		long start = System.currentTimeMillis();
-		try {
-			start();
-			join();
-			Collections.sort((LinkedList<AlgorithmTrainer>)getThreadList());
-			AppLogger.logInfo(getClass(), "Filtering executed in " + (System.currentTimeMillis() - start) + "ms");
-			filteredSeries = selectDataSeries((LinkedList<AlgorithmTrainer>)filterTrainers(getThreadList()));
-			saveFilteredSeries(filteredSeries, "filtered.csv");
-			AppLogger.logInfo(getClass(), "Filtered Checkers Saved");
-		} catch (InterruptedException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
-		}
-		return filteredSeries;
-	}
-	
 	private LinkedList<DataSeries> selectDataSeries(LinkedList<AlgorithmTrainer> atList) {
 		LinkedList<DataSeries> result = new LinkedList<DataSeries>();
 		for(AlgorithmTrainer at : atList){

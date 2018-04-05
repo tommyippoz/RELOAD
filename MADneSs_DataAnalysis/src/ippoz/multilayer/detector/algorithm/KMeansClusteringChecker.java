@@ -31,9 +31,9 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 	}
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
-
-		if (Double.isNaN(sysSnapshot.getSnapValue().getFirst())) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+		DataSeriesSnapshot dsSnapshot = (DataSeriesSnapshot) sysSnapshot;
+		if (Double.isNaN(dsSnapshot.getSnapValue().getFirst())) {
 			return 0;
 		}
 
@@ -70,7 +70,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 			int count = 0;
 
 			Point p = null;
-			double value = sysSnapshot.getSnapValue().getFirst();
+			double value = dsSnapshot.getSnapValue().getFirst();
 
 			for (int i = 0; i < tClusters.length; i++) {
 
@@ -128,7 +128,7 @@ public class KMeansClusteringChecker extends DataSeriesDetectionAlgorithm implem
 
 	public AlgorithmConfiguration automaticTraining(HashMap<String, LinkedList<Snapshot>> algExpSnapshots) {
 
-		AlgorithmConfiguration ac = new AlgorithmConfiguration(AlgorithmType.KMEANS);
+		AlgorithmConfiguration ac = new AlgorithmConfiguration(AlgorithmType.ELKI_KMEANS);
 		List<KMeansData> kmeansData = new ArrayList<KMeansData>();
 		String indName = null;
 		HashMap<String, List<KMeansData>> kdMap = new HashMap<String, List<KMeansData>>();

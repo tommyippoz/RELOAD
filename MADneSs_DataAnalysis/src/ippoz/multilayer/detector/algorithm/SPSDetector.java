@@ -8,6 +8,7 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.support.AppUtility;
 import ippoz.multilayer.detector.commons.support.TimedValue;
 import ippoz.multilayer.detector.graphics.ChartDrawer;
@@ -106,22 +107,23 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	}
 	
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex) {
+	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double anomalyScore;
-		observations.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
+		DataSeriesSnapshot dsSnapshot = (DataSeriesSnapshot) sysSnapshot;
+		observations.add(new TimedValue(sysSnapshot.getTimestamp(), dsSnapshot.getSnapValue().getFirst()));
 		if(newTresholds != null) {
-			lowerTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), newTresholds[0]));
-			upperTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), newTresholds[1]));
+			lowerTreshold.add(new TimedValue(dsSnapshot.getTimestamp(), newTresholds[0]));
+			upperTreshold.add(new TimedValue(dsSnapshot.getTimestamp(), newTresholds[1]));
 		} else {
-			upperTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), 2*observations.get(observations.size()-1).getValue()));
-			lowerTreshold.add(new TimedValue(sysSnapshot.getTimestamp(), 0.0));
+			upperTreshold.add(new TimedValue(dsSnapshot.getTimestamp(), 2*observations.get(observations.size()-1).getValue()));
+			lowerTreshold.add(new TimedValue(dsSnapshot.getTimestamp(), 0.0));
 		}
-		anomalyScore = calculateAnomalyScore(sysSnapshot);
+		anomalyScore = calculateAnomalyScore(dsSnapshot);
 		if(anomalyScore >= 1.0)
-			anomalies.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
+			anomalies.add(new TimedValue(dsSnapshot.getTimestamp(), dsSnapshot.getSnapValue().getFirst()));
 		if(sysSnapshot.getInjectedElement() != null && sysSnapshot.getInjectedElement().getTimestamp().compareTo(sysSnapshot.getTimestamp()) == 0)
-			failures.add(new TimedValue(sysSnapshot.getTimestamp(), sysSnapshot.getSnapValue().getFirst()));
-		newTresholds = calculator.calculateTreshold(sysSnapshot);
+			failures.add(new TimedValue(sysSnapshot.getTimestamp(), dsSnapshot.getSnapValue().getFirst()));
+		newTresholds = calculator.calculateTreshold(dsSnapshot);
 		return anomalyScore;
 	}
 

@@ -15,6 +15,7 @@ import ippoz.multilayer.detector.commons.service.ServiceStat;
 import ippoz.multilayer.detector.commons.service.StatPair;
 import ippoz.multilayer.detector.commons.support.AppLogger;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -123,6 +124,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 	
 	public static DataSeries fromStrings(String seriesName, DataCategory dataType, LayerType layerType) {
+		List<DataSeries> sList;
 		if(layerType.equals(LayerType.COMPOSITION)){
 			if(seriesName.contains(")*(")){
 				return new ProductDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")*(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")*(")+3, seriesName.length()-1).trim(), true), dataType);
@@ -133,7 +135,11 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 			} else if(seriesName.contains(")-(")){
 				return new DiffDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")-(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")-(")+3, seriesName.length()-1).trim(), true), dataType);
 			} else if(seriesName.contains("@")){
-				return new MultipleDataSeries(DataSeries.fromString(seriesName.substring(0,  seriesName.indexOf("@")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf("@")+1, seriesName.length()).trim(), true));
+				sList = new ArrayList<DataSeries>(seriesName.split("@").length);
+				for(String sName : seriesName.split("@")){
+					sList.add(DataSeries.fromString(sName.trim(), true));
+				}
+				return new MultipleDataSeries(sList);
 			} else return null;
 		} else return new IndicatorDataSeries(new Indicator(seriesName, layerType, Double.class), dataType);
 	}
@@ -148,26 +154,32 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return simpleInd;
 	}
 	
-	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<Entry<String, String>> couples) {
+	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<List<String>> list) {
 		DataSeries firstDS, secondDS;
-		LinkedList<DataSeries> outList = new LinkedList<DataSeries>();
-		LinkedList<IndicatorDataSeries> simpleInd = new LinkedList<IndicatorDataSeries>();
-		LinkedList<DataSeries> complexInd = new LinkedList<DataSeries>();
+		List<DataSeries> outList = new LinkedList<DataSeries>();
+		List<IndicatorDataSeries> simpleInd = new LinkedList<IndicatorDataSeries>();
+		List<DataSeries> complexInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
-		for(Entry<String, String> cEntry : couples){
-			firstDS = DataSeries.fromList(simpleInd, cEntry.getKey());
-			secondDS = DataSeries.fromList(simpleInd, cEntry.getValue());
-			if(firstDS != null && secondDS != null){
-				for(DataCategory dCat : dataTypes){
-					complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
-					complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
+		for(List<String> lEntry : list){
+			if(lEntry != null && lEntry.size() == 2){
+				firstDS = DataSeries.fromList(simpleInd, lEntry.get(0).trim());
+				secondDS = DataSeries.fromList(simpleInd, lEntry.get(1).trim());
+				if(firstDS != null && secondDS != null){
+					for(DataCategory dCat : dataTypes){
+						complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
+						complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
+					}
 				}
-				complexInd.add(new MultipleDataSeries(firstDS, secondDS));
 			}
+			List<DataSeries> pList = new ArrayList<DataSeries>(lEntry.size());
+			for(String entry : lEntry){
+				pList.add(DataSeries.fromList(simpleInd, entry.trim()));
+			}
+			complexInd.add(new MultipleDataSeries(pList));
 		}
 		outList.addAll(simpleInd);
 		outList.addAll(complexInd);
@@ -206,5 +218,11 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		}
 		return null;
 	}
+
+	public int size() {
+		return 1;
+	}
+	
+	public abstract String toCompactString();
 		
 }

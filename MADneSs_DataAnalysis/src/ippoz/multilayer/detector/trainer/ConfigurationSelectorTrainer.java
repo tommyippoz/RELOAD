@@ -80,7 +80,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
 				}
 				currentMetricValue = AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
-				if(bestMetricValue.isNaN() || getMetric().compareResults(currentMetricValue, bestMetricValue) == 1){
+				if(bestMetricValue.isNaN() || getMetric().compareResults(currentMetricValue, bestMetricValue) == 1){	
 					bestMetricValue = currentMetricValue;
 					bestConf = (AlgorithmConfiguration) conf.clone();
 				}

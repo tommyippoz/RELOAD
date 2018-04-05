@@ -21,13 +21,13 @@ public class MultipleSnapshot extends Snapshot {
 
 	private Map<DataSeries, DataSeriesSnapshot> dsMap;
 	
-	public MultipleSnapshot(Observation obs, List<ServiceCall> callList, InjectedElement injEl, DataSeries[] seriesList) {
+	public MultipleSnapshot(Observation obs, List<ServiceCall> callList, InjectedElement injEl, List<DataSeries> seriesList) {
 		super(obs.getTimestamp(), callList, injEl);
 		dsMap = generateMultipleSnapshots(obs, seriesList);
 	}
 
-	private Map<DataSeries, DataSeriesSnapshot> generateMultipleSnapshots(Observation obs, DataSeries[] seriesList) {
-		HashMap<DataSeries, DataSeriesSnapshot> outMap = new HashMap<DataSeries, DataSeriesSnapshot>();
+	private Map<DataSeries, DataSeriesSnapshot> generateMultipleSnapshots(Observation obs, List<DataSeries> seriesList) {
+		Map<DataSeries, DataSeriesSnapshot> outMap = new HashMap<DataSeries, DataSeriesSnapshot>();
 		for(DataSeries ds : seriesList){
 			outMap.put(ds, new DataSeriesSnapshot(obs, getServiceCalls(), getInjectedElement(), ds));
 		}
@@ -53,7 +53,7 @@ public class MultipleSnapshot extends Snapshot {
 		return getSeriesValue(dsMap.size()-1);
 	}
 	
-	private SnapshotValue getSeriesValue(int index){
+	public SnapshotValue getSeriesValue(int index){
 		Iterator<DataSeries> iterator = dsMap.keySet().iterator();
 		if(index < dsMap.size()){
 			while(index > 0){

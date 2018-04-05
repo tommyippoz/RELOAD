@@ -15,6 +15,7 @@ import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.multilayer.detector.commons.service.ServiceCall;
 import ippoz.multilayer.detector.commons.service.ServiceStat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -167,17 +168,26 @@ public class MonitoredData {
 	}
 	
 	private MultipleSnapshot generateMultipleSnapshot(String textItem, int index) {
-		List<DataSeries> sList = new LinkedList<DataSeries>();
-		sList.add(DataSeries.fromString(textItem.split(";")[0], true));
-		sList.add(DataSeries.fromString(textItem.split(";")[1], true));
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), sList.toArray(new DataSeries[sList.size()]));
+		List<DataSeries> sList = null;
+		if(textItem != null){
+			if(textItem.contains(";")){
+				sList = new ArrayList<DataSeries>(textItem.split(";").length);
+				for(String sName : textItem.split(";")){
+					sList.add(DataSeries.fromString(sName.trim(), true));
+				}
+			} else {
+				sList = new ArrayList<DataSeries>(1);
+				sList.add(DataSeries.fromString(textItem, true));
+			} 
+		} 
+		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), sList);
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {
 		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
 	}
 	
-	public MultipleSnapshot generateMultipleSnapshot(DataSeries[] dss, int index) {
+	public MultipleSnapshot generateMultipleSnapshot(List<DataSeries> dss, int index) {
 		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dss);
 	}
 

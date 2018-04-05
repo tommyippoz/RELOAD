@@ -1,10 +1,11 @@
 * Algorithms involved in the detection phase
 
-* KMEANS
-HIST
+ELKI_ABOD
+* ELKI_KMEANS
+* HIST
 * CONF
-SPS
+* SPS
 * RCC
 * WER
-INV
+* INV
 * PEA

@@ -7,6 +7,7 @@ import ippoz.multilayer.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.multilayer.detector.commons.dataseries.DataSeries;
 import ippoz.multilayer.detector.commons.knowledge.Knowledge;
 import ippoz.multilayer.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.multilayer.detector.commons.knowledge.snapshot.Snapshot;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -46,9 +47,9 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 
 	@Override
 	protected double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
-		return evaluateDataSeriesSnapshot(knowledge, (DataSeriesSnapshot)knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
+		return evaluateDataSeriesSnapshot(knowledge, knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
 	}
 
-	protected abstract double evaluateDataSeriesSnapshot(Knowledge knowledge, DataSeriesSnapshot sysSnapshot, int currentIndex);
+	protected abstract double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
 	
 }
