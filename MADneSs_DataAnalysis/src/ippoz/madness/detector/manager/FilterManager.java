@@ -39,9 +39,15 @@ public class FilterManager extends TrainDataManager {
 	 * Instantiates a new filter manager.
 	 *
 	 */
-	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double filteringThreshold) {
-		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes);
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold) {
+		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm());
 		this.filteringThreshold = filteringThreshold;
+	}
+
+	private static List<AlgorithmType> defaultFilterAlgorithm() {
+		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
+		list.add(AlgorithmType.ELKI_KMEANS);
+		return list;
 	}
 
 	/**

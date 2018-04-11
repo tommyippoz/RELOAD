@@ -58,10 +58,6 @@ public abstract class DataSeriesElkiAlgorithm extends DataSeriesDetectionAlgorit
 		
 	}
 	
-	private Database translateKnowledge(Knowledge knowledge, boolean includeFaulty){
-		return createElkiDatabase(convertKnowledgeIntoMatrix(knowledge, includeFaulty));
-	}
-	
 	private Database translateKnowledge(List<Knowledge> kList, boolean includeFaulty){
 		return createElkiDatabase(convertKnowledgeIntoMatrix(kList, includeFaulty));
 	}
@@ -71,11 +67,6 @@ public abstract class DataSeriesElkiAlgorithm extends DataSeriesDetectionAlgorit
 	    Database db = new StaticArrayDatabase(dbc, null);
 	    db.initialize();  
 	    return db;
-	} 
-
-	private double[][] convertKnowledgeIntoMatrix(Knowledge knowledge, boolean includeFaulty) {
-		List<Snapshot> kSnapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
-		return convertSnapshotListIntoMatrix(kSnapList, includeFaulty);
 	}
 	
 	private double[][] convertKnowledgeIntoMatrix(List<Knowledge> kList, boolean includeFaulty) {
@@ -111,12 +102,9 @@ public abstract class DataSeriesElkiAlgorithm extends DataSeriesDetectionAlgorit
 	
 	protected Vector convertSnapToVector(Snapshot sysSnapshot) {
 		Vector vec = new Vector(getDataSeries().size());
-		//System.out.println(getDataSeries().toString());
 		if(getDataSeries().size() == 1){
 			vec.set(0, ((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst());
-			//System.out.println(((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst() + " - " + ((DataSeriesSnapshot)sysSnapshot).getSnapValue().getLast());
 		} else {
-			MultipleSnapshot ms = (MultipleSnapshot)sysSnapshot;
 			for(int j=0;j<getDataSeries().size();j++){
 				vec.set(j, ((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());						
 			}

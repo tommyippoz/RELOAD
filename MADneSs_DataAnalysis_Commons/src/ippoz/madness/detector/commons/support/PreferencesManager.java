@@ -24,7 +24,9 @@ public class PreferencesManager {
 	 */
 	public PreferencesManager(File prefFile){
 		try {
-			preferences = AppUtility.loadPreferences(prefFile, null);
+			if(prefFile != null && prefFile.exists())
+				preferences = AppUtility.loadPreferences(prefFile, null);
+			else preferences = null;
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to load main preferences file");
 		}
@@ -50,7 +52,11 @@ public class PreferencesManager {
 	}
 
 	public boolean hasPreference(String loaderPrefFile) {
-		return preferences.containsKey(loaderPrefFile);
+		return preferences != null && preferences.containsKey(loaderPrefFile);
+	}
+
+	public boolean isValidFile() {
+		return preferences != null;
 	}
 
 }

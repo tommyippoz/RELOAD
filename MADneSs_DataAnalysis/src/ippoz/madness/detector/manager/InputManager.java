@@ -27,9 +27,12 @@ import ippoz.madness.detector.reputation.MetricReputation;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +43,12 @@ import java.util.Map;
  *
  */
 public class InputManager {
+	
+	private static final String DEFAULT_GLOBAL_PREF_FILE = "madness.preferences";
+	
+	private static final String DEFAULT_SCORING_PREF_FILE = "scoringPreferences.preferences";
+	
+	private static final String DEFAULT_ALGORITHM_PREF_FILE = "algorithmPreferences.preferences";
 	
 	/** The Constant LOADER_TYPE. */
 	private static final String LOADER_TYPE = "LOADER_TYPE";
@@ -63,7 +72,13 @@ public class InputManager {
 	public static final String OUTPUT_FORMAT = "OUTPUT_TYPE";
 	
 	/** The Constant OUTPUT_FOLDER. */
+	public static final String INPUT_FOLDER = "INPUT_FOLDER";
+	
+	/** The Constant OUTPUT_FOLDER. */
 	public static final String OUTPUT_FOLDER = "OUTPUT_FOLDER";
+	
+	/** The Constant OUTPUT_FOLDER. */
+	public static final String LOADER_FOLDER = "LOADER_FOLDER";
 	
 	/** The Constant METRIC_TYPE. */
 	private static final String METRIC = "METRIC"; 
@@ -121,9 +136,19 @@ public class InputManager {
 	
 	public InputManager(PreferencesManager prefManager) {
 		this.prefManager = prefManager;
-		detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
+		try {
+			if(prefManager == null || !prefManager.isValidFile())
+				this.prefManager = generateDefaultMADneSsPreferences();
+			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
+				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
+			else {
+				detectionManager = generateDefaultScoringPreferences();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Error while reading preferences");
+		}
 	}
-	
+
 	public String getLoader() {
 		return prefManager.getPreference(LOADER_TYPE);
 	}
@@ -135,29 +160,53 @@ public class InputManager {
 	public int getAnomalyWindow() {
 		if(prefManager.hasPreference(ANOMALY_WINDOW) && AppUtility.isNumber(prefManager.getPreference(ANOMALY_WINDOW)))
 			return Integer.parseInt(prefManager.getPreference(ANOMALY_WINDOW));
-		else return 1;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					ANOMALY_WINDOW + " not found. Using default value of 1");
+			return 1;
+		}
 	}
 
 	public PreferencesManager getLoaderPreferences() {
 		if(prefManager.hasPreference(LOADER_PREF_FILE))
-			return new PreferencesManager(prefManager.getPreference(LOADER_PREF_FILE));
-		else return null;
+			return new PreferencesManager(getLoaderFolder() + prefManager.getPreference(LOADER_PREF_FILE));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					LOADER_PREF_FILE + " not found. Unable to load default value");
+			return null;
+		}
 	}
 
 	public String getConsideredLayers() {
 		if(prefManager.hasPreference(CONSIDERED_LAYERS))
 			return prefManager.getPreference(CONSIDERED_LAYERS);
-		else return null;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					CONSIDERED_LAYERS + " not found. Using 'NO_LAYER' default value");
+			return "NO_LAYER";
+		}
 	}
 	
 	private String checkFolder(String toCheck){
+		return checkFolder(toCheck, false);
+	}
+	
+	private String checkFolder(String toCheck, boolean create){
 		File dir;
 		if(!toCheck.endsWith(File.separator))
 			toCheck = toCheck + File.separator;
 		dir = new File(toCheck);
 		if(dir.exists())
 			return toCheck;
-		else return null;
+		else {
+			if(create){
+				dir.mkdirs();
+				return toCheck;
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "Folder " + toCheck + " does not exist");
+				return null;
+			}
+		}
 	}
 	
 	/**
@@ -166,24 +215,24 @@ public class InputManager {
 	 * @return the list of metrics
 	 */
 	public Metric[] loadValidationMetrics() {
-		File dataTypeFile = new File(checkFolder(prefManager.getPreference(SETUP_FILE_FOLDER)) + "validationMetrics.preferences");
+		File dataTypeFile = new File(getSetupFolder() + "validationMetrics.preferences");
 		List<Metric> metricList = new LinkedList<>();
 		BufferedReader reader;
 		String readed;
 		try {
-			if(dataTypeFile.exists()){
-				reader = new BufferedReader(new FileReader(dataTypeFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							metricList.add(getMetric(readed.trim()));
-						}
+			if(!dataTypeFile.exists())
+				generateValidationMetricsFile(dataTypeFile);
+			reader = new BufferedReader(new FileReader(dataTypeFile));
+			while(reader.ready()){
+				readed = reader.readLine();
+				if(readed != null){
+					readed = readed.trim();
+					if(readed.length() > 0 && !readed.trim().startsWith("*")){
+						metricList.add(getMetric(readed.trim()));
 					}
 				}
-				reader.close();
-			} 
+			}
+			reader.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
@@ -193,13 +242,41 @@ public class InputManager {
 	public double getFilteringTreshold() {
 		if(prefManager.hasPreference(FILTERING_TRESHOLD))
 			return Double.parseDouble(prefManager.getPreference(FILTERING_TRESHOLD));
-		else return 0.0;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FILTERING_TRESHOLD + " not found. Using default value of 0.0");
+			return 0.0;
+		} 
 	}
 
+	public String getInputFolder() {
+		if(prefManager.hasPreference(INPUT_FOLDER))
+			return checkFolder(prefManager.getPreference(INPUT_FOLDER), true);
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					INPUT_FOLDER + " not found. Using default value of 'input'");
+			return checkFolder("input", true);
+		}
+	}
+	
+	private String getLoaderFolder() {
+		if(prefManager.hasPreference(LOADER_FOLDER))
+			return checkFolder(getInputFolder() + prefManager.getPreference(LOADER_FOLDER));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					LOADER_FOLDER + " not found. Using default value of '" + getInputFolder() + "loaders'");
+			return checkFolder(getInputFolder() + "loaders");
+		}
+	}
+	
 	public String getScoresFolder() {
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER))
-			return checkFolder(prefManager.getPreference(SCORES_FILE_FOLDER));
-		else return null;
+			return checkFolder(prefManager.getPreference(SCORES_FILE_FOLDER), true);
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					SCORES_FILE_FOLDER + " not found. Using default value of 'intermediate'");
+			return checkFolder("intermediate", true);
+		}
 	}
 	
 	/**
@@ -219,7 +296,10 @@ public class InputManager {
 			default:
 				if(AppUtility.isNumber(reputationType))
 					return new ConstantReputation(reputationType, Double.parseDouble(reputationType));
-				else return null;
+				else {
+					AppLogger.logError(getClass(), "MissingPreferenceError", "Reputation cannot be defined");
+					return null;
+				}
 		}
 	}
 	
@@ -231,8 +311,9 @@ public class InputManager {
 	 */
 	public Metric getMetric(String metricType){
 		String param = null;
-		boolean absolute = prefManager.getPreference(METRIC_TYPE).equals("absolute") ? true : false;
-		boolean validAfter = Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION));
+		String mType = prefManager.getPreference(METRIC_TYPE);
+		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
+		boolean validAfter = prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true;
 		if(metricType.contains("(")){
 			param = metricType.substring(metricType.indexOf('(')+1, metricType.indexOf(')'));
 			metricType = metricType.substring(0, metricType.indexOf('('));
@@ -267,6 +348,7 @@ public class InputManager {
 			case "CUSTOM":
 				return new Custom_Metric(validAfter);	
 			default:
+				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
 				return null;
 		}
 	}
@@ -282,20 +364,32 @@ public class InputManager {
 
 	public String getConfigurationFolder() {
 		if(prefManager.hasPreference(CONF_FILE_FOLDER))
-			return checkFolder(prefManager.getPreference(CONF_FILE_FOLDER));
-		else return null;
+			return checkFolder(getInputFolder() + prefManager.getPreference(CONF_FILE_FOLDER));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					CONF_FILE_FOLDER + " not found. Using default value of '" + getInputFolder() + "conf'");
+			return checkFolder(getInputFolder() + "conf");
+		}
 	}
 
 	public String getSetupFolder() {
 		if(prefManager.hasPreference(SETUP_FILE_FOLDER))
-			return checkFolder(prefManager.getPreference(SETUP_FILE_FOLDER));
-		else return null;
+			return checkFolder(getInputFolder() + prefManager.getPreference(SETUP_FILE_FOLDER), true);
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					SETUP_FILE_FOLDER + " not found. Using default value of '" + getInputFolder() + "setup'");
+			return checkFolder(getInputFolder() + "setup");
+		}
 	}
 	
 	public String getAnomalyTreshold(){
 		if(detectionManager.hasPreference(DM_ANOMALY_TRESHOLD))
 			return detectionManager.getPreference(DM_ANOMALY_TRESHOLD);
-		else return null;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					DM_ANOMALY_TRESHOLD + " not found. Using default value of 'HALF'");
+			return "HALF";
+		}
 	}
 	
 	public String[] parseAnomalyTresholds() {
@@ -310,7 +404,11 @@ public class InputManager {
 	public String getVoterTreshold(){
 		if(detectionManager.hasPreference(DM_SCORE_TRESHOLD))
 			return detectionManager.getPreference(DM_SCORE_TRESHOLD);
-		else return null;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					DM_SCORE_TRESHOLD + " not found. Using default value of 'FILTERED 10'");
+			return "FILTERED 10";
+		}
 	}
 
 	public String[] parseVoterTresholds(){
@@ -345,7 +443,11 @@ public class InputManager {
 					}
 				}
 				reader.close();
-			} 
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
+						dataTypeFile.getPath() + " not found. Using default value of 'PLAIN, DIFFERENCE'");
+				return new DataCategory[]{DataCategory.PLAIN, DataCategory.DIFFERENCE};
+			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
@@ -358,7 +460,7 @@ public class InputManager {
 	 * @return the algorithm types
 	 */
 	public List<AlgorithmType> getAlgTypes() {
-		File algTypeFile = new File(getSetupFolder() + "detectionAlgorithms.preferences");
+		File algTypeFile = new File(getSetupFolder() + "algorithmPreferences.preferences");
 		List<AlgorithmType> algTypeList = new LinkedList<AlgorithmType>();
 		BufferedReader reader;
 		String readed;
@@ -375,11 +477,22 @@ public class InputManager {
 					}
 				}
 				reader.close();
-			} 
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
+						algTypeFile.getPath() + " not found. Will be generated. Using default value of 'ELKI_KMEANS'");
+				algTypeList.add(AlgorithmType.ELKI_KMEANS);
+				generateDefaultAlgorithmPreferences();
+			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
 		return algTypeList;
+	}
+	
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at) {
+		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
+		list.add(at);
+		return loadConfigurations(list);
 	}
 
 	/**
@@ -441,48 +554,228 @@ public class InputManager {
 	public boolean getTrainingFlag() {
 		if(prefManager.hasPreference(TRAIN_NEEDED_FLAG))
 			return !prefManager.getPreference(TRAIN_NEEDED_FLAG).equals("0");
-		else return true;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					TRAIN_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
 	}
 	
 	public boolean getFilteringFlag() {
 		if(prefManager.hasPreference(FILTERING_NEEDED_FLAG))
 			return !prefManager.getPreference(FILTERING_NEEDED_FLAG).equals("0");
-		else return true;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FILTERING_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
 	}
 
 	public String getOutputFolder() {
 		if(prefManager.hasPreference(OUTPUT_FOLDER))
-			return checkFolder(prefManager.getPreference(OUTPUT_FOLDER));
-		else return null;
+			return checkFolder(prefManager.getPreference(OUTPUT_FOLDER), true);
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					OUTPUT_FOLDER + " not found. Using default value of 'output'");
+			return checkFolder("output", true);
+		}
 	}
 
 	public boolean getOutputVisibility() {
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
 			return !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
-		return false;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					OUTPUT_FORMAT + " not found. Using default value of 'not visible'");
+			return false;
+		}
 	}
 
 	public double getConvergenceTime() {
 		if(detectionManager.hasPreference(DM_CONVERGENCE_TIME) && AppUtility.isNumber(detectionManager.getPreference(DM_CONVERGENCE_TIME)))
 			return Double.parseDouble(detectionManager.getPreference(DM_CONVERGENCE_TIME));
-		else return 0.0;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					DM_CONVERGENCE_TIME + " not found. Using default value of '0.0'");
+			return 0.0;
+		}
 	}
 	
 	public String getScoresFile(){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
-			return checkFolder(prefManager.getPreference(SCORES_FILE_FOLDER)) + prefManager.getPreference(SCORES_FILE);
-		else return null;
+			return getScoresFolder() + prefManager.getPreference(SCORES_FILE);
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					SCORES_FILE + " not found. Using default value of '" + getScoresFolder() + "scores.csv'");
+			return getScoresFolder() + "scores.csv";
+		}
 	}
 	
 	public String getOutputFormat(){
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
 			return prefManager.getPreference(OUTPUT_FORMAT);
-		else return null;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					OUTPUT_FORMAT + " not found. Using default value of 'null'");
+			return "null";
+		}
 	}
 
 	public String getDataSeriesDomain() {
 		if(prefManager.hasPreference(DATA_SERIES_DOMAIN))
 			return prefManager.getPreference(DATA_SERIES_DOMAIN);
-		return null;
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					DATA_SERIES_DOMAIN + " not found. Using default value of 'PEARSON(0.90)'");
+			return "PEARSON(0.90)";
+		}
 	}
+	
+	private static PreferencesManager generateDefaultMADneSsPreferences() throws IOException {
+		File prefFile = null;
+		BufferedWriter writer = null;
+		try {
+			prefFile = new File(DEFAULT_GLOBAL_PREF_FILE);
+			if(!prefFile.exists()){
+				writer = new BufferedWriter(new FileWriter(prefFile));
+				writer.write("* Default preferences file for 'MADneSs'. Comments with '*'.\n");
+				writer.write("\n* Data Source - Loaders.\n\n");
+				writer.write("\n* Loader type (MYSQL, CSVALL).\n" + 
+						"LOADER_TYPE = CSVALL\n");
+				writer.write("\n* Loaders folder.\n" + 
+						"LOADER_FOLDER = loaders\n");
+				writer.write("\n* Loader file.\n" + 
+						"LOADER_PREF_FILE = kddcup_loader.preferences\n");
+				writer.write("\n* Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
+						"CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK\n");
+				writer.write("\n* Data Partitioning.\n\n");
+				writer.write("\n* Golden Runs.\n" + 
+						"GOLDEN_RUN_IDS = 1 - 100\n");
+				writer.write("\n* Training Runs.\n" + 
+						"TRAIN_RUN_IDS = 1 - 20\n");
+				writer.write("\n* Evaluation Runs.\n" + 
+						"VALIDATION_RUN_IDS = 1 - 50\n");
+				writer.write("\n* MADneSs Execution.\n\n");
+				writer.write("\n* Perform Filtering of Indicators (0 = NO, 1 = YES).\n" + 
+						"FILTERING_FLAG = 1\n");
+				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
+						"TRAIN_FLAG = 1\n");
+				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
+						"METRIC = FSCORE(2)\n");
+				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
+						"METRIC_TYPE = absolute\n");
+				writer.write("\n* Expected duration of injected faults (observations).\n" + 
+						"ANOMALY_WINDOW = 1\n");
+				writer.write("\n* Threshold for filtering i.e., minimum value of FPR accepted.\n" + 
+						"FILTERING_TRESHOLD = 0.5\n");
+				writer.write("\n* Flag which indicates if we expect more than one fault for each run\n" + 
+						"VALID_AFTER_INJECTION = true\n");
+				writer.write("\n* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS\n" + 
+						"REPUTATION = 1.0\n");
+				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
+						"DATA_SERIES_DOMAIN = PEARSON(0.90)\n");
+				writer.write("\n* Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT\n" + 
+						"OUTPUT_TYPE = null\n");
+				writer.write("\n* Path Setup.\n\n");
+				writer.write("\n* Input folder\n" + 
+						"INPUT_FOLDER = input\n");
+				writer.write("\n* Output folder\n" + 
+						"OUTPUT_FOLDER = output\n");
+				writer.write("\n* Configuration folder\n" + 
+						"CONF_FILE_FOLDER = configurations\n");
+				writer.write("\n* Setup folder\n" + 
+						"SETUP_FILE_FOLDER = setup\n");
+				writer.write("\n* Setup folder\n" + 
+						"SCORES_FILE_FOLDER = intermediate\n");
+				writer.write("\n* Scores file\n" + 
+						"SCORES_FILE = scores.csv");
+				writer.write("\n* Other Preference Files.\n\n");
+				writer.write("\n* Detection Preferences\n" + 
+						"DETECTION_PREFERENCES_FILE = scoringPreferences.preferences\n");						
+			}
+		} catch(IOException ex){
+			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs global preferences");
+			throw ex;
+		} finally {
+			if(writer != null)
+				writer.close();
+		}
+		return new PreferencesManager(DEFAULT_GLOBAL_PREF_FILE);
+	}
+	
+	private PreferencesManager generateDefaultScoringPreferences() throws IOException {
+		File prefFile = null;
+		BufferedWriter writer = null;
+		try {
+			prefFile = new File(checkFolder(getInputFolder(), true) + DEFAULT_SCORING_PREF_FILE);
+			if(!prefFile.exists()){
+				writer = new BufferedWriter(new FileWriter(prefFile));
+				writer.write("* Default scoring preferences file for 'MADneSs'. Comments with '*'.\n");
+				writer.write("\n* Time needed for convergence (excluded by metric evaluations).\n" + 
+						"CONVERGENCE_TIME = 10.0\n");
+				writer.write("\n* Set of possible anomaly thresholds. Accepted values are ALL, HALF, THIRD, 'n'.\n" + 
+						"ANOMALY_TRESHOLD = ALL, HALF, 1\n");
+				writer.write("\n* Strategy to select anomaly checkers. Accepted values are 'min metric score', BEST 'n', FILTERED 'n'.\n" + 
+						"INDICATOR_SCORE_TRESHOLD = BEST 10, BEST 3, 0.9, FILTERED 10, BEST 30\n");
+			}
+		} catch(IOException ex){
+			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs scoring preferences");
+			throw ex;
+		} finally {
+			if(writer != null)
+				writer.close();
+		}
+		return new PreferencesManager(getInputFolder() + DEFAULT_SCORING_PREF_FILE);
+	}
+	
+	private void generateDefaultAlgorithmPreferences() throws IOException {
+		File prefFile = null;
+		BufferedWriter writer = null;
+		try {
+			prefFile = new File(checkFolder(getSetupFolder(), true) + DEFAULT_ALGORITHM_PREF_FILE);
+			if(!prefFile.exists()){
+				writer = new BufferedWriter(new FileWriter(prefFile));
+				writer.write("* Default algorithm preferences file for 'MADneSs'. Comments with '*'.\n");
+				writer.write("* Uncomment the algorithms you want to use. Filtering uses ELKI_KMEANS by default.\n");
+				for(AlgorithmType at : AlgorithmType.values()){
+					if(at.equals(AlgorithmType.ELKI_KMEANS))
+						writer.write("\n " + at + "\n");
+					else writer.write("\n* " + at + "\n");
+				}
+			}
+		} catch(IOException ex){
+			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs algorithm preferences");
+			throw ex;
+		} finally {
+			if(writer != null)
+				writer.close();
+		}
+	}
+	
+	private void generateValidationMetricsFile(File dataTypeFile) throws IOException {
+		BufferedWriter writer = null;
+		try {
+			if(!dataTypeFile.exists()){
+				writer = new BufferedWriter(new FileWriter(dataTypeFile));
+				writer.write("* Metrics involved in the output of the detection phase. Comments with '*'.\n");
+				writer.write("\n TP\n");
+				writer.write("\n TN\n");
+				writer.write("\n FP\n");
+				writer.write("\n FN\n");
+				writer.write("\n FPR\n");
+				writer.write("\n Precision\n");
+				writer.write("\n Recall\n");
+				writer.write("\n FMeasure\n");
+				writer.write("\n FScore(2)\n");
+				writer.write("\n MATTHEWS\n");
+			}
+		} catch(IOException ex){
+			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs algorithm preferences");
+			throw ex;
+		} finally {
+			if(writer != null)
+				writer.close();
+		}
+	}
+	
 }

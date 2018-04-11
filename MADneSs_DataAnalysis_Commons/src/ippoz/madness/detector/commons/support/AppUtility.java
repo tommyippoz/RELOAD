@@ -3,8 +3,6 @@
  */
 package ippoz.madness.detector.commons.support;
 
-import ippoz.madness.commons.support.AppLogger;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

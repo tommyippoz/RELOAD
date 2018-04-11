@@ -69,6 +69,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> {
 	protected int k;
 	
 	private List<ABODResult> resList;
+	
+	private KernelMatrix kernelMatrix;
 
 	/**
 	 * Constructor for Angle-Based Outlier Detection (ABOD).
@@ -80,8 +82,6 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> {
 		super(kernelFunction);
 		this.k = k;
 	}
-
-	KernelMatrix kernelMatrix;
 	
 	/**
 	 * Run Fast-ABOD on the data set.
@@ -341,6 +341,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> {
 			return abof;
 		}
 		
+		@SuppressWarnings("unchecked")
 		public V getVector(){
 			return (V) data;
 		}

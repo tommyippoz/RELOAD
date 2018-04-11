@@ -8,7 +8,6 @@ import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.TimedValue;
@@ -25,7 +24,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -250,7 +248,7 @@ public class ExperimentVoter extends Thread {
 		return map;
 	}
 
-	private List<TimedValue> convertFailures(List<Map<AlgorithmVoter, Snapshot>> expSnapMap) {
+	/*private List<TimedValue> convertFailures(List<Map<AlgorithmVoter, Snapshot>> expSnapMap) {
 		List<TimedValue> failList = new LinkedList<TimedValue>();
 		for(Map<AlgorithmVoter, Snapshot> map : expSnapMap){
 			if(map.get(algList.get(0)).getInjectedElement() != null){
@@ -261,7 +259,7 @@ public class ExperimentVoter extends Thread {
 			}
 		}
 		return failList;
-	}
+	}*/
 	
 	/**
 	 * Prints the textual summarization of the voting.

@@ -5,7 +5,6 @@ package ippoz.madness.detector.commons.knowledge.data;
 
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.madness.commons.support.AppLogger;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.failure.InjectedElement;
@@ -14,6 +13,7 @@ import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.service.ServiceCall;
 import ippoz.madness.detector.commons.service.ServiceStat;
+import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.util.ArrayList;
 import java.util.Date;

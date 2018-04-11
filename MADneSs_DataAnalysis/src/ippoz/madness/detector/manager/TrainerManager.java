@@ -35,7 +35,7 @@ import java.util.Map;
 public class TrainerManager extends TrainDataManager {
 	
 	/** The output folder. */
-	private String outputFolder;
+	//private String outputFolder;
 		
 	private InvariantManager iManager;
 	
@@ -52,7 +52,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
-		this.outputFolder = outputFolder;
+		//this.outputFolder = outputFolder;
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes);
-		this.outputFolder = outputFolder;
+		//this.outputFolder = outputFolder;
 	}
 	
 	/**
@@ -86,7 +86,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries);
-		this.outputFolder = outputFolder;
+		//this.outputFolder = outputFolder;
 	}
 	
 	/**
@@ -120,18 +120,6 @@ public class TrainerManager extends TrainDataManager {
 		}
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
 		return finalDs;
-	}
-
-	private LinkedList<DataSeries> selectDataSeries(LinkedList<AlgorithmTrainer> atList) {
-		LinkedList<DataSeries> result = new LinkedList<DataSeries>();
-		for(AlgorithmTrainer at : atList){
-			if(at.getMetricScore() < 0.1){
-				if(!result.contains(at.getDataSeries()))
-					result.add(at.getDataSeries());
-			}
-		}
-		AppLogger.logInfo(getClass(), "Filtered Data Series are " + result.size() + " out of the possible " + seriesList.size());
-		return result;
 	}
 
 	/**
@@ -216,8 +204,11 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + ((AlgorithmTrainer)t).getBestConfiguration().toString());		
-		((AlgorithmTrainer)t).flush();
+		AlgorithmTrainer at = ((AlgorithmTrainer)t);
+		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
+				(at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
+				" Score: " + at.getMetricScore());		
+		at.flush();
 	}
 	
 	/*private void saveTrainingTimes(List<? extends Thread> list) {
@@ -259,25 +250,6 @@ public class TrainerManager extends TrainDataManager {
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
-		}
-	}
-	
-	/**
-	 * Saves scores related to the executed AlgorithmTrainers.
-	 *
-	 * @param list the list of algorithm trainers
-	 */
-	private void saveFilteredSeries(LinkedList<DataSeries> list, String filename) {
-		BufferedWriter writer;
-		try {
-			writer = new BufferedWriter(new FileWriter(new File(getScoresFolder() + filename)));
-			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
-			for(DataSeries ds : list){
-				writer.write(ds.toString() + "\n");			
-			}
-			writer.close();
-		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to write series");
 		}
 	}
 	

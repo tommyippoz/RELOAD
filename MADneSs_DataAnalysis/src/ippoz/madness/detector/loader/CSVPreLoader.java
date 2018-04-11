@@ -4,11 +4,11 @@
 package ippoz.madness.detector.loader;
 
 import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.madness.commons.support.AppLogger;
 import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.commons.knowledge.data.IndicatorData;
 import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
 import ippoz.madness.detector.commons.knowledge.data.Observation;
+import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.PreferencesManager;
 
 import java.io.BufferedReader;
@@ -101,8 +101,8 @@ public class CSVPreLoader extends CSVLoader {
 								for(String splitted : readLine.split(",")){
 									if(i < header.size() && header.get(i) != null){
 										HashMap<DataCategory, String> iD = new HashMap<DataCategory, String>();
-										iD.put(DataCategory.PLAIN, splitted);
-										iD.put(DataCategory.DIFFERENCE, obList.size()>0 ? String.valueOf(Double.parseDouble(splitted) - Double.parseDouble(obList.getLast().getValue(header.get(i), DataCategory.PLAIN))) : "0.0");
+										iD.put(DataCategory.PLAIN, splitted.replace("\"", ""));
+										iD.put(DataCategory.DIFFERENCE, obList.size()>0 ? String.valueOf(Double.parseDouble(splitted.replace("\"", "")) - Double.parseDouble(obList.getLast().getValue(header.get(i), DataCategory.PLAIN))) : "0.0");
 										current.addIndicator(header.get(i), new IndicatorData(iD));
 									} 
 									i++;
@@ -116,7 +116,7 @@ public class CSVPreLoader extends CSVLoader {
 					}
 				}
 				reader.close();
-			}
+			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + csvFile.getPath() + "' not found");
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}

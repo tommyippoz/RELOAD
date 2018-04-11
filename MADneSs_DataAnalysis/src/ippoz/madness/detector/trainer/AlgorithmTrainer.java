@@ -162,14 +162,14 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param algExpSnapshots the alg exp snapshots
 	 * @return the reputation score
 	 */
-	private double evaluateReputationScore(){
+	/*private double evaluateReputationScore(){
 		List<Double> reputationResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
 			reputationResults.add(reputation.evaluateReputation(algorithm, knowledge));
 		}
 		return AppUtility.calcAvg(reputationResults.toArray(new Double[reputationResults.size()]));
-	}
+	}*/
 
 	/**
 	 * Gets the data series.

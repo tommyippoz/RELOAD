@@ -3,8 +3,8 @@
  */
 package ippoz.madness.detector.commons.configuration;
 
-import ippoz.madness.commons.support.AppLogger;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
+import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.util.HashMap;
 

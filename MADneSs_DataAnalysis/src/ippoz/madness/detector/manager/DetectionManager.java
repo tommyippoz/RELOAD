@@ -142,7 +142,7 @@ public class DetectionManager {
 		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").get(0).fetch(), iManager.loadConfigurations(algTypes), new FalsePositiveRate_Metric(true), reputation, dataTypes, algTypes, iManager.getFilteringTreshold());
+				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").get(0).fetch(), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold());
 				selectedDataSeries = fManager.filter();
 				fManager.flush();
 			}

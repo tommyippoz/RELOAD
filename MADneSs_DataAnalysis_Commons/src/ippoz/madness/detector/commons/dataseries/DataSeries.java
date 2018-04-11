@@ -172,13 +172,13 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 						complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
 						complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
 					}
+					List<DataSeries> pList = new ArrayList<DataSeries>(lEntry.size());
+					for(String entry : lEntry){
+						pList.add(DataSeries.fromList(simpleInd, entry.trim()));
+					}
+					complexInd.add(new MultipleDataSeries(pList));
 				}
 			}
-			List<DataSeries> pList = new ArrayList<DataSeries>(lEntry.size());
-			for(String entry : lEntry){
-				pList.add(DataSeries.fromList(simpleInd, entry.trim()));
-			}
-			complexInd.add(new MultipleDataSeries(pList));
 		}
 		outList.addAll(simpleInd);
 		outList.addAll(complexInd);

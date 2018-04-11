@@ -1,0 +1,87 @@
+* Default preferences file for 'MADneSs'. Comments with '*'.
+
+* Data Source - Loaders.
+
+
+* Loader type (MYSQL, CSVALL).
+LOADER_TYPE = CSVALL
+
+* Loaders folder.
+LOADER_FOLDER = loaders
+
+* Loader file.
+LOADER_PREF_FILE = kddcup_loader.preferences
+
+* Investigated Data Layers (if any, NO_LAYER otherwise).
+CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
+
+* Data Partitioning.
+
+
+* Golden Runs.
+GOLDEN_RUN_IDS = 1 - 100
+
+* Training Runs.
+TRAIN_RUN_IDS = 1 - 20
+
+* Evaluation Runs.
+VALIDATION_RUN_IDS = 1 - 50
+
+* MADneSs Execution.
+
+
+* Perform Filtering of Indicators (0 = NO, 1 = YES).
+FILTERING_FLAG = 1
+
+* Perform Training (0 = NO, 1 = YES).
+TRAIN_FLAG = 1
+
+* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.
+METRIC = FSCORE(2)
+
+* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
+METRIC_TYPE = absolute
+
+* Expected duration of injected faults (observations).
+ANOMALY_WINDOW = 1
+
+* Threshold for filtering i.e., minimum value of FPR accepted.
+FILTERING_TRESHOLD = 0.5
+
+* Flag which indicates if we expect more than one fault for each run
+VALID_AFTER_INJECTION = true
+
+* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS
+REPUTATION = 1.0
+
+* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted
+DATA_SERIES_DOMAIN = PEARSON(0.90)
+
+* Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
+OUTPUT_TYPE = null
+
+* Path Setup.
+
+
+* Input folder
+INPUT_FOLDER = input
+
+* Output folder
+OUTPUT_FOLDER = output
+
+* Configuration folder
+CONF_FILE_FOLDER = configurations
+
+* Setup folder
+SETUP_FILE_FOLDER = setup
+
+* Scores folder
+SCORES_FILE_FOLDER = intermediate
+
+* Scores file
+SCORES_FILE = scores.csv
+* Other Preference Files.
+
+
+* Detection Preferences
+DETECTION_PREFERENCES_FILE = detectionPreferences.preferences

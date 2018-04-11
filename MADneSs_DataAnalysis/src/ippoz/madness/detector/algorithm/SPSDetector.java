@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.algorithm;
 
-import ippoz.madness.commons.support.CustomArrayList;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
@@ -13,6 +12,7 @@ import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.TimedValue;
 import ippoz.madness.detector.graphics.ChartDrawer;
 import ippoz.madness.detector.graphics.XYChartDrawer;
+import ippoz.utils.datastructures.CustomArrayList;
 
 import java.io.File;
 import java.util.Date;

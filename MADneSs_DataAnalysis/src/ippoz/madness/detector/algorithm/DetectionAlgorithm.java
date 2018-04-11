@@ -5,6 +5,7 @@ package ippoz.madness.detector.algorithm;
 
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
 import ippoz.madness.detector.algorithm.elki.KMeansELKI;
+import ippoz.madness.detector.algorithm.elki.LOFELKI;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
@@ -78,6 +79,8 @@ public abstract class DetectionAlgorithm {
 				return new KMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
 				return new FastABODELKI(dataSeries, conf);
+			case ELKI_LOF:
+				return new LOFELKI(dataSeries, conf);
 			default:
 				return null;
 		}
@@ -93,11 +96,13 @@ public abstract class DetectionAlgorithm {
 			case PEA:
 			case ELKI_KMEANS:
 			case ELKI_ABOD:
+			case ELKI_LOF:
 				return KnowledgeType.SINGLE;
 			case INV:
 			case RCC:
 				return KnowledgeType.GLOBAL;
-
+			default:
+				break;
 		}
 		return null;
 	}
@@ -106,7 +111,8 @@ public abstract class DetectionAlgorithm {
 		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
 				(dataSeries.size() == 1 && (algType == AlgorithmType.SPS || algType == AlgorithmType.HIST)) ||
 				(algType == AlgorithmType.ELKI_KMEANS) || 
-				(algType == AlgorithmType.ELKI_ABOD && dataSeries.size() > 1);
+				(algType == AlgorithmType.ELKI_ABOD) || 
+				(algType == AlgorithmType.ELKI_LOF);
 	}
 	
 	/**

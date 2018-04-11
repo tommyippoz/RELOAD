@@ -80,11 +80,13 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
 				}
 				currentMetricValue = AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
+				//System.out.println(currentMetricValue + " - " + conf.toString());
 				if(bestMetricValue.isNaN() || getMetric().compareResults(currentMetricValue, bestMetricValue) == 1){	
 					bestMetricValue = currentMetricValue;
 					bestConf = (AlgorithmConfiguration) conf.clone();
 				}
 			}
+			//System.out.println("BEST: " + bestMetricValue + " - " + bestConf.toString());
 			//tTiming.addTrainingTime(getAlgType(), System.currentTimeMillis() - startTime, configurations.size());
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");

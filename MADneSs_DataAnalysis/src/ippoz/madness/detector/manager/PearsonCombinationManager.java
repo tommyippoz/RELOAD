@@ -232,10 +232,6 @@ public class PearsonCombinationManager {
 			return prStats.getStd();
 		}
 		
-		public DataSeries getDataSeries(int index) {
-			return dsList.get(index);
-		}
-		
 		private List<DataSeries> getDataSeries() {
 			return dsList;
 		}

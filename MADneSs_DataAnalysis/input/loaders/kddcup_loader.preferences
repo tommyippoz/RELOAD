@@ -7,7 +7,3 @@ LABEL_COLUMN = 41
 EXPERIMENT_ROWS = 100
 
 FAULTY_TAGS = back, land, neptune, pod, smurf, teardrop
-
-* DB_NAME = experiment2
-* DB_USERNAME = root
-* DB_PASSWORD = matilde

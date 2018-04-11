@@ -25,7 +25,7 @@ public class DetectorMain {
 		PreferencesManager prefManager;
 		DetectionManager dManager;
 		try {
-			prefManager = new PreferencesManager("detector.preferences");
+			prefManager = new PreferencesManager("madness.preferences");
 			AppLogger.logInfo(DetectorMain.class, "Preferences Loaded");
 			dManager = new DetectionManager(prefManager);
 			if(dManager.checkAssumptions()){
