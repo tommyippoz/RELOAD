@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -512,30 +511,34 @@ public class InputManager {
 		try {
 			for(File confFile : confFolder.listFiles()){
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
-					algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
-					if(algType != null && algTypes.contains(algType)) {
-						reader = new BufferedReader(new FileReader(confFile));
-						readed = reader.readLine();
-						if(readed != null){
-							header = readed.split(",");
-							while(reader.ready()){
-								readed = reader.readLine();
-								if(readed != null){
-									readed = readed.trim();
-									if(readed.length() > 0){
-										i = 0;
-										alConf = AlgorithmConfiguration.getConfiguration(algType, null);
-										for(String element : readed.split(",")){
-											alConf.addItem(header[i++], element);
+					try {
+						algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
+						if(algType != null && algTypes.contains(algType)) {
+							reader = new BufferedReader(new FileReader(confFile));
+							readed = reader.readLine();
+							if(readed != null){
+								header = readed.split(",");
+								while(reader.ready()){
+									readed = reader.readLine();
+									if(readed != null){
+										readed = readed.trim();
+										if(readed.length() > 0){
+											i = 0;
+											alConf = AlgorithmConfiguration.getConfiguration(algType, null);
+											for(String element : readed.split(",")){
+												alConf.addItem(header[i++], element);
+											}
+											if(confList.get(algType) == null)
+												confList.put(algType, new LinkedList<AlgorithmConfiguration>());
+											confList.get(algType).add(alConf);
 										}
-										if(confList.get(algType) == null)
-											confList.put(algType, new LinkedList<AlgorithmConfiguration>());
-										confList.get(algType).add(alConf);
 									}
 								}
+								AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 							}
-							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 						}
+					} catch(Exception ex){
+						AppLogger.logError(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
 					}
 				} 
 			}

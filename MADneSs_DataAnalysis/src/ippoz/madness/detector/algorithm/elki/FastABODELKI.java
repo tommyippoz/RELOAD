@@ -31,14 +31,14 @@ public class FastABODELKI extends DataSeriesElkiAlgorithm {
 	
 	private static final Integer DEFAULT_K = 5;
 	
-	private static final String DEFAULT_ABOD_TMP_FOLDER = "abod_tmp";
+	public static final String DEFAULT_TMP_FOLDER = "abod_tmp";
 	
 	private CustomFastABOD<NumberVector> fAbod;
 	
 	private double threshold;
 	
 	public FastABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
-		super(dataSeries, conf);
+		super(dataSeries, conf, false, false);
 		threshold = parseThreshold(conf);
 		fAbod = new CustomFastABOD<NumberVector>(
 				HellingerDistanceFunction.STATIC, 
@@ -64,14 +64,14 @@ public class FastABODELKI extends DataSeriesElkiAlgorithm {
 		conf.addItem(TMP_FILE, getFilename());
 	    
 	    if(!new File(getFilename()).exists()){
-	    	if(!new File(DEFAULT_ABOD_TMP_FOLDER).exists())
-	    		new File(DEFAULT_ABOD_TMP_FOLDER).mkdirs();
+	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
+	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	fAbod.printFile(new File(getFilename()));
 	    }
 	}
 	
 	private String getFilename(){
-		return DEFAULT_ABOD_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".abod";
+		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".abod";
 	}
 
 	@Override

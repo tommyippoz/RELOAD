@@ -39,7 +39,7 @@ public class KMeansELKI extends DataSeriesElkiAlgorithm {
 	private SquaredEuclideanDistanceFunction dist;
 	
 	public KMeansELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
-		super(dataSeries, conf);
+		super(dataSeries, conf, false, false);
 		dist = SquaredEuclideanDistanceFunction.STATIC;
 		if(conf.hasItem(KMEANS_CLUSTERS))
 			clusters = CustomKMeans.loadClusters(conf.getItem(KMEANS_CLUSTERS));

@@ -5,6 +5,9 @@ package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.algorithm.elki.FastABODELKI;
+import ippoz.madness.detector.algorithm.elki.LOFELKI;
+import ippoz.madness.detector.algorithm.elki.SVMELKI;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
@@ -52,7 +55,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
-		//this.outputFolder = outputFolder;
+		clearTmpFolders(algTypes);
 	}
 	
 	/**
@@ -69,7 +72,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes);
-		//this.outputFolder = outputFolder;
+		clearTmpFolders(algTypes);
 	}
 	
 	/**
@@ -86,9 +89,35 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
 		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries);
-		//this.outputFolder = outputFolder;
+		clearTmpFolders(algTypes);
 	}
 	
+	private void clearTmpFolders(List<AlgorithmType> algTypes) {
+		File tempFolder;
+		for(AlgorithmType at : algTypes){
+			if(at.equals(AlgorithmType.ELKI_ABOD)){
+				tempFolder = new File(FastABODELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_LOF)){
+				tempFolder = new File(LOFELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_SVM)){
+				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			}
+				
+		}
+	}
+
 	/**
 	 * Instantiates a new trainer manager.
 	 *

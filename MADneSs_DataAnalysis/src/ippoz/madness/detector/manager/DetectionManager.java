@@ -198,14 +198,16 @@ public class DetectionManager {
 
 	/**
 	 * Starts the evaluation process.
+	 * @return 
 	 */
-	public void evaluate(){
+	public String[] evaluate(){
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		List<Loader> lList = buildLoader("validation");
 		List<MonitoredData> bestExpList = null;
 		List<MonitoredData> expList;
 		String bestRuns = null;
+		String[] toReturn = null;
 		double bestScore = 0;
 		double score;
 		int index = 0;
@@ -214,7 +216,7 @@ public class DetectionManager {
 				for(Loader l : lList){
 					expList = l.fetch();
 					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-					score = singleEvaluation(metList, expList, printOutput, false);
+					score = Double.valueOf(singleEvaluation(metList, expList, printOutput, false)[0]);
 					if(score > bestScore){
 						bestRuns = l.getRuns();
 						bestExpList = expList;
@@ -222,19 +224,21 @@ public class DetectionManager {
 					}
 					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 				}
-				singleEvaluation(metList, bestExpList, printOutput, true);
+				toReturn = singleEvaluation(metList, bestExpList, printOutput, true);
 			} else {
 				bestRuns = "all";
 				bestExpList = lList.iterator().next().fetch();
-				bestScore = singleEvaluation(metList, bestExpList, printOutput, true);
+				toReturn = singleEvaluation(metList, bestExpList, printOutput, true);
+				bestScore = Double.valueOf(toReturn[0]);
 			}	
 			AppLogger.logInfo(getClass(), "Final score is " + new DecimalFormat("#.##").format(bestScore) + ", runs (" + bestRuns + ")");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
 		}
+		return toReturn;
 	}
 	
-	private double singleEvaluation(Metric[] metList, List<MonitoredData> expList, boolean printOutput, boolean summaryFlag){
+	private String[] singleEvaluation(Metric[] metList, List<MonitoredData> expList, boolean printOutput, boolean summaryFlag){
 		EvaluatorManager eManager;
 		double bestScore;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
@@ -257,7 +261,7 @@ public class DetectionManager {
 		if(summaryFlag) {
 			summarizeEvaluations(evaluations, metList, iManager.parseAnomalyTresholds(), nVoters, bestScore);
 		}
-		return Double.isFinite(bestScore) ? bestScore : 0.0;
+		return new String[]{Double.isFinite(bestScore) ? String.valueOf(bestScore) : "0.0", getBestSetup(evaluations, metList, anomalyTresholds)};
 	}
 	
 	private double getBestScore(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
@@ -276,6 +280,26 @@ public class DetectionManager {
 			}
 		}
 		return bestScore;
+	}
+	
+	private String getBestSetup(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
+		double score;
+		double bestScore = 0;
+		String bSetup = null;
+		for(String voterTreshold : evaluations.keySet()){
+			for(String anomalyTreshold : anomalyTresholds){
+				for(Metric met : metList){
+					score = Double.parseDouble(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
+					if(met.equals(metric)){
+						if(score > bestScore) {
+							bestScore = score;
+							bSetup = voterTreshold + " - " + anomalyTreshold;
+						}
+					}
+				}
+			}
+		}
+		return bSetup;
 	}
 
 	private void summarizeEvaluations(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds, Map<String, Integer> nVoters, double bestScore) {
@@ -349,6 +373,11 @@ public class DetectionManager {
 			}
 		}
 		return idList;
+	}
+
+	public void flush() {
+		iManager = null;
+		selectedDataSeries = null;
 	}
 		
 }

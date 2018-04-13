@@ -22,7 +22,7 @@ CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
 GOLDEN_RUN_IDS = 1 - 100
 
 * Training Runs.
-TRAIN_RUN_IDS = 1 - 20
+TRAIN_RUN_IDS = 1 - 5
 
 * Evaluation Runs.
 VALIDATION_RUN_IDS = 1 - 50
@@ -31,7 +31,7 @@ VALIDATION_RUN_IDS = 1 - 50
 
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
-FILTERING_FLAG = 1
+FILTERING_FLAG = 0
 
 * Perform Training (0 = NO, 1 = YES).
 TRAIN_FLAG = 1

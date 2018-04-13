@@ -30,14 +30,14 @@ public class LOFELKI extends DataSeriesElkiAlgorithm {
 	
 	private static final Integer DEFAULT_K = 5;
 	
-	private static final String DEFAULT_TMP_FOLDER = "lof_tmp";
+	public static final String DEFAULT_TMP_FOLDER = "lof_tmp";
 	
 	private CustomLOF cLOF;
 	
 	private double threshold;
 	
 	public LOFELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
-		super(dataSeries, conf);
+		super(dataSeries, conf, false, false);
 		cLOF = new CustomLOF( 
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K,
 	    		SquaredEuclideanDistanceFunction.STATIC);
