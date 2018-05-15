@@ -271,24 +271,13 @@ public class EvaluatorManager extends DataManager {
 			for(Metric met : validationMetrics){
 				pw.append(met.getMetricName() + ",");
 			}
-			pw.append("\n");
+			pw.append("AUC\n");
 			pw.close();
 		} catch (FileNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to find results file");
 		} 		
 	}
 	
-	/*public void printTimings(String filename) {
-		PrintWriter pw;
-		try {
-			pw = new PrintWriter(new FileOutputStream(new File(filename), true));
-			pw.append(eTiming.toFileRow() + "\n");
-			pw.close();
-		} catch (FileNotFoundException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to find experiment timings file");
-		}
-	}*/
-
 	public List<Map<Metric, Double>> getMetricsEvaluations() {
 		return expMetricEvaluations;
 	}

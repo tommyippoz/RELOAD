@@ -7,6 +7,7 @@
 	<classpathentry kind="lib" path="libs/jcommon-1.0.23.jar"/>
 	<classpathentry kind="lib" path="libs/commons-lang3-3.4.jar"/>
 	<classpathentry kind="lib" path="libs/elki-bundle-0.7.1.jar"/>
+	<classpathentry kind="lib" path="libs/weka/weka.jar" sourcepath="libs/weka/weka-src.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MADneSs_Commons"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MADneSs_DataAnalysis_Commons"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Ippoz_Utils"/>

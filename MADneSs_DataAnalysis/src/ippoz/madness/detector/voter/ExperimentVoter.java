@@ -59,9 +59,6 @@ public class ExperimentVoter extends Thread {
 	/** The contracted results of the voting. */
 	private List<TimedValue> voting;
 	
-	/** The list of the snapshots for each voter */
-	//private List<Map<AlgorithmVoter, Snapshot>> expSnapMap;
-	
 	private Map<KnowledgeType, Knowledge> kMap;
 	
 	/**
@@ -130,6 +127,22 @@ public class ExperimentVoter extends Thread {
 		}
 	}
 	
+	private double getAUC() {
+		int okCount = 0;
+		double auc = 0;
+		if(algList.size() > 0) {
+			for(AlgorithmVoter aVoter : algList){
+				if(aVoter.getAUC() >= 0){
+					auc = auc + aVoter.getAUC();
+					okCount++;
+				}	
+			}
+		}
+		if(okCount > 0)
+			return auc/okCount;
+		else return -1.0;
+	}
+	
 	/**
 	 * Votes results obtaining a contracted indication about anomaly (double score)
 	 *
@@ -196,7 +209,9 @@ public class ExperimentVoter extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(kMap.get(KnowledgeType.GLOBAL), voting, anomalyTreshold));
+				if(!met.getMetricName().equals("AUC"))
+					metResults.put(met, met.evaluateAnomalyResults(kMap.get(KnowledgeType.GLOBAL), voting, anomalyTreshold));
+				else metResults.put(met, getAUC());
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
@@ -212,14 +227,6 @@ public class ExperimentVoter extends Thread {
 		} 
 		return metResults;
 	}
-
-	/*private List<Snapshot> getSimpleSnapshotList() {
-		List<Snapshot> simpleList = new ArrayList<Snapshot>(kMap.get(KnowledgeType.GLOBAL).size());
-		for(Map<AlgorithmVoter, Snapshot> map : expSnapMap){
-			simpleList.add(map.get(algList.get(0)));
-		}
-		return simpleList;
-	}*/
 
 	/**
 	 * Prints the graphics.

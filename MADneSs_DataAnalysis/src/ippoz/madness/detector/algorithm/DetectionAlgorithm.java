@@ -3,10 +3,14 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import ippoz.madness.detector.algorithm.elki.ABODELKI;
+import ippoz.madness.detector.algorithm.elki.COFELKI;
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
 import ippoz.madness.detector.algorithm.elki.KMeansELKI;
 import ippoz.madness.detector.algorithm.elki.LOFELKI;
+import ippoz.madness.detector.algorithm.elki.ODINELKI;
 import ippoz.madness.detector.algorithm.elki.SVMELKI;
+import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
@@ -79,11 +83,19 @@ public abstract class DetectionAlgorithm {
 			case ELKI_KMEANS:
 				return new KMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
+				return new ABODELKI(dataSeries, conf);
+			case ELKI_FASTABOD:
 				return new FastABODELKI(dataSeries, conf);
 			case ELKI_LOF:
 				return new LOFELKI(dataSeries, conf);
+			case ELKI_COF:
+				return new COFELKI(dataSeries, conf);
+			case ELKI_ODIN:
+				return new ODINELKI(dataSeries, conf);
 			case ELKI_SVM:
 				return new SVMELKI(dataSeries, conf);
+			case WEKA_ISOLATIONFOREST:
+				return new IsolationForestWEKA(dataSeries, conf);
 			default:
 				return null;
 		}
@@ -93,31 +105,19 @@ public abstract class DetectionAlgorithm {
 		switch(algType){
 			case SPS:
 				return KnowledgeType.SLIDING;
-			case HIST:
-			case CONF:
-			case WER:
-			case PEA:
-			case ELKI_KMEANS:
-			case ELKI_ABOD:
-			case ELKI_LOF:
-			case ELKI_SVM:
-				return KnowledgeType.SINGLE;
 			case INV:
 			case RCC:
 				return KnowledgeType.GLOBAL;
 			default:
-				break;
+				return KnowledgeType.SINGLE;
 		}
-		return null;
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
 		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
 				(dataSeries.size() == 1 && (algType == AlgorithmType.SPS || algType == AlgorithmType.HIST)) ||
-				(algType == AlgorithmType.ELKI_KMEANS) || 
-				(algType == AlgorithmType.ELKI_ABOD) || 
-				(algType == AlgorithmType.ELKI_LOF) ||
-				(algType == AlgorithmType.ELKI_SVM);
+				(algType.toString().contains("ELKI_") ||
+				(dataSeries.size() > 1 && algType == AlgorithmType.WEKA_ISOLATIONFOREST));
 	}
 	
 	/**

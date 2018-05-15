@@ -77,35 +77,29 @@ public abstract class TrainDataManager extends DataManager {
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public TrainDataManager(Indicator[] indicators, List<MonitoredData> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes) {
+	public TrainDataManager(Indicator[] indicators, List<MonitoredData> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex) {
 		this(indicators, expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
-		seriesList = generateDataSeries(dataTypes);
+		seriesList = generateDataSeries(dataTypes, pearsonSimple, pearsonComplex);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes) {
+	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
 		if(dsDomain.equals("ALL")){
 			return DataSeries.allCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.equals("SIMPLE")){
 			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			if(!checkCorrelationInfo()){
-				pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes));
-			}
+			pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes), pearsonSimple, pearsonComplex);
 			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
 		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
 	}
 	
-	private void pearsonCorrelation(List<DataSeries> list) {
+	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
 		PearsonCombinationManager pcManager;
 		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
 		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(KnowledgeType.GLOBAL));
-		pcManager.calculatePearsonIndexes();
+		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
 		pcManager.flush();
-	}
-
-	private boolean checkCorrelationInfo() {
-		return new File(getSetupFolder() + "pearsonCombinations.csv").exists();
 	}
 	
 	private List<List<String>> readIndCombinations(String filename){

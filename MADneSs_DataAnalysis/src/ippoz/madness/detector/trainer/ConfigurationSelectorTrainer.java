@@ -11,12 +11,17 @@ import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Metric;
+import ippoz.madness.detector.metric.TruePositiveRate_Metric;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 
 /**
  * The Class ConfigurationSelectorTrainer.
@@ -66,31 +71,63 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	protected AlgorithmConfiguration lookForBestConfiguration() {
 		Double bestMetricValue = Double.NaN;
 		Double currentMetricValue;
-		LinkedList<Double> metricResults;
+		List<Double> metricResults, fprResults, tprResults;
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
+		AUCCalculator auc = new AUCCalculator();
 		try {
 			for(AlgorithmConfiguration conf : configurations){
 				metricResults = new LinkedList<Double>();
+				fprResults = new LinkedList<Double>();
+				tprResults = new LinkedList<Double>();
 				algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), conf);
 				if(algorithm instanceof AutomaticTrainingAlgorithm) {
 					((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList());
 				}
 				for(Knowledge knowledge : getKnowledgeList()){
 					metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
+					//System.out.println(conf + " Score: " + metricResults.get(metricResults.size()-1));
+					fprResults.add(new FalsePositiveRate_Metric(true).evaluateMetric(algorithm, knowledge)[0]);
+					tprResults.add(new TruePositiveRate_Metric(true).evaluateMetric(algorithm, knowledge)[0]);
 				}
 				currentMetricValue = AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
-				//System.out.println(currentMetricValue + " - " + conf.toString());
+				auc.add(AppUtility.calcAvg(fprResults), AppUtility.calcAvg(tprResults));
 				if(bestMetricValue.isNaN() || getMetric().compareResults(currentMetricValue, bestMetricValue) == 1){	
 					bestMetricValue = currentMetricValue;
 					bestConf = (AlgorithmConfiguration) conf.clone();
 				}
 			}
-			//System.out.println("BEST: " + bestMetricValue + " - " + bestConf.toString());
-			//tTiming.addTrainingTime(getAlgType(), System.currentTimeMillis() - startTime, configurations.size());
+			bestConf.addItem(AlgorithmConfiguration.AUC_SCORE, String.valueOf(auc.calculateScore()));
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
 		return bestConf;
+	}
+	
+	private class AUCCalculator {
+		
+		private WeightedObservedPoints oPoints;
+		
+		private static final int APPROXIMATION = 100;
+		
+		public AUCCalculator(){
+			oPoints = new WeightedObservedPoints();
+		}
+		
+		public void add(double fpr, double tpr){
+			oPoints.add(fpr, tpr);
+		}
+		
+		public double calculateScore(){
+			double auc = 0;
+			double step = 0;
+			double[] coeff = PolynomialCurveFitter.create(2).fit(oPoints.toList());
+			for(int i=0; i < APPROXIMATION;i++){
+				auc = auc + 0.01*(coeff[2]*step*step + coeff[1]*step + coeff[0]);
+				step = step + 1.0/APPROXIMATION;
+			}
+			return auc;
+		}
+		
 	}
 }

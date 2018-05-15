@@ -107,7 +107,7 @@ public class PearsonCombinationManager {
 		}
 	}
 	
-	public void calculatePearsonIndexes(){
+	public void calculatePearsonIndexes(double pearsonSimple, double pearsonComplex){
 		Integer correlationSize = 2;
 		PearsonResult pr;
 		List<Double> pExp;
@@ -128,7 +128,7 @@ public class PearsonCombinationManager {
 						dsList.add(ds1);
 						dsList.add(ds2);
 						pr = new PearsonResult(dsList, pExp);
-						if(pr.isValid(pMap.get(2), 0.90))
+						if(pr.isValid(pMap.get(2), pearsonSimple))
 							pMap.get(2).add(pr);
 					}
 				}
@@ -148,7 +148,7 @@ public class PearsonCombinationManager {
 								if(!pMap.containsKey(dsList.size()))
 									pMap.put(dsList.size(), new LinkedList<PearsonResult>());
 								pr = new PearsonResult(dsList, Math.abs(res.getAvg()) <= Math.abs(otherRes.getAvg()) ? res.getAvg() : otherRes.getAvg(), res.getStd() + otherRes.getStd());
-								if(pr.isValid(pMap.get(dsList.size()), 0.99))
+								if(pr.isValid(pMap.get(dsList.size()), pearsonComplex))
 									pMap.get(dsList.size()).add(pr);
 							}
 						}

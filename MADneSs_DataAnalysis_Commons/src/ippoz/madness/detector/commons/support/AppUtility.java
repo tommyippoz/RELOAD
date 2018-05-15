@@ -95,6 +95,15 @@ public class AppUtility {
 		}
 	}
 	
+	public static boolean isInteger(String item) {
+		try {
+			Integer.parseInt(item);
+			return true;
+		} catch(Exception ex){
+			return false;
+		}
+	}
+	
 	public static double readMillis(){
 		return (double)(1.0*System.nanoTime()/1000000.0);
 	}

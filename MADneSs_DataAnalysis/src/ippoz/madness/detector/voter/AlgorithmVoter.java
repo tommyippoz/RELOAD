@@ -126,5 +126,11 @@ public class AlgorithmVoter implements Cloneable {
 	public boolean usesSeries(DataSeries serie) {
 		return alg.usesSeries(serie);
 	}
+	
+	public double getAUC(){
+		if(alg.getConfiguration() != null && alg.getConfiguration().hasItem(AlgorithmConfiguration.AUC_SCORE))
+			return Double.valueOf(alg.getConfiguration().getItem(AlgorithmConfiguration.AUC_SCORE));
+		else return -1.0;
+	}
 
 }

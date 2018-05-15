@@ -1,0 +1,9 @@
+FILTERING_CSV_FILE = ../../git_data/MLAD/datasets/ISCX2012/ISCX2012_BruteForce.csv
+TRAIN_CSV_FILE = ../../git_data/MLAD/datasets/ISCX2012/ISCX2012_BruteForce.csv
+VALIDATION_CSV_FILE = ../../git_data/MLAD/datasets/ISCX2012/ISCX2012_BruteForce.csv
+
+SKIP_COLUMNS = 0, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17
+LABEL_COLUMN = 17
+EXPERIMENT_ROWS = 3000
+
+FAULTY_TAGS = "Attack", Attack

@@ -9,6 +9,7 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
+import ippoz.madness.detector.metric.AUC_Metric;
 import ippoz.madness.detector.metric.Custom_Metric;
 import ippoz.madness.detector.metric.FMeasure_Metric;
 import ippoz.madness.detector.metric.FN_Metric;
@@ -126,6 +127,10 @@ public class InputManager {
 	private static final String DM_CONVERGENCE_TIME = "CONVERGENCE_TIME";
 
 	private static final String LOADER_PREF_FILE = "LOADER_PREF_FILE";
+
+	private static final String PEARSON_SIMPLE_THRESHOLD = "PEARSON_TOLERANCE";
+	
+	private static final String PEARSON_COMPLEX_THRESHOLD = "PEARSON_NUPLES_TOLERANCE";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -231,6 +236,7 @@ public class InputManager {
 					}
 				}
 			}
+			metricList.add(getMetric("AUC"));
 			reader.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
@@ -344,6 +350,8 @@ public class InputManager {
 				return new FalsePositiveRate_Metric(validAfter);
 			case "MATTHEWS":
 				return new Matthews_Coefficient(validAfter);
+			case "AUC":
+				return new AUC_Metric(validAfter);
 			case "CUSTOM":
 				return new Custom_Metric(validAfter);	
 			default:
@@ -778,6 +786,26 @@ public class InputManager {
 		} finally {
 			if(writer != null)
 				writer.close();
+		}
+	}
+
+	public double getSimplePearsonThreshold() {
+		if(prefManager.hasPreference(PEARSON_SIMPLE_THRESHOLD) && AppUtility.isNumber(prefManager.getPreference(PEARSON_SIMPLE_THRESHOLD)))
+			return Double.valueOf(prefManager.getPreference(PEARSON_SIMPLE_THRESHOLD));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PEARSON_SIMPLE_THRESHOLD + " not found. Using default value of '0.9'");
+			return 0.9;
+		}
+	}
+	
+	public double getComplexPearsonThreshold() {
+		if(prefManager.hasPreference(PEARSON_COMPLEX_THRESHOLD) && AppUtility.isNumber(prefManager.getPreference(PEARSON_COMPLEX_THRESHOLD)))
+			return Double.valueOf(prefManager.getPreference(PEARSON_COMPLEX_THRESHOLD));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PEARSON_COMPLEX_THRESHOLD + " not found. Using default value of '0.95'");
+			return 0.95;
 		}
 	}
 	

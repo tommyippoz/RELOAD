@@ -98,6 +98,7 @@ public class CSVPreLoader extends CSVLoader {
 							if(canRead(rowIndex)){
 								i = 0;
 								current = new Observation(obList.size() > 0 ? obList.getLast().getTimestamp().getTime() + 1000 : System.currentTimeMillis());
+								readLine = filterInnerCommas(readLine);
 								for(String splitted : readLine.split(",")){
 									if(i < header.size() && header.get(i) != null){
 										HashMap<DataCategory, String> iD = new HashMap<DataCategory, String>();

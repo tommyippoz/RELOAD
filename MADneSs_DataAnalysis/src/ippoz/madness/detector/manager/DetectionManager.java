@@ -142,7 +142,7 @@ public class DetectionManager {
 		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").get(0).fetch(), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold());
+				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), buildLoader("filter").get(0).fetch(), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
 				selectedDataSeries = fManager.filter();
 				fManager.flush();
 			}
@@ -159,7 +159,7 @@ public class DetectionManager {
 		try {
 			if(needTest()) {
 				if(selectedDataSeries == null && !new File(iManager.getScoresFolder() + "filtered.csv").exists())
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), buildLoader("train").iterator().next().fetch(), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes);
+					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), buildLoader("train").iterator().next().fetch(), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
 				else {
 					if(selectedDataSeries == null){
 						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), buildLoader("train").iterator().next().fetch(), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
@@ -261,7 +261,36 @@ public class DetectionManager {
 		if(summaryFlag) {
 			summarizeEvaluations(evaluations, metList, iManager.parseAnomalyTresholds(), nVoters, bestScore);
 		}
-		return new String[]{Double.isFinite(bestScore) ? String.valueOf(bestScore) : "0.0", getBestSetup(evaluations, metList, anomalyTresholds)};
+		return new String[]{Double.isFinite(bestScore) ? String.valueOf(bestScore) : "0.0", getBestSetup(evaluations, metList, anomalyTresholds), getMetricScores(evaluations, metList, anomalyTresholds)};
+	}
+	
+	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){
+		double score;
+		double bestScore = -1;
+		String bVoter = null;
+		String bAnT = null;
+		String out = "";
+		for(String voterTreshold : evaluations.keySet()){
+			for(String anomalyTreshold : anomalyTresholds){
+				for(Metric met : metList){
+					score = Double.parseDouble(getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
+					if(met.equals(metric)){
+						if(score > bestScore) {
+							bestScore = score;
+							bVoter = voterTreshold;
+							bAnT = anomalyTreshold;
+						}
+					}
+				}
+			}
+		}
+		for(Metric met : metList){
+			if(bestScore >= 0)
+				score = Double.parseDouble(getAverageMetricValue(evaluations.get(bVoter).get(bAnT.trim()), met));
+			else score = Double.NaN;
+			out = out + score + ",";
+		}
+		return out.substring(0, out.length()-1);
 	}
 	
 	private double getBestScore(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {

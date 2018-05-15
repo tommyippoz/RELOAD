@@ -168,18 +168,9 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	      }
 	    }
 
-	    if(LOG.isVerbose()) {
-	      LOG.verbose("Training one-class SVM...");
-	    }
-	    String err = svm.svm_check_parameter(prob, param);
-	    if(err != null) {
-	      LOG.warning("svm_check_parameter: " + err);
-	    }
+	    svm.svm_check_parameter(prob, param);
 	    model = svm.svm_train(prob, param);
 
-	    if(LOG.isVerbose()) {
-	      LOG.verbose("Predicting...");
-	    }
 	    WritableDoubleDataStore scores = DataStoreUtil.makeDoubleStorage(relation.getDBIDs(), DataStoreFactory.HINT_DB);
 	    DoubleMinMax mm = new DoubleMinMax();
 	      

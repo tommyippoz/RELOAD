@@ -83,11 +83,11 @@ public class DetectorMain {
 			if(!drFile.exists()){
 				writer = new BufferedWriter(new FileWriter(drFile, false));
 				writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
-				writer.write("pref_filename,setup,metric_score\n");
+				writer.write("pref_filename,setup,metric_score,TP,TN,FP,FN,FPR,Precision,Recall,FScore(0.5),FMeasure,FScore(2.0),MATTHEWS,AUC\n");
 			} else {
 				writer = new BufferedWriter(new FileWriter(drFile, true));
 			}
-			writer.write(prefName + "," + result[1] + "," + result[0] + "\n");
+			writer.write(prefName + "," + result[1] + "," + result[0] + "," + result[2] + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

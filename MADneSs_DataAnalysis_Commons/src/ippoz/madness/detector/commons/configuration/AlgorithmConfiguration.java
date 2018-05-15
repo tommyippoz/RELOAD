@@ -21,6 +21,8 @@ public class AlgorithmConfiguration implements Cloneable {
 	
 	/** The Constant SCORE. */
 	public static final String SCORE = "metric_score";
+	
+	public static final String AUC_SCORE = "auc_score";
 
 	public static final String INVARIANT = "invariant";
 	

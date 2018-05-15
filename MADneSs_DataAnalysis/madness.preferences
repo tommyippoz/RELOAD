@@ -10,7 +10,7 @@ LOADER_TYPE = CSVALL
 LOADER_FOLDER = loaders
 
 * Loader file.
-LOADER_PREF_FILE = kddcup_loader.preferences
+LOADER_PREF_FILE = iscx/iscx_bruteforce_loader.preferences
 
 * Investigated Data Layers (if any, NO_LAYER otherwise).
 CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
@@ -19,16 +19,15 @@ CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
 
 
 * Golden Runs.
-GOLDEN_RUN_IDS = 1 - 100
+GOLDEN_RUN_IDS = 1 - 5
 
 * Training Runs.
-TRAIN_RUN_IDS = 1 - 5
+TRAIN_RUN_IDS = 110
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 1 - 50
+VALIDATION_RUN_IDS = 110
 
 * MADneSs Execution.
-
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
 FILTERING_FLAG = 0
@@ -37,7 +36,7 @@ FILTERING_FLAG = 0
 TRAIN_FLAG = 1
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.
-METRIC = FSCORE(2)
+METRIC = FMEASURE
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = absolute
@@ -60,6 +59,18 @@ DATA_SERIES_DOMAIN = PEARSON(0.90)
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
 
+* Filtering
+
+* Threshold for filtering i.e., minimum value of FPR accepted.
+FILTERING_TRESHOLD = 0.8
+
+* Threshold for Pearson Correlations
+PEARSON_TOLERANCE = 0.9
+
+* Threshold for n-uples of indicators correlated by Pearson
+PEARSON_NUPLES_TOLERANCE = 0.95
+
+
 * Path Setup.
 
 
@@ -75,13 +86,13 @@ CONF_FILE_FOLDER = configurations
 * Setup folder
 SETUP_FILE_FOLDER = setup
 
-* Scores folder
+* Setup folder
 SCORES_FILE_FOLDER = intermediate
 
 * Scores file
 SCORES_FILE = scores.csv
+
 * Other Preference Files.
 
-
 * Detection Preferences
-DETECTION_PREFERENCES_FILE = detectionPreferences.preferences
+DETECTION_PREFERENCES_FILE = scoringPreferences.preferences

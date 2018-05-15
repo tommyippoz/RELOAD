@@ -31,7 +31,7 @@ public class FastABODELKI extends DataSeriesElkiAlgorithm {
 	
 	private static final Integer DEFAULT_K = 5;
 	
-	public static final String DEFAULT_TMP_FOLDER = "abod_tmp";
+	public static final String DEFAULT_TMP_FOLDER = "fabod_tmp";
 	
 	private CustomFastABOD<NumberVector> fAbod;
 	

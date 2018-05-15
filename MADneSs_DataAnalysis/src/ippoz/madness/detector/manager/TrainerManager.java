@@ -5,9 +5,12 @@ package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.algorithm.elki.ABODELKI;
+import ippoz.madness.detector.algorithm.elki.COFELKI;
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
 import ippoz.madness.detector.algorithm.elki.LOFELKI;
 import ippoz.madness.detector.algorithm.elki.SVMELKI;
+import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
@@ -68,10 +71,12 @@ public class TrainerManager extends TrainDataManager {
 	 * @param metric the chosen metric
 	 * @param reputation the chosen reputation metric
 	 * @param dataTypes the data types
+	 * @param complexPearson 
+	 * @param simplePearson 
 	 * @param algTypes2 the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes) {
-		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson) {
+		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -92,32 +97,6 @@ public class TrainerManager extends TrainDataManager {
 		clearTmpFolders(algTypes);
 	}
 	
-	private void clearTmpFolders(List<AlgorithmType> algTypes) {
-		File tempFolder;
-		for(AlgorithmType at : algTypes){
-			if(at.equals(AlgorithmType.ELKI_ABOD)){
-				tempFolder = new File(FastABODELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_LOF)){
-				tempFolder = new File(LOFELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_SVM)){
-				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			}
-				
-		}
-	}
-
 	/**
 	 * Instantiates a new trainer manager.
 	 *
@@ -136,9 +115,52 @@ public class TrainerManager extends TrainDataManager {
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
+	private void clearTmpFolders(List<AlgorithmType> algTypes) {
+		File tempFolder;
+		for(AlgorithmType at : algTypes){
+			if(at.equals(AlgorithmType.ELKI_ABOD)){
+				tempFolder = new File(ABODELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_FASTABOD)){
+				tempFolder = new File(FastABODELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_LOF)){
+				tempFolder = new File(LOFELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_COF)){
+				tempFolder = new File(COFELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.ELKI_SVM)){
+				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			} else if(at.equals(AlgorithmType.WEKA_ISOLATIONFOREST)){
+				tempFolder = new File(IsolationForestWEKA.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
+			}
+		}
+	}
+	
 	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		List<DataSeries> finalDs = new LinkedList<DataSeries>();
-		List<DataSeries> all = generateDataSeries(dataTypes);
+		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, 0.9);
 		for(String dsString : selectedSeriesString){
 			for(DataSeries ds : all){
 				if(ds.toString().equals(dsString)) {
@@ -163,7 +185,6 @@ public class TrainerManager extends TrainDataManager {
 			join();
 			Collections.sort((List<AlgorithmTrainer>)getThreadList());
 			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
-			//saveTrainingTimes(filterTrainers(getThreadList()));
 			saveScores(filterTrainers(getThreadList()), "scores.csv");
 			AppLogger.logInfo(getClass(), "Training scores saved");
 		} catch (InterruptedException ex) {
@@ -201,7 +222,7 @@ public class TrainerManager extends TrainDataManager {
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getScoresFolder() + "pearsonCombinations.csv");
 						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
-						pcManager.calculatePearsonIndexes();
+						pcManager.calculatePearsonIndexes(0.9, 0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
 						break;
@@ -261,22 +282,24 @@ public class TrainerManager extends TrainDataManager {
 	 * @param list the list of algorithm trainers
 	 */
 	private void saveScores(List<? extends Thread> list, String filename) {
-		BufferedWriter writer;
+		BufferedWriter scoreWriter, timingWriter;
 		AlgorithmTrainer trainer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(getScoresFolder() + filename)));
-			writer.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
+			scoreWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + filename)));
+			timingWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + "trainingTimings.csv")));
+			scoreWriter.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
 				if(trainer.isValidTrain()){
-					writer.write(trainer.getSeriesDescription() + "§" + 
+					scoreWriter.write(trainer.getSeriesDescription() + "§" + 
 							trainer.getAlgType() + "§" +
 							trainer.getReputationScore() + "§" + 
 							trainer.getMetricScore() + "§" +  
 							trainer.getBestConfiguration().toFileRow(false) + "\n");
 				}			
 			}
-			writer.close();
+			timingWriter.close();
+			scoreWriter.close();
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}

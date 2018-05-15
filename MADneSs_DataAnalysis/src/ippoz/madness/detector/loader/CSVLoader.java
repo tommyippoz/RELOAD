@@ -47,6 +47,7 @@ public abstract class CSVLoader extends SimpleLoader {
 							readLine = null;
 					}
 				}
+				readLine = filterInnerCommas(readLine);
 				for(String splitted : readLine.split(",")){
 					if(!occursIn(skip, header.size()))
 						header.add(new Indicator(splitted.replace("\"", ""), LayerType.NO_LAYER, Double.class));
@@ -75,6 +76,18 @@ public abstract class CSVLoader extends SimpleLoader {
 				return true;
 		}
 		return false;
+	}
+	
+	protected static String filterInnerCommas(String readLine) {
+		int tDelCount = 0;
+		for(int i=0;i<readLine.length();i++){
+			if(readLine.charAt(i) == '"' && (i == 0 || readLine.charAt(i-1) != '\\')){
+				tDelCount++;
+			} else if(readLine.charAt(i) == ',' && tDelCount%2 == 1){
+				readLine = readLine.substring(0, i) + ';' + readLine.substring(i+1);
+			}
+		}
+		return readLine;
 	}
 
 }

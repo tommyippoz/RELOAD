@@ -39,8 +39,8 @@ public class FilterManager extends TrainDataManager {
 	 * Instantiates a new filter manager.
 	 *
 	 */
-	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold) {
-		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm());
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex) {
+		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex);
 		this.filteringThreshold = filteringThreshold;
 	}
 
@@ -102,7 +102,7 @@ public class FilterManager extends TrainDataManager {
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
 						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
-						pcManager.calculatePearsonIndexes();
+						pcManager.calculatePearsonIndexes(0.9, 0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
 						break;
