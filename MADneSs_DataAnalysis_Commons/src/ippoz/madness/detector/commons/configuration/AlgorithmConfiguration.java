@@ -31,6 +31,8 @@ public class AlgorithmConfiguration implements Cloneable {
 	public static final String PEARSON_TOLERANCE = "pi_tolerance";
 
 	public static final String PEARSON_WINDOW = "pi_window";
+	
+	public static final String SLIDING_WINDOW_SIZE = "sliding_window_size";
 
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
@@ -195,6 +197,12 @@ public class AlgorithmConfiguration implements Cloneable {
 
 	public boolean hasItem(String tag) {
 		return confMap != null && confMap.containsKey(tag.trim());
+	}
+
+	public int getSlidingWindowSize() {
+		if(confMap.containsKey(SLIDING_WINDOW_SIZE)){
+			return Integer.parseInt(getItem(SLIDING_WINDOW_SIZE));
+		} else return -1;
 	}
 	
 }

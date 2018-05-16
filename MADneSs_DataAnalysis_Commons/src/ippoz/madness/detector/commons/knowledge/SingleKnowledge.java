@@ -19,7 +19,6 @@ public class SingleKnowledge extends Knowledge {
 
 	public SingleKnowledge(MonitoredData baseData) {
 		super(baseData);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -34,6 +33,11 @@ public class SingleKnowledge extends Knowledge {
 			snapArray.add(buildSnapshotFor(algType, i, dataSeries));
 		}
 		return snapArray;
+	}
+
+	@Override
+	public Knowledge cloneKnowledge() {
+		return new SingleKnowledge(baseData);
 	}
 
 }

@@ -18,7 +18,6 @@ public class GlobalKnowledge extends Knowledge {
 
 	public GlobalKnowledge(MonitoredData baseData) {
 		super(baseData);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -30,6 +29,11 @@ public class GlobalKnowledge extends Knowledge {
 	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Knowledge cloneKnowledge() {
+		return new GlobalKnowledge(baseData);
 	}
 
 }

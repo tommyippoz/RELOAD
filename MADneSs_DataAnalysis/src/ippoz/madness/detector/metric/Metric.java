@@ -5,6 +5,8 @@ package ippoz.madness.detector.metric;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
+import ippoz.madness.detector.commons.knowledge.KnowledgeType;
+import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.TimedValue;
 
 import java.util.ArrayList;
@@ -25,17 +27,29 @@ public abstract class Metric {
 	 * @param expData the experiment data
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge knowledge){
+	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know){
 		double average = 0;
 		double std = 0;
+		double snapValue;
+		int undetectable = 0;
+		Knowledge knowledge = know.cloneKnowledge();
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
-			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), alg.snapshotAnomalyRate(knowledge, i)));
-			average = average + anomalyEvaluations.get(i).getValue();
-			std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
+			snapValue = alg.snapshotAnomalyRate(knowledge, i);
+			if(snapValue >= 0.0) {
+				anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), snapValue));
+				average = average + anomalyEvaluations.get(i).getValue();
+				std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
+			} else undetectable++;
+			if(knowledge instanceof SlidingKnowledge){
+				((SlidingKnowledge)knowledge).slide(i, snapValue);
+			}
 		} 
-		average = average / knowledge.size();
-		std = Math.sqrt((std / knowledge.size()) - Math.pow(average, 2));
+		if(knowledge instanceof SlidingKnowledge){
+			((SlidingKnowledge)knowledge).reset();
+		}
+		average = average / (knowledge.size() - undetectable);
+		std = Math.sqrt((std / (knowledge.size() - undetectable)) - Math.pow(average, 2));
 		return new double[]{evaluateAnomalyResults(knowledge, anomalyEvaluations), average, std};
 	}
 

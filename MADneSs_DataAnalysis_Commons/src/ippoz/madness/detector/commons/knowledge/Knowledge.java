@@ -24,7 +24,7 @@ import java.util.Map;
  * @author Tommy
  *
  */
-public abstract class Knowledge {
+public abstract class Knowledge implements Cloneable {
 	
 	protected MonitoredData baseData;
 	
@@ -153,5 +153,7 @@ public abstract class Knowledge {
 		}
 		return count;
 	}
+
+	public abstract Knowledge cloneKnowledge();
 
 }

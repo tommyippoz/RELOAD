@@ -70,6 +70,11 @@ PEARSON_TOLERANCE = 0.9
 * Threshold for n-uples of indicators correlated by Pearson
 PEARSON_NUPLES_TOLERANCE = 0.95
 
+* Strategy to slide windows. Accepted Values are FIFO, 
+SLIDING_POLICY = FIFO
+
+* Size of the sliding window buffer
+SLIDING_WINDOW_SIZE = 20
 
 * Path Setup.
 

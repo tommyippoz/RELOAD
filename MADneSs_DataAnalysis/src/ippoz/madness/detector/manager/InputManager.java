@@ -133,6 +133,10 @@ public class InputManager {
 	
 	private static final String PEARSON_COMPLEX_THRESHOLD = "PEARSON_NUPLES_TOLERANCE";
 	
+	private static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
+	
+	private static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
+	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
 	
@@ -686,6 +690,10 @@ public class InputManager {
 						"REPUTATION = 1.0\n");
 				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
 						"DATA_SERIES_DOMAIN = PEARSON(0.90)\n");
+				writer.write("\n* Strategy to slide windows. Accepted Values are FIFO, \n" + 
+						"SLIDING_POLICY = FIFO\n");
+				writer.write("\n* Size of the sliding window buffer\n" + 
+						"SLIDING_WINDOW_SIZE = 20\n");
 				writer.write("\n* Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT\n" + 
 						"OUTPUT_TYPE = null\n");
 				writer.write("\n* Path Setup.\n\n");
@@ -810,14 +818,30 @@ public class InputManager {
 		}
 	}
 
-	public List<Integer> getSlidingWindowSizes() {
-		// TODO Auto-generated method stub
-		return null;
+	public SlidingPolicyType getSlidingPolicy() {
+		try {
+			if(prefManager.hasPreference(SLIDING_POLICY))
+				return SlidingPolicyType.valueOf(prefManager.getPreference(SLIDING_POLICY).toUpperCase());
+			else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+						SLIDING_POLICY + " not found. Using default value of 'FIFO'");
+				return SlidingPolicyType.FIFO;
+			}
+		} catch(Exception ex){
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					SLIDING_POLICY + " cannot be parsed correctly. Using default value of 'FIFO'");
+			return SlidingPolicyType.FIFO;
+		}
 	}
 
-	public SlidingPolicyType getSlidingPolicy() {
-		// TODO Auto-generated method stub
-		return null;
+	public int getSlidingWindowSize() {
+		if(prefManager.hasPreference(SLIDING_WINDOW_SIZE)  && AppUtility.isNumber(prefManager.getPreference(SLIDING_WINDOW_SIZE)))
+			return Integer.parseInt(prefManager.getPreference(SLIDING_WINDOW_SIZE));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					SLIDING_WINDOW_SIZE + " not found. Using default value of '20'");
+			return 20;
+		}
 	}
 	
 }

@@ -9,6 +9,7 @@ import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
+import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
@@ -86,7 +87,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				}
 				for(Knowledge knowledge : getKnowledgeList()){
 					metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
-					//System.out.println(conf + " Score: " + metricResults.get(metricResults.size()-1));
 					fprResults.add(new FalsePositiveRate_Metric(true).evaluateMetric(algorithm, knowledge)[0]);
 					tprResults.add(new TruePositiveRate_Metric(true).evaluateMetric(algorithm, knowledge)[0]);
 				}

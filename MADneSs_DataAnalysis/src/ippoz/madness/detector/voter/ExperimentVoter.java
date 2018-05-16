@@ -8,6 +8,7 @@ import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
+import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.TimedValue;
@@ -68,12 +69,14 @@ public class ExperimentVoter extends Thread {
 	 * @param algVoters the algorithm list
 	 * @param pManager 
 	 */
-	public ExperimentVoter(List<AlgorithmVoter> algVoters, Map<KnowledgeType, Knowledge> kMap) {
+	public ExperimentVoter(List<AlgorithmVoter> algVoters, Map<KnowledgeType, Knowledge> knowMap) {
 		super();
 		this.algList = deepClone(algVoters);
-		this.kMap = kMap;
+		kMap = new HashMap<KnowledgeType, Knowledge>();
+		for(KnowledgeType kType : knowMap.keySet()){
+			kMap.put(kType, knowMap.get(kType).cloneKnowledge());
+		}
 		expName = kMap.get(KnowledgeType.GLOBAL).getTag();
-		//expSnapMap = loadExpAlgSnapshots(expData);
 	}
 	
 	/*private List<Map<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
@@ -112,6 +115,7 @@ public class ExperimentVoter extends Thread {
 	 */
 	@Override
 	public void run() {
+		double votingResult;
 		Map<AlgorithmVoter, Double> snapVoting;
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
 		voting = new ArrayList<TimedValue>(kMap.get(KnowledgeType.GLOBAL).size());
@@ -122,7 +126,14 @@ public class ExperimentVoter extends Thread {
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
 				partialVoting.put(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), snapVoting);
-				voting.add(new TimedValue(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), voteResults(snapVoting)));
+				votingResult = voteResults(snapVoting);
+				voting.add(new TimedValue(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), votingResult));
+				if(kMap.containsKey(KnowledgeType.SLIDING)){
+					((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).slide(i, votingResult);
+				}
+			}
+			if(kMap.containsKey(KnowledgeType.SLIDING)){
+				((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).reset();
 			}
 		}
 	}
