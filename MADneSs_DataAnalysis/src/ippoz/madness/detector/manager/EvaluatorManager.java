@@ -3,14 +3,12 @@
  */
 package ippoz.madness.detector.manager;
 
-import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.metric.Metric;
@@ -67,14 +65,14 @@ public class EvaluatorManager extends DataManager {
 	 *
 	 * @param prefManager the preference manager
 	 * @param pManager the timings manager
-	 * @param expList the experiment list
+	 * @param map the experiment list
 	 * @param validationMetrics the validation metrics
 	 * @param anTresholdString the an threshold string
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, List<MonitoredData> expList, Indicator[] indicators, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
-		super(indicators, expList);
+	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
+		super(map);
 		this.scoresFile = scoresFile;
 		this.outputFormat = outputFormat;
 		this.validationMetrics = validationMetrics;
@@ -83,7 +81,7 @@ public class EvaluatorManager extends DataManager {
 		detectorScoreTreshold = getVoterTreshold(voterTreshold);
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
 		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
-		AppLogger.logInfo(getClass(), "Evaluating " + expList.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+		AppLogger.logInfo(getClass(), "Evaluating " + map.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
 	}
 	
 	private double getVoterTreshold(String voterTreshold) {

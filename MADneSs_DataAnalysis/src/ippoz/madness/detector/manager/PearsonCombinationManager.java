@@ -133,6 +133,7 @@ public class PearsonCombinationManager {
 					}
 				}
 			}
+			AppLogger.logInfo(getClass(), "Found " + pMap.get(2).size() + " valid 2-uples correlations");
 			while(pMap.get(correlationSize) != null && pMap.get(correlationSize).size() > 1){
 				
 				correlationSize++;

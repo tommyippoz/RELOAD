@@ -6,6 +6,7 @@ package ippoz.madness.detector.commons.knowledge;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
+import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 
 import java.util.List;
@@ -15,8 +16,10 @@ import java.util.List;
  *
  */
 public class SlidingKnowledge extends Knowledge {
+	
+	
 
-	public SlidingKnowledge(MonitoredData baseData) {
+	public SlidingKnowledge(MonitoredData baseData, SlidingPolicyType sPolicy, List<Integer> windowSizes) {
 		super(baseData);
 		// TODO Auto-generated constructor stub
 	}

@@ -3,13 +3,6 @@
  */
 package ippoz.madness.detector.algorithm.weka;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.List;
-
-import weka.core.Instance;
-import weka.core.Instances;
 import ippoz.madness.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.madness.detector.algorithm.DataSeriesExternalAlgorithm;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
@@ -20,6 +13,14 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.List;
+
+import weka.core.Instance;
+import weka.core.Instances;
 
 /**
  * @author Tommy

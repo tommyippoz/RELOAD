@@ -3,6 +3,10 @@
  */
 package ippoz.madness.detector.executable;
 
+import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.commons.support.PreferencesManager;
+import ippoz.madness.detector.manager.DetectionManager;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,10 +16,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.PreferencesManager;
-import ippoz.madness.detector.manager.DetectionManager;
 
 /**
  * The Class DetectorMain.

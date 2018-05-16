@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.commons.knowledge;
 
+import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -31,10 +32,30 @@ public abstract class Knowledge {
 		this.baseData = baseData;
 	}
 	
+	public Indicator[] getIndicators(){
+		return baseData.getIndicators();
+	}
+	
 	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries){
 		List<Snapshot> outList = new ArrayList<Snapshot>(size());
 		for(int i=0;i<size();i++){
 			outList.add(buildSnapshotFor(algType, i, dataSeries));
+		}
+		return outList;
+	}
+	
+	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries, int from, int to){
+		List<Snapshot> outList = new ArrayList<Snapshot>(to-from);
+		for(int i=from;i<to;i++){
+			outList.add(buildSnapshotFor(algType, i, dataSeries));
+		}
+		return outList;
+	}
+	
+	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries, List<Integer> indexes){
+		List<Snapshot> outList = new ArrayList<Snapshot>(indexes.size());
+		for(Integer index : indexes){
+			outList.add(buildSnapshotFor(algType, index, dataSeries));
 		}
 		return outList;
 	}
@@ -132,7 +153,5 @@ public abstract class Knowledge {
 		}
 		return count;
 	}
-	
-	
 
 }

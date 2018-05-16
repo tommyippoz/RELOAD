@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.algorithm.elki;
 
-import ippoz.madness.detector.algorithm.elki.support.CustomLOF;
 import ippoz.madness.detector.algorithm.elki.support.CustomODIN;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;

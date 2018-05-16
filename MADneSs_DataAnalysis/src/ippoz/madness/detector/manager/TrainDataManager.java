@@ -4,12 +4,11 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
@@ -56,8 +55,8 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Indicator[] indicators, List<MonitoredData> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
-		super(indicators, expList);
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
+		super(map);
 		this.setupFolder = setupFolder;
 		this.dsDomain = dsDomain;
 		this.scoresFolder = scoresFolder;
@@ -71,14 +70,14 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Indicator[] indicators, List<MonitoredData> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
-		this(indicators, expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
+		this(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public TrainDataManager(Indicator[] indicators, List<MonitoredData> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex) {
-		this(indicators, expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex) {
+		this(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
 		seriesList = generateDataSeries(dataTypes, pearsonSimple, pearsonComplex);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}

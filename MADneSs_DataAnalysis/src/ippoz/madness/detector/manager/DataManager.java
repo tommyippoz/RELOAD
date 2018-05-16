@@ -4,17 +4,10 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.indicator.Indicator;
-import ippoz.madness.detector.commons.knowledge.GlobalKnowledge;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.knowledge.SingleKnowledge;
-import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
-import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.ThreadScheduler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,27 +21,9 @@ public abstract class DataManager extends ThreadScheduler {
 	/** The experiments list. */
 	private Map<KnowledgeType, List<Knowledge>> kMap;
 	
-	/** The indicators targeted in the experiments. */
-	private Indicator[] indicators;
-	
-	public DataManager(Indicator[] indicators, List<MonitoredData> expList) {
+	public DataManager(Map<KnowledgeType, List<Knowledge>> map) {
 		super();
-		this.indicators = indicators;
-		kMap = generateKnowledge(expList);
-		AppLogger.logInfo(getClass(), expList.size() + " runs loaded");
-	}
-	
-	private Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
-		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
-		map.put(KnowledgeType.GLOBAL, new ArrayList<Knowledge>(expList.size()));
-		map.put(KnowledgeType.SLIDING, new ArrayList<Knowledge>(expList.size()));
-		map.put(KnowledgeType.SINGLE, new ArrayList<Knowledge>(expList.size()));
-		for(int i=0;i<expList.size();i++){
-			map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
-			map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i)));
-			map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
-		}
-		return map;
+		kMap = map;
 	}
 	
 	public int experimentsSize(){
@@ -56,7 +31,14 @@ public abstract class DataManager extends ThreadScheduler {
 	}
 	
 	public Indicator[] getIndicators() {
-		return indicators;
+		List<Knowledge> kList;
+		if(kMap.size() > 0){
+			kList = kMap.get(kMap.keySet().iterator().next());
+			if(kList.size() > 0){
+				return kList.get(0).getIndicators();
+			} else return null;
+		} else return null;
+
 	}
 	
 	public List<Knowledge> getKnowledge(KnowledgeType kType) {

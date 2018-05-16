@@ -120,13 +120,16 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		
 		public double calculateScore(){
 			double auc = 0;
-			double step = 0;
+			double x = 0;
+			double delta = 1.0/APPROXIMATION;
 			double[] coeff = PolynomialCurveFitter.create(2).fit(oPoints.toList());
+			coeff[2] = coeff[2] < 0 ? 0.0 : coeff[2];
+			double corrFactor = coeff[2] + coeff[1] + coeff[0] <= 1 ? 1.0 : 1/(coeff[2] + coeff[1] + coeff[0]); 
 			for(int i=0; i < APPROXIMATION;i++){
-				auc = auc + 0.01*(coeff[2]*step*step + coeff[1]*step + coeff[0]);
-				step = step + 1.0/APPROXIMATION;
+				auc = auc + delta*(coeff[2]*x*x + coeff[1]*x + coeff[0]);
+				x = x + delta;
 			}
-			return auc;
+			return auc*corrFactor;
 		}
 		
 	}

@@ -53,6 +53,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
 	private boolean sameResultFlag;
 	
+	private long trainingTime;
+	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -116,13 +118,19 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
+		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
+		trainingTime = System.currentTimeMillis() - trainingTime;
 		metricScore = evaluateMetricScore();
 		//reputationScore = evaluateReputationScore();
 		if(getReputationScore() > 0.0)
 			bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 		else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
 		bestConf.addItem(AlgorithmConfiguration.SCORE, String.valueOf(getMetricScore()));
+	}
+	
+	public long getTrainingTime() {
+		return trainingTime;
 	}
 	
 	/**
@@ -304,5 +312,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public void flush(){
 		kList = null;
 	}
+
+	
 	
 }

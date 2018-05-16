@@ -6,6 +6,7 @@ package ippoz.madness.detector.manager;
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
+import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
@@ -807,6 +808,16 @@ public class InputManager {
 					PEARSON_COMPLEX_THRESHOLD + " not found. Using default value of '0.95'");
 			return 0.95;
 		}
+	}
+
+	public List<Integer> getSlidingWindowSizes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public SlidingPolicyType getSlidingPolicy() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

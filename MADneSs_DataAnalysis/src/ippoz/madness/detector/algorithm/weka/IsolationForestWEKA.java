@@ -3,6 +3,13 @@
  */
 package ippoz.madness.detector.algorithm.weka;
 
+import ippoz.madness.detector.algorithm.weka.support.CustomIsolationForest;
+import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
+import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.commons.support.AppUtility;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,12 +19,6 @@ import java.io.ObjectOutputStream;
 
 import weka.core.Instance;
 import weka.core.Instances;
-import ippoz.madness.detector.algorithm.weka.support.CustomIsolationForest;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
 
 /**
  * @author Tommy

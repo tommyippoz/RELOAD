@@ -8,8 +8,8 @@ import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
@@ -39,8 +39,8 @@ public class FilterManager extends TrainDataManager {
 	 * Instantiates a new filter manager.
 	 *
 	 */
-	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, List<MonitoredData> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex) {
-		super(expList.get(0).getIndicators(), expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex);
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex);
 		this.filteringThreshold = filteringThreshold;
 	}
 
