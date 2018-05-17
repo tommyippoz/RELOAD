@@ -1,7 +1,7 @@
 * Default preferences file for 'MADneSs'. Comments with '*'.
 
-* Data Source - Loaders.
 
+* Data Source - Loaders.
 
 * Loader type (MYSQL, CSVALL).
 LOADER_TYPE = CSVALL
@@ -15,8 +15,8 @@ LOADER_PREF_FILE = iscx/iscx_bruteforce_loader.preferences
 * Investigated Data Layers (if any, NO_LAYER otherwise).
 CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
 
-* Data Partitioning.
 
+* Data Partitioning.
 
 * Golden Runs.
 GOLDEN_RUN_IDS = 1 - 5
@@ -26,6 +26,7 @@ TRAIN_RUN_IDS = 110
 
 * Evaluation Runs.
 VALIDATION_RUN_IDS = 110
+
 
 * MADneSs Execution.
 
@@ -59,6 +60,7 @@ DATA_SERIES_DOMAIN = PEARSON(0.90)
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
 
+
 * Filtering
 
 * Threshold for filtering i.e., minimum value of FPR accepted.
@@ -71,13 +73,13 @@ PEARSON_TOLERANCE = 0.9
 PEARSON_NUPLES_TOLERANCE = 0.95
 
 * Strategy to slide windows. Accepted Values are FIFO, 
-SLIDING_POLICY = FIFO
+SLIDING_WINDOW_POLICY = FIFO_NORMAL
 
 * Size of the sliding window buffer
-SLIDING_WINDOW_SIZE = 20
+SLIDING_WINDOW_SIZE = 10
+
 
 * Path Setup.
-
 
 * Input folder
 INPUT_FOLDER = input
@@ -96,6 +98,7 @@ SCORES_FILE_FOLDER = intermediate
 
 * Scores file
 SCORES_FILE = scores.csv
+
 
 * Other Preference Files.
 

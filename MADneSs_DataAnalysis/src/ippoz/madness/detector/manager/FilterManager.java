@@ -49,6 +49,25 @@ public class FilterManager extends TrainDataManager {
 		list.add(AlgorithmType.ELKI_KMEANS);
 		return list;
 	}
+	
+	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes), pearsonSimple, pearsonComplex);
+			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
+	}
+	
+	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
+		PearsonCombinationManager pcManager;
+		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(KnowledgeType.GLOBAL));
+		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
+		pcManager.flush();
+	}
 
 	/**
 	 * Starts the train process. 

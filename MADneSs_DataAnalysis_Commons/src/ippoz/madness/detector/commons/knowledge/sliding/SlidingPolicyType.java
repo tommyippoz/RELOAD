@@ -8,5 +8,5 @@ package ippoz.madness.detector.commons.knowledge.sliding;
  *
  */
 public enum SlidingPolicyType {
-	FIFO, FIFO_NORMAL, RANKED
+	FIFO, FIFO_NORMAL, RANKED, RANKED_NORMAL
 }

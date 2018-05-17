@@ -5,7 +5,6 @@ package ippoz.madness.detector.metric;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.TimedValue;
 

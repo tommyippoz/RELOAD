@@ -10,7 +10,6 @@ import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.metric.BetterMaxMetric;
 import ippoz.madness.detector.metric.Metric;

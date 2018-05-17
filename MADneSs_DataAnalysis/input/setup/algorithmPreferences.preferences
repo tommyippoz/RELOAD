@@ -1,7 +1,8 @@
 * Default algorithm preferences file for 'MADneSs'. Comments with '*'.
 * Uncomment the algorithms you want to use. Filtering uses ELKI_KMEANS by default.
 
-SPS
+
+* General Algorithms
 
 * RCC
 
@@ -17,6 +18,9 @@ SPS
 
 * TEST
 
+
+* Elki Algorithms
+
 * ELKI_KMEANS
 
 * ELKI_ABOD
@@ -29,4 +33,14 @@ SPS
 
 * ELKI_SVM
 
+
+* Weka Algorithms
+
 * WEKA_ISOLATIONFOREST
+
+
+* Sliding Algorithms
+
+SLIDING_SPS
+
+SLIDING_WEKA_ISOLATIONFOREST

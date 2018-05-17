@@ -109,7 +109,6 @@ public class SPSDetector extends DataSeriesDetectionAlgorithm {
 	@Override
 	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double anomalyScore;
-		System.out.println(knowledge.toArray(getAlgorithmType(), getDataSeries()).size());
 		DataSeriesSnapshot dsSnapshot = (DataSeriesSnapshot) sysSnapshot;
 		observations.add(new TimedValue(sysSnapshot.getTimestamp(), dsSnapshot.getSnapValue().getFirst()));
 		if(newTresholds != null) {

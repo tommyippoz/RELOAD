@@ -14,7 +14,15 @@ import java.util.List;
 public abstract class SlidingPolicy {
 
 	public static SlidingPolicy getPolicy(SlidingPolicyType policyType){
-		return new FIFOPolicy();
+		switch(policyType){
+		case FIFO:
+			return new FIFOPolicy();
+		case FIFO_NORMAL:
+			return new FIFONormalPolicy();
+		default:
+			return null;
+		}
+		
 	}
 
 	public abstract int canReplace(List<WeightedIndex> indexList, WeightedIndex wi);

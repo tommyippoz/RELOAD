@@ -9,7 +9,6 @@ import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
@@ -112,6 +111,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		
 		public AUCCalculator(){
 			oPoints = new WeightedObservedPoints();
+			oPoints.add(0, 0);
 		}
 		
 		public void add(double fpr, double tpr){

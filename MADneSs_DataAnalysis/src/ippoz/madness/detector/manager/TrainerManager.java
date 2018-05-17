@@ -116,6 +116,16 @@ public class TrainerManager extends TrainDataManager {
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
+	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
+	}
+	
 	private void clearTmpFolders(List<AlgorithmType> algTypes) {
 		File tempFolder;
 		for(AlgorithmType at : algTypes){

@@ -10,6 +10,8 @@ import ippoz.madness.detector.algorithm.elki.KMeansELKI;
 import ippoz.madness.detector.algorithm.elki.LOFELKI;
 import ippoz.madness.detector.algorithm.elki.ODINELKI;
 import ippoz.madness.detector.algorithm.elki.SVMELKI;
+import ippoz.madness.detector.algorithm.sliding.SPSSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
@@ -61,8 +63,6 @@ public abstract class DetectionAlgorithm {
 	 */
 	public static DetectionAlgorithm buildAlgorithm(AlgorithmType algType, DataSeries dataSeries, AlgorithmConfiguration conf) {
 		switch(algType){
-			case SPS:
-				return new SPSDetector(dataSeries, conf);
 			case HIST:
 				return new HistoricalIndicatorChecker(dataSeries, conf);
 			case CONF:
@@ -96,6 +96,11 @@ public abstract class DetectionAlgorithm {
 				return new SVMELKI(dataSeries, conf);
 			case WEKA_ISOLATIONFOREST:
 				return new IsolationForestWEKA(dataSeries, conf);
+			case SLIDING_SPS:
+				//return new SPSDetector(dataSeries, conf);
+				return new SPSSlidingAlgorithm(dataSeries, conf);
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			default:
 				return null;
 		}
@@ -103,21 +108,21 @@ public abstract class DetectionAlgorithm {
 	
 	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
 		switch(algType){
-			case SPS:
-				return KnowledgeType.SLIDING;
 			case INV:
 			case RCC:
 				return KnowledgeType.GLOBAL;
 			default:
-				return KnowledgeType.SINGLE;
+				if(algType.name().toUpperCase().contains("SLIDING"))
+					return KnowledgeType.SLIDING;
+				else return KnowledgeType.SINGLE;
 		}
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
 		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
-				(dataSeries.size() == 1 && (algType == AlgorithmType.SPS || algType == AlgorithmType.HIST)) ||
+				(dataSeries.size() == 1 && (algType == AlgorithmType.SLIDING_SPS || algType == AlgorithmType.HIST)) ||
 				(algType.toString().contains("ELKI_") ||
-				(dataSeries.size() > 1 && algType == AlgorithmType.WEKA_ISOLATIONFOREST));
+				(dataSeries.size() > 1 && (algType == AlgorithmType.WEKA_ISOLATIONFOREST || algType == AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST )));
 	}
 	
 	/**

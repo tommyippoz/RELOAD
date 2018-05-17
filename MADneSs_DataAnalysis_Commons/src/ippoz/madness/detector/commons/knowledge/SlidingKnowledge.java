@@ -11,7 +11,6 @@ import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.WeightedIndex;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -82,7 +81,9 @@ public class SlidingKnowledge extends Knowledge {
 	public Knowledge cloneKnowledge() {
 		return new SlidingKnowledge(baseData, sPolicy, windowSize);
 	}
-	
-	
+
+	public int getWindowSize() {
+		return windowSize;
+	}
 
 }
