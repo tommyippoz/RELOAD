@@ -4,6 +4,7 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.GlobalKnowledge;
@@ -12,7 +13,7 @@ import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.knowledge.SingleKnowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
@@ -31,6 +32,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,43 +61,85 @@ public class DetectionManager {
 	/** The algorithm types (SPS, Historical...). */
 	private List<AlgorithmType> algTypes;
 	
+	private PreferencesManager loaderPref;
+	
+	private Integer windowSize;
+	
+	private SlidingPolicy sPolicy;
+	
 	private List<DataSeries> selectedDataSeries;
 	
 	/**
 	 * Instantiates a new detection manager.
+	 * @param loaderPref 
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(PreferencesManager prefManager){
-		iManager = new InputManager(prefManager);
+	public DetectionManager(InputManager iManager, List<AlgorithmType> algTypes, PreferencesManager loaderPref){
+		this(iManager, algTypes, loaderPref, null, null);
+	}
+	
+	public DetectionManager(InputManager iManager, List<AlgorithmType> algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
+		this.iManager = iManager;
+		this.algTypes = algTypes;
+		this.loaderPref = loaderPref;
+		this.windowSize = windowSize;
+		this.sPolicy = sPolicy;
 		metric = iManager.getMetricName();
 		reputation = iManager.getReputation(metric);
 		dataTypes = iManager.getDataTypes();
-		algTypes = iManager.getAlgTypes();
+	}
+	
+	public Metric[] getMetrics() {
+		return iManager.loadValidationMetrics();
+	}
+
+	public String getTag() {
+		return getWritableTag().replace(",", " ").trim();
+	}
+	
+	public String getWritableTag() {
+		String tag = "";
+		if(loaderPref != null)
+			tag = tag + loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'));
+		tag = tag + ",";
+		if(loaderPref != null)
+			tag = tag + loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE).replace(",", "");
+		tag = tag + ",";
+		if(algTypes != null)
+			tag = tag + Arrays.toString(algTypes.toArray()).replace(",", "");
+		tag = tag + ",";
+		if(windowSize != null)
+			tag = tag + windowSize;
+		tag = tag + ",";
+		if(sPolicy != null)
+			tag = tag + sPolicy.toString();
+		return tag;
 	}
 	
 	private List<Loader> buildLoader(String loaderTag){
-		if(iManager.getLoader() != null){
-			return buildLoaderList(loaderTag, iManager.getRunIDs(loaderTag), iManager.getLoaderPreferences(), iManager.getAnomalyWindow());
+		if(loaderPref != null){
+			return buildLoaderList(loaderTag, iManager.getAnomalyWindow());
 		} else return new LinkedList<>();
 	}
 	
-	private List<Loader> buildLoaderList(String loaderTag, String runsString, PreferencesManager loaderPrefManager, int anomalyWindow){
+	private List<Loader> buildLoaderList(String loaderTag, int anomalyWindow){
 		List<Loader> lList = new LinkedList<>();
 		Loader newLoader;
 		LinkedList<Integer> runs;
 		int nRuns;
+		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? Loader.FILTERING_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE));
 		if(runsString != null && runsString.length() > 0){
 			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
 				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));
 				runs = readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
 				for(int i=0;i<runs.size();i=i+nRuns){
-					newLoader = buildSingleLoader(new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderPrefManager, loaderTag, anomalyWindow);
+					newLoader = buildSingleLoader(new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
 					if(newLoader != null)
 						lList.add(newLoader);
 				}
 			} else {
-				newLoader = buildSingleLoader(readRunIds(runsString), loaderPrefManager, loaderTag, anomalyWindow);
+				newLoader = buildSingleLoader(readRunIds(runsString), loaderTag, anomalyWindow);
 				if(newLoader != null)
 					lList.add(newLoader);
 			}
@@ -103,12 +147,12 @@ public class DetectionManager {
 		return lList;
 	}
 	
-	private Loader buildSingleLoader(LinkedList<Integer> list, PreferencesManager loaderPrefManager, String loaderTag, int anomalyWindow){
-		String loaderType = iManager.getLoader();
+	private Loader buildSingleLoader(LinkedList<Integer> list, String loaderTag, int anomalyWindow){
+		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
 		if(loaderType != null && loaderType.equalsIgnoreCase("MYSQL"))
-			return new MySQLLoader(list, loaderPrefManager, loaderTag, iManager.getConsideredLayers(), null);
+			return new MySQLLoader(list, loaderPref, loaderTag, iManager.getConsideredLayers(), null);
 		else if(loaderType != null && loaderType.equalsIgnoreCase("CSVALL"))
-			return new CSVPreLoader(list, loaderPrefManager, loaderTag, anomalyWindow);
+			return new CSVPreLoader(list, loaderPref, loaderTag, anomalyWindow, iManager.getDatasetsFolder());
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;
@@ -121,7 +165,9 @@ public class DetectionManager {
 	 * @return true, if premises are satisfied
 	 */
 	public boolean checkAssumptions(){
-		if(iManager.getLoader().equalsIgnoreCase("MYSQL") && !AppUtility.isServerUp(3306)){
+		if(loaderPref.getPreference(Loader.LOADER_TYPE) != null && 
+				loaderPref.getPreference(Loader.LOADER_TYPE).equalsIgnoreCase("MYSQL") && 
+					!AppUtility.isServerUp(3306)){
 			AppLogger.logError(getClass(), "MySQLException", "MySQL is not running. Please activate it");
 			return false;
 		}
@@ -181,15 +227,21 @@ public class DetectionManager {
 	
 	private Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
 		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
-		int windowSize = iManager.getSlidingWindowSize();
-		SlidingPolicyType sPolicy = iManager.getSlidingPolicy();
-		map.put(KnowledgeType.GLOBAL, new ArrayList<Knowledge>(expList.size()));
-		map.put(KnowledgeType.SLIDING, new ArrayList<Knowledge>(expList.size()));
-		map.put(KnowledgeType.SINGLE, new ArrayList<Knowledge>(expList.size()));
+		for(AlgorithmType at : algTypes){
+			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(at)))
+				map.put(DetectionAlgorithm.getKnowledgeType(at), new ArrayList<Knowledge>(expList.size()));
+		}
+		if(needFiltering()){
+			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS)))
+				map.put(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS), new ArrayList<Knowledge>(expList.size()));
+		}
 		for(int i=0;i<expList.size();i++){
-			map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
-			map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
-			map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
+			if(map.containsKey(KnowledgeType.GLOBAL))
+				map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
+			if(map.containsKey(KnowledgeType.SLIDING))
+				map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
+			if(map.containsKey(KnowledgeType.SINGLE))
+				map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
 		}
 		AppLogger.logInfo(getClass(), expList.size() + " runs loaded");
 		return map;

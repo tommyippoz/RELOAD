@@ -62,7 +62,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	}
 
 	@Override
-	protected void automaticWEKATraining(Instances db) {
+	protected void automaticWEKATraining(Instances db, boolean createOutput) {
 		int nTrees;
 		int sampleSize;
 		try {
@@ -71,7 +71,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			iForest = new CustomIsolationForest(nTrees, sampleSize);
 			iForest.buildClassifier(db);
 			conf.addItem(TMP_FILE, getFilename());
-			if(!new File(getFilename()).exists()){
+			if(createOutput){
 		    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 		    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 		    	storeSerialized();

@@ -111,6 +111,10 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.size();
 	}
 	
+	public int getInjectionCount(){
+		return baseData.getInjections().size();
+	}
+	
 	public String getTag(){
 		return baseData.getDataTag();
 	}

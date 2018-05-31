@@ -33,7 +33,7 @@ public class SlidingKnowledge extends Knowledge {
 		reset();
 	}
 	
-	private SlidingKnowledge(MonitoredData baseData, SlidingPolicy policy, int windowSize) {
+	public SlidingKnowledge(MonitoredData baseData, SlidingPolicy policy, int windowSize) {
 		super(baseData);
 		this.windowSize = windowSize;
 		sPolicy = policy;

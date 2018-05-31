@@ -22,11 +22,12 @@ public abstract class SlidingPolicy {
 		default:
 			return null;
 		}
-		
 	}
 
 	public abstract int canReplace(List<WeightedIndex> indexList, WeightedIndex wi);
 
 	public abstract boolean canEnter(WeightedIndex wi);
+	
+	public abstract String toString();
 	
 }

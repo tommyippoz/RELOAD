@@ -45,7 +45,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private AlgorithmConfiguration bestConf;
 	
 	/** The metric score. */
-	private double metricScore;
+	protected double metricScore;
 	
 	/** The reputation score. */
 	private double reputationScore;

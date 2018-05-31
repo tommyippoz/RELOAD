@@ -92,7 +92,6 @@ public class Observation {
 	 * @return the indicator value
 	 */
 	public String getValue(String indicatorName, DataCategory categoryTag) {
-		Indicator[] iList = getIndicators();
 		for(Indicator ind : getIndicators()){
 			if(ind.getName().equals(indicatorName.trim()))
 				return getValue(ind, categoryTag);

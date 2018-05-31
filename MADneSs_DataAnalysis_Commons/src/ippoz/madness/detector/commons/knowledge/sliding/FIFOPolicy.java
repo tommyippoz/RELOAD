@@ -23,4 +23,9 @@ public class FIFOPolicy extends SlidingPolicy {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "FIFO";
+	}
+
 }

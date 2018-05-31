@@ -17,7 +17,7 @@ import java.util.List;
  *
  */
 public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExternalAlgorithm {
-
+	
 	public DataSeriesExternalSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 		// TODO Auto-generated constructor stub
@@ -28,7 +28,7 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExter
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
 			snapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
-			if(snapList.size() > 0)
+			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= ((SlidingKnowledge)knowledge).getWindowSize())
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
 			else return -1.0;
 		} else {
@@ -38,6 +38,5 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExter
 	}
 	
 	protected abstract double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
-
 
 }

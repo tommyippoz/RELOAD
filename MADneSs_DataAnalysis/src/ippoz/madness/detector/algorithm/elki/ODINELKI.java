@@ -20,7 +20,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class ODINELKI extends DataSeriesElkiAlgorithm {
+public class ODINELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String K = "k";
 	
@@ -60,7 +60,7 @@ public class ODINELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		odin.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
@@ -68,7 +68,7 @@ public class ODINELKI extends DataSeriesElkiAlgorithm {
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	odin.printFile(new File(getFilename()));
@@ -76,7 +76,7 @@ public class ODINELKI extends DataSeriesElkiAlgorithm {
 	}
 	
 	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".abod";
+		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".odin";
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class ODINELKI extends DataSeriesElkiAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			double odinScore = odin.calculateSingleODIN(v);
-			if(odinScore <= threshold)
+			if(odinScore >= threshold)
 				return 1.0;
 			else return 0.0;
 		} else return 0.0;

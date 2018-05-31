@@ -21,7 +21,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class FastABODELKI extends DataSeriesElkiAlgorithm {
+public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String K = "k";
 	
@@ -57,13 +57,13 @@ public class FastABODELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		fAbod.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	fAbod.printFile(new File(getFilename()));
@@ -78,7 +78,7 @@ public class FastABODELKI extends DataSeriesElkiAlgorithm {
 	protected double evaluateElkiSnapshot(Snapshot sysSnapshot) {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			if(fAbod.rankSingleABOF(v) >= (threshold*100)*fAbod.getDbSize())
+			if(fAbod.rankSingleABOF(v) <= (threshold)*fAbod.getDbSize())
 				return 1.0;
 			else return 0.0;
 		} else return 0.0;

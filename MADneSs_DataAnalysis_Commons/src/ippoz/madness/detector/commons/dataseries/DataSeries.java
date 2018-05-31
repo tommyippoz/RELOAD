@@ -150,19 +150,33 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
+		simpleInd.add(new MultipleDataSeries(simpleInd));
 		return simpleInd;
+	}
+	
+	public static List<DataSeries> unionCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+		LinkedList<DataSeries> unionInd = new LinkedList<DataSeries>();
+		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		for(Indicator ind : indicators){
+			for(DataCategory dCat : dataTypes){
+				simpleInd.add(new IndicatorDataSeries(ind, dCat));
+			}
+		}
+		unionInd.add(new MultipleDataSeries(simpleInd));
+		return unionInd;
 	}
 	
 	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<List<String>> list) {
 		DataSeries firstDS, secondDS;
 		List<DataSeries> outList = new LinkedList<DataSeries>();
-		List<IndicatorDataSeries> simpleInd = new LinkedList<IndicatorDataSeries>();
+		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
 		List<DataSeries> complexInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
 		}
+		simpleInd.add(new MultipleDataSeries(simpleInd));
 		for(List<String> lEntry : list){
 			if(lEntry != null && lEntry.size() == 2){
 				firstDS = DataSeries.fromList(simpleInd, lEntry.get(0).trim());
@@ -209,7 +223,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return outList;
 	}
 
-	public static DataSeries fromList(List<IndicatorDataSeries> seriesList, String newSeriesName) {
+	public static DataSeries fromList(List<? extends DataSeries> seriesList, String newSeriesName) {
 		for(DataSeries ds : seriesList){
 			if(ds.toString().equals(newSeriesName)) {
 				return ds;

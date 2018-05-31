@@ -36,10 +36,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	}
 
 	@Override
-	public void automaticTraining(List<Knowledge> kList) {
+	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		Instances db = translateKnowledge(kList);
 		if(db != null)
-			automaticWEKATraining(db);
+			automaticWEKATraining(db, createOutput);
 		else AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 	}
 	
@@ -116,7 +116,7 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 		}
 	}
 
-	protected abstract void automaticWEKATraining(Instances db);
+	protected abstract void automaticWEKATraining(Instances db, boolean createOutput);
 
 	@Override
 	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {

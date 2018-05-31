@@ -18,9 +18,9 @@ public interface AutomaticTrainingAlgorithm {
 	/**
 	 * Automatic training.
 	 *
-	 * @param kList the training data, formatted as an hashmap with experimentName -> list of snapshots
+	 * @param kList the training data
 	 * @return the chosen algorithm configuration
 	 */
-	public void automaticTraining(List<Knowledge> kList);
+	public void automaticTraining(List<Knowledge> kList, boolean createOutput);
 	
 }

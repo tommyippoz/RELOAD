@@ -34,6 +34,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	@Override
 	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
 		int detectionHits = 0;
+		int undetectableCount = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>(); 
 		List<InjectedElement> currentInj = new LinkedList<InjectedElement>(); 
 		for(int i=0;i<knowledge.size();i++){
@@ -44,11 +45,14 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 				overallInj.add(knowledge.getInjection(i));
 				currentInj.add(knowledge.getInjection(i));
 			}
-			detectionHits = detectionHits + classifyMetric(knowledge.getTimestamp(i), anomalyEvaluations.get(i).getValue(), currentInj);
+			int d = classifyMetric(knowledge.getTimestamp(i), anomalyEvaluations.get(i).getValue(), currentInj);
+			if(anomalyEvaluations.get(i).getValue() >= 0.0){
+				detectionHits = detectionHits + d;
+			} else undetectableCount++;
 		}
 		if(knowledge.size() > 0){
 			if(!absolute)
-				return 1.0*detectionHits/(knowledge.size() - getUndetectable(overallInj));
+				return 1.0*detectionHits/(knowledge.size() - getUndetectable(overallInj) - undetectableCount);
 			else return detectionHits;
 		} else return 0.0;
 	}
@@ -66,28 +70,6 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		}
 		return undetectable;
 	}
-	
-/*	@Override
-	public double evaluateAnomalyResults(LinkedList<Snapshot> snapList, HashMap<Date, Double> anomalyEvaluations) {
-		int detectionHits = 0;
-		int undetectable = 0;
-		Snapshot snap;
-		InjectedElement injEl = null; 
-		for(int i=0;i<snapList.size();i++){
-			snap = snapList.get(i);
-			if(injEl == null && snap.getInjectedElement() != null)
-				injEl = snap.getInjectedElement();
-			if(isValidSnapshot(snap, injEl)){
-				if(classifyMetric(snap, anomalyEvaluations.get(snap.getTimestamp())))
-					detectionHits++;
-			} else undetectable++;
-		}
-		if(snapList.size() > 0){
-			if(!absolute)
-				return 1.0*detectionHits/(snapList.size()-undetectable);
-			else return detectionHits;
-		} else return 0.0;
-	}*/
 
 	protected abstract int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList);
 

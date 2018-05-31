@@ -188,9 +188,14 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			      // Store the current lowest reachability.
 			      // OFScore ofs;
 			      final double[] mindists = new double[r];
+			      boolean allNAN = true;
 			      for(int i = 0; i < neighbors.size(); ++i) {
 			    	 mindists[i] = newInstance.equals(resList.get(neighbors.get(i).getIndex()).getVector()) ? Double.NaN : neighbors.get(i).getScore();
+			    	 if(Double.isFinite(mindists[i]))
+			    		 allNAN = false;
 			      }
+			      if(allNAN)
+			    	  return Double.NaN;
 
 			      double acsum = 0.;
 			      for(int j = ((r < k) ? r : k) - 1; j > 0; --j) {
@@ -206,7 +211,11 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			          }
 			        }
 			        acsum += mindist * j; // Weighted sum, decreasing weights
-			        mindists[minpos] = Double.NaN;
+			        if(minpos >= 0)
+			        	mindists[minpos] = Double.NaN;
+			        else {
+			        	return Double.NaN;
+			        }
 
 			        for(int i = 0; i < neighbors.size(); ++i) {
 			          final double curdist = mindists[i];
@@ -271,10 +280,12 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					double sum = 0.;
 				    OFScore ofs;
 					for(int i=0;i<k;i++){
-						ofs = resList.get(nn.get(i).getIndex()); 
-						if(ofs.getVector() != newInstance) {
-			  				sum += ofs.getACDS();
-		      			}
+						if(i < nn.size()){
+							ofs = resList.get(nn.get(i).getIndex()); 
+							if(ofs.getVector() != newInstance) {
+				  				sum += ofs.getACDS();
+			      			}
+						}
 				    }
 					double acds = singleACDS(nn, newInstance);
 					if(sum > 0){

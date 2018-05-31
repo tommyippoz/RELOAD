@@ -43,7 +43,7 @@ public abstract class CSVLoader extends SimpleLoader {
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
-						if(readLine.length() == 0)
+						if(readLine.length() == 0 || readLine.startsWith("*"))
 							readLine = null;
 					}
 				}

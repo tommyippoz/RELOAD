@@ -15,7 +15,6 @@ import ippoz.madness.detector.commons.service.ServiceCall;
 import ippoz.madness.detector.commons.service.ServiceStat;
 import ippoz.madness.detector.commons.support.AppLogger;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -164,22 +163,6 @@ public class MonitoredData {
 
 	public Map<String, ServiceStat> getStats() {
 		return ssList;
-	}
-	
-	private MultipleSnapshot generateMultipleSnapshot(String textItem, int index) {
-		List<DataSeries> sList = null;
-		if(textItem != null){
-			if(textItem.contains(";")){
-				sList = new ArrayList<DataSeries>(textItem.split(";").length);
-				for(String sName : textItem.split(";")){
-					sList.add(DataSeries.fromString(sName.trim(), true));
-				}
-			} else {
-				sList = new ArrayList<DataSeries>(1);
-				sList.add(DataSeries.fromString(textItem, true));
-			} 
-		} 
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), sList);
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {

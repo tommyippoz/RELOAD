@@ -26,24 +26,24 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public abstract class DataSeriesElkiAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
+public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
 	
 	private boolean outliersInTraining;
 	
-	public DataSeriesElkiAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
+	public DataSeriesELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 		this.outliersInTraining = outliersInTraining;
 	}
 
 	@Override
-	public void automaticTraining(List<Knowledge> kList) {
+	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		Database db = translateKnowledge(kList, outliersInTraining);
 		if(db != null)
-			automaticElkiTraining(db);
+			automaticElkiTraining(db, createOutput);
 		else AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 	}
 	
-	protected abstract void automaticElkiTraining(Database db);
+	protected abstract void automaticElkiTraining(Database db, boolean createOutput);
 
 	@Override
 	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {

@@ -21,7 +21,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class ABODELKI extends DataSeriesElkiAlgorithm {
+public class ABODELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String THRESHOLD = "threshold";
 	
@@ -51,13 +51,13 @@ public class ABODELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		abod.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	abod.printFile(new File(getFilename()));
@@ -72,7 +72,7 @@ public class ABODELKI extends DataSeriesElkiAlgorithm {
 	protected double evaluateElkiSnapshot(Snapshot sysSnapshot) {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			if(abod.rankSingleABOF(v) >= (threshold*100)*abod.getDbSize())
+			if(abod.rankSingleABOF(v) <= threshold*abod.getDbSize())
 				return 1.0;
 			else return 0.0;
 		} else return 0.0;

@@ -9,11 +9,13 @@ import ippoz.madness.detector.algorithm.elki.ABODELKI;
 import ippoz.madness.detector.algorithm.elki.COFELKI;
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
 import ippoz.madness.detector.algorithm.elki.LOFELKI;
+import ippoz.madness.detector.algorithm.elki.ODINELKI;
 import ippoz.madness.detector.algorithm.elki.SVMELKI;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.support.AppLogger;
@@ -119,6 +121,8 @@ public class TrainerManager extends TrainDataManager {
 	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
 		if(dsDomain.equals("ALL")){
 			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("UNION")){
+			return DataSeries.unionCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.equals("SIMPLE")){
 			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
@@ -153,6 +157,12 @@ public class TrainerManager extends TrainDataManager {
 					tempFolder.delete();
 					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
 				}
+			} else if(at.equals(AlgorithmType.ELKI_ODIN)){
+				tempFolder = new File(ODINELKI.DEFAULT_TMP_FOLDER);
+				if(tempFolder.exists()){
+					tempFolder.delete();
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
+				}
 			} else if(at.equals(AlgorithmType.ELKI_SVM)){
 				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
 				if(tempFolder.exists()){
@@ -180,6 +190,7 @@ public class TrainerManager extends TrainDataManager {
 				}
 			}
 		}
+		finalDs.add(new MultipleDataSeries(finalDs));
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
 		return finalDs;
 	}

@@ -81,7 +81,7 @@ public class EvaluatorManager extends DataManager {
 		detectorScoreTreshold = getVoterTreshold(voterTreshold);
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
 		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
-		AppLogger.logInfo(getClass(), "Evaluating " + map.size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
 	}
 	
 	private double getVoterTreshold(String voterTreshold) {
@@ -247,7 +247,7 @@ public class EvaluatorManager extends DataManager {
 	}
 	
 	private boolean checkAnomalyTreshold(Double newMetricValue, int nVoters) {
-		if(Math.abs(detectorScoreTreshold) > 1)
+		if(Math.abs(detectorScoreTreshold) >= 1)
 			return nVoters < Math.abs(detectorScoreTreshold);
 		else return newMetricValue >= detectorScoreTreshold;
 	}

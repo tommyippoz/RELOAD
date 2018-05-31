@@ -20,7 +20,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class COFELKI extends DataSeriesElkiAlgorithm {
+public class COFELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String K = "k";
 	
@@ -61,7 +61,7 @@ public class COFELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		cCOF.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
@@ -69,7 +69,7 @@ public class COFELKI extends DataSeriesElkiAlgorithm {
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	cCOF.printFile(new File(getFilename()));

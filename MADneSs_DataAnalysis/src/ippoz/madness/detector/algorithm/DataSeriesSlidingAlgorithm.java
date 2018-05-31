@@ -34,7 +34,7 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 		if(knowledge instanceof SlidingKnowledge){
 			windowSize = ((SlidingKnowledge)knowledge).getWindowSize();
 			snapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
-			if(snapList.size() > 0)
+			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= windowSize)
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
 			else return -1.0;
 		} else {

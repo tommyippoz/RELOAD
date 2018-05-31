@@ -64,16 +64,6 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 		
 	}
 	
-	private List<Snapshot> toSnapList(List<Knowledge> kList){
-		List<Snapshot> kSnapList = null;
-		for(Knowledge knowledge : kList){
-			if(kSnapList == null)
-				kSnapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
-			else kSnapList.addAll(knowledge.toArray(getAlgorithmType(), getDataSeries()));
-		}
-		return kSnapList;
-	}
-	
 	protected double[][] convertKnowledgeIntoMatrix(List<Knowledge> kList, boolean includeFaulty) {
 		return convertSnapshotListIntoMatrix(toSnapList(kList), includeFaulty);
 	}

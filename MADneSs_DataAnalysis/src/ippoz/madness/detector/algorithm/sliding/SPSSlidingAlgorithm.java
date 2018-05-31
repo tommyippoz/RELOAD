@@ -26,14 +26,19 @@ import org.apache.commons.math3.special.Erf;
  */
 public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	
+	/** The Constant SPS_PDV. */
 	public static final String SPS_PDV = "pdv";
 	
+	/** The Constant SPS_POV. */
 	public static final String SPS_POV = "pov";
 	
+	/** The Constant SPS_PDS. */
 	public static final String SPS_PDS = "pds";
 	
+	/** The Constant SPS_POS. */
 	public static final String SPS_POS = "pos";
 	
+	/** The Constant SPS_DYN_WEIGHT. */
 	public static final String SPS_DYN_WEIGHT = "dweight";
 	
 	/** The pdv. */
@@ -54,8 +59,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/**
 	 * Instantiates a new SPS detector.
 	 *
-	 * @param indicator the indicator
-	 * @param categoryTag the data category tag
+	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
 	public SPSSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
@@ -67,6 +71,9 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		dynamicWeights = (Double.parseDouble(conf.getItem(SPS_DYN_WEIGHT)) == 1.0);	
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
+	 */
 	@Override
 	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		double[] thresholds = calculateTreshold(parseBlocks(snapList));
@@ -76,6 +83,9 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		else return 1.0;
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateDataSeriesSnapshot(ippoz.madness.detector.commons.knowledge.Knowledge, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot, int)
+	 */
 	@Override
 	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double[] thresholds = calculateTreshold(parseBlocks(knowledge.toArray(getAlgorithmType(), getDataSeries())));
@@ -85,6 +95,12 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		else return 1.0;
 	}
 
+	/**
+	 * Parses the blocks.
+	 *
+	 * @param array the array
+	 * @return the list
+	 */
 	private List<SPSBlock> parseBlocks(List<Snapshot> array) {
 		List<SPSBlock> blockList = new LinkedList<SPSBlock>();
 		for(Snapshot snap : array){
@@ -98,7 +114,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/**
 	 * Calculates the new thresholds.
 	 *
-	 * @param sysSnapshot the current snapshot
+	 * @param observedValues the observed values
 	 * @return the new thresholds
 	 */
 	public double[] calculateTreshold(List<SPSBlock> observedValues){
@@ -118,6 +134,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/**
 	 * Computes thresholds.
 	 *
+	 * @param observedValues the observed values
 	 * @return the computed threshold
 	 */
 	private double computeThreshold(List<SPSBlock> observedValues) {
@@ -127,6 +144,12 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		return pred + sm;
 	}
 	
+	/**
+	 * Calculate bounds.
+	 *
+	 * @param observedValues the observed values
+	 * @return the double[]
+	 */
 	private double[] calculateBounds(List<SPSBlock> observedValues){
 		int dof = observedValues.size() - 1;
 		ChiSquaredDistribution chiSq = new ChiSquaredDistribution(dof);
@@ -164,6 +187,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * Gets the weight of each observation in the sliding window.
 	 *
 	 * @param obsIndex the observation index
+	 * @param observedValues the observed values
 	 * @return the weight
 	 */
 	private double getWeigth(int obsIndex, List<SPSBlock> observedValues){
@@ -175,7 +199,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/**
 	 * Gets the weight of each observation in the sliding window.
 	 *
-	 * @param obsIndex the observation index
+	 * @param observedValues the observed values
 	 * @return the weight
 	 */
 	private double getWeigthQuadraticSum(List<SPSBlock> observedValues){
@@ -188,6 +212,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/**
 	 * Gets the weight sum.
 	 *
+	 * @param observedValues the observed values
 	 * @return the weight sum
 	 */
 	private double getWeightSum(List<SPSBlock> observedValues){
@@ -221,6 +246,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 *
 		 * @param obs the observation
 		 * @param timestamp the timestamp
+		 * @param last the last
 		 */
 		public SPSBlock(double obs, Date timestamp, SPSBlock last) {
 			this.obs = obs;

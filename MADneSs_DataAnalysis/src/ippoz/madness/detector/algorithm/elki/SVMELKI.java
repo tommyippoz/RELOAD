@@ -20,7 +20,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class SVMELKI extends DataSeriesElkiAlgorithm {
+public class SVMELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String NU = "nu";
 	
@@ -66,13 +66,13 @@ public class SVMELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		cSVM.run(db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	cSVM.printFile(new File(getFilename()));

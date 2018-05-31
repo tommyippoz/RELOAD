@@ -212,9 +212,9 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		public int rankSingleABOF(V newInstance) {
 			if(resList != null && resList.size() > 0) {
 				double abof = calculateSingleABOF(newInstance);
-				for(int i=0;i<resList.size();i++){
+				for(int i=resList.size()-1; i>=0;i--){
 					if(resList.get(i).getABOF() <= abof){
-						return resList.size() - i;
+						return i+1;
 					}
 				}
 			}

@@ -44,8 +44,6 @@ import de.lmu.ifi.dbs.elki.database.relation.Relation;
 import de.lmu.ifi.dbs.elki.datasource.bundle.SingleObjectBundle;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.DistanceFunction;
 import de.lmu.ifi.dbs.elki.logging.Logging;
-import de.lmu.ifi.dbs.elki.logging.progress.FiniteProgress;
-import de.lmu.ifi.dbs.elki.logging.progress.StepProgress;
 import de.lmu.ifi.dbs.elki.math.DoubleMinMax;
 import de.lmu.ifi.dbs.elki.math.MathUtil;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -95,25 +93,25 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @return LOF outlier result
 	   */
 	  public OutlierResult run(Database database, Relation<NumberVector> relation) {
-	    StepProgress stepprog = LOG.isVerbose() ? new StepProgress("LOF", 3) : null;
+	    //StepProgress stepprog = LOG.isVerbose() ? new StepProgress("LOF", 3) : null;
 	    DBIDs ids = relation.getDBIDs();
 
-	    LOG.beginStep(stepprog, 1, "Materializing nearest-neighbor sets.");
+	    //LOG.beginStep(stepprog, 1, "Materializing nearest-neighbor sets.");
 	    KNNQuery<NumberVector> knnq = DatabaseUtil.precomputedKNNQuery(database, relation, getDistanceFunction(), k);
 
 	    // Compute LRDs
-	    LOG.beginStep(stepprog, 2, "Computing Local Reachability Densities (LRD).");
+	    //LOG.beginStep(stepprog, 2, "Computing Local Reachability Densities (LRD).");
 	    WritableDoubleDataStore lrds = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_TEMP);
 	    computeLRDs(database, knnq, ids, lrds);
 
 	    // compute LOF_SCORE of each db object
-	    LOG.beginStep(stepprog, 3, "Computing Local Outlier Factors (LOF).");
+	    //LOG.beginStep(stepprog, 3, "Computing Local Outlier Factors (LOF).");
 	    WritableDoubleDataStore lofs = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_DB);
 	    // track the maximum value for normalization.
 	    DoubleMinMax lofminmax = new DoubleMinMax();
 	    computeLOFScores(database, knnq, ids, lrds, lofs, lofminmax);
 
-	    LOG.setCompleted(stepprog);
+	    //LOG.setCompleted(stepprog);
 
 	    // Build result representation.
 	    DoubleRelation scoreResult = new MaterializedDoubleRelation("Local Outlier Factor", "lof-outlier", lofs, ids);
@@ -129,14 +127,14 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @param lrds Reachability storage
 	   */
 	  private void computeLRDs(Database db, KNNQuery<NumberVector> knnq, DBIDs ids, WritableDoubleDataStore lrds) {
-	    FiniteProgress lrdsProgress = LOG.isVerbose() ? new FiniteProgress("Local Reachability Densities (LRD)", ids.size(), LOG) : null;
+	    //FiniteProgress lrdsProgress = LOG.isVerbose() ? new FiniteProgress("Local Reachability Densities (LRD)", ids.size(), LOG) : null;
 	    double lrd;
 	    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
 	      lrd = computeLRD(db, knnq, iter);
 	      lrds.putDouble(iter, lrd);
-	      LOG.incrementProcessed(lrdsProgress);
+	      //LOG.incrementProcessed(lrdsProgress);
 	    }
-	    LOG.ensureCompleted(lrdsProgress);
+	    //LOG.ensureCompleted(lrdsProgress);
 	  }
 
 	  /**
@@ -192,7 +190,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @param lofminmax Score minimum/maximum tracker
 	   */
 	  private void computeLOFScores(Database database, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore lrds, WritableDoubleDataStore lofs, DoubleMinMax lofminmax) {
-	    FiniteProgress progressLOFs = LOG.isVerbose() ? new FiniteProgress("Local Outlier Factor (LOF) scores", ids.size(), LOG) : null;
+	    //FiniteProgress progressLOFs = LOG.isVerbose() ? new FiniteProgress("Local Outlier Factor (LOF) scores", ids.size(), LOG) : null;
 	    double lof;
 	    resList = new ArrayList<OFScore>(ids.size());
 	    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
@@ -201,10 +199,10 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	      lofs.putDouble(iter, lof);
 	      // update minimum and maximum
 	      lofminmax.put(lof);
-	      LOG.incrementProcessed(progressLOFs);
+	      //LOG.incrementProcessed(progressLOFs);
 	    }
 	    Collections.sort(resList);
-	    LOG.ensureCompleted(progressLOFs);
+	    //LOG.ensureCompleted(progressLOFs);
 	  }
 
 	  /**

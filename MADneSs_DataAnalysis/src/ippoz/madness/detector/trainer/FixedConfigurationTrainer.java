@@ -45,7 +45,6 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 
 	@Override
 	protected AlgorithmConfiguration lookForBestConfiguration() {
-		//tTiming.addTrainingTime(getAlgType(), 0, 1);
 		return fixConf;
 	}
 	

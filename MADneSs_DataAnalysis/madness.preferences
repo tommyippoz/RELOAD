@@ -1,49 +1,34 @@
-* Default preferences file for 'MADneSs'. Comments with '*'.
+* Preferences file for 'MADneSs'. Comments with '*'.
 
 
 * Data Source - Loaders.
 
-* Loader type (MYSQL, CSVALL).
-LOADER_TYPE = CSVALL
-
 * Loaders folder.
 LOADER_FOLDER = loaders
 
-* Loader file.
-LOADER_PREF_FILE = iscx/iscx_bruteforce_loader.preferences
+* List of Loaders
+LOADERS = iscx/iscx_synthetic.loader
 
-* Investigated Data Layers (if any, NO_LAYER otherwise).
-CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK
-
-
-* Data Partitioning.
-
-* Golden Runs.
-GOLDEN_RUN_IDS = 1 - 5
-
-* Training Runs.
-TRAIN_RUN_IDS = 110
-
-* Evaluation Runs.
-VALIDATION_RUN_IDS = 110
+* Datasets folder.
+DATASETS_FOLDER = ../../git_data/MLAD/datasets
 
 
 * MADneSs Execution.
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
-FILTERING_FLAG = 0
+FILTERING_FLAG = 1
 
 * Perform Training (0 = NO, 1 = YES).
 TRAIN_FLAG = 1
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.
-METRIC = FMEASURE
+METRIC = Accuracy
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = absolute
 
 * Expected duration of injected faults (observations).
-ANOMALY_WINDOW = 1
+ANOMALY_WINDOW = 0
 
 * Threshold for filtering i.e., minimum value of FPR accepted.
 FILTERING_TRESHOLD = 0.5
@@ -55,7 +40,7 @@ VALID_AFTER_INJECTION = true
 REPUTATION = 1.0
 
 * Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted
-DATA_SERIES_DOMAIN = PEARSON(0.90)
+DATA_SERIES_DOMAIN = UNION
 
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
@@ -72,7 +57,7 @@ PEARSON_TOLERANCE = 0.9
 * Threshold for n-uples of indicators correlated by Pearson
 PEARSON_NUPLES_TOLERANCE = 0.95
 
-* Strategy to slide windows. Accepted Values are FIFO, 
+* Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
 SLIDING_WINDOW_POLICY = FIFO_NORMAL
 
 * Size of the sliding window buffer

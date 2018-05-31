@@ -53,6 +53,8 @@ public class FilterManager extends TrainDataManager {
 	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
 		if(dsDomain.equals("ALL")){
 			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("UNION")){
+			return DataSeries.unionCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.equals("SIMPLE")){
 			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
@@ -64,7 +66,7 @@ public class FilterManager extends TrainDataManager {
 	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
 		PearsonCombinationManager pcManager;
 		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(KnowledgeType.GLOBAL));
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge());
 		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
 		pcManager.flush();
 	}

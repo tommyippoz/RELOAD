@@ -17,6 +17,8 @@ public class PreferencesManager {
 	/** The map of the preferences. */
 	private HashMap<String, String> preferences;
 	
+	private String filename;
+	
 	/**
 	 * Instantiates a new preferences manager.
 	 *
@@ -24,9 +26,10 @@ public class PreferencesManager {
 	 */
 	public PreferencesManager(File prefFile){
 		try {
-			if(prefFile != null && prefFile.exists())
+			if(prefFile != null && prefFile.exists()){
 				preferences = AppUtility.loadPreferences(prefFile, null);
-			else preferences = null;
+				filename = prefFile.getName();
+			} else preferences = null;
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to load main preferences file");
 		}
@@ -57,6 +60,10 @@ public class PreferencesManager {
 
 	public boolean isValidFile() {
 		return preferences != null;
+	}
+
+	public String getFilename() {
+		return filename;
 	}
 
 }

@@ -22,5 +22,10 @@ public class FIFONormalPolicy extends SlidingPolicy {
 	public boolean canEnter(WeightedIndex wi) {
 		return wi.getWeigth() <= 0.0;
 	}
+	
+	@Override
+	public String toString() {
+		return "FIFONormal";
+	}
 
 }

@@ -24,7 +24,7 @@ import de.lmu.ifi.dbs.elki.math.random.RandomFactory;
  * @author Tommy
  *
  */
-public class KMeansELKI extends DataSeriesElkiAlgorithm {
+public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	
 	public static final String KMEANS_CLUSTERS = "clusters";
 
@@ -46,7 +46,7 @@ public class KMeansELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 	    CustomKMeans<NumberVector> km = new CustomKMeans<>(dist, 
 	    		(conf != null && conf.hasItem(K)) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K, 
 	    		0, 

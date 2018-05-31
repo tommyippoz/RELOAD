@@ -20,7 +20,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class LOFELKI extends DataSeriesElkiAlgorithm {
+public class LOFELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String K = "k";
 	
@@ -61,7 +61,7 @@ public class LOFELKI extends DataSeriesElkiAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db) {
+	protected void automaticElkiTraining(Database db, boolean createOutput) {
 
 		cLOF.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
@@ -69,7 +69,7 @@ public class LOFELKI extends DataSeriesElkiAlgorithm {
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
-	    if(!new File(getFilename()).exists()){
+	    if(createOutput){
 	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 	    	cLOF.printFile(new File(getFilename()));

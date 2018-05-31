@@ -3,6 +3,8 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import java.util.List;
+
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
@@ -15,6 +17,8 @@ import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
  * @author Tommy
  */
 public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
+	
+	protected final static int DEFAULT_MINIMUM_ITEMS = 5;
 	
 	/** The indicator. */
 	protected DataSeries dataSeries;
@@ -42,6 +46,16 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	@Override
 	public DataSeries getDataSeries() {
 		return dataSeries;
+	}
+	
+	protected List<Snapshot> toSnapList(List<Knowledge> kList){
+		List<Snapshot> kSnapList = null;
+		for(Knowledge knowledge : kList){
+			if(kSnapList == null)
+				kSnapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
+			else kSnapList.addAll(knowledge.toArray(getAlgorithmType(), getDataSeries()));
+		}
+		return kSnapList;
 	}
 
 	@Override

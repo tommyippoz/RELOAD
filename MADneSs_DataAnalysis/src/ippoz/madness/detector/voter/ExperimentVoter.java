@@ -76,21 +76,8 @@ public class ExperimentVoter extends Thread {
 		for(KnowledgeType kType : knowMap.keySet()){
 			kMap.put(kType, knowMap.get(kType).cloneKnowledge());
 		}
-		expName = kMap.get(KnowledgeType.GLOBAL).getTag();
+		expName = kMap.get(kMap.keySet().iterator().next()).getTag();
 	}
-	
-	/*private List<Map<AlgorithmVoter, Snapshot>> loadExpAlgSnapshots(ExperimentData expData) {
-		Map<AlgorithmVoter, Snapshot> newMap;
-		List<Map<AlgorithmVoter, Snapshot>> expAlgMap = new ArrayList<Map<AlgorithmVoter, Snapshot>>(expData.getSnapshotNumber());
-		for(int i=0;i<expData.getSnapshotNumber();i++){
-			newMap = new HashMap<AlgorithmVoter, Snapshot>();
-			for(AlgorithmVoter aVoter : algList){
-				newMap.put(aVoter, expData.buildSnapshotFor(aVoter.getAlgorithmType(), i, aVoter.getDataSeries(), aVoter.getAlgorithmConfiguration()));
-			}
-			expAlgMap.add(newMap);
-		}
-		return expAlgMap;
-	}*/
 	
 	/**
 	 * Deep clone of the voters' list.
@@ -118,16 +105,16 @@ public class ExperimentVoter extends Thread {
 		double votingResult;
 		Map<AlgorithmVoter, Double> snapVoting;
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
-		voting = new ArrayList<TimedValue>(kMap.get(KnowledgeType.GLOBAL).size());
+		voting = new ArrayList<TimedValue>(kMap.get(kMap.keySet().iterator().next()).size());
 		if(algList.size() > 0) {
-			for(int i=0;i<kMap.get(KnowledgeType.GLOBAL).size();i++){
+			for(int i=0;i<kMap.get(kMap.keySet().iterator().next()).size();i++){
 				snapVoting = new HashMap<AlgorithmVoter, Double>();
 				for(AlgorithmVoter aVoter : algList){
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
-				partialVoting.put(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), snapVoting);
+				partialVoting.put(kMap.get(kMap.keySet().iterator().next()).getTimestamp(i), snapVoting);
 				votingResult = voteResults(snapVoting);
-				voting.add(new TimedValue(kMap.get(KnowledgeType.GLOBAL).getTimestamp(i), votingResult));
+				voting.add(new TimedValue(kMap.get(kMap.keySet().iterator().next()).getTimestamp(i), votingResult));
 				if(kMap.containsKey(KnowledgeType.SLIDING)){
 					((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).slide(i, votingResult);
 				}
@@ -162,12 +149,18 @@ public class ExperimentVoter extends Thread {
 	 */
 	private double voteResults(Map<AlgorithmVoter, Double> algResults){
 		double snapScore = 0.0;
+		boolean undetectable = true;
 		for(AlgorithmVoter aVoter : algList){
-			if(aVoter.getReputationScore() > 0)
-				snapScore = snapScore + 1.0*aVoter.getReputationScore()*algResults.get(aVoter);
-			else snapScore = snapScore + 1.0*algResults.get(aVoter);
+			if(algResults.get(aVoter) >= 0.0){
+				undetectable = false;
+				if(aVoter.getReputationScore() > 0)
+					snapScore = snapScore + 1.0*aVoter.getReputationScore()*algResults.get(aVoter);
+				else snapScore = snapScore + 1.0*algResults.get(aVoter);
+			}
 		}
-		return snapScore;
+		if(undetectable)
+			return -1.0;
+		else return snapScore;
 	}
 	
 	/**
@@ -221,12 +214,12 @@ public class ExperimentVoter extends Thread {
 		try {
 			for(Metric met : validationMetrics){
 				if(!met.getMetricName().equals("AUC"))
-					metResults.put(met, met.evaluateAnomalyResults(kMap.get(KnowledgeType.GLOBAL), voting, anomalyTreshold));
+					metResults.put(met, met.evaluateAnomalyResults(kMap.get(kMap.keySet().iterator().next()), voting, anomalyTreshold));
 				else metResults.put(met, getAUC());
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expName + "," + kMap.get(KnowledgeType.GLOBAL).size() + ",");
+				pw.append(expName + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
 				for(Metric met : validationMetrics){
 					pw.append(String.valueOf(metResults.get(met)) + ",");
 				}
@@ -310,7 +303,7 @@ public class ExperimentVoter extends Thread {
 						count++;
 					}
 				}
-				writer.write(AppUtility.getSecondsBetween(timestamp, kMap.get(KnowledgeType.GLOBAL).getTimestamp(0)) + ",");
+				writer.write(AppUtility.getSecondsBetween(timestamp, kMap.get(kMap.keySet().iterator().next()).getTimestamp(0)) + ",");
 				writer.write(count + ",");
 				for(LayerType currentLayer : countMap.keySet()){
 					for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){

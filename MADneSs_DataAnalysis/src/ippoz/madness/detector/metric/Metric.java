@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.metric;
 
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
@@ -35,8 +36,8 @@ public abstract class Metric {
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
 			snapValue = alg.snapshotAnomalyRate(knowledge, i);
+			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), snapValue));
 			if(snapValue >= 0.0) {
-				anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), snapValue));
 				average = average + anomalyEvaluations.get(i).getValue();
 				std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
 			} else undetectable++;

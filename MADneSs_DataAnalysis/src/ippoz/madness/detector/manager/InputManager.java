@@ -11,6 +11,7 @@ import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.metric.AUC_Metric;
+import ippoz.madness.detector.metric.Accuracy_Metric;
 import ippoz.madness.detector.metric.Custom_Metric;
 import ippoz.madness.detector.metric.FMeasure_Metric;
 import ippoz.madness.detector.metric.FN_Metric;
@@ -52,16 +53,7 @@ public class InputManager {
 	private static final String DEFAULT_ALGORITHM_PREF_FILE = "algorithmPreferences.preferences";
 	
 	/** The Constant LOADER_TYPE. */
-	private static final String LOADER_TYPE = "LOADER_TYPE";
-	
-	/** The Constant FILTERING_RUN_PREFERENCE. */
-	private static final String FILTERING_RUN_PREFERENCE = "GOLDEN_RUN_IDS";
-	
-	/** The Constant TRAIN_RUN_PREFERENCE. */
-	private static final String TRAIN_RUN_PREFERENCE = "TRAIN_RUN_IDS";
-	
-	/** The Constant VALIDATION_RUN_PREFERENCE. */
-	private static final String VALIDATION_RUN_PREFERENCE = "VALIDATION_RUN_IDS";
+	private static final String LOADERS = "LOADERS";
 	
 	/** The Constant CONSIDERED_LAYERS. */
 	private static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
@@ -80,6 +72,8 @@ public class InputManager {
 	
 	/** The Constant OUTPUT_FOLDER. */
 	public static final String LOADER_FOLDER = "LOADER_FOLDER";
+	
+	public static final String DATASETS_FOLDER = "DATASETS_FOLDER";
 	
 	/** The Constant METRIC_TYPE. */
 	private static final String METRIC = "METRIC"; 
@@ -127,8 +121,6 @@ public class InputManager {
 	/** The Constant DM_CONVERGENCE_TIME. */
 	private static final String DM_CONVERGENCE_TIME = "CONVERGENCE_TIME";
 
-	private static final String LOADER_PREF_FILE = "LOADER_PREF_FILE";
-
 	private static final String PEARSON_SIMPLE_THRESHOLD = "PEARSON_TOLERANCE";
 	
 	private static final String PEARSON_COMPLEX_THRESHOLD = "PEARSON_NUPLES_TOLERANCE";
@@ -158,12 +150,8 @@ public class InputManager {
 		}
 	}
 
-	public String getLoader() {
-		return prefManager.getPreference(LOADER_TYPE);
-	}
-	
-	public String getRunIDs(String loaderTag){
-		return prefManager.getPreference(loaderTag.equals("validation") ? VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? FILTERING_RUN_PREFERENCE : TRAIN_RUN_PREFERENCE));
+	public String getLoaders() {
+		return prefManager.getPreference(LOADERS);
 	}
 
 	public int getAnomalyWindow() {
@@ -176,12 +164,12 @@ public class InputManager {
 		}
 	}
 
-	public PreferencesManager getLoaderPreferences() {
-		if(prefManager.hasPreference(LOADER_PREF_FILE))
-			return new PreferencesManager(getLoaderFolder() + prefManager.getPreference(LOADER_PREF_FILE));
+	public PreferencesManager getLoaderPreferences(String loaderFile) {
+		if(new File(getLoaderFolder() + loaderFile).exists())
+			return new PreferencesManager(getLoaderFolder() + loaderFile);
 		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					LOADER_PREF_FILE + " not found. Unable to load default value");
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Loader '" + 
+					loaderFile + "' not valid.");
 			return null;
 		}
 	}
@@ -269,7 +257,17 @@ public class InputManager {
 		}
 	}
 	
-	private String getLoaderFolder() {
+	public String getDatasetsFolder() {
+		if(prefManager.hasPreference(DATASETS_FOLDER))
+			return checkFolder(prefManager.getPreference(DATASETS_FOLDER));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					DATASETS_FOLDER + " not found. Using default value of ' datasets'");
+			return checkFolder("datasets", true);
+		}
+	}
+	
+	public String getLoaderFolder() {
 		if(prefManager.hasPreference(LOADER_FOLDER))
 			return checkFolder(getInputFolder() + prefManager.getPreference(LOADER_FOLDER));
 		else {
@@ -357,6 +355,8 @@ public class InputManager {
 				return new Matthews_Coefficient(validAfter);
 			case "AUC":
 				return new AUC_Metric(validAfter);
+			case "ACCURACY":
+				return new Accuracy_Metric(validAfter);
 			case "CUSTOM":
 				return new Custom_Metric(validAfter);	
 			default:
@@ -464,41 +464,6 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
 		return dataList.toArray(new DataCategory[dataList.size()]);
-	}
-	
-	/**
-	 * Gets the algorithm types.
-	 *
-	 * @return the algorithm types
-	 */
-	public List<AlgorithmType> getAlgTypes() {
-		File algTypeFile = new File(getSetupFolder() + "algorithmPreferences.preferences");
-		List<AlgorithmType> algTypeList = new LinkedList<AlgorithmType>();
-		BufferedReader reader;
-		String readed;
-		try {
-			if(algTypeFile.exists()){
-				reader = new BufferedReader(new FileReader(algTypeFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							algTypeList.add(AlgorithmType.valueOf(readed.trim()));
-						}
-					}
-				}
-				reader.close();
-			} else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						algTypeFile.getPath() + " not found. Will be generated. Using default value of 'ELKI_KMEANS'");
-				algTypeList.add(AlgorithmType.ELKI_KMEANS);
-				generateDefaultAlgorithmPreferences();
-			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read data types");
-		}
-		return algTypeList;
 	}
 	
 	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at) {
@@ -655,22 +620,13 @@ public class InputManager {
 			if(!prefFile.exists()){
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default preferences file for 'MADneSs'. Comments with '*'.\n");
-				writer.write("\n* Data Source - Loaders.\n\n");
+				writer.write("\n\n* Data Source - Loaders.\n");
 				writer.write("\n* Loader type (MYSQL, CSVALL).\n" + 
-						"LOADER_TYPE = CSVALL\n");
-				writer.write("\n* Loaders folder.\n" + 
 						"LOADER_FOLDER = loaders\n");
-				writer.write("\n* Loader file.\n" + 
-						"LOADER_PREF_FILE = kddcup_loader.preferences\n");
-				writer.write("\n* Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
-						"CONSIDERED_LAYERS = CENTOS, JVM, UNIX_NETWORK\n");
-				writer.write("\n* Data Partitioning.\n\n");
-				writer.write("\n* Golden Runs.\n" + 
-						"GOLDEN_RUN_IDS = 1 - 100\n");
-				writer.write("\n* Training Runs.\n" + 
-						"TRAIN_RUN_IDS = 1 - 20\n");
-				writer.write("\n* Evaluation Runs.\n" + 
-						"VALIDATION_RUN_IDS = 1 - 50\n");
+				writer.write("\n* Loaders folder.\n" + 
+						"LOADERS = iscx\n");
+				writer.write("\n* Datasets folder.\n" +
+						"DATASETS_FOLDER = datasets\n");
 				writer.write("\n* MADneSs Execution.\n\n");
 				writer.write("\n* Perform Filtering of Indicators (0 = NO, 1 = YES).\n" + 
 						"FILTERING_FLAG = 1\n");
@@ -709,7 +665,7 @@ public class InputManager {
 						"SCORES_FILE_FOLDER = intermediate\n");
 				writer.write("\n* Scores file\n" + 
 						"SCORES_FILE = scores.csv");
-				writer.write("\n* Other Preference Files.\n\n");
+				writer.write("\n\n* Other Preference Files.\n");
 				writer.write("\n* Detection Preferences\n" + 
 						"DETECTION_PREFERENCES_FILE = scoringPreferences.preferences\n");						
 			}
@@ -748,7 +704,7 @@ public class InputManager {
 		return new PreferencesManager(getInputFolder() + DEFAULT_SCORING_PREF_FILE);
 	}
 	
-	private void generateDefaultAlgorithmPreferences() throws IOException {
+	public void generateDefaultAlgorithmPreferences() throws IOException {
 		File prefFile = null;
 		BufferedWriter writer = null;
 		try {
@@ -818,29 +774,29 @@ public class InputManager {
 		}
 	}
 
-	public SlidingPolicyType getSlidingPolicy() {
+	public String getSlidingPolicies() {
 		try {
 			if(prefManager.hasPreference(SLIDING_POLICY))
-				return SlidingPolicyType.valueOf(prefManager.getPreference(SLIDING_POLICY).toUpperCase());
+				return prefManager.getPreference(SLIDING_POLICY).toUpperCase();
 			else {
 				AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 						SLIDING_POLICY + " not found. Using default value of 'FIFO'");
-				return SlidingPolicyType.FIFO;
+				return SlidingPolicyType.FIFO.toString();
 			}
 		} catch(Exception ex){
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					SLIDING_POLICY + " cannot be parsed correctly. Using default value of 'FIFO'");
-			return SlidingPolicyType.FIFO;
+			return SlidingPolicyType.FIFO.toString();
 		}
 	}
 
-	public int getSlidingWindowSize() {
-		if(prefManager.hasPreference(SLIDING_WINDOW_SIZE)  && AppUtility.isNumber(prefManager.getPreference(SLIDING_WINDOW_SIZE)))
-			return Integer.parseInt(prefManager.getPreference(SLIDING_WINDOW_SIZE));
+	public String getSlidingWindowSizes() {
+		if(prefManager.hasPreference(SLIDING_WINDOW_SIZE))
+			return prefManager.getPreference(SLIDING_WINDOW_SIZE);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					SLIDING_WINDOW_SIZE + " not found. Using default value of '20'");
-			return 20;
+			return "20";
 		}
 	}
 	

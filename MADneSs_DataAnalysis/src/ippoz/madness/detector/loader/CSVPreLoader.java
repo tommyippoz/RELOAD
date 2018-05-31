@@ -40,11 +40,13 @@ public class CSVPreLoader extends CSVLoader {
 	private static final String FAULTY_TAGS = "FAULTY_TAGS";
 	
 	private List<MonitoredData> dataList;
+	
 	private List<String> faultyTagList;
+	
 	private int anomalyWindow;
 	
-	public CSVPreLoader(LinkedList<Integer> runs, PreferencesManager prefManager, String tag, int anomalyWindow) {
-		this(runs, new File(prefManager.getPreference(tag.equals("filtering") ? FILTERING_CSV_FILE : tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE)), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), prefManager.getPreference(FAULTY_TAGS), anomalyWindow);
+	public CSVPreLoader(LinkedList<Integer> runs, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
+		this(runs, new File(datasetsFolder + prefManager.getPreference(tag.equals("filtering") ? FILTERING_CSV_FILE : tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE)), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), prefManager.getPreference(FAULTY_TAGS), anomalyWindow);
 	}
 
 	public CSVPreLoader(LinkedList<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, int anomalyWindow) {
@@ -60,7 +62,7 @@ public class CSVPreLoader extends CSVLoader {
 			faultyTagList.add(str.trim());
 		}
 	}
-
+	
 	private static Integer[] parseColumns(String colString) {
 		LinkedList<Integer> iList = new LinkedList<Integer>();
 		if(colString != null && colString.length() > 0){
@@ -82,12 +84,19 @@ public class CSVPreLoader extends CSVLoader {
 			dataList = new LinkedList<MonitoredData>();
 			if(csvFile != null && csvFile.exists()){
 				reader = new BufferedReader(new FileReader(csvFile));
-				readLine = reader.readLine();
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
 				while(reader.ready()){
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
-						if(readLine.length() > 0){
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							if(rowIndex % experimentRows == 0){ 
 								if(obList != null && obList.size() > 0){
 									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1), obList, injList));
@@ -109,6 +118,7 @@ public class CSVPreLoader extends CSVLoader {
 									i++;
 								}
 								obList.add(current);
+								//System.out.println(readLine);
 								if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
 									injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
 							}

@@ -7,6 +7,7 @@ import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.support.ThreadScheduler;
+import ippoz.utils.logging.AppLogger;
 
 import java.util.List;
 import java.util.Map;
@@ -24,10 +25,23 @@ public abstract class DataManager extends ThreadScheduler {
 	public DataManager(Map<KnowledgeType, List<Knowledge>> map) {
 		super();
 		kMap = map;
+		if(kMap != null && kMap.size() > 0)
+			AppLogger.logInfo(getClass(), "Instances Loaded with " + getInjectionsRatio() + "% of Faults/Attacks");
+	}
+	
+	private double getInjectionsRatio(){
+		int injSum = 0;
+		int itemSum = 0;
+		for(Knowledge k : kMap.get(kMap.keySet().iterator().next())){
+			injSum = injSum + k.getInjectionCount();
+			itemSum = itemSum + k.size();
+			AppLogger.logInfo(getClass(), "'" + k.getTag() + "' has " + (100.0*k.getInjectionCount()/k.size()) + "% of Faults/Attack Ratio");
+		}
+		return 100.0 * injSum / itemSum;
 	}
 	
 	public int experimentsSize(){
-		return kMap.get(KnowledgeType.GLOBAL).size();
+		return kMap.get(kMap.keySet().iterator().next()).size();
 	}
 	
 	public Indicator[] getIndicators() {
@@ -39,6 +53,10 @@ public abstract class DataManager extends ThreadScheduler {
 			} else return null;
 		} else return null;
 
+	}
+	
+	public List<Knowledge> getKnowledge() {
+		return getKnowledge(kMap.keySet().iterator().next());
 	}
 	
 	public List<Knowledge> getKnowledge(KnowledgeType kType) {

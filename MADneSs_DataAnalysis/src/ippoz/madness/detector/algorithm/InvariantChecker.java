@@ -127,7 +127,7 @@ public class InvariantChecker extends DetectionAlgorithm implements AutomaticTra
 	}
 
 	@Override
-	public void automaticTraining(List<Knowledge> kList) {
+	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		int rowIndex = 0;
 		double[][] x = buildMatrix(kList);
 		double[] y = new double[x.length];

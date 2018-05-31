@@ -24,7 +24,7 @@ public class MultipleDataSeries extends DataSeries {
 	
 	private List<DataSeries> dsList;
 
-	public MultipleDataSeries(List<DataSeries> pList) {
+	public MultipleDataSeries(List<? extends DataSeries> pList) {
 		super(aggregateSeriesName(pList), DataCategory.PLAIN);
 		dsList = new ArrayList<DataSeries>(pList.size());
 		for(DataSeries is : pList){
@@ -32,7 +32,7 @@ public class MultipleDataSeries extends DataSeries {
 		}
 	}
 	
-	private static String aggregateSeriesName(List<DataSeries> pList){
+	private static String aggregateSeriesName(List<? extends DataSeries> pList){
 		String aggName = "";
 		if(pList != null && pList.size() >= 2){
 			for(DataSeries id : pList){
