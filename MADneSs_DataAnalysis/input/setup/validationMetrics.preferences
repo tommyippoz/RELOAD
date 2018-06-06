@@ -1,0 +1,12 @@
+* Metrics involved in the output of the detection phase
+TP
+TN
+FP
+FN
+FPR
+Precision
+Recall
+FMeasure
+FScore(2.0)
+Accuracy
+MATTHEWS

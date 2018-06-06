@@ -1,0 +1,9 @@
+FILTERING_CSV_FILE = datasets/NSLKDD/KDDTrain+.csv
+TRAIN_CSV_FILE = datasets/NSLKDD/KDDTrain+.csv
+VALIDATION_CSV_FILE = datasets/NSLKDD/KDDTest+.csv
+
+SKIP_COLUMNS = 1, 2, 3, 41, 42
+LABEL_COLUMN = 41
+EXPERIMENT_ROWS = 100
+
+FAULTY_TAGS = ftp_write, imap, guess_passwd, multihop, phf, spy, warezclient, warezmaster

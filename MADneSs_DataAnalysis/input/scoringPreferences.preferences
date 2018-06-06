@@ -1,0 +1,12 @@
+* Default scoring preferences file for 'MADneSs'. Comments with '*'.
+
+* Time needed for convergence (excluded by metric evaluations).
+CONVERGENCE_TIME = 10.0
+
+* Set of possible anomaly thresholds. Accepted values are ALL, HALF, THIRD, 'n'.
+* ANOMALY_TRESHOLD = ALL, HALF, 1
+ANOMALY_TRESHOLD = 1
+
+* Strategy to select anomaly checkers. Accepted values are 'min metric score', BEST 'n', FILTERED 'n'.
+* INDICATOR_SCORE_TRESHOLD = BEST 3, BEST 10, BEST 3, 0.9, FILTERED 10, BEST 30
+INDICATOR_SCORE_TRESHOLD = BEST 1

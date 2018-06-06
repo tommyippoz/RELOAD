@@ -1,0 +1,9 @@
+FILTERING_CSV_FILE = datasets/ADFALD/ADFA-LD_Web_Shell.csv
+TRAIN_CSV_FILE = datasets/ADFALD/ADFA-LD_Web_Shell.csv
+VALIDATION_CSV_FILE = datasets/ADFALD/ADFA-LD_Web_Shell.csv
+
+SKIP_COLUMNS = 1, 2
+LABEL_COLUMN = 1
+EXPERIMENT_ROWS = 3000
+
+FAULTY_TAGS = "Web_Shell", Web_Shell
