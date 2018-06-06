@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.trainer;
 
-import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;

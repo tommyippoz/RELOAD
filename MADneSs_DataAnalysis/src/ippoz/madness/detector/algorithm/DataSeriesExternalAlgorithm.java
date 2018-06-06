@@ -10,6 +10,7 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.utils.logging.AppLogger;
 
 import java.util.List;
 
@@ -112,7 +113,10 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 						}
 					} else {
 						for(int j=0;j<getDataSeries().size();j++){
-							dataMatrix[insertIndex][j] = ((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
+							if(((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue() == null){
+								AppLogger.logError(getClass(), "UnrecognizableSnapshot", ((MultipleDataSeries)getDataSeries()).getSeries(j).getName() + " - " + i + " - " + j);
+								dataMatrix[insertIndex][j] = 0.0;
+							} else dataMatrix[insertIndex][j] = ((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
 							if(insertIndex == 0){
 								minmax[j][0] = dataMatrix[insertIndex][0];
 								minmax[j][1] = dataMatrix[insertIndex][0];

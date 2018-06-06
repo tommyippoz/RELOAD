@@ -15,12 +15,12 @@ public abstract class SlidingPolicy {
 
 	public static SlidingPolicy getPolicy(SlidingPolicyType policyType){
 		switch(policyType){
-		case FIFO:
-			return new FIFOPolicy();
-		case FIFO_NORMAL:
-			return new FIFONormalPolicy();
-		default:
-			return null;
+			case FIFO:
+				return new FIFOPolicy();
+			case FIFO_NORMAL:
+				return new FIFONormalPolicy();
+			default:
+				return null;
 		}
 	}
 

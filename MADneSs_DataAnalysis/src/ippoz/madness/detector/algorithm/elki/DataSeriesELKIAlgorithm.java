@@ -74,9 +74,11 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 			else vec.set(0, ((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst());
 		} else {
 			for(int j=0;j<getDataSeries().size();j++){
-				if(needNormalization)
-					vec.set(j, (((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]));
-				else vec.set(j, ((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());						
+				if(((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue() != null){
+					if(needNormalization)
+						vec.set(j, (((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]));
+					else vec.set(j, ((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());	
+				} else vec.set(j, 0.0);					
 			}
 		}
 		return vec;

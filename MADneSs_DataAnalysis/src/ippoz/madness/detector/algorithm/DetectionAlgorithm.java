@@ -139,7 +139,8 @@ public abstract class DetectionAlgorithm {
 		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
 				(dataSeries.size() == 1 && (algType == AlgorithmType.SLIDING_SPS || algType == AlgorithmType.HIST)) ||
 				(dataSeries.size() > 1 && (algType == AlgorithmType.WEKA_ISOLATIONFOREST || algType == AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST)) ||
-				(algType.toString().contains("ELKI_") ||
+				(dataSeries.size() == 1 && algType.equals(AlgorithmType.ELKI_ODIN)) ||
+				(!algType.equals(AlgorithmType.ELKI_ODIN) && algType.toString().contains("ELKI_") ||
 				(algType.toString().contains("HBOS")));
 	}
 	

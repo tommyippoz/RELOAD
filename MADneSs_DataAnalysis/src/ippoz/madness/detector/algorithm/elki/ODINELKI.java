@@ -52,7 +52,7 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 			if(AppUtility.isNumber(conf.getItem(THRESHOLD))){
 				ratio = Double.parseDouble(conf.getItem(THRESHOLD));
 				if(ratio <= 1)
-					ratio = ratio * odin.size();
+					ratio = (1-ratio) * odin.size();
 				return odin.getScore((int) ratio);
 			}
 			else return -1;
@@ -84,7 +84,7 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			double odinScore = odin.calculateSingleODIN(v);
-			if(odinScore >= threshold)
+			if(odinScore <= threshold)
 				return 1.0;
 			else return 0.0;
 		} else return 0.0;

@@ -80,7 +80,7 @@ public class DetectorMain {
 		if(wPref != null && wPref.trim().length() > 0){
 			for(String s : wPref.trim().split(",")){
 				try {
-					wList.add(SlidingPolicy.getPolicy(SlidingPolicyType.valueOf(s)));
+					wList.add(SlidingPolicy.getPolicy(SlidingPolicyType.valueOf(s.trim())));
 				} catch(Exception ex){
 					AppLogger.logError(DetectorMain.class, "ParsingError", "Policy '" + s + "' unrecognized");
 				}
@@ -94,6 +94,7 @@ public class DetectorMain {
 		String wPref = iManager.getSlidingWindowSizes();
 		if(wPref != null && wPref.trim().length() > 0){
 			for(String s : wPref.trim().split(",")){
+				s = s.trim();
 				if(AppUtility.isInteger(s)){
 					wList.add(Integer.parseInt(s));
 				}
@@ -201,15 +202,15 @@ public class DetectorMain {
 		try {
 			if(!drFile.exists()){
 				writer = new BufferedWriter(new FileWriter(drFile, false));
+				writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
+				writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+				for(Metric met : metrics){
+					writer.write("," + met.getMetricName());
+				}
+				writer.write("\n");
 			} else {
 				writer = new BufferedWriter(new FileWriter(drFile, true));
 			}
-			writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
-			writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
-			for(Metric met : metrics){
-				writer.write("," + met.getMetricName());
-			}
-			writer.write("\n");
 			writer.write(madnessInfo + "," + result[1] + "," + result[0] + "," + result[2] + "\n");
 			writer.close();
 		} catch(IOException ex){

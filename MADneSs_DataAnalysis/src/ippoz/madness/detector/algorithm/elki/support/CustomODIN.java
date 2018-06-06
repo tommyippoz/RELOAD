@@ -143,43 +143,37 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 			}
 			extList.add(new ODINScore(newInstance, 0.0));
 			for(ODINScore os : resList){
-				if(!os.getVector().equals(newInstance) && isNeighbour(newInstance, extList, os))
+				if(!os.getVector().equals(newInstance) && isKNN(newInstance, extList, os))
 					odin = odin + inc;
 			}
 			return odin;			
 		}
 	}
+	
+	private boolean isKNN(NumberVector toCheck, List<ODINScore> scoreList, ODINScore os){
+		List<KNNValue> list = new ArrayList<KNNValue>() {
+		    private static final long serialVersionUID = 1L;
 
-	private boolean isNeighbour(NumberVector toCheck, List<ODINScore> extList, ODINScore os){
-		List<KNNValue> nn = getKNNs(os.getVector(), extList, true);
-		for(int i=0;i<k;i++){
-			if(extList.get(nn.get(i).getIndex()).getVector().equals(toCheck))
-				return true;
-		}
-		return false;
-	}  
-
-	private List<KNNValue> getKNNs(NumberVector newInstance, List<ODINScore> scoreList, boolean flag){
+			public boolean add(KNNValue mt) {
+		        int index = Collections.binarySearch(this, mt);
+		        if (index < 0) 
+		        	index = ~index;
+		        super.add(index, mt);
+		        return true;
+		    }
+		};
 		DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
-		List<KNNValue> nn = new LinkedList<KNNValue>();
-		Map<String, Integer> nOccurrences = new HashMap<String, Integer>();
-
-		for(int i=0;i<scoreList.size();i++) {
-			double dist = getSimilarity(sq, newInstance, scoreList.get(i).getVector());
-			if(flag){
-				if(!nOccurrences.containsKey(scoreList.get(i).getVector().toString())){
-					nn.add(new KNNValue(dist, i));
-					nOccurrences.put(scoreList.get(i).getVector().toString(), 1);
-				} else if(nOccurrences.get(scoreList.get(i).getVector().toString()) < k - 1){	
-					nn.add(new KNNValue(dist, i));
-					nOccurrences.put(scoreList.get(i).getVector().toString(), nOccurrences.get(scoreList.get(i).getVector().toString()) + 1);
-				}
-			} else nn.add(new KNNValue(dist, i));
+		double refDist = getSimilarity(sq, toCheck, os.getVector());
+		for(int j=0;j<scoreList.size();j++) {
+			if(!os.getVector().equals(scoreList.get(j).getVector())){
+				list.add(new KNNValue(getSimilarity(sq, os.getVector(), scoreList.get(j).getVector()), j));
+				if(list.size() > k && list.get(k).getScore() < refDist)
+					return false;
+			}
 		}
+		return true;
 
-		Collections.sort(nn);
-		return nn;
-	}
+	} 
 
 	private double getSimilarity(DistanceQuery<NumberVector> sq, NumberVector arg0, NumberVector arg1) {
 		return sq.distance(arg0, arg1);

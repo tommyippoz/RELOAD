@@ -1,264 +1,77 @@
-* Report for MADneSs activity on Thu May 24 12:17:19 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_bruteforce,333 - 337,[SLIDING_SPS],10,FIFONormal,BEST 3 - ALL,0.7681771952902541,72.8,494.2,91.2,79.4,0.14797868252064225,0.44430870704845277,0.46466832452132173,0.4126210352865619,0.42472010425252815,0.7681771952902541,0.29259467130549976,0.36983895449904486
-* Report for MADneSs activity on Thu May 24 12:18:17 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_bruteforce,333 - 337,[SLIDING_WEKA_ISOLATIONFOREST],10,FIFONormal,FILTERED 10 - ALL,0.688455920406839,70.4,536.2,138.0,123.8,0.21732344042350976,0.29095670008345675,0.33285709519079915,0.25868127171598465,0.2760977155078412,0.688455920406839,0.0909609919967166,0.8552810956912736
-* Report for MADneSs activity on Thu May 24 12:20:36 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_bruteforce,333 - 337,[SLIDING_ELKI_CLUSTERING],10,FIFONormal,FILTERED 10 - ALL,0.7894865352526432,0.0,658.8,0.0,161.2,0.0,0.0,0.0,0.0,0.0,0.7894865352526432,0.0,0.43068273014153713
-* Report for MADneSs activity on Thu May 24 12:24:22 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_bruteforce,333 - 337,[SLIDING_ELKI_KNN],10,FIFONormal,FILTERED 10 -  HALF,0.6585068937101826,11.2,74.8,6.8,45.4,0.0932461686085883,0.5373015873015874,0.1615530303030303,0.2442789094963008,0.18669200914960613,0.6585068937101826,0.12189502643564756,0.12061028678597492
-* Report for MADneSs activity on Thu May 24 12:30:16 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_bruteforce,333 - 337,[SLIDING_ELKI_KNN SLIDING_SPS],10,FIFONormal,FILTERED 10 - ALL,0.7546642248258427,0.0,626.0,0.0,189.4,0.0,0.0,0.0,0.0,0.0,0.7546642248258427,0.0,0.2750804847231616
-* Report for MADneSs activity on Mon May 28 10:48:49 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_SPS],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:48:49 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_WEKA_ISOLATIONFOREST],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:48:49 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_ELKI_CLUSTERING],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:48:49 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_ELKI_KNN],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:48:49 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_ELKI_KNN SLIDING_SPS],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:54:24 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_SPS],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 10:54:25 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-1,[SLIDING_WEKA_ISOLATIONFOREST],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 11:05:09 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_SPS],10,FIFONormal,FILTERED 10 - ALL,0.9364275802320874,4.875,849.4375,14.9375,42.9375,0.01736600578932628,0.3656769272394272,0.10180809675248932,0.13315603670356707,0.11062116201454655,0.9364275802320874,0.1426318827861026,0.35010767509804813
-* Report for MADneSs activity on Mon May 28 11:05:43 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_WEKA_ISOLATIONFOREST],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 11:08:01 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_ELKI_CLUSTERING],10,FIFONormal,FILTERED 10 - ALL,0.8963759205099928,9.625,755.6875,48.4375,37.875,0.06252374663408132,0.22385574151500173,0.200206466502658,0.1667920186852412,0.1786758088915095,0.8963759205099928,0.13762937700746988,0.5903674879183203
-* Report for MADneSs activity on Mon May 28 11:11:05 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_ELKI_KNN],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 11:13:59 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[ELKI_KMEANS],,,BEST 3 -  HALF,1.0,26.9375,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,0.0,0.7196268771259631
-* Report for MADneSs activity on Mon May 28 11:16:47 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_SPS],10,FIFONormal,FILTERED 10 - ALL,0.9364275802320874,4.875,849.4375,14.9375,42.9375,0.01736600578932628,0.3656769272394272,0.10180809675248932,0.13315603670356707,0.11062116201454655,0.9364275802320874,0.1426318827861026,0.35010767509804813
-* Report for MADneSs activity on Mon May 28 11:17:20 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_WEKA_ISOLATIONFOREST],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 11:19:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_ELKI_CLUSTERING],10,FIFONormal,FILTERED 10 - ALL,0.8963759205099928,9.625,755.6875,48.4375,37.875,0.06252374663408132,0.22385574151500173,0.200206466502658,0.1667920186852412,0.1786758088915095,0.8963759205099928,0.13762937700746988,0.6607642341937765
-* Report for MADneSs activity on Mon May 28 11:23:02 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_ELKI_KNN],10,FIFONormal,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Mon May 28 11:28:31 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[SLIDING_ELKI_KNN SLIDING_SPS],10,FIFONormal,FILTERED 10 - ALL,0.9364275802320874,4.875,849.4375,14.9375,42.9375,0.01736600578932628,0.3656769272394272,0.10180809675248932,0.13315603670356707,0.11062116201454655,0.9364275802320874,0.1426318827861026,0.35010767509804813
-* Report for MADneSs activity on Mon May 28 11:30:23 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-20,[ELKI_KMEANS],,,BEST 3 -  HALF,0.6981320256741318,103.29411764705883,0.0,42.05882352941177,0.0,1.0,0.6981320256741318,1.0,0.8077425839346453,0.9016002567741196,0.6981320256741318,0.0,0.2759108938181459
-* Report for MADneSs activity on Tue May 29 10:55:24 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-2,[ELKI_FASTABOD],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Tue May 29 11:53:51 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-2,[ELKI_FASTABOD],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Tue May 29 11:57:26 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0-2,[ELKI_FASTABOD],,,BEST 1 - 1,0.9311111111111111,15.666666666666666,0.0,1.0,0.0,0.6666666666666666,0.9311111111111111,1.0,0.9628942486085342,0.9844246662428481,0.9311111111111111,0.0,0.0
-* Report for MADneSs activity on Tue May 29 14:07:58 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,1.0
-* Report for MADneSs activity on Tue May 29 14:23:14 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,1.0
-* Report for MADneSs activity on Tue May 29 14:37:09 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,1.0
-* Report for MADneSs activity on Tue May 29 14:38:00 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,1.0
-* Report for MADneSs activity on Tue May 29 14:52:30 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,0.0
-* Report for MADneSs activity on Tue May 29 15:26:56 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,0.0
-* Report for MADneSs activity on Tue May 29 15:27:58 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,0.0
-* Report for MADneSs activity on Tue May 29 15:38:13 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.6026200873362445,138.0,0.0,91.0,0.0,1.0,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.6026200873362445,0.0,0.0
-* Report for MADneSs activity on Tue May 29 15:42:10 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.9048117154811716,138.0,727.0,91.0,0.0,0.11124694376528117,0.6026200873362445,1.0,0.7520435967302452,0.8834827144686299,0.9048117154811716,0.7318336179546007,0.0
-* Report for MADneSs activity on Tue May 29 15:59:09 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.863,92.0,771.0,91.0,46.0,0.10556844547563805,0.5027322404371585,0.6666666666666666,0.573208722741433,0.6258503401360545,0.863,0.5004901041312431,0.0
-* Report for MADneSs activity on Tue May 29 16:05:56 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.863,92.0,771.0,91.0,46.0,0.10556844547563805,0.5027322404371585,0.6666666666666666,0.573208722741433,0.6258503401360545,0.863,0.5004901041312431,0.0
-* Report for MADneSs activity on Tue May 29 16:10:31 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_FASTABOD],,,BEST 1 - 1,0.862,0.0,862.0,0.0,138.0,0.0,0.0,0.0,0.0,0.0,0.862,0.0,0.0
-* Report for MADneSs activity on Tue May 29 16:37:42 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[ELKI_ODIN],,,BEST 1 - 1,0.928,92.0,836.0,26.0,46.0,0.030162412993039442,0.7796610169491526,0.6666666666666666,0.71875,0.6865671641791045,0.928,0.6804859930520254,0.0
-* Report for MADneSs activity on Wed May 30 14:59:10 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 15:05:25 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.937,75.0,862.0,0.0,63.0,0.0,1.0,0.5434782608695652,0.704225352112676,0.5980861244019139,0.937,0.7116621282068157,1.0
-* Report for MADneSs activity on Wed May 30 15:06:09 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.937,75.0,862.0,0.0,63.0,0.0,1.0,0.5434782608695652,0.704225352112676,0.5980861244019139,0.937,0.7116621282068157,1.0
-* Report for MADneSs activity on Wed May 30 15:07:12 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.937,75.0,862.0,0.0,63.0,0.0,1.0,0.5434782608695652,0.704225352112676,0.5980861244019139,0.937,0.7116621282068157,1.0
-* Report for MADneSs activity on Wed May 30 15:08:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:09:51 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:10:33 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.928,80.0,848.0,0.0,72.0,0.0,1.0,0.5298343685300207,0.6914390938781182,0.5843609022556391,0.928,0.6983595397000064,1.0
-* Report for MADneSs activity on Wed May 30 15:11:47 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:12:26 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:14:57 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 15:15:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 15:18:19 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 15:20:23 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 15:21:36 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:23:16 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.8970000000000001,49.0,848.0,0.0,103.0,0.0,0.6666666666666666,0.30809523809523814,0.4214277759215948,0.3452316890881913,0.8970000000000001,0.4317775133262973,1.0
-* Report for MADneSs activity on Wed May 30 15:23:47 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,BEST 1 - 1,0.8988333333333333,48.5,850.3333333333334,0.16666666666666666,101.0,1.96078431372549E-4,0.8266666666666667,0.31978531020735584,0.4465447517978298,0.3600806241150077,0.8988333333333333,0.47821909145911845,1.0
-* Report for MADneSs activity on Wed May 30 15:25:12 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,BEST 1 - 1,0.8988333333333333,48.5,850.3333333333334,0.16666666666666666,101.0,1.96078431372549E-4,0.8266666666666667,0.31978531020735584,0.4465447517978298,0.3600806241150077,0.8988333333333333,0.47821909145911845,1.0
-* Report for MADneSs activity on Wed May 30 15:39:37 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 15:43:18 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 15:46:01 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 15:48:21 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,BEST 1 - 1,0.9245,74.0,850.5,0.0,75.5,0.0,1.0,0.494141801552859,0.6575147088078122,0.5483390080264546,0.9245,0.6716913296002174,0.494141801552859
-* Report for MADneSs activity on Wed May 30 15:50:54 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 5,[HBOS],,,BEST 1 - 1,0.9245,74.0,850.5,0.0,75.5,0.0,1.0,0.494141801552859,0.6575147088078122,0.5483390080264546,0.9245,0.6716913296002174,0.494141801552859
-* Report for MADneSs activity on Wed May 30 15:53:30 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.926,78.0,848.0,0.0,74.0,0.0,1.0,0.5153416149068324,0.6792697817088061,0.5703193882141251,0.926,0.6880995592222575,0.5153416149068324
-* Report for MADneSs activity on Wed May 30 15:53:40 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[ELKI_KMEANS],,,BEST 1 - 1,0.928,80.0,848.0,0.0,72.0,0.0,1.0,0.5298343685300207,0.6914390938781182,0.5843609022556391,0.928,0.6983595397000064,0.7922862362005727
-* Report for MADneSs activity on Wed May 30 15:57:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[ELKI_FASTABOD],,,BEST 1 - 1,0.847,0.0,847.0,1.0,152.0,0.0011934389140271493,0.0,0.0,0.0,0.0,0.847,-0.011135640103406499,0.3297990697611429
-* Report for MADneSs activity on Wed May 30 15:58:09 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[ELKI_SVM],,,BEST 1 - 1,0.928,80.0,848.0,0.0,72.0,0.0,1.0,0.5298343685300207,0.6914390938781182,0.5843609022556391,0.928,0.6983595397000064,0.5298343685300207
-* Report for MADneSs activity on Wed May 30 16:08:25 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.9245,148.0,1701.0,0.0,151.0,0.0,1.0,0.492731753014011,0.6564170288715654,0.547013601552142,0.9245,0.6707806301332768,0.492731753014011
-* Report for MADneSs activity on Wed May 30 16:09:55 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.492731753014011,148.0,1701.0,0.0,151.0,0.0,1.0,0.492731753014011,0.6564170288715654,0.547013601552142,0.9245,0.6707806301332768,0.492731753014011
-* Report for MADneSs activity on Wed May 30 16:13:13 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0 - 2,[HBOS],,,BEST 1 - 1,0.492731753014011,148.0,1701.0,0.0,151.0,0.0,1.0,0.492731753014011,0.6564170288715654,0.547013601552142,0.9245,0.6707806301332768,0.492731753014011
-* Report for MADneSs activity on Wed May 30 16:14:07 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.6086956521739131,84.0,862.0,0.0,54.0,0.0,1.0,0.6086956521739131,0.7567567567567568,0.6603773584905661,0.946,0.7568433439962549,0.6086956521739131
-* Report for MADneSs activity on Wed May 30 16:14:48 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.6086956521739131,84.0,862.0,0.0,54.0,0.0,1.0,0.6086956521739131,0.7567567567567568,0.6603773584905661,0.946,0.7568433439962549,0.6086956521739131
-* Report for MADneSs activity on Wed May 30 16:16:25 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.6086956521739131,84.0,862.0,0.0,54.0,0.0,1.0,0.6086956521739131,0.7567567567567568,0.6603773584905661,0.946,0.7568433439962549,0.6086956521739131
-* Report for MADneSs activity on Wed May 30 16:17:43 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 - 1,0.6086956521739131,84.0,862.0,0.0,54.0,0.0,1.0,0.6086956521739131,0.7567567567567568,0.6603773584905661,0.946,0.7568433439962549,0.6086956521739131
-* Report for MADneSs activity on Wed May 30 16:18:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 1 -  HALF,1.0,84.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,0.0,0.6086956521739131
-* Report for MADneSs activity on Wed May 30 16:21:15 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 30 -  1,1.0,138.0,228.0,634.0,0.0,0.7354988399071926,0.17875647668393782,1.0,0.3032967032967033,0.5211480362537765,0.366,0.2174426256671043,0.3731861440159943
-* Report for MADneSs activity on Wed May 30 16:30:35 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 16:36:00 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 16:36:22 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 16:37:12 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 16:43:59 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-* Report for MADneSs activity on Wed May 30 16:52:52 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 16:54:25 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Wed May 30 16:59:46 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Thu May 31 10:03:02 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Thu May 31 10:07:10 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
-* Report for MADneSs activity on Thu May 31 10:18:26 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 3 - ALL,1.0,138.0,0.0,862.0,0.0,1.0,0.138,1.0,0.2425307557117751,0.4445876288659794,0.138,0.0,0.9883330306015022
-* Report for MADneSs activity on Thu May 31 10:20:57 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 3 - ALL,0.6569213216846829,135.0,738.0,124.0,3.0,0.14385150812064965,0.5212355212355212,0.9782608695652174,0.6801007556675063,0.8323057953144267,0.873,0.6569213216846829,0.9883330306015022
-* Report for MADneSs activity on Thu May 31 10:22:47 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 3 - ALL,0.898,110.0,788.0,74.0,28.0,0.08584686774941995,0.5978260869565217,0.7971014492753623,0.6832298136645962,0.747282608695652,0.898,0.6330882630719251,0.9883330306015022
-* Report for MADneSs activity on Thu May 31 10:27:50 CEST 2018
-dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
-iscx_synthetic,0,[HBOS],,,BEST 3 -  HALF,0.985,126.0,859.0,3.0,12.0,0.0034802784222737818,0.9767441860465116,0.9130434782608695,0.9438202247191011,0.9251101321585903,0.985,0.9358842192087895,0.3913043478260869
+* Report for MADneSs activity on Mon Jun 04 12:08:48 CEST 2018
+dataset,runs,algorithm,window_size,window_policy,setup,metric_score,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],20,FIFONormal,BEST 30 -  HALF,0.16550586015685842,94.0,484.0,364.0,58.0,0.4291149764831865,0.24513111101492643,0.6331297446514838,0.33762542149847846,0.4553359981902882,0.578,0.16550586015685842,0.35767435685240717
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],20,FIFO,BEST 3 -  HALF,0.25022961873107114,91.33333333333333,616.6666666666666,231.33333333333334,60.666666666666664,0.2729956400282762,0.28197158199547223,0.5987232574189095,0.38334748459583307,0.4888346796983975,0.7079999999999999,0.25022961873107114,0.46346879497026805
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],50,FIFONormal,BEST 3 - ALL,0.2636328113062308,73.0,579.0,269.0,79.0,0.3125815345770648,0.4906675036618539,0.49887163561076603,0.3519909550224358,0.3650801992258712,0.652,0.2636328113062308,0.7500654042727734
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],50,FIFO,BEST 3 -  HALF,0.360327065278045,95.0,689.0,159.0,57.0,0.18763133720380887,0.3734727332694942,0.6249965493443754,0.46742198268741547,0.5506687307314188,0.7840000000000001,0.360327065278045,0.4193526494079807
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],100,FIFONormal,BEST 3 - ALL,0.2187393296283465,67.0,578.3333333333334,269.6666666666667,85.0,0.31334887997676314,0.44745762711864406,0.4610144927536232,0.30707556894440774,0.3244468753467318,0.6453333333333333,0.2187393296283465,0.6541849930091955
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],100,FIFO,BEST 3 -  HALF,0.4076346408464602,92.0,727.3333333333334,120.66666666666667,60.0,0.14207220046683675,0.4347270302145403,0.6066183574879228,0.5044242490768059,0.5603844028700166,0.8193333333333332,0.4076346408464602,0.22703318666500225
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],20,FIFONormal,BEST 3 - ALL,0.1782360160993718,14.666666666666666,885.0,64.33333333333333,36.0,0.06780871566946071,0.18435606060606058,0.2869466627230602,0.22397923276788656,0.2577275870320824,0.8996666666666666,0.1782360160993718,0.622212076828634
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],20,FIFO,BEST 3 -  HALF,0.20771290667426276,31.333333333333332,740.6666666666666,208.66666666666666,19.333333333333332,0.219940561739985,0.13219658805063775,0.6251446421436614,0.2182396633740357,0.35808118146392903,0.7719999999999999,0.20771290667426276,0.2888884949949905
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],50,FIFONormal,BEST 3 - ALL,0.2730890781124866,17.0,908.3333333333334,41.0,33.666666666666664,0.04317216549095263,0.29356725146198825,0.3330998303211445,0.3112812314923766,0.32379249472228283,0.9253333333333335,0.2730890781124866,0.4507151223143433
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],50,FIFO,BEST 10 -  1,0.22575929930414865,45.666666666666664,572.6666666666666,376.6666666666667,5.0,0.3969255286776469,0.10865712287106899,0.9094838545639461,0.19411132602621964,0.36756304326847333,0.6183333333333333,0.22575929930414865,0.13286698562616614
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],100,FIFONormal,BEST 3 - ALL,0.26147849338599255,16.0,910.3333333333334,39.0,34.666666666666664,0.04107021829645142,0.28947368421052627,0.3118043556095207,0.29989439618463637,0.3068406309892378,0.9263333333333333,0.26147849338599255,0.46581021970949804
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],100,FIFO,BEST 3 -  HALF,0.23943700713357588,32.0,761.3333333333334,188.0,18.666666666666668,0.19825642227148652,0.15449064967768514,0.6405247072131676,0.24820131665323034,0.3912985939108908,0.7933333333333333,0.23943700713357588,0.10113587558953953
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],20,FIFONormal,BEST 3 - ALL,0.19508654686019186,13.333333333333334,900.6666666666666,48.0,38.0,0.05055279703448268,0.22378004313488184,0.26142935079105295,0.2367930579136012,0.24970882832518052,0.914,0.19508654686019186,0.431994933581571
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],20,FIFO,BEST 3 -  HALF,0.13696319180303967,27.333333333333332,705.6666666666666,243.0,24.0,0.25620838367859766,0.10061172385620915,0.5331969448990725,0.16923653096584726,0.2865426279306951,0.733,0.13696319180303967,0.10156497634473494
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],50,FIFONormal,BEST 3 - ALL,0.20359703663756365,14.0,900.3333333333334,48.333333333333336,37.333333333333336,0.050904414474707706,0.22799422799422797,0.27459951396121607,0.2445771732267085,0.26046409557633904,0.9143333333333334,0.20359703663756365,0.3036681573705129
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],50,FIFO,BEST 3 -  HALF,0.1040556530195239,20.666666666666668,751.3333333333334,197.33333333333334,30.666666666666668,0.20801933501779868,0.0942074104744548,0.4050786093339285,0.15253421587892577,0.24318473758975942,0.7719999999999999,0.1040556530195239,0.0
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],100,FIFONormal,BEST 3 - ALL,0.2523208684980773,16.0,907.0,41.666666666666664,35.333333333333336,0.04391303880325889,0.2720502031862481,0.3171527054505778,0.2904766599925106,0.3053184242657927,0.923,0.2523208684980773,0.252098453985759
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],100,FIFO,BEST 3 -  HALF,0.08522412855995581,16.333333333333332,787.6666666666666,161.0,35.0,0.1697554290133354,0.09156626506024097,0.31802063185041907,0.14212118064264948,0.2126269100346867,0.8039999999999999,0.08522412855995581,0.2666491206478726
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_collective,0-2,[SLIDING_SPS],10,FIFO,BEST 3 -  HALF,0.1864170526671273,91.33333333333333,554.6666666666666,293.3333333333333,60.666666666666664,0.34630378115015414,0.23664409479754744,0.5987232574189095,0.33919381269024435,0.458403922746871,0.646,0.1864170526671273,0.2587186046075714
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_contextual,0-2,[SLIDING_SPS],10,FIFO,BEST 3 -  HALF,0.20727678160271593,33.0,723.3333333333334,226.0,17.666666666666668,0.23816553016526787,0.12795236150898573,0.6515875610350929,0.2138760516648892,0.3582383899918162,0.7563333333333334,0.20727678160271593,0.2653603452294548
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[SLIDING_SPS],10,FIFO,BEST 3 -  HALF,0.15085002005437273,32.666666666666664,650.6666666666666,298.0,18.666666666666668,0.3141615497980696,0.09840889871250402,0.6367405644001388,0.170401720922283,0.30381684551771815,0.6833333333333332,0.15085002005437273,0.36716991675555893
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 10 -  HALF,0.03394143433215308,0.3333333333333333,92.0,2.0,5.666666666666667,0.02127659574468085,0.08333333333333333,0.05555555555555555,0.06666666666666667,0.059523809523809514,0.9233333333333333,0.03394143433215308,0.3764422194035177
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 10 -  HALF,0.03394143433215308,0.3333333333333333,92.0,2.0,5.666666666666667,0.02127659574468085,0.08333333333333333,0.05555555555555555,0.06666666666666667,0.059523809523809514,0.9233333333333333,0.03394143433215308,0.3764422194035177
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 10 -  HALF,0.12413786394020626,0.3333333333333333,93.66666666666667,0.3333333333333333,5.666666666666667,0.0035460992907801418,0.3333333333333333,0.05555555555555555,0.09523809523809523,0.06666666666666665,0.94,0.12413786394020626,0.3633946422378918
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.03619718758305888,1.0,84.66666666666667,9.333333333333334,5.0,0.09929078014184396,0.07142857142857142,0.16666666666666666,0.09999999999999999,0.13157894736842105,0.8566666666666666,0.03619718758305888,0.6220247933884288
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.03619718758305888,1.0,84.66666666666667,9.333333333333334,5.0,0.09929078014184396,0.07142857142857142,0.16666666666666666,0.09999999999999999,0.13157894736842105,0.8566666666666666,0.03619718758305888,0.6220247933884288
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.04580057397519224,0.3333333333333333,89.66666666666667,4.333333333333333,5.666666666666667,0.046099290780141834,0.16666666666666666,0.05555555555555555,0.08333333333333333,0.0641025641025641,0.9,0.04580057397519224,0.31275167238945134
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.1718598739743594,1.6666666666666667,85.66666666666667,8.333333333333334,4.333333333333333,0.08865248226950355,0.21203703703703702,0.27777777777777773,0.22626262626262625,0.24878091257401602,0.8733333333333334,0.1718598739743594,0.31746031746031744
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.23857069052384441,3.6666666666666665,177.33333333333334,12.666666666666666,6.333333333333333,0.06677057471800901,0.22588522588522586,0.37264957264957266,0.2739297739297739,0.32200656795076,0.9050000000000001,0.23857069052384441,0.42528490028490024
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,null,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.23857069052384441,3.6666666666666665,177.33333333333334,12.666666666666666,6.333333333333333,0.06677057471800901,0.22588522588522586,0.37264957264957266,0.2739297739297739,0.32200656795076,0.9050000000000001,0.23857069052384441,0.42528490028490024
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.23857069052384441,3.6666666666666665,177.33333333333334,12.666666666666666,6.333333333333333,0.06677057471800901,0.22588522588522586,0.37264957264957266,0.2739297739297739,0.32200656795076,0.9050000000000001,0.23857069052384441,0.42528490028490024
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.4516612430004827,5.333333333333333,183.0,7.0,4.666666666666667,0.036963210617778824,0.43201754385964913,0.5504273504273504,0.4708167008307261,0.5119850058463443,0.9416666666666668,0.4516612430004827,0.0
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.39745882603019794,5.333333333333333,179.33333333333334,10.666666666666666,4.666666666666667,0.05633946084509289,0.3619047619047619,0.5504273504273504,0.4115942028985507,0.47651386530843237,0.9233333333333333,0.39745882603019794,0.0
+,True Positives,True Negatives,False Positives,False Negatives,False Positive Rate,Precision,Recall,F-Measure,FScore(2.0),Accuracy,MatthewsCorrelationCoefficient,AUC
+iscx_synthetic_point,0-2,[ELKI_ODIN],,,BEST 1 - 1,0.39745882603019794,5.333333333333333,179.33333333333334,10.666666666666666,4.666666666666667,0.05633946084509289,0.3619047619047619,0.5504273504273504,0.4115942028985507,0.47651386530843237,0.9233333333333333,0.39745882603019794,0.0

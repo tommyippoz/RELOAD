@@ -3,12 +3,12 @@
  */
 package ippoz.madness.detector.algorithm;
 
-import java.util.List;
-
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+
+import java.util.List;
 
 // TODO: Auto-generated Javadoc
 /**
