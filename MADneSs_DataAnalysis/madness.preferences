@@ -16,7 +16,7 @@ DATASETS_FOLDER = ../../git_data/MLAD/datasets
 * MADneSs Execution.
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
-FILTERING_FLAG = 0
+FILTERING_FLAG = 1
 
 * Perform Training (0 = NO, 1 = YES).
 TRAIN_FLAG = 1
@@ -58,10 +58,10 @@ PEARSON_TOLERANCE = 0.9
 PEARSON_NUPLES_TOLERANCE = 0.95
 
 * Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
-SLIDING_WINDOW_POLICY = FIFO
+SLIDING_WINDOW_POLICY = FIFO, FIFO_NORMAL
 
 * Size of the sliding window buffer
-SLIDING_WINDOW_SIZE = 10
+SLIDING_WINDOW_SIZE = 10, 20, 50, 100
 
 
 * Path Setup.

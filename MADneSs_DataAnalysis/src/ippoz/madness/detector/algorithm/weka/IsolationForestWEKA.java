@@ -51,10 +51,12 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			if(new File(item).exists()){
 				file = new FileInputStream(item);
 	            in = new ObjectInputStream(file);
-	            isf = (CustomIsolationForest)in.readObject();
+	            synchronized(CustomIsolationForest.class){
+	            	isf = (CustomIsolationForest)in.readObject();
+	            }
 				in.close();
 	            file.close();
-			} else AppLogger.logError(getClass(), "SerializeError", "Unable to Serialize: missing '" + item + "' file");
+			} else AppLogger.logError(getClass(), "SerializeError", "Unable to Deserialize: missing '" + item + "' file");
 		} catch (IOException | ClassNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Error while deserializing Isolation Forest");
 		}
