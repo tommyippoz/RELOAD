@@ -103,7 +103,7 @@ public class MultipleDataSeries extends DataSeries {
 	public String toCompactString() {
 		String string = "";
 		for(DataSeries ds : dsList){
-			string = string + ds.getName().substring(0, 3) + ds.getDataCategory().name().substring(0, 1) + ";";
+			string = string + ds.getName() + ds.getDataCategory().name().substring(0, 1) + ";";
 		}
 		return string.substring(0, string.length()-1);
 	}

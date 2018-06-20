@@ -145,12 +145,14 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	
 	public static List<DataSeries> simpleCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
 		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		LinkedList<DataSeries> groupInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));
 			}
+			groupInd.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
 		}
-		simpleInd.add(new MultipleDataSeries(simpleInd));
+		simpleInd.add(new MultipleDataSeries(groupInd));
 		return simpleInd;
 	}
 	
@@ -169,14 +171,8 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<List<String>> list) {
 		DataSeries firstDS, secondDS;
 		List<DataSeries> outList = new LinkedList<DataSeries>();
-		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
 		List<DataSeries> complexInd = new LinkedList<DataSeries>();
-		for(Indicator ind : indicators){
-			for(DataCategory dCat : dataTypes){
-				simpleInd.add(new IndicatorDataSeries(ind, dCat));
-			}
-		}
-		simpleInd.add(new MultipleDataSeries(simpleInd));
+		List<DataSeries> simpleInd = simpleCombinations(indicators, dataTypes);
 		for(List<String> lEntry : list){
 			if(lEntry != null && lEntry.size() == 2){
 				firstDS = DataSeries.fromList(simpleInd, lEntry.get(0).trim());
