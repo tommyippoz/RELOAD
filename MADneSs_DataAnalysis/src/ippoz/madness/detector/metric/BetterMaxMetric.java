@@ -11,8 +11,8 @@ package ippoz.madness.detector.metric;
  */
 public abstract class BetterMaxMetric extends ScoringMetric {
 
-	public BetterMaxMetric(boolean validAfter) {
-		super(validAfter);
+	public BetterMaxMetric(MetricType mType, boolean validAfter) {
+		super(mType, validAfter);
 	}
 
 	/* (non-Javadoc)

@@ -19,6 +19,12 @@ import java.util.List;
  */
 public abstract class Metric {
 	
+	private MetricType mType;
+	
+	public Metric(MetricType mType){
+		this.mType = mType;
+	}
+	
 	/**
 	 * Evaluates the experiment using the chosen metric.
 	 *
@@ -109,5 +115,9 @@ public abstract class Metric {
 	 * @return the metric name
 	 */
 	public abstract String getMetricName();
+
+	public MetricType getMetricType(){
+		return mType;
+	}
 
 }

@@ -18,7 +18,7 @@ import java.util.List;
 public class Custom_Metric extends BetterMaxMetric {
 
 	public Custom_Metric(boolean validAfter) {
-		super(validAfter);
+		super(null, validAfter);
 	}
 
 	/* (non-Javadoc)

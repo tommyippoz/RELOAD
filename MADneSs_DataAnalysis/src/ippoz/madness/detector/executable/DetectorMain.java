@@ -34,7 +34,7 @@ public class DetectorMain {
 	
 	private static final String DEFAULT_REPORT_FILE = "madnessreport.csv";
 	
-	private static final String DEFAULT_PREF_FILE = "madness.preferences";
+	public static final String DEFAULT_PREF_FILE = "madness.preferences";
 	
 	/**
 	 * The main method.
@@ -74,7 +74,20 @@ public class DetectorMain {
 		}
 	}
 	
-	private static List<SlidingPolicy> readSlidingPolicies(InputManager iManager) {
+	public static int getMADneSsIterations(InputManager iManager){
+		int count = 0;
+		for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
+			if(hasSliding(aList)){
+				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
+			} else {
+				count++;
+			}
+		}
+		count = count*readLoaders(iManager).size();
+		return count;
+	}
+	
+	public static List<SlidingPolicy> readSlidingPolicies(InputManager iManager) {
 		List<SlidingPolicy> wList = new LinkedList<SlidingPolicy>();
 		String wPref = iManager.getSlidingPolicies();
 		if(wPref != null && wPref.trim().length() > 0){
@@ -89,7 +102,7 @@ public class DetectorMain {
 		return wList;
 	}
 
-	private static List<Integer> readWindowSizes(InputManager iManager) {
+	public static List<Integer> readWindowSizes(InputManager iManager) {
 		List<Integer> wList = new LinkedList<Integer>();
 		String wPref = iManager.getSlidingWindowSizes();
 		if(wPref != null && wPref.trim().length() > 0){
@@ -103,7 +116,7 @@ public class DetectorMain {
 		return wList;
 	}
 
-	private static List<PreferencesManager> readLoaders(InputManager iManager) {
+	public static List<PreferencesManager> readLoaders(InputManager iManager) {
 		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
 		String lPref = iManager.getLoaders();
 		PreferencesManager pManager;
@@ -129,7 +142,7 @@ public class DetectorMain {
 		return lList;
 	}
 	
-	private static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
+	public static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");
 		List<List<AlgorithmType>> alList = new LinkedList<List<AlgorithmType>>();
 		BufferedReader reader;
@@ -170,7 +183,7 @@ public class DetectorMain {
 		return alList;
 	}
 
-	private static boolean hasSliding(List<AlgorithmType> aList) {
+	public static boolean hasSliding(List<AlgorithmType> aList) {
 		for(AlgorithmType at : aList){
 			if(at.toString().toUpperCase().contains("SLIDING"))
 				return true;
@@ -178,7 +191,7 @@ public class DetectorMain {
 		return false;
 	}
 
-	private static void runMADneSs(DetectionManager dManager){
+	public static void runMADneSs(DetectionManager dManager){
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");

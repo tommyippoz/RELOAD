@@ -17,7 +17,7 @@ import java.util.List;
 public class Recall_Metric extends BetterMaxMetric {
 
 	public Recall_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.RECALL, validAfter);
 	}
 
 	/* (non-Javadoc)

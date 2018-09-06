@@ -20,6 +20,7 @@ import ippoz.madness.detector.metric.FScore_Metric;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Matthews_Coefficient;
 import ippoz.madness.detector.metric.Metric;
+import ippoz.madness.detector.metric.MetricType;
 import ippoz.madness.detector.metric.Precision_Metric;
 import ippoz.madness.detector.metric.Recall_Metric;
 import ippoz.madness.detector.metric.TN_Metric;
@@ -53,10 +54,10 @@ public class InputManager {
 	private static final String DEFAULT_ALGORITHM_PREF_FILE = "algorithmPreferences.preferences";
 	
 	/** The Constant LOADER_TYPE. */
-	private static final String LOADERS = "LOADERS";
+	public static final String LOADERS = "LOADERS";
 	
 	/** The Constant CONSIDERED_LAYERS. */
-	private static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
+	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
 	/** The Constant INV_DOMAIN. */
 	public static final String DATA_SERIES_DOMAIN = "DATA_SERIES_DOMAIN";
@@ -73,23 +74,24 @@ public class InputManager {
 	/** The Constant OUTPUT_FOLDER. */
 	public static final String LOADER_FOLDER = "LOADER_FOLDER";
 	
+	/** The Constant DATASETS_FOLDER. */
 	public static final String DATASETS_FOLDER = "DATASETS_FOLDER";
 	
 	/** The Constant METRIC_TYPE. */
-	private static final String METRIC = "METRIC"; 
+	public static final String METRIC = "METRIC"; 
 	
 	/** The Constant METRIC_TYPE. */
-	private static final String METRIC_TYPE = "METRIC_TYPE"; 
+	public static final String METRIC_TYPE = "METRIC_TYPE"; 
 	
 	/** The Constant FILTERING_TRESHOLD. */
-	private static final String FILTERING_TRESHOLD = "FILTERING_TRESHOLD"; 
+	public static final String FILTERING_TRESHOLD = "FILTERING_TRESHOLD"; 
 	
-	private static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
+	public static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
 	
 	/** The Constant REPUTATION_TYPE. */
-	private static final String REPUTATION_TYPE = "REPUTATION";
+	public static final String REPUTATION_TYPE = "REPUTATION";
 	
-	private static final String VALID_AFTER_INJECTION = "VALID_AFTER_INJECTION";
+	public static final String VALID_AFTER_INJECTION = "VALID_AFTER_INJECTION";
 	
 	/** The Constant CONF_FILE_FOLDER. */
 	public static final String CONF_FILE_FOLDER = "CONF_FILE_FOLDER";
@@ -104,13 +106,13 @@ public class InputManager {
 	public static final String SETUP_FILE_FOLDER = "SETUP_FILE_FOLDER";
 	
 	/** The Constant TRAIN_NEEDED_FLAG. */
-	private static final String TRAIN_NEEDED_FLAG = "TRAIN_FLAG";
+	public static final String TRAIN_NEEDED_FLAG = "TRAIN_FLAG";
 	
 	/** The Constant FILTERING_NEEDED_FLAG. */
-	private static final String FILTERING_NEEDED_FLAG = "FILTERING_FLAG";
+	public static final String FILTERING_NEEDED_FLAG = "FILTERING_FLAG";
 	
 	/** The Constant DETECTION_PREFERENCES_FILE. */
-	private static final String DETECTION_PREFERENCES_FILE = "DETECTION_PREFERENCES_FILE";
+	public static final String DETECTION_PREFERENCES_FILE = "DETECTION_PREFERENCES_FILE";
 	
 	/** The Constant DM_ANOMALY_TRESHOLD. */
 	private static final String DM_ANOMALY_TRESHOLD = "ANOMALY_TRESHOLD";
@@ -121,13 +123,13 @@ public class InputManager {
 	/** The Constant DM_CONVERGENCE_TIME. */
 	private static final String DM_CONVERGENCE_TIME = "CONVERGENCE_TIME";
 
-	private static final String PEARSON_SIMPLE_THRESHOLD = "PEARSON_TOLERANCE";
+	public static final String PEARSON_SIMPLE_THRESHOLD = "PEARSON_TOLERANCE";
 	
-	private static final String PEARSON_COMPLEX_THRESHOLD = "PEARSON_NUPLES_TOLERANCE";
+	public static final String PEARSON_COMPLEX_THRESHOLD = "PEARSON_NUPLES_TOLERANCE";
 	
-	private static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
+	public static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
 	
-	private static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
+	public static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -148,6 +150,13 @@ public class InputManager {
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while reading preferences");
 		}
+	}
+	
+	public boolean updatePreference(String tag, String newValue){
+		if(tag != null && prefManager.hasPreference(tag)){
+			prefManager.updatePreference(tag, newValue);
+			return true;
+		} else return false;
 	}
 
 	public String getLoaders() {
@@ -309,6 +318,10 @@ public class InputManager {
 					return null;
 				}
 		}
+	}
+	
+	public MetricType getMetricType() {
+		return getMetric(prefManager.getPreference(METRIC)).getMetricType();
 	}
 	
 	/**
@@ -799,5 +812,9 @@ public class InputManager {
 			return "20";
 		}
 	}
+
+	public String getDetectionPreferencesFile() {
+		return detectionManager.getFilename();
+	}	
 	
 }

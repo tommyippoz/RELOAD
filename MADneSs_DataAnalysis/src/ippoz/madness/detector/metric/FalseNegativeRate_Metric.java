@@ -18,7 +18,7 @@ import java.util.List;
 public class FalseNegativeRate_Metric extends BetterMinMetric {
 
 	public FalseNegativeRate_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.FNR, validAfter);
 	}
 
 	/* (non-Javadoc)

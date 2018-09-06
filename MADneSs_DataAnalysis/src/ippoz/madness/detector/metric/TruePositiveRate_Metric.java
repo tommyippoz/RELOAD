@@ -15,7 +15,7 @@ import java.util.List;
 public class TruePositiveRate_Metric extends BetterMaxMetric {
 
 	public TruePositiveRate_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.TPR, validAfter);
 	}
 
 	/* (non-Javadoc)

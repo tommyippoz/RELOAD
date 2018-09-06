@@ -18,7 +18,7 @@ public class AUC_Metric extends BetterMaxMetric {
 	private AlgorithmConfiguration conf; 
 
 	public AUC_Metric(boolean validAfter) {
-		super(validAfter);
+		super(null, validAfter);
 		// TODO Auto-generated constructor stub
 	}
 	

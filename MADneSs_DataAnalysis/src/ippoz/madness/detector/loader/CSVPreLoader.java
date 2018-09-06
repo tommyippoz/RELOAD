@@ -27,7 +27,7 @@ public class CSVPreLoader extends CSVLoader {
 	
 	private static final String FILTERING_CSV_FILE = "FILTERING_CSV_FILE";
 
-	private static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
+	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
 
 	private static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
 

@@ -22,7 +22,7 @@ public class FN_Metric extends ClassificationMetric {
 	 * @param absolute the absolute flag
 	 */
 	public FN_Metric(boolean absolute, boolean validAfter) {
-		super(absolute, validAfter);
+		super(MetricType.FN, absolute, validAfter);
 	}
 
 	/* (non-Javadoc)
