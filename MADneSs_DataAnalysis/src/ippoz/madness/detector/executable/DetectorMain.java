@@ -12,6 +12,7 @@ import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.manager.DetectionManager;
 import ippoz.madness.detector.manager.InputManager;
 import ippoz.madness.detector.metric.Metric;
+import ippoz.madness.detector.output.DetectorOutput;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -191,7 +192,8 @@ public class DetectorMain {
 		return false;
 	}
 
-	public static void runMADneSs(DetectionManager dManager){
+	public static DetectorOutput runMADneSs(DetectionManager dManager){
+		DetectorOutput dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
@@ -202,14 +204,16 @@ public class DetectorMain {
 				dManager.train();
 			} 
 			AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
-			report(dManager.getWritableTag(), dManager.evaluate(), dManager.getMetrics());
-		}
+			dOut = dManager.evaluate();
+			report(dOut);
+			AppLogger.logInfo(DetectorMain.class, "Done.");
+		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
 		dManager = null;
-		AppLogger.logInfo(DetectorMain.class, "Done.");
+		return dOut;
 	}
 
-	private static void report(String madnessInfo, String[] result, Metric[] metrics){
+	private static void report(DetectorOutput dOut){
 		File drFile = new File(DEFAULT_REPORT_FILE);
 		BufferedWriter writer;
 		try {
@@ -217,14 +221,14 @@ public class DetectorMain {
 				writer = new BufferedWriter(new FileWriter(drFile, false));
 				writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
 				writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
-				for(Metric met : metrics){
+				for(Metric met : dOut.getEvaluationMetrics()){
 					writer.write("," + met.getMetricName());
 				}
 				writer.write("\n");
 			} else {
 				writer = new BufferedWriter(new FileWriter(drFile, true));
 			}
-			writer.write(madnessInfo + "," + result[1] + "," + result[0] + "," + result[2] + "\n");
+			writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

@@ -32,6 +32,11 @@ public class TP_Metric extends ClassificationMetric {
 	public String getMetricName() {
 		return "True Positives";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "TP";
+	}
 
 	@Override
 	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {

@@ -39,5 +39,10 @@ public class Recall_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "Recall";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "R";
+	}
 
 }

@@ -1,2 +1,2 @@
 algorithm,knowledge,#checkers,avg_time(ms),avg_MatthewsCorrelationCoefficient,#top10,#top50,#top100,avg_MatthewsCorrelationCoefficient_top10,avg_MatthewsCorrelationCoefficient_top50,avg_MatthewsCorrelationCoefficient_top100,#conf
-WEKA_ISOLATIONFOREST,SINGLE,13.0,4671.0,0.21686152200259168,10.0,13.0,13.0,0.2636836537470045,0.21686152200259168,0.21686152200259168,24.0,
+ELKI_LOF,SINGLE,72.0,7852.319444444444,0.15630101032602856,10.0,50.0,72.0,0.4234705294383154,0.21492492211817396,0.15630101032602856,12.0,

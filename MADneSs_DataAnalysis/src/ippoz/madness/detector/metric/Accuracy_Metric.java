@@ -40,4 +40,9 @@ public class Accuracy_Metric extends BetterMaxMetric {
 		return "Accuracy";
 	}
 
+	@Override
+	public String getMetricShortName() {
+		return "ACC";
+	}
+
 }

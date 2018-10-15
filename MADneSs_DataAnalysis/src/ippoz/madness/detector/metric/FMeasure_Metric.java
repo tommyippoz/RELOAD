@@ -39,5 +39,10 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "F-Measure";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "F1";
+	}
 
 }

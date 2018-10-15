@@ -15,6 +15,7 @@ import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.dataseries.IndicatorDataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
@@ -181,16 +182,28 @@ public class TrainerManager extends TrainDataManager {
 	
 	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		List<DataSeries> finalDs = new LinkedList<DataSeries>();
+		List<DataSeries> allFeatures = new LinkedList<DataSeries>();
 		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, 0.9);
 		for(String dsString : selectedSeriesString){
 			for(DataSeries ds : all){
 				if(ds.toString().equals(dsString)) {
 					finalDs.add(ds);
+					if(ds instanceof IndicatorDataSeries){
+						boolean flag = false;
+						for(DataSeries dsall : allFeatures){
+							if(dsall.getName().equals(ds.getName())) {
+								flag = true;
+								break;
+							}
+						}
+						if(!flag)
+							allFeatures.add(ds);
+					}
 					break;
 				}
 			}
 		}
-		finalDs.add(new MultipleDataSeries(finalDs));
+		finalDs.add(new MultipleDataSeries(allFeatures));
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
 		return finalDs;
 	}
@@ -318,26 +331,28 @@ public class TrainerManager extends TrainDataManager {
 				trainer = (AlgorithmTrainer)tThread;
 				if(trainer.isValidTrain()){
 					count++;
-					scoreWriter.write(trainer.getSeriesDescription() + "§" + 
-							trainer.getAlgType() + "§" +
-							trainer.getReputationScore() + "§" + 
-							trainer.getMetricScore() + "§" +  
-							trainer.getBestConfiguration().toFileRow(false) + "\n");
-					statMap.get(trainer.getAlgType())[0] += 1.0;
-					statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
-					statMap.get(trainer.getAlgType())[2] += trainer.getMetricScore();
-					if(count <= 10)
-						statMap.get(trainer.getAlgType())[3] += 1.0;
-					if(count <= 50)
-						statMap.get(trainer.getAlgType())[4] += 1.0;
-					if(count <= 100)
-						statMap.get(trainer.getAlgType())[5] += 1.0;
-					if(count <= 10)
-						statMap.get(trainer.getAlgType())[6] += trainer.getMetricScore();
-					if(count <= 50)
-						statMap.get(trainer.getAlgType())[7] += trainer.getMetricScore();
-					if(count <= 100)
-						statMap.get(trainer.getAlgType())[8] += trainer.getMetricScore();
+					if(trainer.getBestConfiguration() != null) {
+						scoreWriter.write(trainer.getSeriesDescription() + "§" + 
+								trainer.getAlgType() + "§" +
+								trainer.getReputationScore() + "§" + 
+								trainer.getMetricScore() + "§" +  
+								trainer.getBestConfiguration().toFileRow(false) + "\n");
+						statMap.get(trainer.getAlgType())[0] += 1.0;
+						statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
+						statMap.get(trainer.getAlgType())[2] += trainer.getMetricScore();
+						if(count <= 10)
+							statMap.get(trainer.getAlgType())[3] += 1.0;
+						if(count <= 50)
+							statMap.get(trainer.getAlgType())[4] += 1.0;
+						if(count <= 100)
+							statMap.get(trainer.getAlgType())[5] += 1.0;
+						if(count <= 10)
+							statMap.get(trainer.getAlgType())[6] += trainer.getMetricScore();
+						if(count <= 50)
+							statMap.get(trainer.getAlgType())[7] += trainer.getMetricScore();
+						if(count <= 100)
+							statMap.get(trainer.getAlgType())[8] += trainer.getMetricScore();
+					}
 				}			
 			}
 			scoreWriter.close();

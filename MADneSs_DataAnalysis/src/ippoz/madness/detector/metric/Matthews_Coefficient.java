@@ -40,5 +40,10 @@ public class Matthews_Coefficient extends BetterMaxMetric {
 	public String getMetricName() {
 		return "MatthewsCorrelationCoefficient";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "MCC";
+	}
 
 }

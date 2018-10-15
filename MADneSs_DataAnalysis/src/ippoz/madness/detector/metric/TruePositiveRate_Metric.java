@@ -37,5 +37,10 @@ public class TruePositiveRate_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "True Positive Rate";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "TPR";
+	}
 
 }

@@ -39,5 +39,10 @@ public class Precision_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "Precision";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "P";
+	}
 
 }

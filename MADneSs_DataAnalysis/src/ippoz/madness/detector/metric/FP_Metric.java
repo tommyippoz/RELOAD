@@ -32,6 +32,11 @@ public class FP_Metric extends ClassificationMetric {
 	public String getMetricName() {
 		return "False Positives";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "FP";
+	}
 
 	@Override
 	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {

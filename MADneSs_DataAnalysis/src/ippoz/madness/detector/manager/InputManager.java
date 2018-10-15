@@ -815,6 +815,10 @@ public class InputManager {
 
 	public String getDetectionPreferencesFile() {
 		return detectionManager.getFilename();
+	}
+
+	public boolean filteringResultExists(String datasetName) {
+		return new File(getScoresFolder() + datasetName + "_filtered.csv").exists();
 	}	
 	
 }

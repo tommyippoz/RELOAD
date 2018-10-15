@@ -40,5 +40,10 @@ public class FalseNegativeRate_Metric extends BetterMinMetric {
 	public String getMetricName() {
 		return "False Negative Rate";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "FNR";
+	}
 
 }

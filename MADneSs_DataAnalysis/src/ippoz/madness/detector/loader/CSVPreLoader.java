@@ -140,8 +140,15 @@ public class CSVPreLoader extends CSVLoader {
 
 	@Override
 	public String getRuns() {
-		// TODO Auto-generated method stub
-		return null;
+		if(dataList != null){
+			if(dataList.size() == 1){
+				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) + "]";
+			} else {
+				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) 
+						+ "-" + dataList.get(dataList.size()-1).getDataTag().charAt(dataList.get(dataList.size()-1).getDataTag().length()-1) + "]";
+			}
+		}
+		else return null;
 	}
 	
 	

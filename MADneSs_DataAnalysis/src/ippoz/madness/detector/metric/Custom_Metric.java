@@ -40,5 +40,10 @@ public class Custom_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "Custom";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "Custom";
+	}
 
 }

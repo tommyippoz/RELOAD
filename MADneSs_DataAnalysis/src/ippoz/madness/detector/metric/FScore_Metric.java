@@ -48,5 +48,10 @@ public class FScore_Metric extends BetterMaxMetric {
 	public String getMetricName() {
 		return "FScore(" + beta + ")";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "F" + (int)beta;
+	}
 
 }

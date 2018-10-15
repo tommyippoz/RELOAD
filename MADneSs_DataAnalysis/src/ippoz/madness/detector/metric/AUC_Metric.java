@@ -37,4 +37,10 @@ public class AUC_Metric extends BetterMaxMetric {
 		return "AUC";
 	}
 
+	@Override
+	public String getMetricShortName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

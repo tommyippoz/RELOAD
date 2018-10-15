@@ -39,5 +39,10 @@ public class FalsePositiveRate_Metric extends BetterMinMetric {
 	public String getMetricName() {
 		return "False Positive Rate";
 	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "FPR";
+	}
 
 }
