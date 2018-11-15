@@ -128,6 +128,7 @@ public class BuildUI {
 	
 	private void reload() {
 		frame.setVisible(false);
+		frame.getContentPane().removeAll();
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
 		dataAlgMap = new HashMap<String, JPanel>();
@@ -312,7 +313,7 @@ public class BuildUI {
 		int labelSpacing = 30;
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, 80 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2) + 15);
+		dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, 100 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2));
 		dataAlgPanel.setBorder(tb);
 		dataAlgPanel.setLayout(null);
 		
@@ -324,7 +325,24 @@ public class BuildUI {
 		
 		printOptions(dataAlgPanel, getDatasets(), 20, 2*labelSpacing, labelSpacing);
 		
-		tabY = labelSpacing*(getDatasets().length + 1) + 40;
+		JPanel seePrefPanel = new JPanel();
+		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 20 + labelSpacing*(getDatasets().length + 1), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
+		
+		JButton button = new JButton("Open Datasets");
+		button.setVisible(true);
+		button.setBounds(0, 0, pathPanel.getWidth()*2/5, 25);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				try {
+					Desktop.getDesktop().open(new File(iManager.getSetupFolder() + "loaderPreferences.preferences"));
+				} catch (IOException e1) {
+					AppLogger.logException(getClass(), e1, "");
+				}
+			} } );
+		seePrefPanel.add(button);
+		dataAlgPanel.add(seePrefPanel);
+		
+		tabY = labelSpacing*(getDatasets().length + 2) + 40;
 		
 		mainLabel = new JLabel("Algorithms");
 		mainLabel.setBounds(dataAlgPanel.getWidth()/4, tabY, dataAlgPanel.getWidth()/2, 25);
@@ -332,12 +350,12 @@ public class BuildUI {
 		mainLabel.setFont(new Font("Times", Font.BOLD, 20));
 		dataAlgPanel.add(mainLabel);
 		
-		printOptions(dataAlgPanel, getAlgorithms(), 20, tabY + 40, labelSpacing);
+		printOptions(dataAlgPanel, getAlgorithms(), 20, tabY + 30, labelSpacing);
 		
-		JPanel seePrefPanel = new JPanel();
-		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 80 + labelSpacing*(getDatasets().length + getAlgorithms().length + 1), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
+		seePrefPanel = new JPanel();
+		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 60 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
 		
-		JButton button = new JButton("Open Algorithms");
+		button = new JButton("Open Algorithms");
 		button.setVisible(true);
 		button.setBounds(0, 0, pathPanel.getWidth()*2/5, 25);
 		button.addActionListener(new ActionListener() { 
@@ -362,7 +380,7 @@ public class BuildUI {
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
 				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
 			else {
-				dsStrings[i++] = "CSV - " + lPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE);
+				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + lPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE) + ")";
 			}
 		}
 		return dsStrings;
@@ -592,12 +610,12 @@ public class BuildUI {
 	}
 	
 	private void showDetectorOutputs(List<DetectorOutput> outList) {
-		OutputFrame of = new OutputFrame();
+		OutputFrame of = new OutputFrame(outList.size());
 		of.buildSummaryPanel(outList);
 		for(DetectorOutput dOut : outList){
 			of.addOutput(dOut);
-			of.setVisible(true);
 		}
+		of.setVisible(true);
 	}
 	
 	private class OutputFrame {
@@ -608,7 +626,10 @@ public class BuildUI {
 		
 		private static final int labelSpacing = 25;
 		
-		public OutputFrame() {
+		private int panelNumber; 
+		
+		public OutputFrame(int panelNumber) {
+			this.panelNumber = panelNumber;
 			buildFrame();
 			buildTabbedPanel();
 		}
@@ -626,6 +647,9 @@ public class BuildUI {
 		public void setVisible(boolean b) {
 			if(outFrame != null){
 				outFrame.getContentPane().add(tabbedPane);
+				if(panelNumber > 4){
+					outFrame.setBounds(outFrame.getX(), outFrame.getY(), outFrame.getWidth(), outFrame.getHeight() + (panelNumber / 4)*labelSpacing);
+				}
 				outFrame.setLocationRelativeTo(null);
 				outFrame.setVisible(b);
 			}
@@ -665,37 +689,44 @@ public class BuildUI {
 		}
 		
 		private JPanel buildOutputSummaryPanel(DetectorOutput dOut, JPanel root, int i){
+			int elements = 6;
 			JPanel panel = new JPanel();
 			panel.setBounds((int) (root.getWidth()*0.01), labelSpacing*(i+1) + 40, (int) (root.getWidth()*0.98), labelSpacing);
 			panel.setLayout(null);
 			
 			JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(0, 0, root.getWidth()/5, labelSpacing);
+			lbl.setBounds(0, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : "Algorithm");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()/5, 0, root.getWidth()/5, labelSpacing);
+			lbl.setBounds(root.getWidth()/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getBestSetup() : "Best Configuration");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*2/5, 0, root.getWidth()/5, labelSpacing);
+			lbl.setBounds(root.getWidth()*2/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getBestRuns() : "Best Runs");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*3/5, 0, root.getWidth()/5, labelSpacing);
+			lbl.setBounds(root.getWidth()*3/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setHorizontalAlignment(SwingConstants.CENTER);
+			panel.add(lbl);
+			
+			lbl = new JLabel(dOut != null ? dOut.getFaultsRatioString() : "Attacks Ratio");
+			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
+			lbl.setBounds(root.getWidth()*4/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? String.valueOf(dOut.getFormattedBestScore()) : "Best Score");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*4/5, 0, root.getWidth()/5, labelSpacing);
+			lbl.setBounds(root.getWidth()*5/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			

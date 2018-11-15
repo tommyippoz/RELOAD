@@ -25,6 +25,8 @@ import java.util.List;
  *
  */
 public abstract class DataSeries implements Comparable<DataSeries> {
+	
+	private static final int COMPACT_STRING_SIZE_LIMIT = 50;
 
 	private String seriesName;
 	private DataCategory dataCategory;
@@ -232,6 +234,18 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return 1;
 	}
 	
-	public abstract String toCompactString();
+	public String getCompactString(){
+		String toReturn = "";
+		String base = toCompactString();
+		if(base != null && base.length() > COMPACT_STRING_SIZE_LIMIT){
+			int step = base.length() / 15;
+			for(int i=0;i<base.length();i=i+step){
+				toReturn = toReturn + base.charAt(i);
+			}
+		} else toReturn = base;
+		return toReturn;
+	}
+	
+	protected abstract String toCompactString();
 		
 }

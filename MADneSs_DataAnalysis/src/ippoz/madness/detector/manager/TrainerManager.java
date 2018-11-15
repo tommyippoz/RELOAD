@@ -213,14 +213,14 @@ public class TrainerManager extends TrainDataManager {
 	 * The scores are saved in a file specified in the preferences.
 	 */
 	@SuppressWarnings("unchecked")
-	public void train(){
+	public void train(String outFilename){
 		long start = System.currentTimeMillis();
 		try {
 			start();
 			join();
 			Collections.sort((List<AlgorithmTrainer>)getThreadList());
 			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
-			saveScores(filterTrainers(getThreadList()), "scores.csv");
+			saveScores(filterTrainers(getThreadList()), outFilename);
 			AppLogger.logInfo(getClass(), "Training scores saved");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");

@@ -116,8 +116,55 @@ public class DetectorMain {
 		}
 		return wList;
 	}
-
+	
 	public static List<PreferencesManager> readLoaders(InputManager iManager) {
+		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
+		File loadersFile = new File(iManager.getSetupFolder() + "loaderPreferences.preferences");
+		PreferencesManager pManager;
+		BufferedReader reader;
+		String readed;
+		try {
+			if(loadersFile.exists()){
+				reader = new BufferedReader(new FileReader(loadersFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							readed = readed.trim();
+							if(readed.endsWith(".loader")){
+								pManager = iManager.getLoaderPreferences(readed);
+								if(pManager != null)
+									lList.add(pManager);
+							} else if(new File(iManager.getLoaderFolder() + readed).exists() && new File(iManager.getLoaderFolder() + readed).isDirectory()){
+								readed = iManager.getLoaderFolder() + readed; 
+								if(!readed.endsWith("" + File.separatorChar))
+									readed = readed + File.separatorChar;
+								for(File f : new File(readed).listFiles()){
+									if(f.getName().endsWith(".loader")){
+										lList.add(new PreferencesManager(readed + f.getName()));
+									}
+								}
+							}
+						}
+					}
+				}
+				reader.close();
+			} else {
+				AppLogger.logError(DetectorMain.class, "MissingPreferenceError", "File " + 
+						loadersFile.getPath() + " not found. Will be generated. Using default value of ''");
+				/*List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
+				aList.add(AlgorithmType.ELKI_KMEANS);
+				alList.add(aList);
+				iManager.generateDefaultAlgorithmPreferences();*/
+			}
+		} catch(Exception ex){
+			AppLogger.logException(DetectorMain.class, ex, "Unable to read loaders list");
+		}
+		return lList;	
+	}
+	
+	/*public static List<PreferencesManager> readLoaders(InputManager iManager) {
 		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
 		String lPref = iManager.getLoaders();
 		PreferencesManager pManager;
@@ -141,7 +188,7 @@ public class DetectorMain {
 			}
 		}
 		return lList;
-	}
+	}*/
 	
 	public static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");

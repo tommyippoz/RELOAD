@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * @author Tommy
  */
-public abstract class Metric {
+public abstract class Metric implements Comparable<Metric> {
 	
 	private MetricType mType;
 	
@@ -133,10 +133,26 @@ public abstract class Metric {
 		List<Double> dataList = new ArrayList<Double>();
 		if(list != null){
 			for(Map<Metric, Double> map : list){
-				dataList.add(map.get(met));
+				if(map.get(met) != null)
+					dataList.add(map.get(met));
+				else {
+					for(Metric m : map.keySet()){
+						if(m.equals(met)){
+							dataList.add(map.get(m));
+							break;
+						}
+					}
+				}
 			}
 			return String.valueOf(AppUtility.calcAvg(dataList));
 		} else return String.valueOf(Double.NaN);
 	}
+
+	@Override
+	public int compareTo(Metric o) {
+		return o.getMetricName().compareTo(getMetricName());
+	}
+	
+	
 
 }

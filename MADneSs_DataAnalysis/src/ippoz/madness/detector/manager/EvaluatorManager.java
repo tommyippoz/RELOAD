@@ -11,6 +11,7 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.commons.support.TimedValue;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.voter.AlgorithmVoter;
 import ippoz.madness.detector.voter.ExperimentVoter;
@@ -22,10 +23,12 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * The Class EvaluatorManager.
@@ -274,6 +277,15 @@ public class EvaluatorManager extends DataManager {
 		} catch (FileNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to find results file");
 		} 		
+	}
+	
+	public Map<String, List<TimedValue>> getDetailedEvaluations() {
+		Map<String, List<TimedValue>> outMap = new TreeMap<String, List<TimedValue>>();
+		for(Thread t : getThreadList()){
+			ExperimentVoter ev = (ExperimentVoter)t;
+			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());
+		}
+		return outMap;
 	}
 	
 	public List<Map<Metric, Double>> getMetricsEvaluations() {

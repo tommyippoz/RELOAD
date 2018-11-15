@@ -79,6 +79,10 @@ public class ExperimentVoter extends Thread {
 		expName = kMap.get(kMap.keySet().iterator().next()).getTag();
 	}
 	
+	public String getExperimentName(){
+		return expName;
+	}
+	
 	/**
 	 * Deep clone of the voters' list.
 	 *
@@ -332,6 +336,14 @@ public class ExperimentVoter extends Thread {
 				map.get(aVoter.getLayerType()).put(aVoter.getAlgorithmType(), 0);
 		}
 		return map;
+	}
+
+	public Map<Date, Map<AlgorithmVoter, Double>> getSingleAlgorithmScores() {
+		return partialVoting;
+	}
+	
+	public List<TimedValue> getExperimentVoting(){
+		return voting;
 	}
 
 }

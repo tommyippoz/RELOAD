@@ -76,7 +76,7 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".odin";
+		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".odin";
 	}
 
 	@Override

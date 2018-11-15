@@ -595,13 +595,13 @@ public class InputManager {
 		}
 	}
 	
-	public String getScoresFile(){
+	public String getScoresFile(String prequel){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
-			return getScoresFolder() + prefManager.getPreference(SCORES_FILE);
+			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + prefManager.getPreference(SCORES_FILE);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					SCORES_FILE + " not found. Using default value of '" + getScoresFolder() + "scores.csv'");
-			return getScoresFolder() + "scores.csv";
+			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + "scores.csv";
 		}
 	}
 	

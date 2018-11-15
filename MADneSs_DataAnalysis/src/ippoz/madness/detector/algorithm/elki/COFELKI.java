@@ -77,7 +77,7 @@ public class COFELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".cof";
+		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".cof";
 	}
 
 	@Override

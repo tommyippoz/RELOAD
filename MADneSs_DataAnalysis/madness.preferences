@@ -6,9 +6,6 @@
 * Loaders folder.
 LOADER_FOLDER = loaders
 
-* List of Loaders
-LOADERS = sint/iscx_synthetic_point.loader
-
 * Datasets folder.
 DATASETS_FOLDER = ../../git_data/MLAD/datasets
 

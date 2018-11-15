@@ -8,19 +8,19 @@ CONSIDERED_LAYERS = NO_LAYER
 * Data Partitioning.
 
 * File Used for Filtering
-FILTERING_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+FILTERING_CSV_FILE = ISCX2012/ISCX2012_DDoS.csv
 
 * Golden Runs.
-GOLDEN_RUN_IDS = 1 - 15
+GOLDEN_RUN_IDS = 1 - 5
 
 * File Used for Training
-TRAIN_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+TRAIN_CSV_FILE = ISCX2012/ISCX2012_DDoS.csv
 
 * Training Runs.
 TRAIN_RUN_IDS = 333 - 337
 
 * File Used for Evaulating
-VALIDATION_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+VALIDATION_CSV_FILE = ISCX2012/ISCX2012_DDoS.csv
 
 * Evaluation Runs.
 VALIDATION_RUN_IDS = 333 - 337

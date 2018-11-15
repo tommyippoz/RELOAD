@@ -8,19 +8,19 @@ CONSIDERED_LAYERS = NO_LAYER
 * Data Partitioning.
 
 * File Used for Filtering
-FILTERING_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+FILTERING_CSV_FILE = ADFALD/ADFA-LD_Web_Shell.csv
 
 * Golden Runs.
 GOLDEN_RUN_IDS = 1 - 15
 
 * File Used for Training
-TRAIN_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+TRAIN_CSV_FILE = ADFALD/ADFA-LD_Web_Shell.csv
 
 * Training Runs.
 TRAIN_RUN_IDS = 333 - 337
 
 * File Used for Evaulating
-VALIDATION_CSV_FILE = ISCX2012/ISCX2012_BruteForce.csv
+VALIDATION_CSV_FILE = ADFALD/ADFA-LD_Web_Shell.csv
 
 * Evaluation Runs.
 VALIDATION_RUN_IDS = 333 - 337
@@ -29,13 +29,13 @@ VALIDATION_RUN_IDS = 333 - 337
 * Parsing Dataset
 
 * Features to Skip
-SKIP_COLUMNS = 0, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17
+SKIP_COLUMNS = 1, 2
 
 * Column Containing the 'Label' Feature
-LABEL_COLUMN = 17
+LABEL_COLUMN = 1
 
 * Size of Each Experiment
-EXPERIMENT_ROWS = 100
+EXPERIMENT_ROWS = 3000
 
 * Tags Identifying an Attack in This Dataset
-FAULTY_TAGS = "Attack", Attack
+FAULTY_TAGS = "Web_Shell", Web_Shell
