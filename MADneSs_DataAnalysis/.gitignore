@@ -4,3 +4,6 @@
 /AppLogger.log
 /output/
 /intermediate/
+/datasets/
+/madnessreport.csv
+/iforest_tmp/
