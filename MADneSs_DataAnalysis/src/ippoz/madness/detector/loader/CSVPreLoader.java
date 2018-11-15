@@ -27,7 +27,7 @@ public class CSVPreLoader extends CSVLoader {
 	
 	private static final String FILTERING_CSV_FILE = "FILTERING_CSV_FILE";
 
-	private static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
+	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
 
 	private static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
 
@@ -140,8 +140,15 @@ public class CSVPreLoader extends CSVLoader {
 
 	@Override
 	public String getRuns() {
-		// TODO Auto-generated method stub
-		return null;
+		if(dataList != null){
+			if(dataList.size() == 1){
+				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) + "]";
+			} else {
+				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) 
+						+ "-" + dataList.get(dataList.size()-1).getDataTag().charAt(dataList.get(dataList.size()-1).getDataTag().length()-1) + "]";
+			}
+		}
+		else return null;
 	}
 	
 	

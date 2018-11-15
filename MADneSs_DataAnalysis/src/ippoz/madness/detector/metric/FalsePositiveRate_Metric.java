@@ -17,7 +17,7 @@ import java.util.List;
 public class FalsePositiveRate_Metric extends BetterMinMetric {
 
 	public FalsePositiveRate_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.FPR, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -38,6 +38,11 @@ public class FalsePositiveRate_Metric extends BetterMinMetric {
 	@Override
 	public String getMetricName() {
 		return "False Positive Rate";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "FPR";
 	}
 
 }

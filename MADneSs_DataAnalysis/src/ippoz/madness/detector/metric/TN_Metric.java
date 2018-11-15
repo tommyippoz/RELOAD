@@ -22,7 +22,7 @@ public class TN_Metric extends ClassificationMetric {
 	 * @param absolute the absolute flag
 	 */
 	public TN_Metric(boolean absolute, boolean validAfter) {
-		super(absolute, validAfter);
+		super(MetricType.TN, absolute, validAfter);
 	}
 	
 	/* (non-Javadoc)
@@ -31,6 +31,11 @@ public class TN_Metric extends ClassificationMetric {
 	@Override
 	public String getMetricName() {
 		return "True Negatives";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "TN";
 	}
 
 	@Override

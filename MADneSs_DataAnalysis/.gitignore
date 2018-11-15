@@ -1,3 +1,9 @@
 /bin/
 /databases/
 /versions/
+/AppLogger.log
+/output/
+/intermediate/
+/datasets/
+/madnessreport.csv
+/iforest_tmp/

@@ -18,7 +18,7 @@ public class AUC_Metric extends BetterMaxMetric {
 	private AlgorithmConfiguration conf; 
 
 	public AUC_Metric(boolean validAfter) {
-		super(validAfter);
+		super(null, validAfter);
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -35,6 +35,12 @@ public class AUC_Metric extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "AUC";
+	}
+
+	@Override
+	public String getMetricShortName() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

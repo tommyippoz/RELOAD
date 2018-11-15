@@ -76,7 +76,7 @@ public class FilterManager extends TrainDataManager {
 	 * The scores are saved in a file specified in the preferences.
 	 */
 	@SuppressWarnings("unchecked")
-	public LinkedList<DataSeries> filter(){
+	public LinkedList<DataSeries> filter(String outFilename){
 		LinkedList<DataSeries> filteredSeries = null;
 		long start = System.currentTimeMillis();
 		try {
@@ -85,7 +85,7 @@ public class FilterManager extends TrainDataManager {
 			Collections.sort((LinkedList<AlgorithmTrainer>)getThreadList());
 			AppLogger.logInfo(getClass(), "Filtering executed in " + (System.currentTimeMillis() - start) + "ms");
 			filteredSeries = selectDataSeries((LinkedList<AlgorithmTrainer>)getThreadList());
-			saveFilteredSeries(filteredSeries, "filtered.csv");
+			saveFilteredSeries(filteredSeries, outFilename);
 			AppLogger.logInfo(getClass(), "Filtered Checkers Saved");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");

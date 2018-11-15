@@ -66,4 +66,10 @@ public class PreferencesManager {
 		return filename;
 	}
 
+	public void updatePreference(String tag, String newValue) {
+		if(hasPreference(tag)){
+			preferences.put(tag, newValue);
+		}
+	}
+
 }

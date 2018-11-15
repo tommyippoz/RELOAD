@@ -15,7 +15,7 @@ import java.util.List;
 public class Accuracy_Metric extends BetterMaxMetric {
 
 	public Accuracy_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.ACCURACY, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -38,6 +38,11 @@ public class Accuracy_Metric extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "Accuracy";
+	}
+
+	@Override
+	public String getMetricShortName() {
+		return "ACC";
 	}
 
 }

@@ -12,6 +12,7 @@ import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.manager.DetectionManager;
 import ippoz.madness.detector.manager.InputManager;
 import ippoz.madness.detector.metric.Metric;
+import ippoz.madness.detector.output.DetectorOutput;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,7 +35,7 @@ public class DetectorMain {
 	
 	private static final String DEFAULT_REPORT_FILE = "madnessreport.csv";
 	
-	private static final String DEFAULT_PREF_FILE = "madness.preferences";
+	public static final String DEFAULT_PREF_FILE = "madness.preferences";
 	
 	/**
 	 * The main method.
@@ -74,7 +75,20 @@ public class DetectorMain {
 		}
 	}
 	
-	private static List<SlidingPolicy> readSlidingPolicies(InputManager iManager) {
+	public static int getMADneSsIterations(InputManager iManager){
+		int count = 0;
+		for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
+			if(hasSliding(aList)){
+				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
+			} else {
+				count++;
+			}
+		}
+		count = count*readLoaders(iManager).size();
+		return count;
+	}
+	
+	public static List<SlidingPolicy> readSlidingPolicies(InputManager iManager) {
 		List<SlidingPolicy> wList = new LinkedList<SlidingPolicy>();
 		String wPref = iManager.getSlidingPolicies();
 		if(wPref != null && wPref.trim().length() > 0){
@@ -89,7 +103,7 @@ public class DetectorMain {
 		return wList;
 	}
 
-	private static List<Integer> readWindowSizes(InputManager iManager) {
+	public static List<Integer> readWindowSizes(InputManager iManager) {
 		List<Integer> wList = new LinkedList<Integer>();
 		String wPref = iManager.getSlidingWindowSizes();
 		if(wPref != null && wPref.trim().length() > 0){
@@ -102,8 +116,55 @@ public class DetectorMain {
 		}
 		return wList;
 	}
-
-	private static List<PreferencesManager> readLoaders(InputManager iManager) {
+	
+	public static List<PreferencesManager> readLoaders(InputManager iManager) {
+		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
+		File loadersFile = new File(iManager.getSetupFolder() + "loaderPreferences.preferences");
+		PreferencesManager pManager;
+		BufferedReader reader;
+		String readed;
+		try {
+			if(loadersFile.exists()){
+				reader = new BufferedReader(new FileReader(loadersFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							readed = readed.trim();
+							if(readed.endsWith(".loader")){
+								pManager = iManager.getLoaderPreferences(readed);
+								if(pManager != null)
+									lList.add(pManager);
+							} else if(new File(iManager.getLoaderFolder() + readed).exists() && new File(iManager.getLoaderFolder() + readed).isDirectory()){
+								readed = iManager.getLoaderFolder() + readed; 
+								if(!readed.endsWith("" + File.separatorChar))
+									readed = readed + File.separatorChar;
+								for(File f : new File(readed).listFiles()){
+									if(f.getName().endsWith(".loader")){
+										lList.add(new PreferencesManager(readed + f.getName()));
+									}
+								}
+							}
+						}
+					}
+				}
+				reader.close();
+			} else {
+				AppLogger.logError(DetectorMain.class, "MissingPreferenceError", "File " + 
+						loadersFile.getPath() + " not found. Will be generated. Using default value of ''");
+				/*List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
+				aList.add(AlgorithmType.ELKI_KMEANS);
+				alList.add(aList);
+				iManager.generateDefaultAlgorithmPreferences();*/
+			}
+		} catch(Exception ex){
+			AppLogger.logException(DetectorMain.class, ex, "Unable to read loaders list");
+		}
+		return lList;	
+	}
+	
+	/*public static List<PreferencesManager> readLoaders(InputManager iManager) {
 		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
 		String lPref = iManager.getLoaders();
 		PreferencesManager pManager;
@@ -127,9 +188,9 @@ public class DetectorMain {
 			}
 		}
 		return lList;
-	}
+	}*/
 	
-	private static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
+	public static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");
 		List<List<AlgorithmType>> alList = new LinkedList<List<AlgorithmType>>();
 		BufferedReader reader;
@@ -170,7 +231,7 @@ public class DetectorMain {
 		return alList;
 	}
 
-	private static boolean hasSliding(List<AlgorithmType> aList) {
+	public static boolean hasSliding(List<AlgorithmType> aList) {
 		for(AlgorithmType at : aList){
 			if(at.toString().toUpperCase().contains("SLIDING"))
 				return true;
@@ -178,7 +239,8 @@ public class DetectorMain {
 		return false;
 	}
 
-	private static void runMADneSs(DetectionManager dManager){
+	public static DetectorOutput runMADneSs(DetectionManager dManager){
+		DetectorOutput dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
@@ -189,14 +251,16 @@ public class DetectorMain {
 				dManager.train();
 			} 
 			AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
-			report(dManager.getWritableTag(), dManager.evaluate(), dManager.getMetrics());
-		}
+			dOut = dManager.evaluate();
+			report(dOut);
+			AppLogger.logInfo(DetectorMain.class, "Done.");
+		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
 		dManager = null;
-		AppLogger.logInfo(DetectorMain.class, "Done.");
+		return dOut;
 	}
 
-	private static void report(String madnessInfo, String[] result, Metric[] metrics){
+	private static void report(DetectorOutput dOut){
 		File drFile = new File(DEFAULT_REPORT_FILE);
 		BufferedWriter writer;
 		try {
@@ -204,14 +268,14 @@ public class DetectorMain {
 				writer = new BufferedWriter(new FileWriter(drFile, false));
 				writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
 				writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
-				for(Metric met : metrics){
+				for(Metric met : dOut.getEvaluationMetrics()){
 					writer.write("," + met.getMetricName());
 				}
 				writer.write("\n");
 			} else {
 				writer = new BufferedWriter(new FileWriter(drFile, true));
 			}
-			writer.write(madnessInfo + "," + result[1] + "," + result[0] + "," + result[2] + "\n");
+			writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

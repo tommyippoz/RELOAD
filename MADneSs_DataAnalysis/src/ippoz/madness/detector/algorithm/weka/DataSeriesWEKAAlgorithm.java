@@ -75,7 +75,7 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	}
 	
 	protected String getStreamHeader(boolean training){
-		String header = "@relation " + getDataSeries().toCompactString() + "\n\n";
+		String header = "@relation " + getDataSeries().getCompactString() + "\n\n";
 		if(getDataSeries().size() == 1){
 			header = header + "@attribute " + getDataSeries().getName() + " numeric\n";
 		} else {

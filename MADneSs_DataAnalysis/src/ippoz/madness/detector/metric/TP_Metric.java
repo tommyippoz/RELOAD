@@ -22,7 +22,7 @@ public class TP_Metric extends ClassificationMetric {
 	 * @param absolute the absolute flag
 	 */
 	public TP_Metric(boolean absolute, boolean validAfter) {
-		super(absolute, validAfter);
+		super(MetricType.TP, absolute, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -31,6 +31,11 @@ public class TP_Metric extends ClassificationMetric {
 	@Override
 	public String getMetricName() {
 		return "True Positives";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "TP";
 	}
 
 	@Override

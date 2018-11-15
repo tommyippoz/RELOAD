@@ -17,7 +17,7 @@ import java.util.List;
 public class FMeasure_Metric extends BetterMaxMetric {
 
 	public FMeasure_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.FMEASURE, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -38,6 +38,11 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "F-Measure";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "F1";
 	}
 
 }

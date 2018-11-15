@@ -26,8 +26,8 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	 * @param absolute the absolute flag
 	 * @param absolute the validAfter flag
 	 */
-	public ClassificationMetric(boolean absolute, boolean validAfter) {
-		super(validAfter);
+	public ClassificationMetric(MetricType mType, boolean absolute, boolean validAfter) {
+		super(mType, validAfter);
 		this.absolute = absolute;
 	}
 

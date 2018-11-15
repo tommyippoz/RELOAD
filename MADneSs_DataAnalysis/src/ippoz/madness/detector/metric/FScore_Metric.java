@@ -25,7 +25,7 @@ public class FScore_Metric extends BetterMaxMetric {
 	 * @param beta the beta parameter of f-score
 	 */
 	public FScore_Metric(double beta, boolean validAfter){
-		super(validAfter);
+		super(MetricType.FSCORE, validAfter);
 		this.beta = beta;
 	}
 	
@@ -47,6 +47,11 @@ public class FScore_Metric extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "FScore(" + beta + ")";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "F" + (int)beta;
 	}
 
 }

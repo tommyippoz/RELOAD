@@ -80,7 +80,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().toCompactString().replace("\\", "_").replace("/", "_") + ".svm";
+		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".svm";
 	}
 
 	@Override

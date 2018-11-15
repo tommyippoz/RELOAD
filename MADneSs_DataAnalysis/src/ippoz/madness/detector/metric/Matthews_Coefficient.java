@@ -15,7 +15,7 @@ import java.util.List;
 public class Matthews_Coefficient extends BetterMaxMetric {
 
 	public Matthews_Coefficient(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.MATTHEWS, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -39,6 +39,11 @@ public class Matthews_Coefficient extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "MatthewsCorrelationCoefficient";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "MCC";
 	}
 
 }

@@ -1,18 +1,5 @@
 * Preferences file for 'MADneSs'. Comments with '*'.
 
-
-* Data Source - Loaders.
-
-* Loaders folder.
-LOADER_FOLDER = loaders
-
-* List of Loaders
-LOADERS = sint/iscx_synthetic_point.loader
-
-* Datasets folder.
-DATASETS_FOLDER = ../../git_data/MLAD/datasets
-
-
 * MADneSs Execution.
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
@@ -44,7 +31,6 @@ DATA_SERIES_DOMAIN = PEARSON(0.9)
 
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
-
 
 * Filtering
 
@@ -83,6 +69,15 @@ SCORES_FILE_FOLDER = intermediate
 
 * Scores file
 SCORES_FILE = scores.csv
+
+
+* Data Source - Loaders.
+
+* Loaders folder.
+LOADER_FOLDER = loaders
+
+* Datasets folder.
+DATASETS_FOLDER = datasets
 
 
 * Other Preference Files.

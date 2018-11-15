@@ -25,7 +25,7 @@ import java.util.List;
 public class MySQLLoader extends ThreadScheduler implements Loader {
 	
 	/** The Constant DB_USERNAME. */
-	private static final String DB_NAME = "DB_NAME";
+	public static final String DB_NAME = "DB_NAME";
 	
 	/** The Constant DB_USERNAME. */
 	private static final String DB_USERNAME = "DB_USERNAME";

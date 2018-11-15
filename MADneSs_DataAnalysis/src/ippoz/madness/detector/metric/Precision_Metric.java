@@ -17,7 +17,7 @@ import java.util.List;
 public class Precision_Metric extends BetterMaxMetric {
 
 	public Precision_Metric(boolean validAfter) {
-		super(validAfter);
+		super(MetricType.PRECISION, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -38,6 +38,11 @@ public class Precision_Metric extends BetterMaxMetric {
 	@Override
 	public String getMetricName() {
 		return "Precision";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "P";
 	}
 
 }

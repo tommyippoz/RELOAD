@@ -11,8 +11,8 @@ package ippoz.madness.detector.metric;
  */
 public abstract class BetterMinMetric extends ScoringMetric {
 	
-	public BetterMinMetric(boolean validAfter) {
-		super(validAfter);
+	public BetterMinMetric(MetricType mType, boolean validAfter) {
+		super(mType, validAfter);
 	}
 
 	/* (non-Javadoc)

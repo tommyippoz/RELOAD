@@ -6,10 +6,12 @@ package ippoz.madness.detector.metric;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
+import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.TimedValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class Metric.
@@ -17,7 +19,13 @@ import java.util.List;
  *
  * @author Tommy
  */
-public abstract class Metric {
+public abstract class Metric implements Comparable<Metric> {
+	
+	private MetricType mType;
+	
+	public Metric(MetricType mType){
+		this.mType = mType;
+	}
 	
 	/**
 	 * Evaluates the experiment using the chosen metric.
@@ -109,5 +117,42 @@ public abstract class Metric {
 	 * @return the metric name
 	 */
 	public abstract String getMetricName();
+	
+	/**
+	 * Gets the metric short name.
+	 *
+	 * @return the metric short name
+	 */
+	public abstract String getMetricShortName();
+
+	public MetricType getMetricType(){
+		return mType;
+	}
+	
+	public static String getAverageMetricValue(List<Map<Metric, Double>> list, Metric met) {
+		List<Double> dataList = new ArrayList<Double>();
+		if(list != null){
+			for(Map<Metric, Double> map : list){
+				if(map.get(met) != null)
+					dataList.add(map.get(met));
+				else {
+					for(Metric m : map.keySet()){
+						if(m.equals(met)){
+							dataList.add(map.get(m));
+							break;
+						}
+					}
+				}
+			}
+			return String.valueOf(AppUtility.calcAvg(dataList));
+		} else return String.valueOf(Double.NaN);
+	}
+
+	@Override
+	public int compareTo(Metric o) {
+		return o.getMetricName().compareTo(getMetricName());
+	}
+	
+	
 
 }

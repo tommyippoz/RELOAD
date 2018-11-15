@@ -1,29 +1,13 @@
 * Default algorithm preferences file for 'MADneSs'. Comments with '*'.
 * Uncomment the algorithms you want to use. Filtering uses ELKI_KMEANS by default.
 
-
 * General Algorithms
 
-* RCC
-
-* HIST
-
-* CONF
-
-* WER
-
-* INV
-
-* PEA
-
-* TEST
-
-* HBOS
-
+HBOS
 
 * Elki Algorithms
 
-* ELKI_KMEANS
+ELKI_KMEANS
 
 * ELKI_ABOD
 
@@ -37,17 +21,15 @@
 
 * ELKI_ODIN
 
-
 * Weka Algorithms
 
 WEKA_ISOLATIONFOREST
-
 
 * Sliding Algorithms
 
 * SLIDING_SPS
 
-SLIDING_WEKA_ISOLATIONFOREST
+* SLIDING_WEKA_ISOLATIONFOREST
 
 * SLIDING_ELKI_COF
 
@@ -57,10 +39,8 @@ SLIDING_WEKA_ISOLATIONFOREST
 
 * SLIDING_ELKI_KNN
 
-
 * Mixed Algorithms
 
 * SLIDING_ELKI_KNN, SLIDING_SPS
 
 * SLIDING_ELKI_KNN, SLIDING_ELKI_ABOD, SLIDING_SPS, SLIDING_WEKA_ISOLATIONFOREST, SLIDING_ELKI_COF, SLIDING_ELKI_CLUSTERING
-

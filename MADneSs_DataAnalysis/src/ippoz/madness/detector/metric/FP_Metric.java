@@ -22,7 +22,7 @@ public class FP_Metric extends ClassificationMetric {
 	 * @param absolute the absolute flag
 	 */
 	public FP_Metric(boolean absolute, boolean validAfter) {
-		super(absolute, validAfter);
+		super(MetricType.FP, absolute, validAfter);
 	}
 	
 	/* (non-Javadoc)
@@ -31,6 +31,11 @@ public class FP_Metric extends ClassificationMetric {
 	@Override
 	public String getMetricName() {
 		return "False Positives";
+	}
+	
+	@Override
+	public String getMetricShortName() {
+		return "FP";
 	}
 
 	@Override

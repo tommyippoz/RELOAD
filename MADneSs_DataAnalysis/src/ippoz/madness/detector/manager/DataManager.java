@@ -29,7 +29,7 @@ public abstract class DataManager extends ThreadScheduler {
 			AppLogger.logInfo(getClass(), "Instances Loaded with " + getInjectionsRatio() + "% of Faults/Attacks");
 	}
 	
-	private double getInjectionsRatio(){
+	public double getInjectionsRatio(){
 		int injSum = 0;
 		int itemSum = 0;
 		for(Knowledge k : kMap.get(kMap.keySet().iterator().next())){
