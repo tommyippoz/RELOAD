@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -115,7 +116,7 @@ public class BuildUI {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		frame = new JFrame();
 		frame.setTitle("MADneSs Framework");
-		frame.setIconImage(new ImageIcon("img/Logo_Icon.png").getImage());
+		frame.setIconImage(new ImageIcon(getClass().getResource("/Logo_Icon.png")).getImage());
 		if(screenSize.getWidth() > 1600)
 			frame.setBounds(0, 0, (int)(screenSize.getWidth()*0.75), (int)(screenSize.getHeight()*0.75));
 		else frame.setBounds(0, 0, 800, 480);
@@ -199,8 +200,7 @@ public class BuildUI {
 	private JPanel buildHeaderTab(){
 		headerPanel.setBounds(0, 0, frame.getWidth(), 145);
 		headerPanel.setLayout(null);
-		
-		ImageIcon ii = new ImageIcon("img/Logo_Transparent.png");
+		ImageIcon ii = new ImageIcon(getClass().getResource("/Logo_Transparent.png"));
 		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(400, 125, Image.SCALE_DEFAULT)));
 		lblMadness.setBounds(0, 10, frame.getWidth(), 125);
 		lblMadness.setHorizontalAlignment(SwingConstants.CENTER);
@@ -213,7 +213,7 @@ public class BuildUI {
 		footerPanel.setBounds(frame.getWidth()/10, tabY, frame.getWidth()*4/5, 100);
 		footerPanel.setLayout(null);
 		
-		ImageIcon ii = new ImageIcon("img/reload.png");
+		ImageIcon ii = new ImageIcon(getClass().getResource("/reload.png"));
 		JButton button = new JButton("", new ImageIcon(ii.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT)));
 		button.setBounds(footerPanel.getWidth()*2/5, 0, 40, 40);
 		button.addActionListener(new ActionListener() { 
