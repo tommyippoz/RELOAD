@@ -3,7 +3,7 @@
 
 * KDD CUP
 
-kddcup/kddcup_dos.loader
+*kddcup/kddcup_dos.loader
 
 *kddcup/kddcup_probe.loader
 
@@ -23,7 +23,7 @@ nslkdd/nslkdd_probe.loader
 
 * ISCX 2012
 
-iscx/iscx_bruteforce.loader
+*iscx/iscx_bruteforce.loader
 
 *iscx/iscx_DoS.loader
 
@@ -33,7 +33,7 @@ iscx/iscx_bruteforce.loader
 
 * UNSW-NB15
 
-unsw/unsw_analysis.loader
+*unsw/unsw_analysis.loader
 
 *unsw/unsw_backdoor.loader
 
