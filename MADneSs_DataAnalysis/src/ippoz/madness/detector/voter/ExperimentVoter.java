@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,6 +60,9 @@ public class ExperimentVoter extends Thread {
 	
 	/** The contracted results of the voting. */
 	private List<TimedValue> voting;
+	
+	/** The contracted results of the voting. */
+	private List<TimedValue> failures;
 	
 	private Map<KnowledgeType, Knowledge> kMap;
 	
@@ -108,17 +112,21 @@ public class ExperimentVoter extends Thread {
 	public void run() {
 		double votingResult;
 		Map<AlgorithmVoter, Double> snapVoting;
+		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
-		voting = new ArrayList<TimedValue>(kMap.get(kMap.keySet().iterator().next()).size());
+		voting = new ArrayList<TimedValue>(currentKnowledge.size());
+		failures = new LinkedList<TimedValue>();
 		if(algList.size() > 0) {
-			for(int i=0;i<kMap.get(kMap.keySet().iterator().next()).size();i++){
+			for(int i=0;i<currentKnowledge.size();i++){
 				snapVoting = new HashMap<AlgorithmVoter, Double>();
 				for(AlgorithmVoter aVoter : algList){
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
-				partialVoting.put(kMap.get(kMap.keySet().iterator().next()).getTimestamp(i), snapVoting);
+				partialVoting.put(currentKnowledge.getTimestamp(i), snapVoting);
 				votingResult = voteResults(snapVoting);
-				voting.add(new TimedValue(kMap.get(kMap.keySet().iterator().next()).getTimestamp(i), votingResult));
+				voting.add(new TimedValue(currentKnowledge.getTimestamp(i), votingResult));
+				if(currentKnowledge.getInjection(i) != null)
+					failures.add(new TimedValue(currentKnowledge.getTimestamp(i), 1.0));
 				if(kMap.containsKey(KnowledgeType.SLIDING)){
 					((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).slide(i, votingResult);
 				}
@@ -247,7 +255,7 @@ public class ExperimentVoter extends Thread {
 		HistogramChartDrawer hist;
 		Map<String, List<TimedValue>> voterMap = new HashMap<String, List<TimedValue>>();
 		voterMap.put(ANOMALY_SCORE_LABEL, voting);
-		//voterMap.put(FAILURE_LABEL, convertFailures(expSnapMap));
+		voterMap.put(FAILURE_LABEL, failures);
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, algConvergence);
 		hist.saveToFile(outFolderName + "/voter/graphic/" + expName + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}

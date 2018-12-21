@@ -294,7 +294,6 @@ public class EvaluatorManager extends DataManager {
 	
 	public Integer getCheckersNumber() {
 		return loadTrainScores().size();
-	}
-	
+	}	
 
 }
