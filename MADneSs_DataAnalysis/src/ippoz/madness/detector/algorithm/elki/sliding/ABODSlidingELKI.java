@@ -15,7 +15,6 @@ import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class ABODSlidingELKI.
  *
@@ -48,7 +47,7 @@ public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		CustomABOD<NumberVector> abod = new CustomABOD<NumberVector>(HellingerDistanceFunction.STATIC);
 		abod.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			if(abod.rankSingleABOF(newInstance) >= threshold*abod.getDbSize())
+			if(abod.rankSingleABOF(newInstance) >= threshold*sKnowledge.size())
 				return 1.0;
 			else return 0.0;
 		} else return 0.0;

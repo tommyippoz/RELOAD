@@ -115,12 +115,12 @@ public class BuildUI {
 	private void buildFrame(){
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		frame = new JFrame();
-		frame.setTitle("MADneSs Framework");
+		frame.setTitle("MUStArD Framework");
 		frame.setIconImage(new ImageIcon(getClass().getResource("/Logo_Icon.png")).getImage());
 		if(screenSize.getWidth() > 1600)
 			frame.setBounds(0, 0, (int)(screenSize.getWidth()*0.75), (int)(screenSize.getHeight()*0.75));
 		else frame.setBounds(0, 0, 800, 480);
-		frame.setBackground(Color.WHITE);
+		frame.getContentPane().setBackground(Color.WHITE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(null);
@@ -198,10 +198,11 @@ public class BuildUI {
 	}
 	
 	private JPanel buildHeaderTab(){
+		headerPanel.setBackground(Color.WHITE);
 		headerPanel.setBounds(0, 0, frame.getWidth(), 145);
 		headerPanel.setLayout(null);
-		ImageIcon ii = new ImageIcon(getClass().getResource("/Logo_Transparent.png"));
-		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(400, 125, Image.SCALE_DEFAULT)));
+		ImageIcon ii = new ImageIcon(getClass().getResource("/Mustard_Logo.png"));
+		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(140, 125, Image.SCALE_DEFAULT)));
 		lblMadness.setBounds(0, 10, frame.getWidth(), 125);
 		lblMadness.setHorizontalAlignment(SwingConstants.CENTER);
 		headerPanel.add(lblMadness);
@@ -210,6 +211,7 @@ public class BuildUI {
 	}
 	
 	private JPanel buildFooterTab(int tabY){
+		footerPanel.setBackground(Color.WHITE);
 		footerPanel.setBounds(frame.getWidth()/10, tabY, frame.getWidth()*4/5, 100);
 		footerPanel.setLayout(null);
 		
@@ -305,12 +307,14 @@ public class BuildUI {
 	}
 	
 	private void addToPanel(JPanel root, String tag, JPanel panel, Map<String, JPanel> refMap){
+		panel.setBackground(Color.WHITE);
 		root.add(panel);
 		refMap.put(tag, panel);
 	}
 	
 	private JPanel buildAlgorithmsDatasetsTab(int tabY){
 		int labelSpacing = 30;
+		dataAlgPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
 		dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, 100 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2));
@@ -326,6 +330,7 @@ public class BuildUI {
 		printOptions(dataAlgPanel, getDatasets(), 20, 2*labelSpacing, labelSpacing);
 		
 		JPanel seePrefPanel = new JPanel();
+		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 20 + labelSpacing*(getDatasets().length + 1), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
 		
 		JButton button = new JButton("Open Datasets");
@@ -353,6 +358,7 @@ public class BuildUI {
 		printOptions(dataAlgPanel, getAlgorithms(), 20, tabY + 30, labelSpacing);
 		
 		seePrefPanel = new JPanel();
+		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 60 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
 		
 		button = new JButton("Open Algorithms");
@@ -398,6 +404,7 @@ public class BuildUI {
 	
 	private JPanel buildPathsTab(int tabY){
 		int labelSpacing = 35;
+		pathPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Paths", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
 		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 8*labelSpacing + 10);
@@ -412,6 +419,7 @@ public class BuildUI {
 		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 6*labelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
 		
 		JPanel seePrefPanel = new JPanel();
+		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 7*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
 		
 		JButton button = new JButton("Open Scoring Preferences");
@@ -433,6 +441,7 @@ public class BuildUI {
 	
 	private JPanel buildSetupTab(int tabY){
 		int labelSpacing = 30;
+		setupPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Setup", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
 		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 10*labelSpacing + 15);
@@ -449,6 +458,7 @@ public class BuildUI {
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 8*labelSpacing, iManager.getSlidingWindowSizes()), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
+		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 9*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
 		
 		JButton button = new JButton("Open Preferences");
@@ -474,6 +484,7 @@ public class BuildUI {
 	
 	private JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText){
 		JPanel panel = new JPanel();
+		panel.setBackground(Color.WHITE);
 		panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.98), 25);
 		panel.setLayout(null);
 		
@@ -636,6 +647,7 @@ public class BuildUI {
 
 		private void buildTabbedPanel() {
 			tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+			tabbedPane.setBackground(Color.WHITE);
 			tabbedPane.setBounds(0, labelSpacing + 40, outFrame.getWidth() - 10, outFrame.getHeight() - labelSpacing - 50);		
 		}
 
@@ -646,10 +658,12 @@ public class BuildUI {
 
 		public void setVisible(boolean b) {
 			if(outFrame != null){
+				outFrame.getContentPane().setBackground(Color.WHITE);
 				outFrame.getContentPane().add(tabbedPane);
 				if(panelNumber > 4){
 					outFrame.setBounds(outFrame.getX(), outFrame.getY(), outFrame.getWidth(), outFrame.getHeight() + (panelNumber / 4)*labelSpacing);
 				}
+				tabbedPane.setForeground(Color.WHITE);
 				outFrame.setLocationRelativeTo(null);
 				outFrame.setVisible(b);
 			}
@@ -669,10 +683,12 @@ public class BuildUI {
 		
 		public void buildSummaryPanel(List<DetectorOutput> dOutList){
 			JPanel summaryPanel = new JPanel();
+			summaryPanel.setBackground(Color.WHITE);
 			summaryPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
 			summaryPanel.setLayout(null);
 			
 			JPanel fPanel = new JPanel();
+			fPanel.setBackground(Color.WHITE);
 			TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Common Setups", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 			fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, labelSpacing + 30);
 			fPanel.setBorder(tb);
@@ -689,8 +705,9 @@ public class BuildUI {
 		}
 		
 		private JPanel buildOutputSummaryPanel(DetectorOutput dOut, JPanel root, int i){
-			int elements = 6;
+			int elements = 7;
 			JPanel panel = new JPanel();
+			panel.setBackground(Color.WHITE);
 			panel.setBounds((int) (root.getWidth()*0.01), labelSpacing*(i+1) + 40, (int) (root.getWidth()*0.98), labelSpacing);
 			panel.setLayout(null);
 			
@@ -702,31 +719,31 @@ public class BuildUI {
 			
 			lbl = new JLabel(dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : "Algorithm");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setBounds(root.getWidth()/elements, 0, 2*root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getBestSetup() : "Best Configuration");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*2/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setBounds(root.getWidth()*3/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getBestRuns() : "Best Runs");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*3/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setBounds(root.getWidth()*4/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? dOut.getFaultsRatioString() : "Attacks Ratio");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*4/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setBounds(root.getWidth()*5/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
 			lbl = new JLabel(dOut != null ? String.valueOf(dOut.getFormattedBestScore()) : "Best Score");
 			lbl.setFont(new Font(lbl.getFont().getName(), dOut == null ? Font.BOLD : Font.PLAIN, 12));
-			lbl.setBounds(root.getWidth()*5/elements, 0, root.getWidth()/elements, labelSpacing);
+			lbl.setBounds(root.getWidth()*6/elements, 0, root.getWidth()/elements, labelSpacing);
 			lbl.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(lbl);
 			
@@ -735,10 +752,12 @@ public class BuildUI {
 		
 		private JPanel buildOutputPanel(DetectorOutput dOut) {	
 			JPanel containerPanel = new JPanel();
+			containerPanel.setBackground(Color.WHITE);
 			containerPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
 			containerPanel.setLayout(null);
 			
 			JPanel miscPanel = new JPanel();
+			miscPanel.setBackground(Color.WHITE);
 			TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Setup", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 			miscPanel.setBounds(5, 10, containerPanel.getWidth()/2 - 10, labelSpacing*3+30);
 			miscPanel.setBorder(tb);
@@ -749,12 +768,13 @@ public class BuildUI {
 			containerPanel.add(miscPanel);
 			
 			miscPanel = new JPanel();
+			miscPanel.setBackground(Color.WHITE);
 			tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Details", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 			miscPanel.setBounds(containerPanel.getWidth()/2 + 5, 10, containerPanel.getWidth()/2 - 10, labelSpacing*3+30);
 			miscPanel.setBorder(tb);
 			miscPanel.setLayout(null);
 			miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.01*miscPanel.getWidth()), 20, dOut.getBestSetup()));
-			miscPanel.add(createLPanel(true, "Best Runs", miscPanel, (int) (0.01*miscPanel.getWidth()), labelSpacing + 20, dOut.getBestRuns()));
+			miscPanel.add(createLPanel(true, "Runs", miscPanel, (int) (0.01*miscPanel.getWidth()), labelSpacing + 20, dOut.getBestRuns()));
 			miscPanel.add(createLPanel(true, "Best Score (" + dOut.getReferenceMetric().getMetricShortName() + ")", miscPanel, (int) (0.01*miscPanel.getWidth()), labelSpacing*2 + 20, String.valueOf(dOut.getBestScore())));			
 			containerPanel.add(miscPanel);
 			   
@@ -783,6 +803,7 @@ public class BuildUI {
 	        containerPanel.add(scroll);
 	        
 	        JPanel fPanel = new JPanel();
+	        fPanel.setBackground(Color.WHITE);
 			tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Additional Files", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 			fPanel.setBounds(outFrame.getWidth()/4, miscPanel.getHeight() + scroll.getHeight() + 20, outFrame.getWidth()/2, labelSpacing + 30);
 			fPanel.setBorder(tb);

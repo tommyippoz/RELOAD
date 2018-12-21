@@ -577,7 +577,7 @@ public class InputManager {
 
 	public boolean getOutputVisibility() {
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
-			return !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
+			return prefManager.getPreference(OUTPUT_FORMAT).equals("null");
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					OUTPUT_FORMAT + " not found. Using default value of 'not visible'");

@@ -201,6 +201,8 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		    }
 		    // Sample variance probably would be better here, but the ABOD publication
 		    // uses the naive variance.
+		    if(s.getNaiveVariance() > 0)
+		    	System.out.println(s.getNaiveVariance());
 		    return s.getNaiveVariance();
 		}
 	  }

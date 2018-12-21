@@ -15,7 +15,7 @@
 
 nslkdd/nslkdd_probe.loader
 
-*nslkdd/nslkdd_dos.loader
+nslkdd/nslkdd_dos.loader
 
 *nslkdd/nslkdd_r2l.loader
 

@@ -140,12 +140,14 @@ public class CSVPreLoader extends CSVLoader {
 
 	@Override
 	public String getRuns() {
+		String tag, endTag;
 		if(dataList != null){
+			tag = dataList.get(0).getDataTag();
 			if(dataList.size() == 1){
-				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) + "]";
+				return "[" + tag.substring(tag.indexOf("_") + 1) + "]";
 			} else {
-				return "[" + dataList.get(0).getDataTag().charAt(dataList.get(0).getDataTag().length()-1) 
-						+ "-" + dataList.get(dataList.size()-1).getDataTag().charAt(dataList.get(dataList.size()-1).getDataTag().length()-1) + "]";
+				endTag = dataList.get(dataList.size()-1).getDataTag();				
+				return "[" + tag.substring(tag.indexOf("_") + 1) + "-" + endTag.substring(endTag.indexOf("_") + 1) + "]";
 			}
 		}
 		else return null;

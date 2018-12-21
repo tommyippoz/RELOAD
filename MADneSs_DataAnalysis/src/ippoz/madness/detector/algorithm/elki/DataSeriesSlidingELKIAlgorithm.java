@@ -12,6 +12,7 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 
+import java.util.Arrays;
 import java.util.List;
 
 import de.lmu.ifi.dbs.elki.database.Database;
@@ -32,6 +33,7 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 
 	@Override
 	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		// TODO
 		return evaluateSlidingELKISnapshot(sKnowledge, translateSnapList(snapList, true), convertSnapToVector(dsSnapshot)); 
 	}
 

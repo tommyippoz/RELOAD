@@ -188,8 +188,13 @@ public class DetectorOutput {
 	}
 	
 	public String getAlgorithm(){
-		if(writableTag != null)
-			return writableTag.split(",")[2];
+		String[] splitted;
+		if(writableTag != null){
+			splitted = writableTag.split(",");
+			if(splitted.length > 3)
+				return splitted[2] + " (" + splitted[4] + " - " + splitted[3] + ")";
+			else return splitted[2];
+		}
 		else return null;
 	}
 
@@ -203,7 +208,10 @@ public class DetectorOutput {
 				result[row][2] = nVoters.get(voterTreshold.trim()).toString();
 				int col = 3;
 				for(Metric met : evaluationMetrics){
-					result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(Metric.getAverageMetricValue(detailedMetricScores.get(voterTreshold).get(anomalyTreshold.trim()), met))));
+					String res = Metric.getAverageMetricValue(detailedMetricScores.get(voterTreshold).get(anomalyTreshold.trim()), met);
+					if(res.equals(String.valueOf(Double.NaN)))
+						result[row][col++] = "-";
+					result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(res)));
 				}
 				row++;
 			}

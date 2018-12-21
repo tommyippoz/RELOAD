@@ -27,7 +27,7 @@ public abstract class DataManager extends ThreadScheduler {
 		kMap = map;
 		if(kMap != null && kMap.size() > 0)
 			AppLogger.logInfo(getClass(), "Instances Loaded with " + getInjectionsRatio() + "% of Faults/Attacks");
-	}
+	}      
 	
 	public double getInjectionsRatio(){
 		int injSum = 0;
