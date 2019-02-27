@@ -8,7 +8,6 @@ import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.executable.DetectorMain;
-import ippoz.madness.detector.executable.DetectorUI;
 import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
 import ippoz.madness.detector.loader.MySQLLoader;
@@ -22,7 +21,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -41,7 +39,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -82,6 +79,8 @@ public class BuildUI {
 	
 	private static final String SETUP_LABEL_TRAINING = "Training";
 	
+	private static final String SETUP_KFOLD_VALIDATION = "K-Fold Cross Validation";
+	
 	private static final String SETUP_LABEL_SLIDING_POLICY = "Sliding Policy";
 	
 	private static final String SETUP_LABEL_WINDOW_SIZE = "Window Size";
@@ -100,7 +99,7 @@ public class BuildUI {
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
-	private Map<String, JPanel> setupMap, pathMap, dataAlgMap;
+	private Map<String, JPanel> setupMap, pathMap;
 
 	private JFrame frame;
 	
@@ -110,7 +109,6 @@ public class BuildUI {
 		this.iManager = iManager;
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
-		dataAlgMap = new HashMap<String, JPanel>();
 		buildFrame();
 	}
 	
@@ -134,7 +132,6 @@ public class BuildUI {
 		frame.getContentPane().removeAll();
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
-		dataAlgMap = new HashMap<String, JPanel>();
 		frame = buildJFrame();
 		frame.setVisible(true);
 	}
@@ -408,17 +405,12 @@ public class BuildUI {
 					possibilities[i++] = at.toString();
 				}
 				String returnValue = (String)JOptionPane.showInputDialog(
-				                    frame,
-				                    "Choose an Algorithm",
-				                    "Add Algorithm",
-				                    JOptionPane.PLAIN_MESSAGE,
-				                    null,
-				                    possibilities, "");
+				                    frame, "Choose an Algorithm", "Add Algorithm",
+				                    JOptionPane.PLAIN_MESSAGE, null, possibilities, "");
 				if (returnValue != null && returnValue.length() > 0) {
 				    iManager.addAlgorithm(returnValue);
 				    reload();
 				}
-
 			} } );
 		seePrefPanel.add(button);
 		button = new JButton("Open Algorithms");
@@ -501,25 +493,33 @@ public class BuildUI {
 	
 	private JPanel buildSetupTab(int tabY){
 		int labelSpacing = 30;
+		JPanel comp;
 		setupPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Setup", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 10*labelSpacing + 15);
+		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 11*labelSpacing + 15);
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
 		addToPanel(setupPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, setupPanel, labelSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
+		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*labelSpacing, MetricType.values(), iManager.getMetricType()), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*labelSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*labelSpacing, iManager.getFilteringFlag()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*labelSpacing, Double.toString(iManager.getFilteringTreshold())), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*labelSpacing, iManager.getTrainingFlag()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 7*labelSpacing, iManager.getSlidingPolicies()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 8*labelSpacing, iManager.getSlidingWindowSizes()), setupMap);
+		
+		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*labelSpacing, Double.toString(iManager.getFilteringTreshold()));
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*labelSpacing, iManager.getFilteringFlag(), comp), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, comp, setupMap);
+		
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*labelSpacing, Integer.toString(iManager.getKFoldCounter()));
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*labelSpacing, iManager.getTrainingFlag(), comp), setupMap);
+		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
+		
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*labelSpacing, iManager.getSlidingPolicies()), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*labelSpacing, iManager.getSlidingWindowSizes()), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 9*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 10*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
 		
 		JButton button = new JButton("Open Preferences");
 		button.setVisible(true);
@@ -638,7 +638,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked){
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 25);
 		panel.setLayout(null);
@@ -647,6 +647,17 @@ public class BuildUI {
 		cb.setSelected(checked);
 		cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, 20);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		if(comp != null){
+			cb.addActionListener(new ActionListener() {
+			    @Override
+			    public void actionPerformed(ActionEvent event) {
+			        JCheckBox cb = (JCheckBox) event.getSource();
+			        comp.setVisible(cb.isSelected());
+			    }
+			});
+		}
+		
 		panel.add(cb);
 		
 		root.add(panel);

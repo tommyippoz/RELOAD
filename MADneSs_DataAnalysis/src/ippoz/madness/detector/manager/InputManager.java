@@ -32,7 +32,6 @@ import ippoz.madness.detector.reputation.Reputation;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -86,6 +85,9 @@ public class InputManager {
 	
 	/** The Constant FILTERING_TRESHOLD. */
 	public static final String FILTERING_TRESHOLD = "FILTERING_TRESHOLD"; 
+	
+	/** The Constant KFOLD_COUNTER. */
+	public static final String KFOLD_COUNTER = "KFOLD_COUNTER"; 
 	
 	public static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
 	
@@ -365,6 +367,7 @@ public class InputManager {
 				return new FScore_Metric(Double.valueOf(param), validAfter);
 			case "FPR":
 				return new FalsePositiveRate_Metric(validAfter);
+			case "MCC":
 			case "MATTHEWS":
 				return new Matthews_Coefficient(validAfter);
 			case "AUC":
@@ -596,6 +599,16 @@ public class InputManager {
 		}
 	}
 	
+	public int getKFoldCounter() {
+		if(prefManager.hasPreference(KFOLD_COUNTER) && AppUtility.isNumber(prefManager.getPreference(KFOLD_COUNTER)))
+			return Integer.parseInt(prefManager.getPreference(KFOLD_COUNTER));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					KFOLD_COUNTER + " not found. Using default value of '1'");
+			return 1;
+		}
+	}
+	
 	public String getScoresFile(String prequel){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
 			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + prefManager.getPreference(SCORES_FILE);
@@ -646,6 +659,8 @@ public class InputManager {
 						"FILTERING_FLAG = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
 						"TRAIN_FLAG = 1\n");
+				writer.write("\n* K for the K-Fold Evaluation (Default is 1).\n" + 
+						"KFOLD_COUNTER = 1\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
 						"METRIC = FSCORE(2)\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 

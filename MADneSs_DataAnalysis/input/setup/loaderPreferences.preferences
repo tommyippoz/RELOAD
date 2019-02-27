@@ -15,7 +15,7 @@
 
 * NSL-KDD
 
-*nslkdd/nslkdd_probe.loader
+nslkdd/nslkdd_probe.loader
 
 *nslkdd/nslkdd_dos.loader
 
@@ -31,7 +31,7 @@
 
 * iscx/iscx_DDoS.loader
 
-iscx/iscx_infiltrator.loader
+* iscx/iscx_infiltrator.loader
 
 * UNSW-NB15
 

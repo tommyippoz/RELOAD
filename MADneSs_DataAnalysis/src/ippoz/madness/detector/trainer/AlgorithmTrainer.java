@@ -74,37 +74,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	/**
-	 * Loads the snapshots of all the training experiments.
-	 *
-	 * @return the hash map of the snapshots
-	 */
-	/*private HashMap<String, LinkedList<Snapshot>> loadAlgExpSnapshots() {
-		HashMap<String, LinkedList<Snapshot>> expAlgMap = new HashMap<String, LinkedList<Snapshot>>();
-		for(ExperimentData expData : expList){
-			expAlgMap.put(expData.getName(), expData.buildSnapshotsFor(algTag, dataSeries, bestConf));
-		}
-		return expAlgMap;
-	}*/
-	
-	/**
-	 * Deep clone of the experiment list.
-	 *
-	 * @param trainData the train data
-	 * @return the cloned experiment list
-	 */
-	/*private List<ExperimentData> deepClone(List<ExperimentData> trainData) {
-		List<ExperimentData> list = new ArrayList<ExperimentData>(trainData.size());
-		try {
-			for(ExperimentData eData : trainData){
-				list.add(eData.clone());
-			}
-		} catch (CloneNotSupportedException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to clone Experiment");
-		}
-		return list;
-	}*/
-	
-	/**
 	 * Checks if is valid train.
 	 *
 	 * @return true, if is valid train
@@ -118,6 +87,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
+		System.out.println("Training Set: " + kList.size());
 		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
@@ -160,22 +130,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		sameResultFlag = kList.size() > 1 && AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
 		return AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
 	}
-	
-	/**
-	 * Evaluate reputation score on a specified set of experiments.
-	 *
-	 * @param list the train data
-	 * @param algExpSnapshots the alg exp snapshots
-	 * @return the reputation score
-	 */
-	/*private double evaluateReputationScore(){
-		List<Double> reputationResults = new ArrayList<Double>(kList.size());
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
-		for(Knowledge knowledge : kList){
-			reputationResults.add(reputation.evaluateReputation(algorithm, knowledge));
-		}
-		return AppUtility.calcAvg(reputationResults.toArray(new Double[reputationResults.size()]));
-	}*/
 
 	/**
 	 * Gets the data series.
