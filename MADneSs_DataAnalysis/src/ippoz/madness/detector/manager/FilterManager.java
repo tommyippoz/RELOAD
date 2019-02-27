@@ -39,8 +39,8 @@ public class FilterManager extends TrainDataManager {
 	 * Instantiates a new filter manager.
 	 *
 	 */
-	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex);
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex, kfold);
 		this.filteringThreshold = filteringThreshold;
 	}
 
@@ -66,7 +66,7 @@ public class FilterManager extends TrainDataManager {
 	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
 		PearsonCombinationManager pcManager;
 		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge());
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(), kfold);
 		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
 		pcManager.flush();
 	}
@@ -122,7 +122,7 @@ public class FilterManager extends TrainDataManager {
 					case PEA:
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
+						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType), kfold);
 						pcManager.calculatePearsonIndexes(0.9, 0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
@@ -130,7 +130,7 @@ public class FilterManager extends TrainDataManager {
 					default:
 						for(DataSeries dataSeries : seriesList){
 							if(dataSeries.compliesWith(algType))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType)));
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), kfold));
 						}
 						break;
 				}

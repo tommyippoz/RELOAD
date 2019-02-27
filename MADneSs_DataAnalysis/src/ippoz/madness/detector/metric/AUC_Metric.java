@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.metric;
 
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.TimedValue;
 
@@ -16,7 +15,7 @@ import java.util.List;
 public class AUC_Metric extends BetterMaxMetric {
 
 	public AUC_Metric(boolean validAfter) {
-		super(null, validAfter);
+		super(MetricType.AUC, validAfter);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -24,7 +23,8 @@ public class AUC_Metric extends BetterMaxMetric {
 	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
 		double tpr = new TruePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
 		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
-		return (tpr + fpr)/2;
+		double auc = (tpr * fpr)/2 + (tpr+1)*(1-fpr)/2;
+		return auc;
 	}
 
 	@Override

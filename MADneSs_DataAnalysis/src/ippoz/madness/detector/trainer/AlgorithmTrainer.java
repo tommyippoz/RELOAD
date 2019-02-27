@@ -16,6 +16,7 @@ import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -53,6 +54,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
 	private boolean sameResultFlag;
 	
+	protected int kfold;
+	
 	private long trainingTime;
 	
 	/**
@@ -65,12 +68,27 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, int kfold) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
 		this.reputation = reputation;
 		this.kList = kList;
+		this.kfold = kfold;
+	}
+	
+	/**
+	 * Instantiates a new algorithm trainer.
+	 *
+	 * @param algTag the algorithm tag
+	 * @param dataSeries the data series
+	 * @param metric the used metric
+	 * @param reputation the used reputation metric
+	 * @param tTiming the t timing
+	 * @param kList the considered train data
+	 */
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
+		this(algTag, dataSeries, metric, reputation, kList, 1);
 	}
 	
 	/**
@@ -163,8 +181,11 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the exp list
 	 */
-	protected List<Knowledge> getKnowledgeList() {
-		return kList;
+	protected List<List<Knowledge>> getKnowledgeList() {
+		List<List<Knowledge>> outList = new LinkedList<List<Knowledge>>();
+		if(kfold <= 1)
+			outList.add(kList);
+		return outList;
 	}
 	
 	public int getExpNumber(){

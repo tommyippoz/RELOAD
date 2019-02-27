@@ -192,7 +192,7 @@ public class DetectionManager {
 		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), generateKnowledge(buildLoader("filter").get(0).fetch()), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
+				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), generateKnowledge(buildLoader("filter").get(0).fetch()), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				selectedDataSeries = fManager.filter(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_filtered.csv");
 				fManager.flush();
 			}
@@ -213,11 +213,11 @@ public class DetectionManager {
 		try {
 			if(needTest()) {
 				if(selectedDataSeries == null && !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))))
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
+					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				else {
 					if(selectedDataSeries == null){
-						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
-					} else tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, algTypes, selectedDataSeries); 
+						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString(), iManager.getKFoldCounter());
+					} else tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, algTypes, selectedDataSeries, iManager.getKFoldCounter()); 
 				}
 				tManager.train(buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_scores.csv");
 				tManager.flush();

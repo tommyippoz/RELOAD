@@ -60,8 +60,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
-		super(map, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
+	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+		super(map, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -79,8 +79,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param simplePearson 
 	 * @param algTypes2 the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -96,8 +96,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -113,8 +113,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString) {
-		this(setupFolder, dsDomain, scoresFolder, outputFolder, map, confList, metric, reputation, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
+		this(setupFolder, dsDomain, scoresFolder, outputFolder, map, confList, metric, reputation, algTypes, kfold);
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -256,7 +256,7 @@ public class TrainerManager extends TrainDataManager {
 					case PEA:
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getScoresFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
+						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType), kfold);
 						pcManager.calculatePearsonIndexes(0.9, 0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
@@ -264,7 +264,7 @@ public class TrainerManager extends TrainDataManager {
 					default:
 						for(DataSeries dataSeries : seriesList){
 							if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType)));
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), kfold));
 						}
 						break;
 				}

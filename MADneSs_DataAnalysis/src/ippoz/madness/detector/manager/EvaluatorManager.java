@@ -274,7 +274,6 @@ public class EvaluatorManager extends DataManager {
 			for(Metric met : validationMetrics){
 				pw.append(met.getMetricName() + ",");
 			}
-			pw.append("AUC\n");
 			pw.close();
 		} catch (FileNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to find results file");

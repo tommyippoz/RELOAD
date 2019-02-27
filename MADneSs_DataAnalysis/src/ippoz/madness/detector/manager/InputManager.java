@@ -241,7 +241,6 @@ public class InputManager {
 					}
 				}
 			}
-			metricList.add(getMetric("AUC"));
 			reader.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
