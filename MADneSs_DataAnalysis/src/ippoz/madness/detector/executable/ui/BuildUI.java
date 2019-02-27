@@ -8,6 +8,7 @@ import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.executable.DetectorMain;
+import ippoz.madness.detector.executable.DetectorUI;
 import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
 import ippoz.madness.detector.loader.MySQLLoader;
@@ -21,6 +22,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -115,8 +117,8 @@ public class BuildUI {
 	private void buildFrame(){
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		frame = new JFrame();
-		frame.setTitle("MUStArD Framework");
-		frame.setIconImage(new ImageIcon(getClass().getResource("/Logo_Icon.png")).getImage());
+		frame.setTitle("RELOAD Framework");
+		frame.setIconImage(new ImageIcon(getClass().getResource("/RELOAD_Transparent.png")).getImage());
 		if(screenSize.getWidth() > 1600)
 			frame.setBounds(0, 0, (int)(screenSize.getWidth()*0.75), (int)(screenSize.getHeight()*0.75));
 		else frame.setBounds(0, 0, 800, 480);
@@ -201,8 +203,8 @@ public class BuildUI {
 		headerPanel.setBackground(Color.WHITE);
 		headerPanel.setBounds(0, 0, frame.getWidth(), 145);
 		headerPanel.setLayout(null);
-		ImageIcon ii = new ImageIcon(getClass().getResource("/Mustard_Logo.png"));
-		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(140, 125, Image.SCALE_DEFAULT)));
+		ImageIcon ii = new ImageIcon(getClass().getResource("/RELOAD_Transparent.png"));
+		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(320, 125, Image.SCALE_DEFAULT)));
 		lblMadness.setBounds(0, 10, frame.getWidth(), 125);
 		lblMadness.setHorizontalAlignment(SwingConstants.CENTER);
 		headerPanel.add(lblMadness);
@@ -225,7 +227,7 @@ public class BuildUI {
 		} );
 		footerPanel.add(button);
 		
-		button = new JButton("Run MADneSs");
+		button = new JButton("RELOAD!");
 		button.setBounds(footerPanel.getWidth()*2/5 + 65, 0, footerPanel.getWidth()/5 - 65, 40);
 		button.setFont(new Font("Times", Font.BOLD, 15));
 		button.addActionListener(new ActionListener() { 
@@ -241,7 +243,7 @@ public class BuildUI {
 		{  
 		    public void mouseClicked(MouseEvent e)  
 		    {  
-		    	JOptionPane.showMessageDialog(frame, "Multi-Layer Anomaly Detection for Complex Dynamic Systems (MADneSs) Framework\n"
+		    	JOptionPane.showMessageDialog(frame, "Rapid Evaluation of Anomaly Detectors (RELOAD) Framework\n"
 		    			+ "For further information, please refer to the Resilient Computing Lab @ University of Florence, Italy\n"
 		    			+ "Website: http://rcl.dsi.unifi.it/");
 		    }  
@@ -276,10 +278,10 @@ public class BuildUI {
 							}
 						}
 					}
-					AppLogger.logInfo(DetectorMain.class, dmList.size() + " MADneSs instances found.");
+					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(dmList.size());
 					for(int i=0;i<dmList.size();i++){
-						AppLogger.logInfo(DetectorMain.class, "Running MADneSs [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
+						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
 						outList.add(DetectorMain.runMADneSs(dmList.get(i)));
 						pBar.moveNext();
 					}
@@ -294,13 +296,28 @@ public class BuildUI {
 	
 	private void printOptions(JPanel panel, String[] options, int fromX, int fromY, int space){
 		JLabel lbl;
+		JButton jb;
 		int i = 0;
+		int buttonsSpace = 35;
 		if(options != null){
 			for(String option : options){
 				lbl = new JLabel(option);
-				lbl.setBounds(fromX, fromY + i*space, panel.getWidth()-fromX, 20);
+				lbl.setBounds(fromX, fromY + i*space, panel.getWidth() - fromX - buttonsSpace, 20);
 				lbl.setHorizontalAlignment(SwingConstants.CENTER);
 				panel.add(lbl);
+				jb = new JButton("-");
+				jb.setBounds(panel.getWidth() - fromX - buttonsSpace, fromY + i*space, buttonsSpace, 20);
+				jb.setHorizontalAlignment(SwingConstants.CENTER);
+				jb.addActionListener(new ActionListener() { 
+					public void actionPerformed(ActionEvent e) { 
+						if(option.contains(".")){
+							iManager.removeDataset(option);
+						} else {
+							iManager.removeAlgorithm(option);
+						}
+						reload();
+					} } );
+				panel.add(jb);
 				i++;
 			}
 		}
@@ -333,9 +350,27 @@ public class BuildUI {
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 20 + labelSpacing*(getDatasets().length + 1), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
 		
-		JButton button = new JButton("Open Datasets");
+		JButton button = new JButton("Add Dataset");
 		button.setVisible(true);
-		button.setBounds(0, 0, pathPanel.getWidth()*2/5, 25);
+		button.setBounds(25, 0, pathPanel.getWidth()/5, 25);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				JFileChooser jfc = new JFileChooser(new File(iManager.getLoaderFolder()).getAbsolutePath());
+				int returnValue = jfc.showOpenDialog(null);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+					File selectedFile = jfc.getSelectedFile();
+					Path pathAbsolute = Paths.get(selectedFile.getAbsolutePath());
+			        Path pathBase = Paths.get(new File(iManager.getLoaderFolder()).getAbsolutePath());
+					if(!selectedFile.isDirectory() && selectedFile.getName().endsWith(".loader")){
+						iManager.addDataset(pathBase.relativize(pathAbsolute).toString());
+						reload();
+					} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a '.loader' file");
+				}
+			} } );
+		seePrefPanel.add(button);
+		button = new JButton("See Datasets");
+		button.setVisible(true);
+		button.setBounds(0, 0, pathPanel.getWidth()/5, 25);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
@@ -345,6 +380,7 @@ public class BuildUI {
 				}
 			} } );
 		seePrefPanel.add(button);
+		
 		dataAlgPanel.add(seePrefPanel);
 		
 		tabY = labelSpacing*(getDatasets().length + 2) + 40;
@@ -361,9 +397,33 @@ public class BuildUI {
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 60 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 1);
 		
+		button = new JButton("Add Algorithm");
+		button.setVisible(true);
+		button.setBounds(25, 0, pathPanel.getWidth()/5, 25);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				Object[] possibilities = new String[AlgorithmType.values().length];
+				int i = 0;
+				for(AlgorithmType at : AlgorithmType.values()){
+					possibilities[i++] = at.toString();
+				}
+				String returnValue = (String)JOptionPane.showInputDialog(
+				                    frame,
+				                    "Choose an Algorithm",
+				                    "Add Algorithm",
+				                    JOptionPane.PLAIN_MESSAGE,
+				                    null,
+				                    possibilities, "");
+				if (returnValue != null && returnValue.length() > 0) {
+				    iManager.addAlgorithm(returnValue);
+				    reload();
+				}
+
+			} } );
+		seePrefPanel.add(button);
 		button = new JButton("Open Algorithms");
 		button.setVisible(true);
-		button.setBounds(0, 0, pathPanel.getWidth()*2/5, 25);
+		button.setBounds(0, 0, pathPanel.getWidth()/5, 25);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {

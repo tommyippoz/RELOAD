@@ -178,7 +178,10 @@ public class EvaluatorManager extends DataManager {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		expMetricEvaluations.add(((ExperimentVoter)t).printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+		ExperimentVoter ev = (ExperimentVoter)t;
+		if(ev.getFailuresNumber() > 0){
+			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+		}
 	}
 	
 	/**

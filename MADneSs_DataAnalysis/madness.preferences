@@ -9,7 +9,7 @@ FILTERING_FLAG = 1
 TRAIN_FLAG = 1
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.
-METRIC = Matthews
+METRIC = FSCORE(0.5)
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = absolute

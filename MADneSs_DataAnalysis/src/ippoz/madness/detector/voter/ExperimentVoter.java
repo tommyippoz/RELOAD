@@ -61,7 +61,6 @@ public class ExperimentVoter extends Thread {
 	/** The contracted results of the voting. */
 	private List<TimedValue> voting;
 	
-	/** The contracted results of the voting. */
 	private List<TimedValue> failures;
 	
 	private Map<KnowledgeType, Knowledge> kMap;
@@ -352,6 +351,10 @@ public class ExperimentVoter extends Thread {
 	
 	public List<TimedValue> getExperimentVoting(){
 		return voting;
+	}
+
+	public int getFailuresNumber() {
+		return failures != null ? failures.size() : 0;
 	}
 
 }

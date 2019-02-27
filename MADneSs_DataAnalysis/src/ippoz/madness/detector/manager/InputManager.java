@@ -32,6 +32,7 @@ import ippoz.madness.detector.reputation.Reputation;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -819,6 +820,102 @@ public class InputManager {
 
 	public boolean filteringResultExists(String datasetName) {
 		return new File(getScoresFolder() + datasetName + "_filtered.csv").exists();
+	}
+
+	public void removeDataset(String option) {
+		String a = option.split("-")[1].trim();
+		String b = a.split(" ")[0];
+		removeFromFile(new File(getSetupFolder() + "loaderPreferences.preferences"), b.trim(), true);
 	}	
+	
+	public void removeAlgorithm(String option) {
+		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option, false);
+	}
+	
+	private void removeFromFile(File file, String toRemove, boolean partialMatching){
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							if(readed.equalsIgnoreCase(toRemove) || (partialMatching && readed.endsWith(toRemove))){
+								readed = fileLines.remove(fileLines.size()-1);
+								readed = "* " + readed;
+								fileLines.add(readed);
+								found = true;
+							}
+						}
+					}
+				}
+				reader.close();
+				if(found){
+					writer = new BufferedWriter(new FileWriter(file));
+					for(String st : fileLines){
+						writer.write(st + "\n");
+					}
+					writer.close();
+				}
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 		
+	}
+	
+	public void addDataset(String option) {
+		addToFile(new File(getSetupFolder() + "loaderPreferences.preferences"), option);
+	}	
+	
+	public void addAlgorithm(String option) {
+		addToFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option);
+	}
+
+	private void addToFile(File file, String toAdd){
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && readed.trim().startsWith("*")){
+							readed = readed.substring(1).trim();
+							if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
+								readed = fileLines.remove(fileLines.size()-1);
+								readed = readed.substring(1).trim();
+								fileLines.add(readed);
+								found = true;
+							}
+						}
+					}
+				}
+				reader.close();
+				if(!found){
+					fileLines.add(toAdd);
+				}
+				writer = new BufferedWriter(new FileWriter(file));
+				for(String st : fileLines){
+					writer.write(st + "\n");
+				}
+				writer.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 		
+	}
 	
 }
