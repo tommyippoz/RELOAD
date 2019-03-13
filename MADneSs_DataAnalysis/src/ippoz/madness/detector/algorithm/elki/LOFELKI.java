@@ -8,8 +8,11 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.scoreclassifier.AnomalyResult;
+import ippoz.madness.detector.scoreclassifier.ScoreClassifier;
 
 import java.io.File;
+import java.util.List;
 
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
@@ -34,7 +37,7 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	
 	private CustomLOF cLOF;
 	
-	private double threshold;
+	private List<Double> scoresList;
 	
 	public LOFELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, false);
@@ -43,12 +46,20 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	    		SquaredEuclideanDistanceFunction.STATIC);
 		if(conf.hasItem(TMP_FILE)){
 			cLOF.loadFile(conf.getItem(TMP_FILE));
-			threshold = parseThreshold(conf);
+			clearLoggedScores();
+			for(int i=0;i<cLOF.size();i++){
+				logScore(cLOF.getScore(i+1));
+			}
+			scoresList = cLOF.getScoresList();
 		}
 	}
 
 	private double parseThreshold(AlgorithmConfiguration conf) {
 		double ratio;
+		clearLoggedScores();
+		for(int i=0;i<cLOF.size();i++){
+			logScore(cLOF.getScore(i+1));
+		}
 		if(conf != null && conf.hasItem(THRESHOLD)){
 			if(AppUtility.isNumber(conf.getItem(THRESHOLD))){
 				ratio = Double.parseDouble(conf.getItem(THRESHOLD));
@@ -65,7 +76,11 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 
 		cLOF.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
-		threshold = parseThreshold(conf);
+		clearLoggedScores();
+		for(int i=0;i<cLOF.size();i++){
+			logScore(cLOF.getScore(i+1));
+		}
+		scoresList = cLOF.getScoresList();
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
@@ -81,14 +96,19 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	}
 
 	@Override
-	protected double evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
 		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
+		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getClassifier() != null){
 			double of = cLOF.calculateSingleOF(v);
-			if(of >= threshold)
-				return 1.0;
-			else return 0.0;
-		} else return 0.0;
+			return getClassifier().classify(of);
+		} else return AnomalyResult.UNKNOWN;
 	}
 
+	@Override
+	protected ScoreClassifier buildClassifier() {
+		if(conf != null && conf.hasItem(THRESHOLD))
+			return ScoreClassifier.getClassifier(scoresList, conf.getItem(THRESHOLD));
+		else return null;
+	}
+	
 }

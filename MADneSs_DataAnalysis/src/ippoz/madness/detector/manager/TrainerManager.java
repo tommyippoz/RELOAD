@@ -292,7 +292,7 @@ public class TrainerManager extends TrainDataManager {
 		AlgorithmTrainer at = ((AlgorithmTrainer)t);
 		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
 				(at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
-				" Score: " + at.getMetricScore());		
+				" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");		
 		at.flush();
 	}
 	
@@ -335,11 +335,12 @@ public class TrainerManager extends TrainDataManager {
 						scoreWriter.write(trainer.getSeriesDescription() + "§" + 
 								trainer.getAlgType() + "§" +
 								trainer.getReputationScore() + "§" + 
-								trainer.getMetricScore() + "§" +  
+								trainer.getMetricAvgScore() + "§" +  
+								trainer.getMetricStdScore() + "§" + 
 								trainer.getBestConfiguration().toFileRow(false) + "\n");
 						statMap.get(trainer.getAlgType())[0] += 1.0;
 						statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
-						statMap.get(trainer.getAlgType())[2] += trainer.getMetricScore();
+						statMap.get(trainer.getAlgType())[2] += trainer.getMetricAvgScore();
 						if(count <= 10)
 							statMap.get(trainer.getAlgType())[3] += 1.0;
 						if(count <= 50)
@@ -347,11 +348,11 @@ public class TrainerManager extends TrainDataManager {
 						if(count <= 100)
 							statMap.get(trainer.getAlgType())[5] += 1.0;
 						if(count <= 10)
-							statMap.get(trainer.getAlgType())[6] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[6] += trainer.getMetricAvgScore();
 						if(count <= 50)
-							statMap.get(trainer.getAlgType())[7] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[7] += trainer.getMetricAvgScore();
 						if(count <= 100)
-							statMap.get(trainer.getAlgType())[8] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[8] += trainer.getMetricAvgScore();
 					}
 				}			
 			}

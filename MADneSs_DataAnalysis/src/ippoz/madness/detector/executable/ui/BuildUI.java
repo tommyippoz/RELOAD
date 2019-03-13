@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.executable.ui;
 
+import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -104,12 +106,16 @@ public class BuildUI {
 	private JFrame frame;
 	
 	private InputManager iManager;
+	
+	private boolean isUpdating;
 
 	public BuildUI(InputManager iManager){
 		this.iManager = iManager;
+		isUpdating = true;
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
 		buildFrame();
+		isUpdating = false;
 	}
 	
 	private void buildFrame(){
@@ -128,12 +134,14 @@ public class BuildUI {
 	}
 	
 	private void reload() {
+		isUpdating = true;
 		frame.setVisible(false);
 		frame.getContentPane().removeAll();
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
 		frame = buildJFrame();
 		frame.setVisible(true);
+		isUpdating = false;
 	}
 	
 	public JFrame getFrame() {
@@ -175,6 +183,9 @@ public class BuildUI {
 	}
 	
 	public JFrame buildJFrame(){
+		
+		isUpdating = true;
+		
 		headerPanel = new JPanel();
 		frame.getContentPane().add(buildHeaderTab());
 		
@@ -192,6 +203,8 @@ public class BuildUI {
 		
 		frame.setBounds(0, 0, frame.getWidth(), headerPanel.getHeight() + Math.max(setupPanel.getHeight(), Math.max(pathPanel.getHeight(), dataAlgPanel.getHeight())) + footerPanel.getHeight());
 		frame.setLocationRelativeTo(null);
+		
+		isUpdating = false;
 		
 		return frame;
 	}
@@ -402,6 +415,9 @@ public class BuildUI {
 				Object[] possibilities = new String[AlgorithmType.values().length];
 				int i = 0;
 				for(AlgorithmType at : AlgorithmType.values()){
+					if(at != AlgorithmType.RCC && at != AlgorithmType.HIST && at != AlgorithmType.CONF 
+						&& at != AlgorithmType.PEA && at != AlgorithmType.INV && at != AlgorithmType.WER
+						&& at != AlgorithmType.TEST && !Arrays.asList(getAlgorithms()).contains(at.toString()))
 					possibilities[i++] = at.toString();
 				}
 				String returnValue = (String)JOptionPane.showInputDialog(
@@ -449,7 +465,7 @@ public class BuildUI {
 		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
 		for(List<AlgorithmType> aList : aComb){
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1);
+			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " (" + DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1))) + ")";
 		}
 		return algStrings;
 	}
@@ -503,19 +519,21 @@ public class BuildUI {
 		
 		addToPanel(setupPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, setupPanel, labelSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*labelSpacing, MetricType.values(), iManager.getMetricType()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*labelSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat()), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*labelSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*labelSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*labelSpacing, Double.toString(iManager.getFilteringTreshold()));
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*labelSpacing, iManager.getFilteringFlag(), comp), setupMap);
+		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*labelSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD);
+		comp.setVisible(iManager.getFilteringFlag());
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*labelSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*labelSpacing, Integer.toString(iManager.getKFoldCounter()));
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*labelSpacing, iManager.getTrainingFlag(), comp), setupMap);
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*labelSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*labelSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*labelSpacing, iManager.getSlidingPolicies()), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*labelSpacing, iManager.getSlidingWindowSizes()), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*labelSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*labelSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -563,7 +581,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText){
+	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 25);
 		panel.setLayout(null);
@@ -594,7 +612,7 @@ public class BuildUI {
 
 			public void workOnUpdate() {
 				if (textField.getText() != null && textField.getText().length() > 0){
-	        		iManager.updatePreference(panelToPreference(textName), textField.getText());
+	        		iManager.updatePreference(fileTag, textField.getText(), true);
 	        	}
 			}
 		});
@@ -627,7 +645,7 @@ public class BuildUI {
 			        Path pathBase = Paths.get(new File("").getAbsolutePath());
 					if(!folderFlag || selectedFile.isDirectory()){
 						button.setText(pathBase.relativize(pathAbsolute).toString());
-						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString());
+						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString(), true);
 					} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a folder");
 				}
 			} } );
@@ -638,7 +656,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp){
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 25);
 		panel.setLayout(null);
@@ -654,6 +672,11 @@ public class BuildUI {
 			    public void actionPerformed(ActionEvent event) {
 			        JCheckBox cb = (JCheckBox) event.getSource();
 			        comp.setVisible(cb.isSelected());
+			        if(!isUpdating){
+			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true);
+			        	reload();
+			        }
+			        	
 			    }
 			});
 		}
@@ -665,7 +688,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected){
+	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected, String fileTag){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 25);
 		panel.setLayout(null);
@@ -677,10 +700,19 @@ public class BuildUI {
 		
 		JComboBox<Object> comboBox = new JComboBox<Object>();
 		comboBox.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, 25);
+
 		if(itemList != null){
 			for(Object ob : itemList){
 				comboBox.addItem(ob);
 			}
+			comboBox.addActionListener (new ActionListener () {
+			    public void actionPerformed(ActionEvent e) {
+			        if(!isUpdating){
+			        	iManager.updatePreference(fileTag, comboBox.getSelectedItem().toString(), true);
+			        	reload();
+			    	}
+			    }
+			});
 		}
 		if(selected != null)
 			comboBox.setSelectedItem(selected);

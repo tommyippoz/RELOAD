@@ -11,13 +11,16 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.commons.support.ValueSeries;
 import ippoz.madness.detector.metric.BetterMaxMetric;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class AlgorithmTrainer.
@@ -46,7 +49,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private AlgorithmConfiguration bestConf;
 	
 	/** The metric score. */
-	protected double metricScore;
+	protected ValueSeries metricScore;
+	
+	/** The metric score. */
+	protected ValueSeries trainScore;
 	
 	/** The reputation score. */
 	private double reputationScore;
@@ -105,7 +111,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
-		System.out.println("Training Set: " + kList.size());
 		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
@@ -114,7 +119,15 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		if(getReputationScore() > 0.0)
 			bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 		else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
-		bestConf.addItem(AlgorithmConfiguration.SCORE, String.valueOf(getMetricScore()));
+		bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
+		bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainScore.getAvg());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainScore.getStd());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainScore.getMin());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainScore.getQ1());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
 	}
 	
 	public long getTrainingTime() {
@@ -135,18 +148,18 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	private double evaluateMetricScore(){
+	private ValueSeries evaluateMetricScore(){
 		double[] metricEvaluation = null;
-		List<Double> metricResults = new ArrayList<Double>(kList.size());
+		ValueSeries metricResults = new ValueSeries();
 		List<Double> algResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
 			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
-			metricResults.add(metricEvaluation[0]);
+			metricResults.addValue(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
 		sameResultFlag = kList.size() > 1 && AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
-		return AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
+		return metricResults;
 	}
 
 	/**
@@ -177,14 +190,38 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 
 	/**
-	 * Gets the exp list.
+	 * Gets the exp list, considering the kfold parameter.
 	 *
 	 * @return the exp list
 	 */
-	protected List<List<Knowledge>> getKnowledgeList() {
-		List<List<Knowledge>> outList = new LinkedList<List<Knowledge>>();
-		if(kfold <= 1)
-			outList.add(kList);
+	protected List<Map<String, List<Knowledge>>> getKnowledgeList() {
+		List<Map<String, List<Knowledge>>> outList = new LinkedList<Map<String, List<Knowledge>>>();
+		List<List<Knowledge>> subsets = new ArrayList<List<Knowledge>>(kfold);
+		List<Knowledge> partialList;
+		Map<String, List<Knowledge>> map;
+		if(kfold <= 1 || kfold == Integer.MAX_VALUE || kfold > kList.size()){
+			map = new HashMap<String, List<Knowledge>>();
+			map.put("TRAIN", kList);
+			map.put("TEST", kList);
+			outList.add(map);
+		} else {
+			for(int i=0;i<kList.size();i++){
+				if(subsets.size() <= i%kfold || subsets.get(i%kfold) == null)
+					subsets.add(i%kfold, new LinkedList<Knowledge>());
+				subsets.get(i%kfold).add(kList.get(i));
+			}
+			for(int k=0;k<kfold;k++){
+				map = new HashMap<String, List<Knowledge>>();
+				partialList = new LinkedList<Knowledge>();
+				for(int i=0;i<kfold;i++){
+					if(i==k)
+						map.put("TEST", subsets.get(k));
+					else partialList.addAll(subsets.get(i));
+				}
+				map.put("TRAIN", partialList);
+				outList.add(map);
+			}
+		}
 		return outList;
 	}
 	
@@ -197,8 +234,17 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	public double getMetricScore() {
-		return metricScore;
+	public double getMetricAvgScore() {
+		return metricScore.getAvg();
+	}
+	
+	/**
+	 * Gets the metric score.
+	 *
+	 * @return the metric score
+	 */
+	public double getMetricStdScore() {
+		return metricScore.getStd();
 	}
 	
 	/**
@@ -267,8 +313,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
 		if(metric instanceof BetterMaxMetric)
-			return Double.compare(other.getMetricScore(), getMetricScore());
-		else return -1*Double.compare(other.getMetricScore(), getMetricScore());
+			return Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
+		else return -1*Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
 	}
 
 	/**

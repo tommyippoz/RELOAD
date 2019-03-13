@@ -3,6 +3,8 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import java.util.List;
+
 import ippoz.madness.detector.algorithm.elki.ABODELKI;
 import ippoz.madness.detector.algorithm.elki.COFELKI;
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
@@ -17,6 +19,7 @@ import ippoz.madness.detector.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.madness.detector.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.madness.detector.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
+import ippoz.madness.detector.commons.algorithm.AlgorithmFamily;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
@@ -26,6 +29,9 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.service.StatPair;
 import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.commons.support.ValueSeries;
+import ippoz.madness.detector.scoreclassifier.AnomalyResult;
+import ippoz.madness.detector.scoreclassifier.ScoreClassifier;
 
 /**
  * The Class DetectionAlgorithm.
@@ -37,6 +43,10 @@ public abstract class DetectionAlgorithm {
 	/** The configuration. */
 	protected AlgorithmConfiguration conf;
 	
+	protected ValueSeries loggedScores;
+	
+	protected ScoreClassifier scoreClassifier;
+	
 	/**
 	 * Instantiates a new detection algorithm.
 	 *
@@ -44,6 +54,26 @@ public abstract class DetectionAlgorithm {
 	 */
 	public DetectionAlgorithm(AlgorithmConfiguration conf){
 		this.conf = conf;
+		loggedScores = new ValueSeries();
+		scoreClassifier = null;
+	}
+	
+	protected abstract ScoreClassifier buildClassifier();
+	
+	protected void setClassifier(){
+		scoreClassifier = buildClassifier();
+	}
+	
+	protected ScoreClassifier getClassifier(){
+		return scoreClassifier;
+	}
+	
+	public void logScore(double score){
+		loggedScores.addValue(score);
+	}
+	
+	public void clearLoggedScores() {
+		loggedScores.clear();
 	}
 	
 	/**
@@ -52,12 +82,20 @@ public abstract class DetectionAlgorithm {
 	 * @param anomalyValue the anomaly value
 	 * @return the double
 	 */
-	protected static double anomalyTrueFalse(double anomalyValue){
-		if(anomalyValue > 0.0)
-			return 1.0;
-		else if(anomalyValue == -1.0)
-			return -1.0;
-		else return 0.0;	
+	protected static double convertResultIntoDouble(AnomalyResult anomalyResult){
+		switch (anomalyResult){
+			case ANOMALY:
+				return 1.0;
+			case NORMAL:
+				return 0.0;
+			case MAYBE:
+				return Double.NaN;
+			case UNKNOWN:
+				return 0.0;
+			default:
+				return Double.NaN;
+		}
+		
 	}
 	
 	/**
@@ -117,6 +155,43 @@ public abstract class DetectionAlgorithm {
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
+			default:
+				return null;
+			
+		}
+	}
+	
+	public static AlgorithmFamily getFamily(AlgorithmType algType) {
+		switch(algType){
+			case HIST:
+			case CONF:
+			case RCC:
+			case WER:
+			case PEA:
+				return AlgorithmFamily.STATISTICAL;
+			case INV:
+				return AlgorithmFamily.CLASSIFICATION;
+			case HBOS:
+			case SLIDING_SPS:
+				return AlgorithmFamily.STATISTICAL;
+			case ELKI_KMEANS:
+			case SLIDING_ELKI_CLUSTERING:
+				return AlgorithmFamily.CLUSTERING;
+			case ELKI_ABOD:
+			case ELKI_FASTABOD:
+			case SLIDING_ELKI_ABOD:
+				return AlgorithmFamily.ANGLE;
+			case ELKI_LOF:
+			case ELKI_COF:
+			case SLIDING_ELKI_COF:
+				return AlgorithmFamily.DENSITY;
+			case ELKI_ODIN:
+			case SLIDING_ELKI_KNN:
+				return AlgorithmFamily.NEIGHBOUR;
+			case ELKI_SVM:
+			case WEKA_ISOLATIONFOREST:
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return AlgorithmFamily.CLASSIFICATION;
 			default:
 				return null;
 			
@@ -190,7 +265,9 @@ public abstract class DetectionAlgorithm {
 	 * @return the anomaly rate of the snapshot
 	 */
 	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
-		return anomalyTrueFalse(evaluateSnapshot(knowledge, currentIndex));//*getWeight();
+		if(getClassifier() == null)
+			setClassifier();
+		return convertResultIntoDouble(evaluateSnapshot(knowledge, currentIndex));//*getWeight();
 	}
 	
 	/**
@@ -200,7 +277,7 @@ public abstract class DetectionAlgorithm {
 	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	protected abstract double evaluateSnapshot(Knowledge knowledge, int currentIndex);
+	protected abstract AnomalyResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
 	
 	/**
 	 * Prints the results of the detection.
@@ -330,5 +407,9 @@ public abstract class DetectionAlgorithm {
 	 * @return the data series
 	 */
 	public abstract DataSeries getDataSeries();
+
+	public ValueSeries getTrainScore() {
+		return loggedScores;
+	}
 
 }

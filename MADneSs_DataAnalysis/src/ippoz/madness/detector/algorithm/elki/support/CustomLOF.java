@@ -301,6 +301,14 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    return LOG;
 	  }
 	  
+	  public List<Double> getScoresList(){
+			ArrayList<Double> list = new ArrayList<Double>(size());
+			for(OFScore of : resList){
+				list.add(of.getOF());
+			}
+			return list;
+		}
+	  
 	  private class OFScore implements Comparable<OFScore> {
 
 			private NumberVector data;

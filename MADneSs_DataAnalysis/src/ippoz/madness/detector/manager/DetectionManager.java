@@ -245,7 +245,7 @@ public class DetectionManager {
 			if(map.containsKey(KnowledgeType.SINGLE))
 				map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
 		}
-		AppLogger.logInfo(getClass(), expList.size() + " runs loaded");
+		AppLogger.logInfo(getClass(), expList.size() + " runs loaded (K-Fold:" + iManager.getKFoldCounter() + ")");
 		return map;
 	}
 

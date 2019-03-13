@@ -96,7 +96,7 @@ public class FilterManager extends TrainDataManager {
 	private LinkedList<DataSeries> selectDataSeries(LinkedList<AlgorithmTrainer> atList) {
 		LinkedList<DataSeries> result = new LinkedList<DataSeries>();
 		for(AlgorithmTrainer at : atList){
-			if(at.getMetricScore() <= filteringThreshold){
+			if(at.getMetricAvgScore() <= filteringThreshold){
 				if(!result.contains(at.getDataSeries()))
 					result.add(at.getDataSeries());
 			}

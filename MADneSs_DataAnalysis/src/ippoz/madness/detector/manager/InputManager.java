@@ -155,9 +155,9 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue){
+	public boolean updatePreference(String tag, String newValue, boolean updateFile){
 		if(tag != null && prefManager.hasPreference(tag)){
-			prefManager.updatePreference(tag, newValue);
+			prefManager.updatePreference(tag, newValue, updateFile);
 			return true;
 		} else return false;
 	}
@@ -843,7 +843,7 @@ public class InputManager {
 	}	
 	
 	public void removeAlgorithm(String option) {
-		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option, false);
+		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.split(" ")[0], false);
 	}
 	
 	private void removeFromFile(File file, String toRemove, boolean partialMatching){

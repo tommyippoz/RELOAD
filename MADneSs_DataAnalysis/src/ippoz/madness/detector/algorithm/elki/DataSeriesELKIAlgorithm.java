@@ -13,6 +13,7 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.scoreclassifier.AnomalyResult;
 
 import java.util.List;
 
@@ -46,11 +47,11 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract void automaticElkiTraining(Database db, boolean createOutput);
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		return evaluateElkiSnapshot(sysSnapshot);
 	}
 	
-	protected abstract double evaluateElkiSnapshot(Snapshot sysSnapshot);
+	protected abstract AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot);
 	
 	private Database translateKnowledge(List<Knowledge> kList, boolean includeFaulty){
 		double[][] dataMatrix = convertKnowledgeIntoMatrix(kList, includeFaulty);

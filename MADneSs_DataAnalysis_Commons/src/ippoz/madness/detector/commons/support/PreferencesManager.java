@@ -3,9 +3,15 @@
  */
 package ippoz.madness.detector.commons.support;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Class PreferencesManager.
@@ -17,7 +23,7 @@ public class PreferencesManager {
 	/** The map of the preferences. */
 	private HashMap<String, String> preferences;
 	
-	private String filename;
+	private File file;
 	
 	/**
 	 * Instantiates a new preferences manager.
@@ -28,7 +34,7 @@ public class PreferencesManager {
 		try {
 			if(prefFile != null && prefFile.exists()){
 				preferences = AppUtility.loadPreferences(prefFile, null);
-				filename = prefFile.getName();
+				file = prefFile;
 			} else preferences = null;
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to load main preferences file");
@@ -63,13 +69,48 @@ public class PreferencesManager {
 	}
 
 	public String getFilename() {
-		return filename;
+		return file.getName();
 	}
 
-	public void updatePreference(String tag, String newValue) {
+	public void updatePreference(String tag, String newValue, boolean updateFile) {
 		if(hasPreference(tag)){
 			preferences.put(tag, newValue);
+			if(updateFile)
+				updatePreferencesFile(tag, newValue);
 		}
+	}
+
+	private void updatePreferencesFile(String tag, String newValue) {
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists() && newValue != null && newValue.length() > 0){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && (readed.trim().startsWith(tag + " ") || readed.trim().startsWith(tag + "="))){
+							fileLines.add(tag + " = " + newValue.trim());
+							found = true;
+						} else fileLines.add(readed);
+					}
+				}
+				reader.close();
+				if(found) {
+					writer = new BufferedWriter(new FileWriter(file));
+					for(String st : fileLines){
+						writer.write(st + "\n");
+					}
+					writer.close();
+				}
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 		
 	}
 
 }

@@ -7,6 +7,7 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.madness.detector.scoreclassifier.AnomalyResult;
 
 import java.util.List;
 
@@ -59,10 +60,10 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	}
 
 	@Override
-	protected double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
+	protected AnomalyResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		return evaluateDataSeriesSnapshot(knowledge, knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
 	}
 
-	protected abstract double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
+	protected abstract AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
 	
 }

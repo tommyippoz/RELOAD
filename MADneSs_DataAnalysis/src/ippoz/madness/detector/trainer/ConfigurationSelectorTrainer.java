@@ -11,6 +11,7 @@ import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.commons.support.ValueSeries;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.metric.TruePositiveRate_Metric;
@@ -71,33 +72,35 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 
 	@Override
 	protected AlgorithmConfiguration lookForBestConfiguration() {
-		Double currentMetricValue = null;
+		ValueSeries currentMetricValue = null;
 		List<Double> metricResults;
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
 		try {
-			metricScore = Double.NaN;
+			metricScore = null;
 			for(AlgorithmConfiguration conf : configurations){
-				for(List<Knowledge> knList : getKnowledgeList()){
+				currentMetricValue = new ValueSeries();
+				for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
 					metricResults = new LinkedList<Double>();
 					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), conf);
 					if(algorithm instanceof AutomaticTrainingAlgorithm) {
-						((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knList, false);
+						((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
 					}
-					for(Knowledge knowledge : knList){
+					for(Knowledge knowledge : knMap.get("TEST")){
 						metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
 					}
-					currentMetricValue = AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
+					currentMetricValue.addValue(AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()])));
 				}
-				if(Double.isNaN(metricScore) || getMetric().compareResults(currentMetricValue, metricScore) == 1){	
+				if(metricScore == null || getMetric().compareResults(currentMetricValue, metricScore) == 1){	
 					metricScore = currentMetricValue;
 					bestConf = (AlgorithmConfiguration) conf.clone();
 				}
 			}
 			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
-				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0), true);
+				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
 			}
+			trainScore = algorithm.getTrainScore();
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}

@@ -9,10 +9,10 @@ FILTERING_FLAG = 1
 TRAIN_FLAG = 1
 
 * K Counter for K-Fold Training/Validation
-KFOLD_COUNTER = 1
+KFOLD_COUNTER = 5
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
-METRIC = MCC
+METRIC = MATTHEWS
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = absolute
@@ -47,10 +47,10 @@ PEARSON_TOLERANCE = 0.9
 PEARSON_NUPLES_TOLERANCE = 0.95
 
 * Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
-SLIDING_WINDOW_POLICY = FIFO, FIFO_NORMAL
+SLIDING_WINDOW_POLICY = FIFO
 
 * Size of the sliding window buffer
-SLIDING_WINDOW_SIZE = 10, 20, 50, 100
+SLIDING_WINDOW_SIZE = 20, 50
 
 
 * Path Setup.
@@ -86,4 +86,4 @@ DATASETS_FOLDER = datasets
 * Other Preference Files.
 
 * Detection Preferences
-DETECTION_PREFERENCES_FILE = scoringPreferences.preferences
+DETECTION_PREFERENCES_FILE = input\scoringPreferences.preferences

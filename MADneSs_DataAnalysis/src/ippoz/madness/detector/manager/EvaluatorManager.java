@@ -208,7 +208,7 @@ public class EvaluatorManager extends DataManager {
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = readed.split("§");
 							if(splitted.length > 3 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 4 ? splitted[4] : null));
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 5 ? splitted[5] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
 									case PEA:
@@ -220,7 +220,8 @@ public class EvaluatorManager extends DataManager {
 								}
 								if(conf != null){
 									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 								}
 								addVoter(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])), voterList);
 							}

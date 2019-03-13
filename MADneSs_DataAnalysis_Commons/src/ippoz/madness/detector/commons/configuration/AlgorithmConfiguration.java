@@ -19,8 +19,11 @@ public class AlgorithmConfiguration implements Cloneable {
 	/** The Constant WEIGHT. */
 	public static final String WEIGHT = "weight";
 	
-	/** The Constant SCORE. */
-	public static final String SCORE = "metric_score";
+	/** The Constant AVG_SCORE. */
+	public static final String AVG_SCORE = "metric_avg_score";
+	
+	/** The Constant STD_SCORE. */
+	public static final String STD_SCORE = "metric_std_score";
 	
 	public static final String AUC_SCORE = "auc_score";
 
@@ -33,6 +36,20 @@ public class AlgorithmConfiguration implements Cloneable {
 	public static final String PEARSON_WINDOW = "pi_window";
 	
 	public static final String SLIDING_WINDOW_SIZE = "sliding_window_size";
+
+	public static final String TRAIN_Q0 = "train_q0";
+	
+	public static final String TRAIN_Q1 = "train_q1";
+	
+	public static final String TRAIN_Q2 = "train_q2";
+	
+	public static final String TRAIN_Q3 = "train_q3";
+	
+	public static final String TRAIN_Q4 = "train_q4";
+
+	public static final String TRAIN_STD = "train_std";
+	
+	public static final String TRAIN_AVG = "train_avg";
 
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
@@ -166,14 +183,14 @@ public class AlgorithmConfiguration implements Cloneable {
 	 */
 	public String toFileRow(boolean complete){
 		if(complete)
-			return getItem(WEIGHT, false) + ", " + getItem(SCORE, false) + ", " + getSpecificItems();
+			return getItem(WEIGHT, false) + ", " + getItem(AVG_SCORE, false) + ", " + getItem(STD_SCORE, false) + ", " + getSpecificItems();
 		else return getSpecificItems();
 	}
 
 	private String getSpecificItems() {
 		String all = "";
 		for(String itemTag : confMap.keySet()){
-			if(!itemTag.equals(SCORE) && !itemTag.equals(WEIGHT)){
+			if(!itemTag.equals(AVG_SCORE) && !itemTag.equals(STD_SCORE) &&!itemTag.equals(WEIGHT)){
 				all = all + itemTag + "=" + getRawItem(itemTag, false).toString() + "&";
 			}
 		}
@@ -203,6 +220,10 @@ public class AlgorithmConfiguration implements Cloneable {
 		if(confMap.containsKey(SLIDING_WINDOW_SIZE)){
 			return Integer.parseInt(getItem(SLIDING_WINDOW_SIZE));
 		} else return -1;
+	}
+
+	public void addItem(String tag, double doubleValue) {
+		addItem(tag, String.valueOf(doubleValue));
 	}
 	
 }
