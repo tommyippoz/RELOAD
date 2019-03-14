@@ -4,8 +4,10 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
+import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
@@ -482,18 +484,20 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(at);
-		return loadConfigurations(list);
+		return loadConfigurations(list, windowSize, sPolicy);
 	}
 
 	/**
 	 * Loads the possible configurations for all the algorithms.
+	 * @param sPolicy 
+	 * @param windowSize 
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
 		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
 		AlgorithmConfiguration alConf;
@@ -521,6 +525,10 @@ public class InputManager {
 											alConf = AlgorithmConfiguration.getConfiguration(algType, null);
 											for(String element : readed.split(",")){
 												alConf.addItem(header[i++], element);
+											}
+											if(DetectionAlgorithm.isSliding(algType)){
+												alConf.addItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE, windowSize);
+												alConf.addItem(AlgorithmConfiguration.SLIDING_POLICY, sPolicy.toString());
 											}
 											if(confList.get(algType) == null)
 												confList.put(algType, new LinkedList<AlgorithmConfiguration>());

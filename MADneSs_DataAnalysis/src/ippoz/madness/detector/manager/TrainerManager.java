@@ -5,13 +5,6 @@ package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.algorithm.elki.ABODELKI;
-import ippoz.madness.detector.algorithm.elki.COFELKI;
-import ippoz.madness.detector.algorithm.elki.FastABODELKI;
-import ippoz.madness.detector.algorithm.elki.LOFELKI;
-import ippoz.madness.detector.algorithm.elki.ODINELKI;
-import ippoz.madness.detector.algorithm.elki.SVMELKI;
-import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
@@ -132,50 +125,12 @@ public class TrainerManager extends TrainDataManager {
 	}
 	
 	private void clearTmpFolders(List<AlgorithmType> algTypes) {
-		File tempFolder;
-		for(AlgorithmType at : algTypes){
-			if(at.equals(AlgorithmType.ELKI_ABOD)){
-				tempFolder = new File(ABODELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_FASTABOD)){
-				tempFolder = new File(FastABODELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_LOF)){
-				tempFolder = new File(LOFELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_COF)){
-				tempFolder = new File(COFELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_ODIN)){
-				tempFolder = new File(ODINELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_SVM)){
-				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.WEKA_ISOLATIONFOREST)){
-				tempFolder = new File(IsolationForestWEKA.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
+		File rootFolder = new File(new File(".").getAbsolutePath().substring(0, new File(".").getAbsolutePath().length()-2));
+		for(File file : rootFolder.listFiles()){
+			if(file.isDirectory() && file.getName().endsWith("_tmp_RELOAD")){
+				if(file.delete())
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + file.getPath() + "'");
+				else AppLogger.logInfo(getClass(), "Failed to clean folder '" + file.getPath() + "'");
 			}
 		}
 	}

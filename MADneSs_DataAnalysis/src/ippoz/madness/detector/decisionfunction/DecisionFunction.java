@@ -1,32 +1,32 @@
 /**
  * 
  */
-package ippoz.madness.detector.scoreclassifier;
-
-import java.util.List;
+package ippoz.madness.detector.decisionfunction;
 
 import ippoz.madness.detector.commons.support.AppUtility;
+
+import java.util.List;
 
 /**
  * @author Tommy
  *
  */
-public abstract class ScoreClassifier {
+public abstract class DecisionFunction {
 	
 	private String classifierName;
 	
-	private ClassifierType classifierType;
+	private DecisionFunctionType classifierType;
 	
-	protected ScoreClassifier(String classifierName, ClassifierType classifierType) {
+	protected DecisionFunction(String classifierName, DecisionFunctionType classifierType) {
 		this.classifierName = classifierName;
 		this.classifierType = classifierType;
 	}
 	
-	public static ScoreClassifier getClassifier(List<Double> scores, String tag){
+	public static DecisionFunction getClassifier(List<Double> scores, String tag){
 		if(tag != null && tag.length() > 0){
 			if(AppUtility.isNumber(tag)){
 				double ratio = Double.parseDouble(tag);
-				return new ThresholdClassifier(ratio, scores);
+				return new ThresholdDecision(ratio, scores);
 			}
 			else return null;
 		} else return null;
@@ -36,7 +36,7 @@ public abstract class ScoreClassifier {
 		return classifierName;
 	}
 
-	public ClassifierType getClassifierType() {
+	public DecisionFunctionType getClassifierType() {
 		return classifierType;
 	}
 

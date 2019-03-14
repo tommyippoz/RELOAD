@@ -13,6 +13,7 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -119,10 +120,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract void automaticWEKATraining(Instances db, boolean createOutput);
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		return evaluateWEKASnapshot(sysSnapshot);
 	}
 	
-	protected abstract double evaluateWEKASnapshot(Snapshot sysSnapshot);
+	protected abstract AnomalyResult evaluateWEKASnapshot(Snapshot sysSnapshot);
 
 }

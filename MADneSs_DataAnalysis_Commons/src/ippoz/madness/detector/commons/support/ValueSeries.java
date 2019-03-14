@@ -19,6 +19,11 @@ public class ValueSeries {
 		values = new LinkedList<Double>();
 	}
 	
+	public void removeFirst(){
+		if(!values.isEmpty())
+			values.remove(0);
+	}
+	
 	public void addValue(double newValue){
 		values.add(newValue);
 	}
@@ -71,6 +76,10 @@ public class ValueSeries {
 
 	public double getMedian() {
 		return quartile(0.5);
+	}
+
+	public int size() {
+		return values.size();
 	}	
 
 }

@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -10,12 +11,25 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.madness.detector.decisionfunction.LogThresholdDecision;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
+import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * @author Tommy
@@ -33,21 +47,44 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	
 	public static final double DEFAULT_THRESHOLD = 0.8;
 	
+	private static final String TMP_FILE = "tmp_file";
+	
 	public static final int DEFAULT_K = 10;
 	
 	private Map<String, Histograms> histograms;
 	
-	private double threshold;
+	private List<HBOSScore> scores;
 	
 	public HBOSDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(HISTOGRAMS)){
 			histograms = loadFromConfiguration();
-			threshold = loadThreshold();
+			loadFile(getFilename());
+			clearLoggedScores();
+			logScores(filterScores());
 		}
 	}
 	
-	private double loadThreshold() {
+	private String getFilename(){
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".hbos";
+	}
+	
+	private String getDefaultTmpFolder(){
+		return "HBOS_tmp_RELOAD";
+	}
+	
+	@Override
+	protected DecisionFunction buildClassifier() {
+		double perc = 0.0;
+		if(conf != null && conf.hasItem(THRESHOLD)){
+			if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
+				perc = Double.parseDouble(conf.getItem(THRESHOLD));
+			else perc = DEFAULT_THRESHOLD;
+		} else perc = DEFAULT_THRESHOLD;
+		return new LogThresholdDecision(perc, histograms.size());
+	}
+	
+	/*private double loadThreshold() {
 		double perc = 0.0;
 		if(conf != null && conf.hasItem(THRESHOLD)){
 			if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
@@ -55,7 +92,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			else perc = DEFAULT_THRESHOLD;
 		} else perc = DEFAULT_THRESHOLD;
 		return histograms.size()*Math.log(1.0/(perc));
-	}
+	}*/
 
 	private Map<String, Histograms> loadFromConfiguration(){
 		Map<String, Histograms> loadedHist = new HashMap<String, Histograms>();
@@ -78,9 +115,43 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
 			generateDynamicHistograms(toSnapList(kList));
 		else generateStaticHistograms(toSnapList(kList), getK());
-		threshold = loadThreshold();
-		if(createOutput)
+		
+		scores = new LinkedList<HBOSScore>();
+		for(Snapshot snap : toSnapList(kList)){
+			scores.add(new HBOSScore(snapToString(snap), calculateHBOS(snap)));
+		}
+		clearLoggedScores();
+		logScores(filterScores());
+		
+		conf.addItem(TMP_FILE, getFilename());
+		
+		if(createOutput) {
 			conf.addItem(HISTOGRAMS, histogramsToConfiguration());
+			if(!new File(getDefaultTmpFolder()).exists())
+	    		new File(getDefaultTmpFolder()).mkdirs();
+	    	printFile(new File(getFilename()));
+		}
+	}
+	
+	private String snapToString(Snapshot snap){
+		String snapValue = "{";
+		if(getDataSeries().size() == 1){
+			snapValue = snapValue + ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
+		} else {
+			for(int j=0;j<getDataSeries().size();j++){
+				snapValue = snapValue + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ", ";
+			}
+			snapValue = snapValue.substring(0,  snapValue.length()-2);
+		}
+		return snapValue + "}";
+	}
+
+	private List<Double> filterScores() {
+		List<Double> list = new LinkedList<Double>();
+		for(HBOSScore score : scores){
+			list.add(score.getHbos());
+		}
+		return list;	
 	}
 
 	private int getK() {
@@ -132,15 +203,13 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	}
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double hbos;
 		if(histograms != null){
 			hbos = calculateHBOS(sysSnapshot);
-			if(hbos > threshold)
-				return 1.0;
-			else return 0.0;
+			return getClassifier().classify(hbos);
 		
-		} else return 0.0;
+		} else return AnomalyResult.ERROR;
 	}
 	
 	private double calculateHBOS(Snapshot snap){
@@ -153,7 +222,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			hbos = 0;
 			for(int j=0;j<getDataSeries().size();j++){
 				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				//System.out.println(((MultipleDataSeries)getDataSeries()).getSeries(j).getName() + " - " + Arrays.toString(histograms.keySet().toArray()));
 				hbos = hbos + Math.log(1.0/histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapValue));
 			}
 		}
@@ -170,6 +238,98 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	protected void printTextResults(String outFolderName, String expTag) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void loadFile(String filename) {
+		loadHistogramsFile(new File(filename));
+		loadScoresFile(new File(filename + "scores"));		
+	}
+	
+	private void loadScoresFile(File file) {
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				scores = new LinkedList<HBOSScore>();
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.split(";").length >= 2)
+							scores.add(new HBOSScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read KMeans Scores file");
+		} 
+	}
+	
+	private void loadHistogramsFile(File file){
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				histograms = new HashMap<String, Histograms>();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						histograms.put(readed.trim().split("@")[0].trim(), new Histograms(readed.trim().split("@")[1].trim()));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read Histograms (HBOS) file");
+		} 
+	}
+	
+	private void printFile(File file) {
+		printHistograms(file);
+		printScores(new File(file.getPath() + "scores"));
+	}
+	
+	private void printHistograms(File file){
+		BufferedWriter writer;
+		try {
+			if(histograms != null && histograms.size() > 0){
+				if(file.exists())
+					file.delete();
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("histogram\n");
+				for(String dsName : histograms.keySet()){
+					writer.write(dsName + "@" + histograms.get(dsName).toConfString() + "\n");
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write KMEANS clusters file");
+		} 
+	}
+	
+	private void printScores(File file){
+		BufferedWriter writer;
+		String clusterString;
+		try {
+			if(scores != null && scores.size() > 0){
+				if(file.exists())
+					file.delete();
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("data(enclosed in {});hbos\n");
+				for(HBOSScore score : scores){
+					writer.write(score.getSnapValue() + ";" + score.getHbos() + "\n");
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write KMEANS scores file");
+		} 
 	}
 	
 	private class Histograms {
@@ -287,6 +447,27 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		public String toString() {
 			return "Histogram [from=" + from + ", to=" + to + ", items="
 					+ items + "]";
+		}
+		
+	}
+	
+	private class HBOSScore {
+		
+		private double hbos;
+		
+		private String snapValue;
+
+		public HBOSScore(String snapValue, double hbos) {
+			this.hbos = hbos;
+			this.snapValue = snapValue;
+		}
+
+		public double getHbos() {
+			return hbos;
+		}
+
+		public String getSnapValue() {
+			return snapValue;
 		}
 		
 	}

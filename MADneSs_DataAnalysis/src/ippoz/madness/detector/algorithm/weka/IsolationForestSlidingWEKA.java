@@ -9,6 +9,9 @@ import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.madness.detector.decisionfunction.StaticThresholdDecision;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -33,18 +36,23 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	}
 
 	@Override
-	protected double evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance) {
+	protected AnomalyResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance) {
 		CustomIsolationForest iForest;
 		try {
 			if(windowInstances.size() > sampleSize)
 				iForest = new CustomIsolationForest(nTrees, sampleSize);
 			else iForest = new CustomIsolationForest(1, windowInstances.size());
 			iForest.buildClassifier(windowInstances);
-			return iForest.classifyInstance(newInstance);
+			return getClassifier().classify(iForest.classifyInstance(newInstance));			
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
 		}
-		return 0;
+		return AnomalyResult.UNKNOWN;
+	}
+	
+	@Override
+	protected DecisionFunction buildClassifier() {
+		return new StaticThresholdDecision(0.5);
 	}
 	
 	private int loadSampleSize() {

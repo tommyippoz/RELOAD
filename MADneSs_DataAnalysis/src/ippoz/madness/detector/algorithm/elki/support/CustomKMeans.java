@@ -3,7 +3,18 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
+import ippoz.madness.detector.commons.support.AppLogger;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.AbstractKMeans;
@@ -11,17 +22,21 @@ import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.KMeansLloyd;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.KMeansInitialization;
 import de.lmu.ifi.dbs.elki.data.Cluster;
 import de.lmu.ifi.dbs.elki.data.Clustering;
+import de.lmu.ifi.dbs.elki.data.DoubleVector;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.database.datastore.DataStoreFactory;
 import de.lmu.ifi.dbs.elki.database.datastore.DataStoreUtil;
 import de.lmu.ifi.dbs.elki.database.datastore.WritableIntegerDataStore;
+import de.lmu.ifi.dbs.elki.database.ids.DBIDIter;
 import de.lmu.ifi.dbs.elki.database.ids.DBIDUtil;
 import de.lmu.ifi.dbs.elki.database.ids.DBIDs;
 import de.lmu.ifi.dbs.elki.database.ids.ModifiableDBIDs;
 import de.lmu.ifi.dbs.elki.database.relation.Relation;
+import de.lmu.ifi.dbs.elki.datasource.bundle.SingleObjectBundle;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.NumberVectorDistanceFunction;
+import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.logging.Logging;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -29,13 +44,15 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  *
  */
-public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMeansModel> {
+public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMeansModel> implements ELKIAlgorithm<V> {
 	  /**
 	   * The logger for this class.
 	   */
 	  private static final Logging LOG = Logging.getLogger(KMeansLloyd.class);
 	  
 	  private List<KMeansModel> finalClusters;
+	  
+	  private List<KMeansScore> scoresList;
 	  
 	  /**
 	   * Constructor.
@@ -99,7 +116,45 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	      result.addToplevelCluster(new Cluster<>(ids, model));
 	      finalClusters.add(model);
 	    }
+	    
+	    // Calculating Distances
+	    scoresList = new LinkedList<KMeansScore>();
+	    DBIDs ids = relation.getDBIDs();
+	    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
+	    	scoresList.add(getMinimumClustersDistance(extractVector(database.getBundle(iter))));
+	      
+	    }
+		Collections.sort(scoresList);
+	    
 	    return result;
+	  }
+	  
+	  public Vector extractVector(SingleObjectBundle bundle){
+			double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
+			Vector data = new Vector(bValues.length);
+			for(int i=0;i<data.getDimensionality();i++){
+				((Vector)data).set(i, bValues[i]);
+			}
+			return data;
+	  }
+	  
+	  public KMeansScore getMinimumClustersDistance(Vector newData){
+		  double partial;
+		  double minValue = Double.MAX_VALUE;
+		  KMeansScore kms = new KMeansScore(newData);
+		  KMeansModel minKmm = null;
+		  if(finalClusters != null && finalClusters.size() > 0){
+			for(KMeansModel kmm : finalClusters){
+				partial = Math.abs(SquaredEuclideanDistanceFunction.STATIC.minDist(newData, kmm.getMean()));
+				if(partial < minValue){
+					minValue = partial;
+					minKmm = kmm;
+				}
+			}
+			kms.addClusterDistance(minValue, minKmm);
+		  }
+		  
+		  return kms;
 	  }
 
 	  @Override
@@ -120,7 +175,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 		  return outString;
 	  }
 	  
-	  public static List<KMeansModel> loadClusters(String cString) {
+	  public static List<KMeansModel> loadClustersOLD(String cString) {
 		  Vector vec;
 		  String[] splitted;
 		  String[] sSplitted;
@@ -162,4 +217,198 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	public List<KMeansModel> getClusters() {
 		return finalClusters;
 	}
+
+	@Override
+	public void loadFile(String filename) {
+		loadClustersFile(new File(filename));
+		loadScoresFile(new File(filename + "scores"));		
+	}
+	
+	private void loadScoresFile(File file) {
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				scoresList = new LinkedList<KMeansScore>();
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.split(";").length >= 3)
+							scoresList.add(new KMeansScore(readed.split(";")[0], readed.split(";")[2], Double.parseDouble(readed.split(";")[3])));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read KMeans Scores file");
+		} 
+	}
+	
+	private void loadClustersFile(File file){
+		BufferedReader reader;
+		String readed;
+		Vector vec;
+		finalClusters = new LinkedList<KMeansModel>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						String[] sSplitted = readed.split("#")[1].split(",");
+						vec = new Vector(sSplitted.length);
+						for(int i=0; i<sSplitted.length;i++){
+							vec.set(i, Double.parseDouble(sSplitted[i].trim()));
+						}
+						finalClusters.add(new KMeansModel(vec, Double.parseDouble(readed.split("#")[0])));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read LOF file");
+		} 
+	}
+
+	@Override
+	public List<Double> getScoresList() {
+		List<Double> scores = new ArrayList<Double>(scoresList.size());
+		for(KMeansScore score : scoresList){
+			scores.add(score.getDistance());
+		}
+		Collections.sort(scores);
+		return scores;
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "kmeans";
+	}
+
+	@Override
+	public void printFile(File file) {
+		printClusters(file);
+		printScores(new File(file.getPath() + "scores"));
+	}
+	
+	private void printClusters(File file){
+		BufferedWriter writer;
+		try {
+			if(finalClusters != null && finalClusters.size() > 0){
+				if(file.exists())
+					file.delete();
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("cluster\n");
+				for(KMeansModel kmm : finalClusters){
+					String outString = kmm.getVarianceContribution() + "#";
+					for(int i=0;i<kmm.getMean().getDimensionality();i++){
+						outString = outString + kmm.getMean().get(i) + ",";
+					}
+					outString = outString.substring(0, outString.length()-1);
+					writer.write(outString + "\n");
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write KMEANS clusters file");
+		} 
+	}
+	
+	private void printScores(File file){
+		BufferedWriter writer;
+		String clusterString;
+		try {
+			if(finalClusters != null && finalClusters.size() > 0){
+				if(file.exists())
+					file.delete();
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("vector, k, nearest_cluster(variance#means), kmeans_score\n");
+				for(KMeansScore score : scoresList){
+					String vectorString = "{";
+					for(int i=0;i<score.getVector().getDimensionality();i++){
+						vectorString = vectorString + score.getVector().get(i) + ",";
+					}
+					vectorString = vectorString.substring(0, vectorString.length()-1) + "}";
+					if(score.getCluster() != null){
+						clusterString = score.getCluster().getVarianceContribution() + "#";
+						for(int i=0;i<score.getCluster().getMean().getDimensionality();i++){
+							clusterString = clusterString + score.getCluster().getMean().get(i) + ",";
+						}
+						clusterString = clusterString.substring(0, clusterString.length()-1);
+					} else clusterString = null;
+					writer.write(vectorString + ";" + k + ";" + clusterString + ";" + score.getDistance() + "\n");
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write KMEANS scores file");
+		} 
+	}
+	
+	public class KMeansScore implements Comparable<KMeansScore>{
+
+		private double distance;
+		
+		private KMeansModel cluster;
+		
+		private Vector vector;
+		
+		public KMeansScore(Vector vector) {
+			this.vector = vector;
+			distance = Double.MAX_VALUE;
+		}
+
+		public KMeansScore(String vectorString, String clusterString, double distance) {
+			String[] sSplitted;
+			
+			this.distance = distance;
+			
+			if(clusterString != null && clusterString.length() > 0 && !clusterString.contains("null")){
+				if(clusterString.split("#").length < 2)
+					System.out.println("'" + clusterString + "'");
+				sSplitted = clusterString.split("#")[1].split(",");
+				Vector vec = new Vector(sSplitted.length);
+				for(int i=0; i<sSplitted.length;i++){
+					vec.set(i, Double.parseDouble(sSplitted[i].trim()));
+				}
+				cluster = new KMeansModel(vec, Double.parseDouble(clusterString.split("#")[0]));
+			} else cluster = null;
+			
+			sSplitted = vectorString.substring(1, vectorString.length()-1).split(",");
+			vector = new Vector(sSplitted.length);
+			for(int i=0; i<sSplitted.length;i++){
+				vector.set(i, Double.parseDouble(sSplitted[i].trim()));
+			}
+			
+		}
+
+		public void addClusterDistance(double minValue, KMeansModel minKmm) {
+			distance = minValue;
+			cluster = minKmm;
+		}
+
+		public double getDistance() {
+			return distance;
+		}
+
+		public KMeansModel getCluster() {
+			return cluster;
+		}
+
+		public Vector getVector() {
+			return vector;
+		}
+
+		@Override
+		public int compareTo(CustomKMeans<V>.KMeansScore o) {
+			return Double.compare(distance, o.getDistance());
+		}
+		
+	}
+	
 }

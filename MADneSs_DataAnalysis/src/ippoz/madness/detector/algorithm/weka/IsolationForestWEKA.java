@@ -9,6 +9,9 @@ import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.madness.detector.decisionfunction.StaticThresholdDecision;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,7 +35,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	
 	private static final String TMP_FILE = "tmp_file";
 	
-	public static final String DEFAULT_TMP_FOLDER = "iforest_tmp";
+	public static final String DEFAULT_TMP_FOLDER = "iforest_tmp_RELOAD";
 	
 	private CustomIsolationForest iForest;
 
@@ -40,6 +43,9 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		super(dataSeries, conf, true, false);
 		if(conf.hasItem(TMP_FILE)){
 			iForest = loadSerialized(conf.getItem(TMP_FILE));
+			iForest.loadScores(new File(conf.getItem(TMP_FILE) + "scores"));
+			clearLoggedScores();
+			logScores(iForest.getScores());
 		}
 	}
 
@@ -72,11 +78,16 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			sampleSize = loadSampleSize();
 			iForest = new CustomIsolationForest(nTrees, sampleSize);
 			iForest.buildClassifier(db);
+			
+			clearLoggedScores();
+			logScores(iForest.getScores());
+			
 			conf.addItem(TMP_FILE, getFilename());
 			if(createOutput){
 		    	if(!new File(DEFAULT_TMP_FOLDER).exists())
 		    		new File(DEFAULT_TMP_FOLDER).mkdirs();
 		    	storeSerialized();
+		    	iForest.printScores(new File(getFilename() + "scores"));
 		    }
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train IsolationForest");
@@ -116,17 +127,22 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	}
 
 	@Override
-	protected double evaluateWEKASnapshot(Snapshot sysSnapshot) {
+	protected AnomalyResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
 		Instance inst;
 		try {
 			if(iForest != null){
 				inst = snapshotToInstance(sysSnapshot);
-				return iForest.classifyInstance(inst);
-			} else return 0.0;
+				return getClassifier().classify(iForest.classifyInstance(inst));
+			} else return AnomalyResult.UNKNOWN;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to score IsolationForest");
-			return 0.0;
+			return AnomalyResult.UNKNOWN;
 		}
+	}
+
+	@Override
+	protected DecisionFunction buildClassifier() {
+		return new StaticThresholdDecision(0.5);
 	}
 
 }

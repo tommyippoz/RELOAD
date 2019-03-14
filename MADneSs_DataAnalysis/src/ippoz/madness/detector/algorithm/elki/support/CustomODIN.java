@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -51,7 +52,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
  * @author Tommy
  *
  */
-public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm {
+public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	/**
 	 * Class logger.
 	 */
@@ -258,11 +259,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		public double getScore() {
 			return score;
 		}
-
-		public int getIndex() {
-			return index;
-		}
-
+		
 		@Override
 		public int compareTo(KNNValue o) {
 			return Double.compare(score, o.getScore());
@@ -334,7 +331,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						resList.add(new ODINScore(readed.split(";")[0], readed.split(";")[1]));
+						resList.add(new ODINScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2]));
 					}
 				}
 				reader.close();
@@ -352,9 +349,9 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("data;odin\n");
+				writer.write("data (enclosed in {});k;odin\n");
 				for(ODINScore ar : resList){
-					writer.write(ar.getVector().toString() + ";" + ar.getODIN() + "\n");
+					writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getODIN() + "\n");
 				}
 				writer.close();
 			}
@@ -371,5 +368,20 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		if(ratio >= 1 && ratio <= size()){
 			return resList.get(ratio-1).getODIN();
 		} else return 1.0;
+	}
+
+	@Override
+	public List<Double> getScoresList() {
+		ArrayList<Double> list = new ArrayList<Double>(size());
+		for(ODINScore os : resList){
+			list.add(os.getODIN());
+		}
+		Collections.sort(list);
+		return list;
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "odin";
 	}
 }

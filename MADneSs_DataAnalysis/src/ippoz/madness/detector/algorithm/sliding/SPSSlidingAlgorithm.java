@@ -10,6 +10,8 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -71,28 +73,34 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		dynamicWeights = (Double.parseDouble(conf.getItem(SPS_DYN_WEIGHT)) == 1.0);	
 	}
 	
+	@Override
+	protected DecisionFunction buildClassifier() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	/* (non-Javadoc)
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		double[] thresholds = calculateTreshold(parseBlocks(snapList));
 		double snapValue = ((DataSeriesSnapshot)dsSnapshot).getSnapValue().getFirst();
 		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return 0.0;
-		else return 1.0;
+			return AnomalyResult.NORMAL;
+		else return AnomalyResult.ANOMALY;
 	}
 	
 	/* (non-Javadoc)
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateDataSeriesSnapshot(ippoz.madness.detector.commons.knowledge.Knowledge, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot, int)
 	 */
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		double[] thresholds = calculateTreshold(parseBlocks(knowledge.toArray(getAlgorithmType(), getDataSeries())));
 		double snapValue = ((DataSeriesSnapshot) sysSnapshot).getSnapValue().getFirst();
 		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return 0.0;
-		else return 1.0;
+			return AnomalyResult.NORMAL;
+		else return AnomalyResult.ANOMALY;
 	}
 
 	/**

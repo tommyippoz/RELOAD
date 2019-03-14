@@ -3,7 +3,7 @@
 
 * General Algorithms
 
-* HBOS
+HBOS
 
 * Elki Algorithms
 
@@ -13,7 +13,7 @@
 
 * ELKI_FASTABOD
 
-ELKI_LOF
+* ELKI_LOF
 
 * ELKI_COF
 
@@ -35,7 +35,7 @@ ELKI_LOF
 
 * SLIDING_ELKI_CLUSTERING
 
-*SLIDING_ELKI_ABOD
+* SLIDING_ELKI_ABOD
 
 *SLIDING_ELKI_KNN
 

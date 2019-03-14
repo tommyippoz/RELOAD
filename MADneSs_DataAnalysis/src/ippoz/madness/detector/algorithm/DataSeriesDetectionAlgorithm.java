@@ -7,7 +7,7 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.scoreclassifier.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
 
 import java.util.List;
 

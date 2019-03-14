@@ -3,8 +3,6 @@
  */
 package ippoz.madness.detector.algorithm;
 
-import java.util.List;
-
 import ippoz.madness.detector.algorithm.elki.ABODELKI;
 import ippoz.madness.detector.algorithm.elki.COFELKI;
 import ippoz.madness.detector.algorithm.elki.FastABODELKI;
@@ -24,14 +22,15 @@ import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.service.StatPair;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.ValueSeries;
-import ippoz.madness.detector.scoreclassifier.AnomalyResult;
-import ippoz.madness.detector.scoreclassifier.ScoreClassifier;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
+
+import java.util.List;
 
 /**
  * The Class DetectionAlgorithm.
@@ -45,7 +44,7 @@ public abstract class DetectionAlgorithm {
 	
 	protected ValueSeries loggedScores;
 	
-	protected ScoreClassifier scoreClassifier;
+	protected DecisionFunction scoreClassifier;
 	
 	/**
 	 * Instantiates a new detection algorithm.
@@ -58,18 +57,24 @@ public abstract class DetectionAlgorithm {
 		scoreClassifier = null;
 	}
 	
-	protected abstract ScoreClassifier buildClassifier();
+	protected abstract DecisionFunction buildClassifier();
 	
 	protected void setClassifier(){
 		scoreClassifier = buildClassifier();
 	}
 	
-	protected ScoreClassifier getClassifier(){
+	protected DecisionFunction getClassifier(){
 		return scoreClassifier;
 	}
 	
-	public void logScore(double score){
+	protected void logScore(double score){
 		loggedScores.addValue(score);
+	}
+	
+	protected void logScores(List<Double> list) {
+		for(Double score : list){
+			logScore(score);
+		}
 	}
 	
 	public void clearLoggedScores() {
@@ -107,23 +112,6 @@ public abstract class DetectionAlgorithm {
 	 */
 	public static DetectionAlgorithm buildAlgorithm(AlgorithmType algType, DataSeries dataSeries, AlgorithmConfiguration conf) {
 		switch(algType){
-			case HIST:
-				return new HistoricalIndicatorChecker(dataSeries, conf);
-			case CONF:
-				return new ConfidenceIntervalChecker(dataSeries, conf);
-			case RCC:
-				return new RemoteCallChecker(conf);
-			case WER:
-				return new WesternElectricRulesChecker(dataSeries, conf);
-			case INV:
-				if(dataSeries instanceof MultipleDataSeries)
-					return new InvariantChecker((MultipleDataSeries)dataSeries, conf);
-				else {
-					AppLogger.logError(DetectionAlgorithm.class, "DataSeriesError", "Cannot create INV checker with just simple data series '" + dataSeries.getName() + "'");
-					return null;
-				}
-			case PEA:
-				return new PearsonIndexChecker(conf);
 			case HBOS:
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
 			case ELKI_KMEANS:
@@ -143,7 +131,6 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 				return new IsolationForestWEKA(dataSeries, conf);
 			case SLIDING_SPS:
-				//return new SPSDetector(dataSeries, conf);
 				return new SPSSlidingAlgorithm(dataSeries, conf);
 			case SLIDING_ELKI_ABOD:
 				return new ABODSlidingELKI(dataSeries, conf);
@@ -233,13 +220,7 @@ public abstract class DetectionAlgorithm {
 	
 	private boolean usesSimpleSeries(DataSeries container, DataSeries serie) {
 		if(container == null){
-			if(getAlgorithmType().equals(AlgorithmType.RCC))
-				return false;
-			else if(getAlgorithmType().equals(AlgorithmType.PEA))
-				return ((PearsonIndexChecker)this).getDs1().contains(serie) || ((PearsonIndexChecker)this).getDs2().contains(serie);
-			else if(getAlgorithmType().equals(AlgorithmType.INV))
-				return false;
-			else return false;
+			return false;
 		} else {
 			return container.contains(serie);
 		}
@@ -410,6 +391,10 @@ public abstract class DetectionAlgorithm {
 
 	public ValueSeries getTrainScore() {
 		return loggedScores;
+	}
+
+	public static boolean isSliding(AlgorithmType algType) {
+		return algType.toString().contains("SLIDING");
 	}
 
 }

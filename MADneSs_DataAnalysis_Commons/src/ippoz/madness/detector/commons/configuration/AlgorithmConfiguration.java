@@ -51,6 +51,8 @@ public class AlgorithmConfiguration implements Cloneable {
 	
 	public static final String TRAIN_AVG = "train_avg";
 
+	public static final String SLIDING_POLICY = "sliding_policy";
+
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
 	
@@ -224,6 +226,10 @@ public class AlgorithmConfiguration implements Cloneable {
 
 	public void addItem(String tag, double doubleValue) {
 		addItem(tag, String.valueOf(doubleValue));
+	}
+	
+	public void addItem(String tag, Integer intValue) {
+		addItem(tag, String.valueOf(intValue));
 	}
 	
 }

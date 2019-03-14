@@ -12,6 +12,7 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -105,10 +106,10 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	}
 
 	@Override
-	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true), snapshotToInstance(dsSnapshot)); 
 	}
 
-	protected abstract double evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance);
+	protected abstract AnomalyResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance);
 
 }

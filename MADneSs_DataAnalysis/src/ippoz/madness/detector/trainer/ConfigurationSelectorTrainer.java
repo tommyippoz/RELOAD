@@ -12,19 +12,13 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.ValueSeries;
-import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Metric;
-import ippoz.madness.detector.metric.TruePositiveRate_Metric;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.commons.math3.fitting.PolynomialCurveFitter;
-import org.apache.commons.math3.fitting.WeightedObservedPoint;
 
 /**
  * The Class ConfigurationSelectorTrainer.
@@ -76,13 +70,15 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		List<Double> metricResults;
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
+		AlgorithmConfiguration currentConf = null;
 		try {
 			metricScore = null;
 			for(AlgorithmConfiguration conf : configurations){
 				currentMetricValue = new ValueSeries();
 				for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
 					metricResults = new LinkedList<Double>();
-					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), conf);
+					currentConf = (AlgorithmConfiguration)conf.clone();
+					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
 					if(algorithm instanceof AutomaticTrainingAlgorithm) {
 						((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
 					}

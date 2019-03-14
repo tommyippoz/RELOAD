@@ -1,4 +1,4 @@
-package ippoz.madness.detector.scoreclassifier;
+package ippoz.madness.detector.decisionfunction;
 
 public enum AnomalyResult {
 	
