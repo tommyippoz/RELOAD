@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.algorithm;
 
-import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -27,9 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
-import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * @author Tommy
@@ -315,7 +311,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	
 	private void printScores(File file){
 		BufferedWriter writer;
-		String clusterString;
 		try {
 			if(scores != null && scores.size() > 0){
 				if(file.exists())
