@@ -4,9 +4,9 @@
 package ippoz.madness.detector.algorithm.sliding;
 
 import ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
@@ -83,24 +83,14 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		double[] thresholds = calculateTreshold(parseBlocks(snapList));
 		double snapValue = ((DataSeriesSnapshot)dsSnapshot).getSnapValue().getFirst();
+		AlgorithmResult ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), thresholds[1]);
 		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return AnomalyResult.NORMAL;
-		else return AnomalyResult.ANOMALY;
-	}
-	
-	/* (non-Javadoc)
-	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateDataSeriesSnapshot(ippoz.madness.detector.commons.knowledge.Knowledge, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot, int)
-	 */
-	@Override
-	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		double[] thresholds = calculateTreshold(parseBlocks(knowledge.toArray(getAlgorithmType(), getDataSeries())));
-		double snapValue = ((DataSeriesSnapshot) sysSnapshot).getSnapValue().getFirst();
-		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return AnomalyResult.NORMAL;
-		else return AnomalyResult.ANOMALY;
+			ar.setScoreEvaluation(AnomalyResult.NORMAL);
+		else ar.setScoreEvaluation(AnomalyResult.ANOMALY);
+		return ar;
 	}
 
 	/**

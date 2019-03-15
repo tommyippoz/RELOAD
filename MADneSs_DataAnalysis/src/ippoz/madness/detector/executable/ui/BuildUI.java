@@ -4,6 +4,7 @@
 package ippoz.madness.detector.executable.ui;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.commons.algorithm.AlgorithmFamily;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
@@ -462,10 +463,16 @@ public class BuildUI {
 
 	private String[] getAlgorithms(){
 		int i = 0;
+		AlgorithmFamily family;
 		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
 		for(List<AlgorithmType> aList : aComb){
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " (" + DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1))) + ")";
+			try {
+				family = DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1)));
+			} catch(Exception ex){
+				family = AlgorithmFamily.MIXED;
+			}
+			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " (" + family + ")";
 		}
 		return algStrings;
 	}

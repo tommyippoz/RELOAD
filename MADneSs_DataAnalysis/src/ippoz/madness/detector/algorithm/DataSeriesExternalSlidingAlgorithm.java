@@ -3,13 +3,13 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.utils.logging.AppLogger;
 
 import java.util.List;
@@ -37,16 +37,16 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExter
 	}
 
 	@Override
-	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
 			snapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
 			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= ((SlidingKnowledge)knowledge).getWindowSize())
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
-			else return AnomalyResult.UNKNOWN;
+			else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 		} else {
 			AppLogger.logError(getClass(), "WrongKnowledgeError", "Knowledge is not 'Sliding'");
-			return AnomalyResult.NORMAL;
+			return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 		}
 	}
 	
@@ -54,6 +54,6 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExter
 		return windowSize;
 	}
 	
-	protected abstract AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
+	protected abstract AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
 
 }

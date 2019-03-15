@@ -5,10 +5,11 @@ package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans;
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+import ippoz.madness.detector.algorithm.result.ClusteringResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
@@ -58,12 +59,15 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	protected AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-			return getClassifier().classify(of.getDistance());
-		} else return AnomalyResult.NORMAL;
+			ar = new ClusteringResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 	
 	/*private boolean evaluateThreshold(Snapshot sysSnapshot){

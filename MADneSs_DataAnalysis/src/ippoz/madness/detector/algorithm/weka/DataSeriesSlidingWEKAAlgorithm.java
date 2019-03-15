@@ -4,6 +4,7 @@
 package ippoz.madness.detector.algorithm.weka;
 
 import ippoz.madness.detector.algorithm.DataSeriesExternalSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -12,7 +13,6 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -106,10 +106,10 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	}
 
 	@Override
-	protected AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true), snapshotToInstance(dsSnapshot)); 
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true), snapshotToInstance(dsSnapshot), dsSnapshot); 
 	}
 
-	protected abstract AnomalyResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance);
+	protected abstract AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
 
 }

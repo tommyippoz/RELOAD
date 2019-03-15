@@ -7,11 +7,13 @@ import ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans;
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+import ippoz.madness.detector.algorithm.result.ClusteringResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
+import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.database.Database;
@@ -58,11 +60,14 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	protected AnomalyResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance) {
+	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
-			return getClassifier().classify(of.getDistance());
-		} else return AnomalyResult.UNKNOWN;
+			ar = new ClusteringResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), of);
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
 	@Override

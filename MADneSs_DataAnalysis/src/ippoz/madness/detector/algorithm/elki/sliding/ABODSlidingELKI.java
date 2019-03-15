@@ -6,10 +6,11 @@ package ippoz.madness.detector.algorithm.elki.sliding;
 import ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.support.CustomABOD;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
@@ -37,11 +38,13 @@ public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	protected AnomalyResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance) {
+	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			double abof = ((CustomABOD<NumberVector>) getAlgorithm()).rankSingleABOF(newInstance);
-			return getClassifier().classify(abof);
-		} else return AnomalyResult.UNKNOWN;
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomABOD<NumberVector>) getAlgorithm()).rankSingleABOF(newInstance));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
 	@Override

@@ -4,6 +4,7 @@
 package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.DataSeriesExternalSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -11,8 +12,6 @@ import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
-import ippoz.madness.detector.decisionfunction.DecisionFunction;
 
 import java.util.List;
 
@@ -29,12 +28,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  */
 public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalSlidingAlgorithm {
 	
-	/** The Constant THRESHOLD. */
-	private static final String THRESHOLD = "threshold";
-	
 	private ELKIAlgorithm<?> customELKI;
-	
-	private List<Double> scoresList;
 	
 	public DataSeriesSlidingELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
@@ -45,27 +39,20 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	}
 
 	protected abstract ELKIAlgorithm<?> generateELKIAlgorithm();
-	
-	@Override
-	protected DecisionFunction buildClassifier() {
-		if(conf != null && conf.hasItem(THRESHOLD))
-			return DecisionFunction.getClassifier(scoresList, conf.getItem(THRESHOLD));
-		else return null;
-	}
 
 	@Override
-	protected AnomalyResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		Database windowDb = translateSnapList(snapList, true);
 		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
 			customELKI = generateELKIAlgorithm();
 			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-			scoresList = customELKI.getScoresList();
-			setClassifier();
-			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot)); 
-		} else return AnomalyResult.UNKNOWN;
+			logScores(customELKI.getScoresList());
+			setDecisionFunction();
+			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot); 
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
-	protected abstract AnomalyResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance);
+	protected abstract AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
 
 	private Database translateSnapList(List<Snapshot> kList, boolean includeFaulty){
 		double[][] dataMatrix = convertSnapshotListIntoMatrix(kList, includeFaulty);

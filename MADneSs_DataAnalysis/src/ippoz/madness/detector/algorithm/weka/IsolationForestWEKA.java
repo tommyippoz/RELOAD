@@ -3,13 +3,13 @@
  */
 package ippoz.madness.detector.algorithm.weka;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.weka.support.CustomIsolationForest;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
 import ippoz.madness.detector.decisionfunction.StaticThresholdDecision;
 
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import weka.core.Instance;
 import weka.core.Instances;
 
 /**
@@ -127,16 +126,17 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	}
 
 	@Override
-	protected AnomalyResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
-		Instance inst;
+	protected AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
 		try {
 			if(iForest != null){
-				inst = snapshotToInstance(sysSnapshot);
-				return getClassifier().classify(iForest.classifyInstance(inst));
-			} else return AnomalyResult.UNKNOWN;
+				ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), iForest.classifyInstance(snapshotToInstance(sysSnapshot)));
+				getDecisionFunction().classifyScore(ar);
+				return ar;
+			} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to score IsolationForest");
-			return AnomalyResult.UNKNOWN;
+			return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 		}
 	}
 

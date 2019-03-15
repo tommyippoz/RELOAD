@@ -520,7 +520,7 @@ public class InputManager {
 									readed = reader.readLine();
 									if(readed != null){
 										readed = readed.trim();
-										if(readed.length() > 0){
+										if(readed.length() > 0 && !readed.startsWith("*")){
 											i = 0;
 											alConf = AlgorithmConfiguration.getConfiguration(algType, null);
 											for(String element : readed.split(",")){

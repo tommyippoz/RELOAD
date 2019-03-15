@@ -5,10 +5,10 @@ package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomSVM;
 import ippoz.madness.detector.algorithm.elki.support.CustomSVM.SVMKernel;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
@@ -56,12 +56,14 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	}
 
 	@Override
-	protected AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			double svmScore = ((CustomSVM)getAlgorithm()).calculateSVM(v);
-			return getClassifier().classify(svmScore);
-		} else return AnomalyResult.NORMAL;
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomSVM)getAlgorithm()).calculateSVM(v));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
 	@Override

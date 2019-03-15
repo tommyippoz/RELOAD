@@ -12,6 +12,8 @@ public enum DecisionFunctionType {
 	
 	STATIC_THRESHOLD, 
 	
-	LOG_THRESHOLD
+	LOG_THRESHOLD, 
+	
+	CLUSTER
 
 }

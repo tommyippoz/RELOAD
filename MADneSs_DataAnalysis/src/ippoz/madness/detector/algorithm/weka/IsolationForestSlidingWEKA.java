@@ -3,13 +3,14 @@
  */
 package ippoz.madness.detector.algorithm.weka;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.weka.support.CustomIsolationForest;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
+import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
 import ippoz.madness.detector.decisionfunction.StaticThresholdDecision;
 import weka.core.Instance;
@@ -36,18 +37,22 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	}
 
 	@Override
-	protected AnomalyResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance) {
+	protected AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
 		CustomIsolationForest iForest;
+		AlgorithmResult ar;
 		try {
 			if(windowInstances.size() > sampleSize)
 				iForest = new CustomIsolationForest(nTrees, sampleSize);
 			else iForest = new CustomIsolationForest(1, windowInstances.size());
 			iForest.buildClassifier(windowInstances);
-			return getClassifier().classify(iForest.classifyInstance(newInstance));			
+			ar = new AlgorithmResult(
+					dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), iForest.classifyInstance(newInstance));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
 		}
-		return AnomalyResult.UNKNOWN;
+		return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 	
 	@Override

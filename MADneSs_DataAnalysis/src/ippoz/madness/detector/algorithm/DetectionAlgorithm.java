@@ -14,6 +14,7 @@ import ippoz.madness.detector.algorithm.elki.sliding.ABODSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.KNNSlidingELKI;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.madness.detector.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
@@ -44,7 +45,7 @@ public abstract class DetectionAlgorithm {
 	
 	protected ValueSeries loggedScores;
 	
-	protected DecisionFunction scoreClassifier;
+	protected DecisionFunction decisionFunction;
 	
 	/**
 	 * Instantiates a new detection algorithm.
@@ -54,17 +55,21 @@ public abstract class DetectionAlgorithm {
 	public DetectionAlgorithm(AlgorithmConfiguration conf){
 		this.conf = conf;
 		loggedScores = new ValueSeries();
-		scoreClassifier = null;
+		decisionFunction = null;
 	}
 	
-	protected abstract DecisionFunction buildClassifier();
-	
-	protected void setClassifier(){
-		scoreClassifier = buildClassifier();
+	protected DecisionFunction buildClassifier() {
+		if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD))
+			return DecisionFunction.getClassifier(loggedScores, conf.getItem(AlgorithmConfiguration.THRESHOLD));
+		else return null;
 	}
 	
-	protected DecisionFunction getClassifier(){
-		return scoreClassifier;
+	protected void setDecisionFunction(){
+		decisionFunction = buildClassifier();
+	}
+	
+	protected DecisionFunction getDecisionFunction(){
+		return decisionFunction;
 	}
 	
 	protected void logScore(double score){
@@ -246,10 +251,12 @@ public abstract class DetectionAlgorithm {
 	 * @return the anomaly rate of the snapshot
 	 */
 	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
-		if(getClassifier() == null)
-			setClassifier();
-		return convertResultIntoDouble(evaluateSnapshot(knowledge, currentIndex));//*getWeight();
+		if(getDecisionFunction() == null)
+			setDecisionFunction();
+		return convertResultIntoDouble(evaluateSnapshot(knowledge, currentIndex).getScoreEvaluation());//*getWeight();
 	}
+	
+	// TODO
 	
 	/**
 	 * Evaluates a snapshot.
@@ -258,7 +265,7 @@ public abstract class DetectionAlgorithm {
 	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	protected abstract AnomalyResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
+	protected abstract AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
 	
 	/**
 	 * Prints the results of the detection.

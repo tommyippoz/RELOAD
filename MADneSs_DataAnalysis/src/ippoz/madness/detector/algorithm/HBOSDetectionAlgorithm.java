@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -12,7 +13,6 @@ import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
 import ippoz.madness.detector.decisionfunction.LogThresholdDecision;
 
@@ -199,13 +199,14 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	}
 
 	@Override
-	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		double hbos;
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+		AlgorithmResult ar;
 		if(histograms != null){
-			hbos = calculateHBOS(sysSnapshot);
-			return getClassifier().classify(hbos);
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateHBOS(sysSnapshot));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
 		
-		} else return AnomalyResult.ERROR;
+		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 	
 	private double calculateHBOS(Snapshot snap){
@@ -213,7 +214,9 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		double hbos;
 		if(getDataSeries().size() == 1){
 			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			hbos = Math.log(1.0/histograms.get(getDataSeries().getName()).getScore(snapValue));
+			if(histograms == null || histograms.get(getDataSeries().getName()) == null)
+				hbos = Math.log(1.0/histograms.get(histograms.keySet().iterator().next()).getScore(snapValue));
+			else hbos = Math.log(1.0/histograms.get(getDataSeries().getName()).getScore(snapValue));
 		} else {
 			hbos = 0;
 			for(int j=0;j<getDataSeries().size();j++){

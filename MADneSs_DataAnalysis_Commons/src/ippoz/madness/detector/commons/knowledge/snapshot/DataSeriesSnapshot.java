@@ -10,6 +10,7 @@ import ippoz.madness.detector.commons.service.ServiceCall;
 import ippoz.madness.detector.commons.service.ServiceStat;
 import ippoz.madness.detector.commons.service.StatPair;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,13 @@ public class DataSeriesSnapshot extends Snapshot {
 
 	public StatPair getSnapStat(ServiceCall sCall, Map<String, ServiceStat> stats) {
 		return dataSeries.getSeriesServiceStat(getTimestamp(), sCall, stats.get(sCall.getServiceName()));
+	}
+
+	@Override
+	public List<SnapshotValue> listValues() {
+		List<SnapshotValue> list = new LinkedList<SnapshotValue>();
+		list.add(snapValue);
+		return list;
 	}
 
 }

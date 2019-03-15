@@ -5,6 +5,7 @@ package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.madness.detector.algorithm.DataSeriesExternalAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -13,8 +14,6 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
-import ippoz.madness.detector.decisionfunction.DecisionFunction;
 
 import java.io.File;
 import java.util.List;
@@ -32,15 +31,11 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  */
 public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
 	
-	private static final String THRESHOLD = "threshold";
-	
 	private static final String TMP_FILE = "tmp_file";
 	
 	private boolean outliersInTraining;
 	
 	private ELKIAlgorithm<?> customELKI;
-	
-	private List<Double> scoresList;
 	
 	public DataSeriesELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
@@ -50,7 +45,6 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 			customELKI.loadFile(conf.getItem(TMP_FILE));
 			clearLoggedScores();
 			logScores(customELKI.getScoresList());
-			scoresList = customELKI.getScoresList();
 		}
 	}
 	
@@ -70,19 +64,11 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 		else AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 	}
 	
-	@Override
-	protected DecisionFunction buildClassifier() {
-		if(conf != null && conf.hasItem(THRESHOLD))
-			return DecisionFunction.getClassifier(scoresList, conf.getItem(THRESHOLD));
-		else return null;
-	}
-	
 	protected void automaticElkiTraining(Database db, boolean createOutput){
 		customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 		
 		clearLoggedScores();
-		scoresList = customELKI.getScoresList();
-		logScores(scoresList);
+		logScores(customELKI.getScoresList());
 		
 		conf.addItem(TMP_FILE, getFilename());
 	    
@@ -104,11 +90,11 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	}
 
 	@Override
-	protected AnomalyResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		return evaluateElkiSnapshot(sysSnapshot);
 	}
 	
-	protected abstract AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot);
+	protected abstract AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot);
 	
 	private Database translateKnowledge(List<Knowledge> kList, boolean includeFaulty){
 		double[][] dataMatrix = convertKnowledgeIntoMatrix(kList, includeFaulty);

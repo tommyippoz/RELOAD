@@ -53,6 +53,8 @@ public class AlgorithmConfiguration implements Cloneable {
 
 	public static final String SLIDING_POLICY = "sliding_policy";
 
+	public static final String THRESHOLD = "threshold";
+
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
 	

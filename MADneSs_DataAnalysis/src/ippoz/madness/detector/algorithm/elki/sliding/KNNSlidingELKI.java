@@ -6,11 +6,12 @@ package ippoz.madness.detector.algorithm.elki.sliding;
 import ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.algorithm.elki.support.CustomKNN;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
+import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -47,11 +48,13 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm#evaluateSlidingELKISnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, de.lmu.ifi.dbs.elki.database.Database, de.lmu.ifi.dbs.elki.math.linearalgebra.Vector)
 	 */
 	@Override
-	protected AnomalyResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance) {
+	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			double knnScore = ((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb);
-			return getClassifier().classify(knnScore);
-		} else return AnomalyResult.UNKNOWN;
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 	
 	/**

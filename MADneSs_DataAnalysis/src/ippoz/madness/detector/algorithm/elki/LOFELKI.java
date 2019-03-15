@@ -4,10 +4,10 @@
 package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomLOF;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -34,12 +34,14 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	}
 
 	@Override
-	protected AnomalyResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getClassifier() != null){
-			double of = ((CustomLOF)getAlgorithm()).calculateSingleOF(v);
-			return getClassifier().classify(of);
-		} else return AnomalyResult.UNKNOWN;
+		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null){
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomLOF)getAlgorithm()).calculateSingleOF(v));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
 	@Override

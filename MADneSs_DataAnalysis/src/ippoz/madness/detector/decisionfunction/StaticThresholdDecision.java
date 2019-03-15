@@ -3,6 +3,8 @@
  */
 package ippoz.madness.detector.decisionfunction;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+
 /**
  * @author Tommy
  *
@@ -17,8 +19,8 @@ public class StaticThresholdDecision extends DecisionFunction {
 	}
 
 	@Override
-	public AnomalyResult classify(double value) {
-		if(value < threshold)
+	protected AnomalyResult classify(AlgorithmResult value) {
+		if(value.getScore() < threshold)
 			return AnomalyResult.NORMAL;
 		else return AnomalyResult.ANOMALY;
 	}

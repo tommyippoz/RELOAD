@@ -3,6 +3,8 @@
  */
 package ippoz.madness.detector.decisionfunction;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+
 /**
  * @author Tommy
  *
@@ -20,9 +22,9 @@ public class LogThresholdDecision extends DecisionFunction {
 	}
 
 	@Override
-	public AnomalyResult classify(double doubleValue) {
+	protected AnomalyResult classify(AlgorithmResult value) {
 		double threshold = size*Math.log(1.0/(perc));
-		return doubleValue > threshold ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		return value.getScore() > threshold ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
 
 }

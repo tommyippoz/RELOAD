@@ -15,10 +15,19 @@ public class ValueSeries {
 	
 	private List<Double> values;
 	
+	private boolean sorted;
+	
 	public ValueSeries(){
 		values = new LinkedList<Double>();
+		sorted = true;
 	}
 	
+	public ValueSeries(List<Double> scoresList) {
+		values = scoresList;
+		Collections.sort(values);
+		sorted = true;
+	}
+
 	public void removeFirst(){
 		if(!values.isEmpty())
 			values.remove(0);
@@ -29,15 +38,11 @@ public class ValueSeries {
 	}
 	
 	public double getMin(){
-		if(values != null && values.size() > 0)
-			return Collections.min(values);
-		else return Double.NaN;
+		return quartile(0);
 	}
 	
 	public double getMax(){
-		if(values != null && values.size() > 0)
-			return Collections.max(values);
-		else return Double.NaN;
+		return quartile(1);
 	}
 	
 	public double getQ1(){
@@ -49,17 +54,15 @@ public class ValueSeries {
 	}
 	
 	private double quartile(double lowerPercent) {
-
         if (values == null || values.size() == 0) {
             return 0;
         }
-
-        Collections.sort(values);
-
-        int n = (int) Math.round(values.size() * lowerPercent / 100);
-        
+        if(!sorted){
+        	Collections.sort(values);
+        	sorted = true;
+        }
+        int n = (int) Math.round((values.size()-1) * lowerPercent); 
         return values.get(n);
-
     }
 	
 	public double getAvg(){
@@ -72,6 +75,7 @@ public class ValueSeries {
 
 	public void clear() {
 		values.clear();
+		sorted = true;
 	}
 
 	public double getMedian() {
@@ -80,6 +84,14 @@ public class ValueSeries {
 
 	public int size() {
 		return values.size();
+	}
+
+	public double get(int i) {
+		if(!sorted){
+			Collections.sort(values);
+			sorted = true;
+		}
+		return values.get(i);
 	}	
 
 }
