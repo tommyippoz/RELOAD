@@ -17,9 +17,7 @@ import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
-import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
-import ippoz.madness.detector.loader.MySQLLoader;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.output.DetectorOutput;
@@ -124,37 +122,25 @@ public class DetectionManager {
 	private List<Loader> buildLoaderList(String loaderTag, int anomalyWindow){
 		List<Loader> lList = new LinkedList<>();
 		Loader newLoader;
-		LinkedList<Integer> runs;
+		List<Integer> runs;
 		int nRuns;
 		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? Loader.FILTERING_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE));
 		if(runsString != null && runsString.length() > 0){
 			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
 				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));
-				runs = readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
+				runs = iManager.readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
 				for(int i=0;i<runs.size();i=i+nRuns){
-					newLoader = buildSingleLoader(new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
+					newLoader = iManager.buildSingleLoader(loaderPref, new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
 					if(newLoader != null)
 						lList.add(newLoader);
 				}
 			} else {
-				newLoader = buildSingleLoader(readRunIds(runsString), loaderTag, anomalyWindow);
+				newLoader = iManager.buildSingleLoader(loaderPref, iManager.readRunIds(runsString), loaderTag, anomalyWindow);
 				if(newLoader != null)
 					lList.add(newLoader);
 			}
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
 		return lList;
-	}
-	
-	private Loader buildSingleLoader(LinkedList<Integer> list, String loaderTag, int anomalyWindow){
-		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
-		if(loaderType != null && loaderType.equalsIgnoreCase("MYSQL"))
-			return new MySQLLoader(list, loaderPref, loaderTag, iManager.getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.equalsIgnoreCase("CSVALL"))
-			return new CSVPreLoader(list, loaderPref, loaderTag, anomalyWindow, iManager.getDatasetsFolder());
-		else {
-			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
-			return null;
-		} 
 	}
 	
 	/**
@@ -416,29 +402,6 @@ public class DetectionManager {
 			}
 		}
 		return bSetup;
-	}
-	
-	/**
-	 * Returns run IDs parsing a specific tag.
-	 *
-	 * @param runTag the run tag
-	 * @return the list of IDs
-	 */
-	private LinkedList<Integer> readRunIds(String idPref){
-		String from, to;
-		LinkedList<Integer> idList = new LinkedList<Integer>();
-		if(idPref != null && idPref.length() > 0){
-			for(String id : idPref.split(",")){
-				if(id.contains("-")){
-					from = id.split("-")[0].trim();
-					to = id.split("-")[1].trim();
-					for(int i=Integer.parseInt(from);i<=Integer.parseInt(to);i++){
-						idList.add(i);
-					}
-				} else idList.add(Integer.parseInt(id.trim()));
-			}
-		}
-		return idList;
 	}
 
 	public void flush() {

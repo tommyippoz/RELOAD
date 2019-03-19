@@ -404,4 +404,39 @@ public abstract class DetectionAlgorithm {
 		return algType.toString().contains("SLIDING");
 	}
 
+	public static String explainParameters(AlgorithmType algType) {
+		String base = "Parameters: (threshold) string defining the DecisionFunction converting numeric to boolean scores";
+		switch(algType){
+			case ELKI_ABOD:
+			case SLIDING_ELKI_ABOD:
+				return base;
+			case ELKI_LOF:
+			case ELKI_COF:
+			case SLIDING_ELKI_COF:
+				return base + ", (k) the number of neighbours.";
+			case ELKI_FASTABOD:
+				return base + ", (k) the number of neighbours.";
+			case ELKI_KMEANS:
+			case SLIDING_ELKI_CLUSTERING:
+				return base + ", (k) the number of clusters.";
+			case ELKI_SVM:
+				return base + ", (kernel) the type of kernel, (nu) an upper bound on the fraction of margin "
+						+ "errors and a lower bound of the fraction of support vectors relative to training set "
+						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified "
+						+ "and at least 5% of training examples being support vectors.";
+			case HBOS:
+				return base + ", (k) the number of histograms to generate for each indicator.";
+			case ELKI_ODIN:
+			case SLIDING_ELKI_KNN:
+				return base + ", (k) the number of neighbours.";
+			case SLIDING_SPS:
+				return "";
+			case WEKA_ISOLATIONFOREST:
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return "Parameters: (ntrees) number of trees in the forest, (sample_size) instances to be sampled to train each tree.";
+			default:
+				return "Parameters are shown in the table.";
+		}
+	}
+
 }

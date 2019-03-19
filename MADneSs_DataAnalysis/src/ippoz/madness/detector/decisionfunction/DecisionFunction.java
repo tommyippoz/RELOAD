@@ -58,6 +58,39 @@ public abstract class DecisionFunction {
 		}
 		return null;
 	}
+	
+	public static boolean checkClassifier(String thresholdTag){
+		String partial;
+		if(thresholdTag != null && thresholdTag.length() > 0){
+			thresholdTag = thresholdTag.trim();
+			if(thresholdTag.length() > 0) {
+				if(AppUtility.isNumber(thresholdTag)){
+					return true;
+				} else if(thresholdTag.endsWith("%")) {
+					return true;
+				} else if(thresholdTag.contains("IQR")) {
+					if(thresholdTag.equals("IQR"))
+						return true;
+					else if(thresholdTag.equals("LEFT_IQR"))
+						return true;
+					else if(thresholdTag.equals("RIGHT_IQR"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else return false;
+					} else return false;
+				} else if (thresholdTag.contains("CLUSTER")){
+					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						return true;
+					}
+				} else return false;
+			} else return false;
+		}
+		return false;
+	}
 
 	public String getClassifierName() {
 		return classifierName;
@@ -75,5 +108,35 @@ public abstract class DecisionFunction {
 	}
 
 	protected abstract AnomalyResult classify(AlgorithmResult aResult);
+
+	public static String getParameterDetails(String string) {
+		try {
+			switch(DecisionFunctionType.valueOf(string)){
+			case CLUSTER:
+				return "Threshold can depend on VAR and STD of the nearest cluster.\n Try with 'VAR' or 'STD' to check if score exceeds such quantities.\n Allowed combinations are also 'nVAR' or 'nSTD' where n is a real positive number.\n Default n = 1";
+			case CONFIDENCE_INTERVAL:
+				return "Checks if result exceeds the confidence interval avg +/- std.\n Combinations as CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
+			case DOUBLE_THRESHOLD:
+				return "Checks if result is inside two thresholds m and n,\n that should be specified as DOUBLE_THRESHOLD(m,n).";
+			case IQR:
+				return "Checks if result is in the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result < Q3 + 1.5 IQR,\n where IQR = Q3 - Q1.\n Combinations as IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+			case LEFT_IQR:
+				return "Checks if result is before the left threshold of the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result,\n where IQR = Q3 - Q1.\n Combinations as LEFT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+			case RIGHT_IQR:
+				return "Checks if result is over the right threshold in the Interquartile Range IQR,\n defined as result < Q3 + 1.5 IQR,\n where IQR = Q3 - Q1.\n Combinations as RIGHT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+			case LOG_THRESHOLD:
+				return "Checks if result is over the averaged sum of heights of histograms,\n for statistical histogram-based algorithms.";
+			case STATIC_THRESHOLD:
+				return "Checks if result is greather than n,\n a real number that should be specified as STATIC_THRESHOLD(n).";
+			case THRESHOLD:
+				return "Checks if result is greather than n,\n a real number that should be specified as THRESHOLD(n).";
+			default:
+				break;
+			}
+			return null;
+		} catch(Exception ex){
+			return "";
+		}
+	}
 
 }

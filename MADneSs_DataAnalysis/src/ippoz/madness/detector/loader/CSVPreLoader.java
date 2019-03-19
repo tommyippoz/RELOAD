@@ -25,19 +25,19 @@ import java.util.List;
  */
 public class CSVPreLoader extends CSVLoader {
 	
-	private static final String FILTERING_CSV_FILE = "FILTERING_CSV_FILE";
+	public static final String FILTERING_CSV_FILE = "FILTERING_CSV_FILE";
 
 	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
 
-	private static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
+	public static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
 
-	private static final String SKIP_COLUMNS = "SKIP_COLUMNS";
+	public static final String SKIP_COLUMNS = "SKIP_COLUMNS";
 
-	private static final String LABEL_COLUMN = "LABEL_COLUMN";
+	public static final String LABEL_COLUMN = "LABEL_COLUMN";
 
-	private static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
+	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 	
-	private static final String FAULTY_TAGS = "FAULTY_TAGS";
+	public static final String FAULTY_TAGS = "FAULTY_TAGS";
 	
 	private List<MonitoredData> dataList;
 	
@@ -45,11 +45,11 @@ public class CSVPreLoader extends CSVLoader {
 	
 	private int anomalyWindow;
 	
-	public CSVPreLoader(LinkedList<Integer> runs, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
-		this(runs, new File(datasetsFolder + prefManager.getPreference(tag.equals("filtering") ? FILTERING_CSV_FILE : tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE)), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), prefManager.getPreference(FAULTY_TAGS), anomalyWindow);
+	public CSVPreLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
+		this(list, new File(datasetsFolder + prefManager.getPreference(tag.equals("filtering") ? FILTERING_CSV_FILE : tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE)), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), prefManager.getPreference(FAULTY_TAGS), anomalyWindow);
 	}
 
-	public CSVPreLoader(LinkedList<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, int anomalyWindow) {
+	public CSVPreLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, int anomalyWindow) {
 		super(runs, csvFile, skip, labelCol, experimentRows);
 		this.anomalyWindow = anomalyWindow;
 		parseFaultyTags(faultyTags);
@@ -151,8 +151,6 @@ public class CSVPreLoader extends CSVLoader {
 			}
 		}
 		else return null;
-	}
-	
-	
+	}	
 
 }

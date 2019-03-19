@@ -15,7 +15,7 @@
 
 * NSL-KDD
 
-nslkdd/nslkdd_probe.loader
+* nslkdd/nslkdd_probe.loader
 
 * nslkdd/nslkdd_dos.loader
 
@@ -25,7 +25,7 @@ nslkdd/nslkdd_probe.loader
 
 * ISCX 2012
 
-*iscx/iscx_bruteforce.loader
+* iscx/iscx_bruteforce.loader
 
 *iscx/iscx_DoS.loader
 
@@ -52,3 +52,7 @@ nslkdd/nslkdd_probe.loader
 *unsw/unsw_worms.loader
 
 *unsw/unsw_shellcode.loader
+* qqqqqqqqqqqq.loader
+* sint\iscx_synthetic_contextual.loader
+sint\iscx_synthetic_point.loader
+* sint\iscx_synthetic_collective.loader

@@ -113,4 +113,10 @@ public class PreferencesManager {
 		} 		
 	}
 
+	public void updateToFile() {
+		for(String tag : preferences.keySet()){
+			updatePreferencesFile(tag, preferences.get(tag));
+		}
+	}
+
 }

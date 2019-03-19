@@ -17,7 +17,7 @@ public abstract class SimpleLoader implements Loader {
 	
 	protected List<MonitoredData> dataList;
 	private List<Integer> runs;
-		
+
 	public SimpleLoader(List<Integer> runs){
 		Collections.sort(runs);
 		this.runs = runs;

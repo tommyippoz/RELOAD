@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = Synthetic/ISCX2012_BruteForce_COLLECTIVE.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-2
+TRAIN_RUN_IDS = 0-10
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = Synthetic/ISCX2012_BruteForce_COLLECTIVE.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 0-2
+VALIDATION_RUN_IDS = 11-20
 
 
 * Parsing Dataset
@@ -35,7 +35,7 @@ SKIP_COLUMNS = 6
 LABEL_COLUMN = 6
 
 * Size of Each Experiment
-EXPERIMENT_ROWS = 1000
+EXPERIMENT_ROWS = 300
 
 * Tags Identifying an Attack in This Dataset
 FAULTY_TAGS = COLLECTIVE, "COLLECTIVE"

@@ -8,6 +8,10 @@ public enum DecisionFunctionType {
 	
 	IQR, 
 	
+	LEFT_IQR, 
+	
+	RIGHT_IQR, 
+	
 	CONFIDENCE_INTERVAL, 
 	
 	STATIC_THRESHOLD, 

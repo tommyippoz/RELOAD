@@ -7,6 +7,7 @@ import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * The Class AlgorithmConfiguration.
@@ -232,6 +233,10 @@ public class AlgorithmConfiguration implements Cloneable {
 	
 	public void addItem(String tag, Integer intValue) {
 		addItem(tag, String.valueOf(intValue));
+	}
+
+	public Set<String> listLabels() {
+		return confMap.keySet();
 	}
 	
 }

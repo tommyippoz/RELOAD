@@ -23,9 +23,13 @@ public interface Loader {
 	public static final String VALIDATION_RUN_PREFERENCE = "VALIDATION_RUN_IDS";
 
 	public static final String LOADER_TYPE = "LOADER_TYPE";
+
+	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
 	public abstract List<MonitoredData> fetch();
 	
 	public abstract String getRuns();
+
+	public abstract String getName();
 	
 }

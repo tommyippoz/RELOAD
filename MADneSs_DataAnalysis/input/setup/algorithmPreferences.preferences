@@ -7,7 +7,7 @@
 
 * Elki Algorithms
 
-ELKI_KMEANS
+* ELKI_KMEANS
 
 * ELKI_ABOD
 
@@ -19,7 +19,7 @@ ELKI_FASTABOD
 
 * ELKI_SVM
 
-ELKI_ODIN
+* ELKI_ODIN
 
 * Weka Algorithms
 
