@@ -102,6 +102,18 @@ public class BuildUI {
 	private InputManager iManager;
 	
 	private boolean isUpdating;
+	
+	private Font bigFont;
+	
+	private Font labelFont;
+	
+	private Font smallLabelFont;
+	
+	private static Font titleFont = new Font("Times", Font.BOLD, 20);
+	
+	private int labelSpacing;
+	
+	private int bigLabelSpacing;
 
 	public BuildUI(InputManager iManager){
 		this.iManager = iManager;
@@ -110,16 +122,29 @@ public class BuildUI {
 		pathMap = new HashMap<String, JPanel>();
 		buildFrame();
 		isUpdating = false;
+		
+		double rate = 18*Toolkit.getDefaultToolkit().getScreenSize().getHeight()/1080;
+		
+		bigFont = new Font("Times", Font.BOLD, (int)((18 + rate)/2));
+		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
+		smallLabelFont = new Font("Times", Font.PLAIN, (int)((14 + rate)/2));
+		
+		labelSpacing = (int)(frame.getHeight()/25);
+		bigLabelSpacing = (int)(frame.getHeight()/18);
+		
+		//labelSpacing = (int)(660/25);
+		//bigLabelSpacing = (int)(660/18);
 	}
 	
 	private void buildFrame(){
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		AppLogger.logInfo(getClass(), "Screen dimension is " + screenSize.toString());
 		frame = new JFrame();
 		frame.setTitle("RELOAD Framework");
 		frame.setIconImage(new ImageIcon(getClass().getResource("/RELOAD_Transparent.png")).getImage());
-		if(screenSize.getWidth() > 1600)
-			frame.setBounds(0, 0, (int)(screenSize.getWidth()*0.75), (int)(screenSize.getHeight()*0.75));
-		else frame.setBounds(0, 0, 800, 480);
+		if(screenSize.getWidth() > 1000)
+			frame.setBounds(0, 0, (int)(screenSize.getWidth()*0.8), (int)(screenSize.getHeight()*0.65));
+		else frame.setBounds(0, 0, 1280, 660);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setResizable(false);
@@ -184,16 +209,16 @@ public class BuildUI {
 		frame.getContentPane().add(buildHeaderTab());
 		
 		setupPanel = new JPanel();
-		frame.getContentPane().add(buildSetupTab(headerPanel.getHeight()));
+		frame.getContentPane().add(buildSetupTab(headerPanel.getHeight() + labelSpacing/2));
 		
 		pathPanel = new JPanel();
-		frame.getContentPane().add(buildPathsTab(headerPanel.getHeight()));
+		frame.getContentPane().add(buildPathsTab(headerPanel.getHeight() + labelSpacing/2));
 		
 		dataAlgPanel = new JPanel();
-		frame.getContentPane().add(buildAlgorithmsDatasetsTab(headerPanel.getHeight()));
+		frame.getContentPane().add(buildAlgorithmsDatasetsTab(headerPanel.getHeight() + labelSpacing/2));
 		
 		footerPanel = new JPanel();
-		frame.getContentPane().add(buildFooterTab(headerPanel.getHeight() + Math.max(setupPanel.getHeight(), Math.max(pathPanel.getHeight(), dataAlgPanel.getHeight()))));
+		frame.getContentPane().add(buildFooterTab(headerPanel.getHeight() + Math.max(setupPanel.getHeight(), Math.max(pathPanel.getHeight(), dataAlgPanel.getHeight())) + labelSpacing));
 		
 		frame.setBounds(0, 0, frame.getWidth(), headerPanel.getHeight() + Math.max(setupPanel.getHeight(), Math.max(pathPanel.getHeight(), dataAlgPanel.getHeight())) + footerPanel.getHeight());
 		frame.setLocationRelativeTo(null);
@@ -205,11 +230,11 @@ public class BuildUI {
 	
 	private JPanel buildHeaderTab(){
 		headerPanel.setBackground(Color.WHITE);
-		headerPanel.setBounds(0, 0, frame.getWidth(), 145);
+		headerPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight()/5);
 		headerPanel.setLayout(null);
 		ImageIcon ii = new ImageIcon(getClass().getResource("/RELOAD_Transparent.png"));
 		JLabel lblMadness = new JLabel(new ImageIcon(ii.getImage().getScaledInstance(320, 125, Image.SCALE_DEFAULT)));
-		lblMadness.setBounds(0, 10, frame.getWidth(), 125);
+		lblMadness.setBounds(0, 10, frame.getWidth(), frame.getHeight()/6);
 		lblMadness.setHorizontalAlignment(SwingConstants.CENTER);
 		headerPanel.add(lblMadness);
 		
@@ -218,12 +243,12 @@ public class BuildUI {
 	
 	private JPanel buildFooterTab(int tabY){
 		footerPanel.setBackground(Color.WHITE);
-		footerPanel.setBounds(frame.getWidth()/10, tabY, frame.getWidth()*4/5, 100);
+		footerPanel.setBounds(frame.getWidth()/10, tabY, frame.getWidth()*4/5, (int) (frame.getHeight()*0.25));
 		footerPanel.setLayout(null);
 		
 		ImageIcon ii = new ImageIcon(getClass().getResource("/reload.png"));
 		JButton button = new JButton("", new ImageIcon(ii.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT)));
-		button.setBounds(footerPanel.getWidth()*2/5, 0, 40, 40);
+		button.setBounds(footerPanel.getWidth()*2/5, 0, footerPanel.getHeight()*2/5, footerPanel.getHeight()*2/5);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				reload();
@@ -232,8 +257,8 @@ public class BuildUI {
 		footerPanel.add(button);
 		
 		button = new JButton("RELOAD!");
-		button.setBounds(footerPanel.getWidth()*2/5 + 65, 0, footerPanel.getWidth()/5 - 65, 40);
-		button.setFont(new Font("Times", Font.BOLD, 15));
+		button.setBounds(footerPanel.getWidth()/2, 0, footerPanel.getWidth()/6, footerPanel.getHeight()*2/5);
+		button.setFont(bigFont);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				runExperiments();
@@ -241,8 +266,8 @@ public class BuildUI {
 		footerPanel.add(button);
 		
 		JLabel lblFooter = new JLabel("Authors' Information and References");
-		lblFooter.setBounds(0, 40, footerPanel.getWidth(), 20);
-		lblFooter.setFont(new Font(footerPanel.getFont().getName(), Font.PLAIN, 16));
+		lblFooter.setBounds(0, footerPanel.getHeight()/3, footerPanel.getWidth(), footerPanel.getHeight()/5);
+		lblFooter.setFont(labelFont);
 		lblFooter.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblFooter.addMouseListener(new MouseAdapter()  
 		{  
@@ -303,17 +328,17 @@ public class BuildUI {
 		JLabel lbl;
 		JButton jb;
 		int i = 0;
-		int buttonsSpace = 35;
+		int buttonsSpace = (int)(space*1.3);
 		if(options != null){
 			for(String option : options){
 				lbl = new JLabel(option);
-				lbl.setBounds(fromX, fromY + i*space, panel.getWidth() - fromX - 2*buttonsSpace, 20);
-				lbl.setFont(new Font(panel.getFont().getName(), Font.PLAIN, 14));
+				lbl.setBounds(fromX, fromY + i*space, panel.getWidth() - fromX - 3*buttonsSpace, space);
+				lbl.setFont(smallLabelFont);
 				lbl.setHorizontalAlignment(SwingConstants.CENTER);
 				panel.add(lbl);
 				
 				jb = new JButton("#");
-				jb.setBounds(panel.getWidth() - fromX - 2*buttonsSpace, fromY + i*space, buttonsSpace, 20);
+				jb.setBounds(panel.getWidth() - fromX - 2*buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
@@ -343,7 +368,7 @@ public class BuildUI {
 				panel.add(jb);
 					
 				jb = new JButton("-");
-				jb.setBounds(panel.getWidth() - fromX - buttonsSpace, fromY + i*space, buttonsSpace, 20);
+				jb.setBounds(panel.getWidth() - fromX - buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
@@ -367,30 +392,30 @@ public class BuildUI {
 	}
 	
 	private JPanel buildAlgorithmsDatasetsTab(int tabY){
-		int labelSpacing = 30;
+		
 		dataAlgPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, 100 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2) + 20);
+		dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, frame.getHeight()/8 + labelSpacing*(getDatasets().length + getAlgorithms().length) + 2*bigLabelSpacing);
 		dataAlgPanel.setBorder(tb);
 		dataAlgPanel.setLayout(null);
 		
 		JLabel mainLabel = new JLabel("Loaders");
-		mainLabel.setBounds(dataAlgPanel.getWidth()/4, labelSpacing, dataAlgPanel.getWidth()/2, 25);
+		mainLabel.setBounds(dataAlgPanel.getWidth()/4, labelSpacing, dataAlgPanel.getWidth()/2, labelSpacing);
 		mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		mainLabel.setFont(new Font("Times", Font.BOLD, 20));
+		mainLabel.setFont(titleFont);
 		dataAlgPanel.add(mainLabel);
 		
-		printOptions(dataAlgPanel, getDatasets(), 5, 2*labelSpacing, labelSpacing);
+		printOptions(dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 20 + labelSpacing*(getDatasets().length + 1), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 10);
+		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.02), (int)(labelSpacing*(getDatasets().length + 1) + bigLabelSpacing), (int) (dataAlgPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Create Loader");
 		button.setVisible(true);
-		button.setFont(new Font(seePrefPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(25, 0, pathPanel.getWidth()/5, 30);
+		button.setFont(labelFont);
+		button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				LoaderFrame lf;
@@ -417,8 +442,8 @@ public class BuildUI {
 		
 		button = new JButton("Add Loader");
 		button.setVisible(true);
-		button.setFont(new Font(seePrefPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(25, 0, pathPanel.getWidth()/5, 25);
+		button.setFont(labelFont);
+		button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				JFileChooser jfc = new JFileChooser(new File(iManager.getLoaderFolder()).getAbsolutePath());
@@ -437,8 +462,8 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		button = new JButton("See Loaders");
 		button.setVisible(true);
-		button.setFont(new Font(seePrefPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(0, 0, pathPanel.getWidth()/5, 30);
+		button.setFont(labelFont);
+		button.setBounds(0, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
@@ -451,19 +476,23 @@ public class BuildUI {
 		
 		dataAlgPanel.add(seePrefPanel);
 		
-		tabY = labelSpacing*(getDatasets().length + 2) + 40;
+		tabY = labelSpacing*(getDatasets().length) + 2*bigLabelSpacing + seePrefPanel.getHeight();
 		
 		mainLabel = new JLabel("Algorithms");
-		mainLabel.setBounds(dataAlgPanel.getWidth()/4, tabY, dataAlgPanel.getWidth()/2, 25);
+		mainLabel.setBounds(dataAlgPanel.getWidth()/4, tabY, dataAlgPanel.getWidth()/2, labelSpacing);
 		mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		mainLabel.setFont(new Font("Times", Font.BOLD, 20));
+		mainLabel.setFont(titleFont);
 		dataAlgPanel.add(mainLabel);
 		
-		printOptions(dataAlgPanel, getAlgorithms(), 20, tabY + 30, labelSpacing);
+		tabY = tabY + labelSpacing;
+		
+		printOptions(dataAlgPanel, getAlgorithms(), dataAlgPanel.getWidth()/20, tabY, labelSpacing);
+		
+		tabY = tabY + (getAlgorithms().length)*labelSpacing;
 		
 		seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.01), 60 + labelSpacing*(getDatasets().length + getAlgorithms().length + 2), (int) (dataAlgPanel.getWidth()*0.98), labelSpacing + 10);
+		seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.02), tabY, (int) (dataAlgPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		button = new JButton("Add Algorithm");
 		button.setVisible(true);
@@ -503,6 +532,10 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		dataAlgPanel.add(seePrefPanel);
 		
+		tabY = tabY + seePrefPanel.getHeight() + labelSpacing;
+		
+		dataAlgPanel.setBounds(dataAlgPanel.getX(), dataAlgPanel.getY(), dataAlgPanel.getWidth(), tabY);
+		
 		return dataAlgPanel;
 	}
 	
@@ -537,29 +570,28 @@ public class BuildUI {
 	}
 	
 	private JPanel buildPathsTab(int tabY){
-		int labelSpacing = 35;
 		pathPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Paths", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 8*labelSpacing + 10);
+		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 7*bigLabelSpacing + 2*labelSpacing);
 		pathPanel.setBorder(tb);
 		pathPanel.setLayout(null);
 		
-		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, labelSpacing, iManager.getInputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 2*labelSpacing, iManager.getOutputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 3*labelSpacing, iManager.getConfigurationFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 4*labelSpacing, iManager.getSetupFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 5*labelSpacing, iManager.getScoresFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 6*labelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, bigLabelSpacing, iManager.getInputFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getOutputFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getConfigurationFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 6*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 7*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 7*bigLabelSpacing, (int)(setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Open Scoring Preferences");
 		button.setVisible(true);
-		button.setFont(new Font(seePrefPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(0, 0, pathPanel.getWidth()*2/5, 25);
+		button.setFont(labelFont);
+		button.setBounds(0, 0, pathPanel.getWidth()*2/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
@@ -575,41 +607,41 @@ public class BuildUI {
 	}
 	
 	private JPanel buildSetupTab(int tabY){
-		int labelSpacing = 35;
+		int optionSpacing = (int)((bigLabelSpacing + labelSpacing) / 2); 
 		JPanel comp;
 		setupPanel.setBackground(Color.WHITE);
 		
-		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Setup", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 11*labelSpacing + 15);
+		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
+		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 6*optionSpacing + 5*bigLabelSpacing);
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
-		addToPanel(setupPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, setupPanel, labelSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, setupPanel, optionSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*labelSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*labelSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*labelSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
+		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*optionSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
 		comp.setVisible(iManager.getFilteringFlag());
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*labelSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*optionSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*labelSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
 		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*labelSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*labelSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*labelSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.01), 10*labelSpacing, (int) (setupPanel.getWidth()*0.98), labelSpacing+1);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 10*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Open Preferences");
 		button.setVisible(true);
-		button.setFont(new Font(seePrefPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(0, 0, setupPanel.getWidth()*2/5, 25);
+		button.setFont(bigFont);
+		button.setBounds(0, 0, setupPanel.getWidth()*2/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
@@ -624,48 +656,48 @@ public class BuildUI {
 		return setupPanel;
 	}
 	
-	public static JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.01), panelY, textFieldText);
+	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){
+		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText);
 	}
 	
-	public static JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText){
+	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.98), 30);
+		panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), 30);
 		panel.setLayout(null);
 		
 		JLabel lbl = new JLabel(textName);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
+		lbl.setFont(labelFont);
 		if(bold)
 			lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
-		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, 25);
+		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
 		JLabel lbldata = new JLabel(textFieldText);
-		lbldata.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
-		lbldata.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, 25);
+		lbldata.setFont(labelFont);
+		lbldata.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
 		lbldata.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbldata);
 		
 		return panel;
 	}
 	
-	private static JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager){
+	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager){
 		JPanel panel = new JPanel();
-		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 30);
+		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
 		
 		JLabel lbl = new JLabel(textName);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
-		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, 30);
+		lbl.setFont(labelFont);
+		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
 		JTextField textField = new JTextField();
 		textField.setText(textFieldText);
-		textField.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
-		textField.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, 30);
+		textField.setFont(labelFont);
+		textField.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
 		panel.add(textField);
 		textField.setColumns(10);
 		textField.getDocument().addDocumentListener(new DocumentListener() {
@@ -696,18 +728,18 @@ public class BuildUI {
 	
 	private JPanel createFCHPanel(String textName, JPanel root, int panelY, String textFieldText, boolean folderFlag){
 		JPanel panel = new JPanel();
-		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 30);
+		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), bigLabelSpacing);
 		panel.setLayout(null);
 		
 		JLabel lbl = new JLabel(textName);
-		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, 30);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
+		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
+		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
 		JButton button = new JButton(textFieldText);
 		button.setVisible(true);
-		button.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, 25);
+		button.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				JFileChooser jfc = new JFileChooser(new File("").getAbsolutePath());
@@ -731,13 +763,13 @@ public class BuildUI {
 	
 	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag){
 		JPanel panel = new JPanel();
-		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 25);
+		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
 		
 		JCheckBox cb = new JCheckBox(textName);
 		cb.setSelected(checked);
-		cb.setFont(new Font(root.getFont().getName(), Font.BOLD, 18));
-		cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, 25);
+		cb.setFont(bigFont);
+		cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		if(comp != null){
@@ -764,18 +796,18 @@ public class BuildUI {
 	
 	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected, String fileTag){
 		JPanel panel = new JPanel();
-		panel.setBounds((int) (root.getWidth()*0.01), panelY, (int) (root.getWidth()*0.98), 30);
+		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
 		
 		JLabel lbl = new JLabel(textName);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
-		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, 30);
+		lbl.setFont(labelFont);
+		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
 		JComboBox<Object> comboBox = new JComboBox<Object>();
-		comboBox.setFont(new Font(root.getFont().getName(), Font.PLAIN, 16));
-		comboBox.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, 30);
+		comboBox.setFont(labelFont);
+		comboBox.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
 
 		if(itemList != null){
 			for(Object ob : itemList){

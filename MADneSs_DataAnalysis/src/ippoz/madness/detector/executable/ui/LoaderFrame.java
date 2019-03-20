@@ -37,7 +37,15 @@ public class LoaderFrame {
 	
 	private JFrame lFrame;
 	
-	private static final int labelSpacing = 35;
+	private Font bigFont;
+	
+	private Font labelFont;
+	
+	private Font smallLabelFont;
+	
+	private int labelSpacing;
+	
+	private int bigLabelSpacing;
 	
 	private JPanel loaderPanel;
 	
@@ -49,6 +57,16 @@ public class LoaderFrame {
 		this.iManager = iManager;
 		this.loaderPref = loaderPref;
 		buildFrame();
+		
+		double rate = 18*Toolkit.getDefaultToolkit().getScreenSize().getHeight()/1080;
+		
+		bigFont = new Font("Times", Font.PLAIN, (int)((18 + rate)/2));
+		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
+		smallLabelFont = new Font("Times", Font.PLAIN, (int)((14 + rate)/2));
+		
+		labelSpacing = (int)(lFrame.getHeight()/25);
+		bigLabelSpacing = (int)(lFrame.getHeight()/18);
+		
 		loaderPanel = buildMainPanel();
 	}
 
@@ -65,7 +83,7 @@ public class LoaderFrame {
 		lFrame = new JFrame();
 		lFrame.setTitle("Setup of '" + loaderPref.getFilename() + "'");
 		if(screenSize.getWidth() > 1600)
-			lFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.5));
+			lFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.4), (int)(screenSize.getHeight()*0.7));
 		else lFrame.setBounds(0, 0, 800, 480);
 		lFrame.setBackground(Color.WHITE);
 		lFrame.setResizable(false);
@@ -74,26 +92,26 @@ public class LoaderFrame {
 	private JPanel buildMainPanel() {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
-		containerPanel.setBounds(0, 0, lFrame.getWidth()/10*9, lFrame.getHeight()/10*9);
+		containerPanel.setBounds(5, 5, lFrame.getWidth() - 10, lFrame.getHeight() - 10);
 		containerPanel.setLayout(null);
 		
 		JPanel generalPanel = new JPanel();
 		generalPanel.setBackground(Color.WHITE);
-		generalPanel.setBounds(containerPanel.getWidth()/10, 0, containerPanel.getWidth()/5*4 + 20, 4*labelSpacing + 10);
+		generalPanel.setBounds(5, 5, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " General Characteristics ", 
 				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		generalPanel.setBorder(tb);
 		generalPanel.setLayout(null);
 		
-		showPreference2Labels(generalPanel, labelSpacing, "Loader Path", 
+		showPreference2Labels(generalPanel, bigLabelSpacing, "Loader Path", 
 				loaderPref.getFilename(), 
 				"");
 		
-		showPreferenceLabels(generalPanel, 2*labelSpacing, Loader.LOADER_TYPE, 
+		showPreferenceLabels(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
 				loaderPref.getPreference(Loader.LOADER_TYPE), 
 				"Specify loader type, either CSVALL or MYSQL");
 		
-		showPreferenceLabels(generalPanel, 3*labelSpacing, Loader.CONSIDERED_LAYERS, 
+		showPreferenceLabels(generalPanel, 3*bigLabelSpacing, Loader.CONSIDERED_LAYERS, 
 				loaderPref.getPreference(Loader.CONSIDERED_LAYERS), 
 				"Specify considered layers, if indicators of the dataset are grouped through layers. Otherwise, type the 'NO_LAYER' option");
 		
@@ -101,33 +119,33 @@ public class LoaderFrame {
 		
 		JPanel runsPanel = new JPanel();
 		runsPanel.setBackground(Color.WHITE);
-		runsPanel.setBounds(containerPanel.getWidth()/10, generalPanel.getHeight() + 10, containerPanel.getWidth()/5*4 + 20, 7*labelSpacing + 10);
+		runsPanel.setBounds(5, generalPanel.getHeight() + 10, containerPanel.getWidth()-10, 7*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Runs Setup ", 
 				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		runsPanel.setBorder(tb);
 		runsPanel.setLayout(null);
 		
-		showPreferenceLabels(runsPanel, labelSpacing, CSVPreLoader.FILTERING_CSV_FILE, 
+		showPreferenceLabels(runsPanel, bigLabelSpacing, CSVPreLoader.FILTERING_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.FILTERING_CSV_FILE), 
 				"Specify filtering file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 2*labelSpacing, Loader.FILTERING_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 2*bigLabelSpacing, Loader.FILTERING_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.FILTERING_RUN_PREFERENCE), 
 				"Specify runs to be used for filtering, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 3*labelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
+		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 4*labelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
 				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 5*labelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
+		showPreferenceLabels(runsPanel, 5*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 6*labelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
@@ -135,25 +153,25 @@ public class LoaderFrame {
 		
 		JPanel dataPanel = new JPanel();
 		dataPanel.setBackground(Color.WHITE);
-		dataPanel.setBounds(containerPanel.getWidth()/10, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()/5*4 + 20, 5*labelSpacing + 10);
+		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 5*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Data Setup ", 
 				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(null);
 		
-		showPreferenceLabels(dataPanel, labelSpacing, CSVPreLoader.EXPERIMENT_ROWS, 
+		showPreferenceLabels(dataPanel, bigLabelSpacing, CSVPreLoader.EXPERIMENT_ROWS, 
 				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS), 
 				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
 		
-		showPreferenceLabels(dataPanel, 2*labelSpacing, CSVPreLoader.LABEL_COLUMN, 
+		showPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVPreLoader.LABEL_COLUMN, 
 				loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.");
 		
-		showPreferenceLabels(dataPanel, 3*labelSpacing, CSVPreLoader.FAULTY_TAGS, 
+		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.FAULTY_TAGS, 
 				loaderPref.getPreference(CSVPreLoader.FAULTY_TAGS), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data");
 		
-		showPreferenceLabels(dataPanel, 4*labelSpacing, CSVPreLoader.SKIP_COLUMNS, 
+		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
 				loaderPref.getPreference(CSVPreLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.");
 		
@@ -163,7 +181,7 @@ public class LoaderFrame {
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
-		fPanel.setBounds(containerPanel.getWidth()/4, generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()/2, labelSpacing + 40);
+		fPanel.setBounds(containerPanel.getWidth()/8, generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()/4*3, labelSpacing + 40);
 		fPanel.setLayout(null);
 		
 		JButton button = new JButton("Save Changes");
@@ -252,8 +270,8 @@ public class LoaderFrame {
 	private void showPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, String description){
 		
 		JLabel lbl = new JLabel(prefName);
-		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, 20);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 18));
+		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);
+		lbl.setFont(bigFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
@@ -262,8 +280,8 @@ public class LoaderFrame {
 		
 		JTextField textField = new JTextField();
 		textField.setText(textFieldText);
-		textField.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, 30);
-		textField.setFont(new Font(root.getFont().getName(), Font.PLAIN, 15));
+		textField.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, bigLabelSpacing);
+		textField.setFont(labelFont);
 		textField.setColumns(10);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
@@ -295,8 +313,8 @@ public class LoaderFrame {
 private void showPreference2Labels(JPanel root, int panelY, String prefName, String textFieldText, String description){
 		
 		JLabel lbl = new JLabel(prefName);
-		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, 20);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 18));
+		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);
+		lbl.setFont(bigFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
@@ -304,8 +322,8 @@ private void showPreference2Labels(JPanel root, int panelY, String prefName, Str
 		root.add(lbl);
 		
 		lbl = new JLabel(textFieldText);
-		lbl.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, 20);
-		lbl.setFont(new Font(root.getFont().getName(), Font.PLAIN, 18));
+		lbl.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, labelSpacing);
+		lbl.setFont(bigFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);

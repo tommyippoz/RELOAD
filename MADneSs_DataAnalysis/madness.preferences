@@ -3,10 +3,10 @@
 * MADneSs Execution.
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
-FILTERING_FLAG = 1
+FILTERING_FLAG = 0
 
 * Perform Training (0 = NO, 1 = YES).
-TRAIN_FLAG = 1
+TRAIN_FLAG = 0
 
 * K Counter for K-Fold Training/Validation
 KFOLD_COUNTER = 2
