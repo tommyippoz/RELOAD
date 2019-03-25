@@ -95,6 +95,10 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
 				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
+			} else {
+				for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
+					getMetric().evaluateMetric(algorithm, knowledge);
+				}
 			}
 			trainScore = algorithm.getTrainScore();
 		} catch (CloneNotSupportedException ex) {

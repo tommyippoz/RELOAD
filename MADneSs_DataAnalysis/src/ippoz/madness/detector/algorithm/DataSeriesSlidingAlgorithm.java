@@ -31,6 +31,14 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+		AlgorithmResult ar = calculateSnapshotScore(knowledge, sysSnapshot, currentIndex);
+		if(currentIndex >= getWindowSize()){
+			logScore(ar.getScore());
+		}
+		return ar;
+	}
+	
+	private AlgorithmResult calculateSnapshotScore(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
 			windowSize = ((SlidingKnowledge)knowledge).getWindowSize();

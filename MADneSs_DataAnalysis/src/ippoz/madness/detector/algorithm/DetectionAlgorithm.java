@@ -224,7 +224,7 @@ public abstract class DetectionAlgorithm {
 			case CONF:
 			case HIST:
 			case SLIDING_SPS:
-				return dataSeries.size() == 1;
+				return true; //dataSeries.size() == 1;
 			case INV:
 				return dataSeries.size() == 2;
 			case SLIDING_WEKA_ISOLATIONFOREST:
