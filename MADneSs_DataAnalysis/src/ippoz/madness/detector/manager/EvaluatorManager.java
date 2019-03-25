@@ -130,11 +130,11 @@ public class EvaluatorManager extends DataManager {
 			case "ALL":
 				return checkers;
 			case "HALF":
-				return (int)(checkers/2);
+				return Math.ceil(checkers/2.0);
 			case "THIRD":
-				return (int)(checkers/3);
+				return Math.ceil(checkers/3.0);
 			case "QUARTER":
-				return (int)(checkers/4);
+				return Math.ceil(checkers/4.0);
 			default:
 				return Double.parseDouble(anTresholdString);
 		}

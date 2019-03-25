@@ -201,7 +201,7 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
 				dManager.filterIndicators();
 			}
-			if(dManager.needTest()) {
+			if(dManager.needTraining()) {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 

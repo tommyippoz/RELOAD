@@ -41,8 +41,6 @@ public class LoaderFrame {
 	
 	private Font labelFont;
 	
-	private Font smallLabelFont;
-	
 	private int labelSpacing;
 	
 	private int bigLabelSpacing;
@@ -62,7 +60,6 @@ public class LoaderFrame {
 		
 		bigFont = new Font("Times", Font.PLAIN, (int)((18 + rate)/2));
 		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
-		smallLabelFont = new Font("Times", Font.PLAIN, (int)((14 + rate)/2));
 		
 		labelSpacing = (int)(lFrame.getHeight()/25);
 		bigLabelSpacing = (int)(lFrame.getHeight()/18);

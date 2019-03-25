@@ -65,7 +65,7 @@ public class InputManager {
 	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
 	/** The Constant INV_DOMAIN. */
-	public static final String DATA_SERIES_DOMAIN = "DATA_SERIES_DOMAIN";
+	public static final String INDICATOR_SELECTION = "INDICATOR_SELECTION";
 	
 	/** The Constant OUTPUT_FORMAT. */
 	public static final String OUTPUT_FORMAT = "OUTPUT_TYPE";
@@ -676,12 +676,12 @@ public class InputManager {
 	}
 
 	public String getDataSeriesDomain() {
-		if(prefManager.hasPreference(DATA_SERIES_DOMAIN))
-			return prefManager.getPreference(DATA_SERIES_DOMAIN);
+		if(prefManager.hasPreference(INDICATOR_SELECTION))
+			return prefManager.getPreference(INDICATOR_SELECTION);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DATA_SERIES_DOMAIN + " not found. Using default value of 'PEARSON(0.90)'");
-			return "PEARSON(0.90)";
+					INDICATOR_SELECTION + " not found. Using default value of 'PEARSON(0.9)'");
+			return "PEARSON(0.9)";
 		}
 	}
 	
@@ -1117,6 +1117,10 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "'");
 		}
 		return lFile;
+	}
+	
+	public static String[] getIndicatorSelectionPolicies(){
+		return new String[]{"ALL", "UNION", "PEARSON", "SIMPLE"};
 	}
 	
 }

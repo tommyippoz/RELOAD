@@ -203,12 +203,36 @@ public abstract class DetectionAlgorithm {
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
-		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
-				(dataSeries.size() == 1 && (algType == AlgorithmType.SLIDING_SPS || algType == AlgorithmType.HIST)) ||
-				(dataSeries.size() > 1 && (algType == AlgorithmType.WEKA_ISOLATIONFOREST || algType == AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST)) ||
-				(dataSeries.size() == 1 && algType.equals(AlgorithmType.ELKI_ODIN)) ||
-				(!algType.equals(AlgorithmType.ELKI_ODIN) && algType.toString().contains("ELKI_") ||
-				(algType.toString().contains("HBOS")));
+		switch(algType){
+			case ELKI_ABOD:
+			case ELKI_COF:
+			case ELKI_FASTABOD:
+			case ELKI_KMEANS:
+			case ELKI_LOF:
+			case ELKI_ODIN:
+			case ELKI_SVM:
+			case HBOS:
+			case SLIDING_ELKI_ABOD:
+			case SLIDING_ELKI_CLUSTERING:
+			case SLIDING_ELKI_COF:
+			case SLIDING_ELKI_KNN:
+				return true;
+			case TEST:
+			case WER:
+			case PEA:
+			case RCC:
+			case CONF:
+			case HIST:
+			case SLIDING_SPS:
+				return dataSeries.size() == 1;
+			case INV:
+				return dataSeries.size() == 2;
+			case SLIDING_WEKA_ISOLATIONFOREST:
+			case WEKA_ISOLATIONFOREST:
+				return dataSeries.size() > 1;
+			default:
+				return false;
+		}
 	}
 	
 	/**

@@ -163,7 +163,7 @@ public class DetectionManager {
 	 *
 	 * @return true if training is needed
 	 */
-	public boolean needTest(){
+	public boolean needTraining(){
 		return iManager.getTrainingFlag();
 	}
 	
@@ -197,7 +197,7 @@ public class DetectionManager {
 	public void train(){
 		TrainerManager tManager;
 		try {
-			if(needTest()) {
+			if(needTraining()) {
 				if(selectedDataSeries == null && !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))))
 					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				else {

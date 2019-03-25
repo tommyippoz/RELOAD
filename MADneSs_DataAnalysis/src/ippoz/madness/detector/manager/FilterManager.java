@@ -40,7 +40,7 @@ public class FilterManager extends TrainDataManager {
 	 *
 	 */
 	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex, kfold);
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex, true, kfold);
 		this.filteringThreshold = filteringThreshold;
 	}
 
@@ -48,27 +48,6 @@ public class FilterManager extends TrainDataManager {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(AlgorithmType.ELKI_KMEANS);
 		return list;
-	}
-	
-	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
-		if(dsDomain.equals("ALL")){
-			return DataSeries.allCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("UNION")){
-			return DataSeries.unionCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes), pearsonSimple, pearsonComplex);
-			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
-	}
-	
-	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
-		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(), kfold);
-		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
-		pcManager.flush();
 	}
 
 	/**

@@ -209,9 +209,9 @@ public class DetectorOutput {
 				int col = 3;
 				for(Metric met : evaluationMetrics){
 					String res = Metric.getAverageMetricValue(detailedMetricScores.get(voterTreshold).get(anomalyTreshold.trim()), met);
-					if(res.equals(String.valueOf(Double.NaN)))
+					if(res.equals(String.valueOf(Double.NaN))){
 						result[row][col++] = "-";
-					result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(res)));
+					} else result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(res)));
 				}
 				row++;
 			}

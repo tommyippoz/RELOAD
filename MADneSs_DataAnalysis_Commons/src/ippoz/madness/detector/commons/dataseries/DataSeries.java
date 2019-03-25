@@ -158,13 +158,11 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return simpleInd;
 	}
 	
-	public static List<DataSeries> unionCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+	public static List<DataSeries> unionCombinations(Indicator[] indicators) {
 		LinkedList<DataSeries> unionInd = new LinkedList<DataSeries>();
 		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
-			for(DataCategory dCat : dataTypes){
-				simpleInd.add(new IndicatorDataSeries(ind, dCat));
-			}
+				simpleInd.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
 		}
 		unionInd.add(new MultipleDataSeries(simpleInd));
 		return unionInd;
@@ -197,10 +195,10 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return outList;
 	}
 	
-	public static LinkedList<DataSeries> allCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
-		LinkedList<DataSeries> outList = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> complexInd = new LinkedList<DataSeries>();
+	public static List<DataSeries> allCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+		List<DataSeries> outList = new LinkedList<DataSeries>();
+		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		List<DataSeries> complexInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));

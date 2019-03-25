@@ -79,13 +79,11 @@ public abstract class TrainDataManager extends DataManager {
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex, boolean generatePearson, int kfold) {
 		this(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
-		seriesList = generateDataSeries(dataTypes, pearsonSimple, pearsonComplex);
+		seriesList = generateDataSeries(dataTypes, pearsonComplex, generatePearson);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
-	
-	public abstract List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex);
 	
 	private List<List<String>> readIndCombinations(String filename){
 		return readIndCombinations(new File(setupFolder + filename));
@@ -125,6 +123,45 @@ public abstract class TrainDataManager extends DataManager {
 			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
 		}
 		return comb;
+	}
+	
+	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonComplex, boolean generatePearson) {
+		double pearsonSimple;
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("UNION")){
+			return DataSeries.unionCombinations(getIndicators());
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
+			if(generatePearson){
+				pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes), pearsonSimple, pearsonComplex);
+			}
+			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
+	}
+	
+	/*
+	 public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("UNION")){
+			return DataSeries.unionCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			pearsonCorrelation(DataSeries.simpleCombinations(getIndicators(), dataTypes), pearsonSimple, pearsonComplex);
+			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
+	}	 */
+	
+	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
+		PearsonCombinationManager pcManager;
+		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(), kfold);
+		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
+		pcManager.flush();
 	}
 	
 	public List<List<String>> readPossibleIndCombinations(){

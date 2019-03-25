@@ -23,6 +23,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -73,7 +74,7 @@ public class TrainerManager extends TrainDataManager {
 	 * @param algTypes2 the algorithm types
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, kfold);
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, false, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -112,18 +113,6 @@ public class TrainerManager extends TrainDataManager {
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
-		if(dsDomain.equals("ALL")){
-			return DataSeries.allCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("UNION")){
-			return DataSeries.unionCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
-	}
-	
 	private void clearTmpFolders(List<AlgorithmType> algTypes) {
 		File rootFolder = new File(new File(".").getAbsolutePath().substring(0, new File(".").getAbsolutePath().length()-2));
 		for(File file : rootFolder.listFiles()){
@@ -138,27 +127,31 @@ public class TrainerManager extends TrainDataManager {
 	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		List<DataSeries> finalDs = new LinkedList<DataSeries>();
 		List<DataSeries> allFeatures = new LinkedList<DataSeries>();
-		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, 0.9);
-		for(String dsString : selectedSeriesString){
-			for(DataSeries ds : all){
-				if(ds.toString().equals(dsString)) {
-					finalDs.add(ds);
-					if(ds instanceof IndicatorDataSeries){
-						boolean flag = false;
-						for(DataSeries dsall : allFeatures){
-							if(dsall.getName().equals(ds.getName())) {
-								flag = true;
-								break;
+		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, false);
+		if(all != null && all.size() > 1) {
+			for(String dsString : selectedSeriesString){
+				for(DataSeries ds : all){
+					if(ds.toString().equals(dsString)) {
+						finalDs.add(ds);
+						if(ds instanceof IndicatorDataSeries){
+							boolean flag = false;
+							for(DataSeries dsall : allFeatures){
+								if(dsall.getName().equals(ds.getName())) {
+									flag = true;
+									break;
+								}
 							}
+							if(!flag)
+								allFeatures.add(ds);
 						}
-						if(!flag)
-							allFeatures.add(ds);
+						break;
 					}
-					break;
 				}
 			}
+			finalDs.add(new MultipleDataSeries(allFeatures));
+		} else if (all != null && all.size() == 1){
+			finalDs = all;
 		}
-		finalDs.add(new MultipleDataSeries(allFeatures));
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
 		return finalDs;
 	}
@@ -228,7 +221,7 @@ public class TrainerManager extends TrainDataManager {
 			}	
 		}
 		setThreadList(trainerList);
-		AppLogger.logInfo(getClass(), "Train is Starting");
+		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting");
 	}
 
 	/* (non-Javadoc)

@@ -224,9 +224,9 @@ public class ExperimentVoter extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				if(!met.getMetricName().equals("AUC"))
+				//if(!met.getMetricName().equals("AUC"))
 					metResults.put(met, met.evaluateAnomalyResults(kMap.get(kMap.keySet().iterator().next()), voting, anomalyTreshold));
-				else metResults.put(met, getAUC());
+				//else metResults.put(met, getAUC());
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));

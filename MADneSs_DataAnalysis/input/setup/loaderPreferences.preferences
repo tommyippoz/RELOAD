@@ -52,12 +52,9 @@
 *unsw/unsw_worms.loader
 
 *unsw/unsw_shellcode.loader
-* qqqqqqqqqqqq.loader
-* sint\iscx_synthetic_contextual.loader
+
+
+sint\iscx_synthetic_contextual.loader
+
 * sint\iscx_synthetic_point.loader
 * sint\iscx_synthetic_collective.loader
-* sint\iscx_synthetic_point.loader
-* as.loader
-iscx_synthetic_point.loader
-* iscx_synthetic_contextual.loader
-* iscx_synthetic_collective.loader

@@ -72,14 +72,17 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	@Override
 	protected DecisionFunction buildClassifier() {
 		double perc = 0.0;
-		if(conf != null && conf.hasItem(THRESHOLD)){
-			if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
-				perc = Double.parseDouble(conf.getItem(THRESHOLD));
-			else if(conf.getItem(THRESHOLD).contains("LOG(") && conf.getItem(THRESHOLD).contains(")")){
-				perc = Double.parseDouble(conf.getItem(THRESHOLD).replace("LOG(", "").replace(")",""));
+		DecisionFunction df = super.buildClassifier();
+		if(df == null){
+			if(conf != null && conf.hasItem(THRESHOLD)){
+				if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
+					perc = Double.parseDouble(conf.getItem(THRESHOLD));
+				else if(conf.getItem(THRESHOLD).contains("LOG(") && conf.getItem(THRESHOLD).contains(")")){
+					perc = Double.parseDouble(conf.getItem(THRESHOLD).replace("LOG(", "").replace(")",""));
+				} else perc = DEFAULT_THRESHOLD;
 			} else perc = DEFAULT_THRESHOLD;
-		} else perc = DEFAULT_THRESHOLD;
-		return new LogThresholdDecision(perc, histograms.size());
+			return new LogThresholdDecision(perc, histograms.size());
+		} else return df;
 	}
 	
 	/*private double loadThreshold() {

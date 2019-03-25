@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = Synthetic/ISCX2012_BruteForce_CONTEXTUAL.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-10
+TRAIN_RUN_IDS = 0-50
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = Synthetic/ISCX2012_BruteForce_CONTEXTUAL.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 11-20
+VALIDATION_RUN_IDS = 101-140
 
 
 * Parsing Dataset
@@ -35,7 +35,7 @@ SKIP_COLUMNS = 6
 LABEL_COLUMN = 6
 
 * Size of Each Experiment
-EXPERIMENT_ROWS = 300
+EXPERIMENT_ROWS = 200
 
 * Tags Identifying an Attack in This Dataset
 FAULTY_TAGS = CONTEXTUAL, "CONTEXTUAL"

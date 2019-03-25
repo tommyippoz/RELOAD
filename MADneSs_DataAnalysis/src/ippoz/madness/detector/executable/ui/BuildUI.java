@@ -69,6 +69,8 @@ public class BuildUI {
 	
 	private static final String SETUP_LABEL_OUTPUT = "Output Format";
 	
+	private static final String SETUP_IND_SELECTION = "Indicators Selection";
+	
 	private static final String SETUP_LABEL_FILTERING = "Filtering";
 	
 	private static final String SETUP_LABEL_FILTERING_THRESHOLD = "FPR Threshold";
@@ -612,7 +614,7 @@ public class BuildUI {
 		setupPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
-		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 6*optionSpacing + 5*bigLabelSpacing);
+		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 6*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
@@ -620,23 +622,24 @@ public class BuildUI {
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
+		addToPanel(setupPanel, SETUP_IND_SELECTION, createLCBPanel(SETUP_IND_SELECTION, setupPanel, 4*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesDomain(), InputManager.INDICATOR_SELECTION), setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 5*optionSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
+		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 6*optionSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
 		comp.setVisible(iManager.getFilteringFlag());
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 4*optionSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 5*optionSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 8*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
 		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 7*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 9*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 10*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 10*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Open Preferences");
 		button.setVisible(true);
@@ -824,6 +827,14 @@ public class BuildUI {
 							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 								newValue = newValue + "(" + s + ")";
 							} else newValue = newValue + "(1)";
+			        	}
+			        	if(comboBox.getSelectedItem().toString().equals("PEARSON")){
+			        		String s = (String)JOptionPane.showInputDialog(
+				                    frame, "Set threshold for Pearson Correlation Index (0<threshold<=1) ", "Pearson Index Threshold",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+								newValue = newValue + "(" + s + ")";
+							} else newValue = newValue + "(0.9)";
 			        	}
 			        	iManager.updatePreference(fileTag, newValue, true);
 			        	reload();

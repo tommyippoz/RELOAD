@@ -44,10 +44,33 @@ public abstract class DecisionFunction {
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
-								return new IQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
+								if(thresholdTag.contains("LEFT_IQR"))
+									return new LeftIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
+								else if(thresholdTag.contains("RIGHT_IQR"))
+									return new RightIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
+								else return new IQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create IQR decision function '" + thresholdTag + "'");
+				} else if(thresholdTag.contains("CONFIDENCE_INTERVAL")) {
+					if(scores != null && scores.size() > 0){
+						if(thresholdTag.equals("CONFIDENCE_INTERVAL"))
+							return new ConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
+						else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
+							return new LeftConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
+						else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
+							return new RightConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
+						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+								if(thresholdTag.contains("LEFT_CONFIDENCE_INTERVAL"))
+									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
+								else if(thresholdTag.contains("RIGHT_CONFIDENCE_INTERVAL"))
+									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
+								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
+							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create CONF decision function '" + thresholdTag + "'");
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
