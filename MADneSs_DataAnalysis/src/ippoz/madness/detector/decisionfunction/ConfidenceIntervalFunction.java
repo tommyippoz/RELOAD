@@ -35,4 +35,9 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 		else return AnomalyResult.NORMAL;
 	}
 
+	@Override
+	public String toCompactString() {
+		return "CONF(" + avg + " +- " + ratio + "*" + std + ")";
+	}
+
 }

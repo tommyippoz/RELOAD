@@ -5,7 +5,9 @@ package ippoz.madness.detector.voter;
 
 import ippoz.madness.commons.layers.LayerType;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
+import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
@@ -56,7 +58,7 @@ public class ExperimentVoter extends Thread {
 	private List<AlgorithmVoter> algList;
 	
 	/** The complete results of the voting. */
-	private Map<Date, Map<AlgorithmVoter, Double>> partialVoting;
+	private Map<Date, Map<AlgorithmVoter, AlgorithmResult>> partialVoting;
 	
 	/** The contracted results of the voting. */
 	private List<TimedValue> voting;
@@ -110,14 +112,14 @@ public class ExperimentVoter extends Thread {
 	@Override
 	public void run() {
 		double votingResult;
-		Map<AlgorithmVoter, Double> snapVoting;
+		Map<AlgorithmVoter, AlgorithmResult> snapVoting;
 		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
-		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, Double>>();
+		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, AlgorithmResult>>();
 		voting = new ArrayList<TimedValue>(currentKnowledge.size());
 		failures = new LinkedList<TimedValue>();
 		if(algList.size() > 0) {
 			for(int i=0;i<currentKnowledge.size();i++){
-				snapVoting = new HashMap<AlgorithmVoter, Double>();
+				snapVoting = new HashMap<AlgorithmVoter, AlgorithmResult>();
 				for(AlgorithmVoter aVoter : algList){
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
 				}
@@ -136,37 +138,22 @@ public class ExperimentVoter extends Thread {
 		}
 	}
 	
-	private double getAUC() {
-		int okCount = 0;
-		double auc = 0;
-		if(algList.size() > 0) {
-			for(AlgorithmVoter aVoter : algList){
-				if(aVoter.getAUC() >= 0){
-					auc = auc + aVoter.getAUC();
-					okCount++;
-				}	
-			}
-		}
-		if(okCount > 0)
-			return auc/okCount;
-		else return -1.0;
-	}
-	
 	/**
 	 * Votes results obtaining a contracted indication about anomaly (double score)
 	 *
-	 * @param algResults the complete algorithm scoring results
+	 * @param snapVoting the complete algorithm scoring results
 	 * @return contracted anomaly score
 	 */
-	private double voteResults(Map<AlgorithmVoter, Double> algResults){
+	private double voteResults(Map<AlgorithmVoter, AlgorithmResult> snapVoting){
 		double snapScore = 0.0;
 		boolean undetectable = true;
 		for(AlgorithmVoter aVoter : algList){
-			if(algResults.get(aVoter) >= 0.0){
+			double algScore = DetectionAlgorithm.convertResultIntoDouble(snapVoting.get(aVoter).getScoreEvaluation());
+			if(algScore >= 0.0){
 				undetectable = false;
 				if(aVoter.getReputationScore() > 0)
-					snapScore = snapScore + 1.0*aVoter.getReputationScore()*algResults.get(aVoter);
-				else snapScore = snapScore + 1.0*algResults.get(aVoter);
+					snapScore = snapScore + 1.0*aVoter.getReputationScore()*algScore;
+				else snapScore = snapScore + 1.0*algScore;
 			}
 		}
 		if(undetectable)
@@ -308,7 +295,8 @@ public class ExperimentVoter extends Thread {
 				partial = "";
 				count = 0;
 				for(AlgorithmVoter aVoter : algList){
-					if(partialVoting.get(timestamp).get(aVoter) > 0.0){
+					double algScore = DetectionAlgorithm.convertResultIntoDouble(partialVoting.get(timestamp).get(aVoter).getScoreEvaluation());
+					if(algScore > 0.0){
 						countMap.get(aVoter.getLayerType()).replace(aVoter.getAlgorithmType(), countMap.get(aVoter.getLayerType()).get(aVoter.getAlgorithmType()) + 1);			
 						partial = partial + aVoter.toString() + "|";
 						count++;
@@ -345,7 +333,7 @@ public class ExperimentVoter extends Thread {
 		return map;
 	}
 
-	public Map<Date, Map<AlgorithmVoter, Double>> getSingleAlgorithmScores() {
+	public Map<Date, Map<AlgorithmVoter, AlgorithmResult>> getSingleAlgorithmScores() {
 		return partialVoting;
 	}
 	
@@ -355,6 +343,15 @@ public class ExperimentVoter extends Thread {
 
 	public int getFailuresNumber() {
 		return failures != null ? failures.size() : 0;
+	}
+	
+	public List<InjectedElement> getFailuresList() {
+		List<InjectedElement> list = new LinkedList<InjectedElement>();
+		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
+		for(int i=0;i<currentKnowledge.size();i++){
+			list.add(currentKnowledge.getInjection(i));
+		}
+		return list;
 	}
 
 }

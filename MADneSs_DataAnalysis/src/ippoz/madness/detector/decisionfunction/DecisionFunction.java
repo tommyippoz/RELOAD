@@ -104,6 +104,19 @@ public abstract class DecisionFunction {
 							return true;
 						} else return false;
 					} else return false;
+				} else if(thresholdTag.contains("CONFIDENCE_INTERVAL")) {
+					if(thresholdTag.equals("CONFIDENCE_INTERVAL"))
+						return true;
+					else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
+						return true;
+					else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else return false;
+					} else return false;
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
@@ -161,5 +174,7 @@ public abstract class DecisionFunction {
 			return "";
 		}
 	}
+
+	public abstract String toCompactString();
 
 }

@@ -685,6 +685,13 @@ public class InputManager {
 		}
 	}
 	
+	public String getDataSeriesBaseDomain() {
+		String toRet = getDataSeriesDomain();
+		if(toRet.contains("("))
+			toRet = toRet.substring(0, toRet.indexOf("("));
+		return toRet;
+	}
+	
 	private static PreferencesManager generateDefaultMADneSsPreferences() throws IOException {
 		File prefFile = null;
 		BufferedWriter writer = null;

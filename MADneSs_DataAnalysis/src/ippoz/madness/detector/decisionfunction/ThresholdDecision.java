@@ -32,4 +32,9 @@ public class ThresholdDecision extends DecisionFunction {
 		else return value.getScore() >= scores.get(scores.size()-1) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
 
+	@Override
+	public String toCompactString() {
+		return "THR(" + threshold + ")";
+	}
+
 }

@@ -34,4 +34,9 @@ public class IQRFunction extends DecisionFunction {
 		else return AnomalyResult.NORMAL;
 	}
 
+	@Override
+	public String toCompactString() {
+		return "IQR(" + q1 + " " + q3 + " " + ratio + ")";
+	}
+
 }

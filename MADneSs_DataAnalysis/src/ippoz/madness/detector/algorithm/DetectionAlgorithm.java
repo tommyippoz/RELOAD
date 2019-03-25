@@ -92,7 +92,7 @@ public abstract class DetectionAlgorithm {
 	 * @param anomalyValue the anomaly value
 	 * @return the double
 	 */
-	protected static double convertResultIntoDouble(AnomalyResult anomalyResult){
+	public static double convertResultIntoDouble(AnomalyResult anomalyResult){
 		switch (anomalyResult){
 			case ANOMALY:
 				return 1.0;
@@ -105,7 +105,6 @@ public abstract class DetectionAlgorithm {
 			default:
 				return Double.NaN;
 		}
-		
 	}
 	
 	/**
@@ -274,10 +273,10 @@ public abstract class DetectionAlgorithm {
 	 * @param sysSnapshot the given snapshot
 	 * @return the anomaly rate of the snapshot
 	 */
-	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
+	public AlgorithmResult snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
 		if(getDecisionFunction() == null)
 			setDecisionFunction();
-		return convertResultIntoDouble(evaluateSnapshot(knowledge, currentIndex).getScoreEvaluation());//*getWeight();
+		return evaluateSnapshot(knowledge, currentIndex);//*getWeight();
 	}
 	
 	// TODO

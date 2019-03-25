@@ -333,8 +333,11 @@ public class DetectionManager {
 		return new DetectorOutput(Double.isFinite(bestScore) ? bestScore : 0.0,
 				getBestSetup(evaluations, metList, anomalyTresholds), metric, metList, 
 				getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
-				nVoters, bestEManager != null ? bestEManager.getDetailedEvaluations() : null, 
-				evaluations, getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
+				nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, 
+				evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
+				bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
+				bestEManager != null ? bestEManager.getFailures() : null,		
+				getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
 	}
 	
 	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){

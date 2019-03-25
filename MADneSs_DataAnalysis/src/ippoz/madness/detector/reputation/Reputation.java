@@ -49,7 +49,8 @@ public abstract class Reputation {
 	public double evaluateReputation(DetectionAlgorithm alg, Knowledge knowledge){
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
-			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), alg.snapshotAnomalyRate(knowledge, i)));
+			double algScore = DetectionAlgorithm.convertResultIntoDouble(alg.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
+			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), algScore));
 		}
 		return evaluateExperimentReputation(knowledge, anomalyEvaluations);
 	}

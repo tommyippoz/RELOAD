@@ -622,7 +622,7 @@ public class BuildUI {
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
-		addToPanel(setupPanel, SETUP_IND_SELECTION, createLCBPanel(SETUP_IND_SELECTION, setupPanel, 4*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesDomain(), InputManager.INDICATOR_SELECTION), setupMap);
+		addToPanel(setupPanel, SETUP_IND_SELECTION, createLCBPanel(SETUP_IND_SELECTION, setupPanel, 4*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION), setupMap);
 		
 		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 6*optionSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
 		comp.setVisible(iManager.getFilteringFlag());

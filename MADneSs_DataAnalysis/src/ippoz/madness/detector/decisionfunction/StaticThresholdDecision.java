@@ -24,5 +24,10 @@ public class StaticThresholdDecision extends DecisionFunction {
 			return AnomalyResult.NORMAL;
 		else return AnomalyResult.ANOMALY;
 	}
+	
+	@Override
+	public String toCompactString() {
+		return "STHR(" + threshold + ")";
+	}
 
 }

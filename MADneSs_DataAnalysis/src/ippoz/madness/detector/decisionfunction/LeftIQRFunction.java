@@ -26,5 +26,10 @@ public class LeftIQRFunction extends IQRFunction {
 			return AnomalyResult.ANOMALY;
 		else return AnomalyResult.NORMAL;
 	}
+	
+	@Override
+	public String toCompactString() {
+		return "LIQR(" + q1 + " " + ratio + ")";
+	}
 
 }

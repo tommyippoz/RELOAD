@@ -3,9 +3,12 @@
  */
 package ippoz.madness.detector.output;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.TimedValue;
 import ippoz.madness.detector.metric.Metric;
+import ippoz.madness.detector.voter.AlgorithmVoter;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,6 +46,12 @@ public class DetectorOutput {
 	
 	private Map<String, Map<String, List<Map<Metric, Double>>>> detailedMetricScores;
 	
+	private Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores;
+	
+	private Map<String, List<InjectedElement>> injections;
+	
+	private double bestAnomalyThreshold;
+	
 	private String writableTag;
 	
 	private double faultsRatio;
@@ -51,6 +60,8 @@ public class DetectorOutput {
 			Metric[] evaluationMetrics, String evaluationMetricsScores, String[] anomalyTresholds, Map<String, Integer> nVoters, 
 			Map<String, List<TimedValue>> detailedKnowledgeScores,
 			Map<String, Map<String, List<Map<Metric, Double>>>> evaluations,
+			Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores,
+			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
 			String writableTag, double faultsRatio) {
 		this.bestScore = bestScore;
 		this.bestSetup = bestSetup;
@@ -61,21 +72,46 @@ public class DetectorOutput {
 		this.nVoters = nVoters;
 		this.detailedKnowledgeScores = detailedKnowledgeScores;
 		this.detailedMetricScores = evaluations;
+		this.detailedExperimentsScores = detailedExperimentsScores;
+		this.bestAnomalyThreshold = bestAnomalyThreshold;
+		this.injections = injections;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
 	}
 	
 	public void printDetailedKnowledgeScores(String outputFolder){
 		BufferedWriter writer;
+		String header1 = "";
+		String header2 = "";
+		Map<AlgorithmVoter, AlgorithmResult> map;
 		Date timedRef;
 		try {
 			if(detailedKnowledgeScores != null && detailedKnowledgeScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
-				writer.write("exp,index,score\n");
+				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
+				header2 = ",,,,,";
+				map = detailedExperimentsScores.get(detailedExperimentsScores.keySet().iterator().next()).get(0);
+				for(AlgorithmVoter av : map.keySet()){
+					header1 = header1 + av.getAlgorithmType() + "(" + av.getDataSeries().toString() + ")" + ",,,";
+					header2 = header2 + "score,decision_function,eval,";
+				}
+				writer.write(header1 + "\n" + header2 + "\n");
+				
 				for(String expName : detailedKnowledgeScores.keySet()){
 					timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
-					for(TimedValue td : detailedKnowledgeScores.get(expName)){
-						writer.write(expName + "," + td.getDateOffset(timedRef) + "," + td.getValue() + "\n");
+					for(int i=0;i<detailedKnowledgeScores.get(expName).size();i++){
+						writer.write(expName + "," + 
+								detailedKnowledgeScores.get(expName).get(i).getDateOffset(timedRef) + "," + 
+								(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
+								(detailedKnowledgeScores.get(expName).get(i).getValue() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
+								detailedKnowledgeScores.get(expName).get(i).getValue() + ",");
+						map = detailedExperimentsScores.get(expName).get(i);
+						for(AlgorithmVoter av : map.keySet()){
+							writer.write(map.get(av).getScore() + "," + 
+									(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
+									map.get(av).getScoreEvaluation() + ",");
+						}
+						writer.write("\n");
 					}
 				}
 				writer.close();

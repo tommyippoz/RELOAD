@@ -5,6 +5,7 @@ package ippoz.madness.detector.voter;
 
 import ippoz.madness.commons.layers.LayerType;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
@@ -54,7 +55,7 @@ public class AlgorithmVoter implements Cloneable {
 	 * @param snap the snapshot
 	 * @return the anomaly voting.
 	 */
-	public Double voteKnowledgeSnapshot(Knowledge knowledge, int i) {
+	public AlgorithmResult voteKnowledgeSnapshot(Knowledge knowledge, int i) {
 		return alg.snapshotAnomalyRate(knowledge, i);
 	}
 

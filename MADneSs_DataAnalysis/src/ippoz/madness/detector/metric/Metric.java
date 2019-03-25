@@ -43,7 +43,7 @@ public abstract class Metric implements Comparable<Metric> {
 		Knowledge knowledge = know.cloneKnowledge();
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
-			snapValue = alg.snapshotAnomalyRate(knowledge, i);
+			snapValue = DetectionAlgorithm.convertResultIntoDouble(alg.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
 			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), snapValue));
 			if(snapValue >= 0.0) {
 				average = average + anomalyEvaluations.get(i).getValue();

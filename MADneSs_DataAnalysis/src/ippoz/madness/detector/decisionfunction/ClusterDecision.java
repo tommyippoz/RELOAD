@@ -53,4 +53,9 @@ public class ClusterDecision extends DecisionFunction {
 		}
 	}
 
+	@Override
+	public String toCompactString() {
+		return "CLUSTER(" + functionText + ")";
+	}
+
 }

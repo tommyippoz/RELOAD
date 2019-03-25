@@ -32,5 +32,10 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 			return AnomalyResult.ANOMALY;
 		else return AnomalyResult.NORMAL;
 	}
+	
+	@Override
+	public String toCompactString() {
+		return "LCONF(" + avg + " - " + ratio + "*" + std + ")";
+	}
 
 }

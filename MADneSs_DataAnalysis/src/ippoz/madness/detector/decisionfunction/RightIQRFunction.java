@@ -26,5 +26,10 @@ public class RightIQRFunction extends IQRFunction {
 			return AnomalyResult.ANOMALY;
 		else return AnomalyResult.NORMAL;
 	}
+	
+	@Override
+	public String toCompactString() {
+		return "RIQR(" + q3 + " " + ratio + ")";
+	}
 
 }

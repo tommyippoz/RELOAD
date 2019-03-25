@@ -27,4 +27,9 @@ public class LogThresholdDecision extends DecisionFunction {
 		return value.getScore() > threshold ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
 
+	@Override
+	public String toCompactString() {
+		return "LOG(" + perc + "% " + size + ")";
+	}
+
 }
