@@ -12,4 +12,4 @@ Setup
 - uncompress datasets in the folder ("datasets" folder should be in the same folder as the jar file)
 
 Running
-- from shell, run "java -jar myfolder/MADneSs_V8.jar"
+- from shell, run "java -jar myfolder/RELOAD_V3.jar"
