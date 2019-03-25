@@ -3,16 +3,28 @@
  */
 package ippoz.madness.detector.algorithm.weka.support;
 
+import ippoz.madness.detector.commons.support.AppLogger;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
 import weka.classifiers.RandomizableClassifier;
+import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Option;
@@ -44,6 +56,8 @@ TechnicalInformationHandler, Serializable {
 
 	// The subsample size
 	protected int m_subsampleSize;
+	
+	private List<IsolationForestScore> ifScores;
 
 	public CustomIsolationForest(int numTrees, int subsampleSize) {
 		super();
@@ -54,6 +68,32 @@ TechnicalInformationHandler, Serializable {
 			m_subsampleSize = subsampleSize;
 		else m_subsampleSize = DEFAULT_SAMPLE_SIZE;
 	}
+
+	@Override
+	public double classifyInstance(Instance instance) throws Exception {
+		double[] dist = distributionForInstance(instance);
+	    if (dist == null) {
+	      throw new Exception("Null distribution predicted");
+	    }
+	    switch (instance.classAttribute().type()) {
+		    case Attribute.NOMINAL:
+		    case Attribute.NUMERIC:
+		    case Attribute.DATE:
+		    	return dist[1];
+		    default:
+		    	return Utils.missingValue();
+	    }
+	}
+
+
+
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		// TODO Auto-generated method stub
+		return super.clone();
+	}
+
+
 
 	/**
 	 * Returns a string describing this filter
@@ -317,11 +357,63 @@ TechnicalInformationHandler, Serializable {
 		data = new Instances(data);
 		Random r = (data.numInstances() > 0) ? data
 				.getRandomNumberGenerator(m_Seed) : new Random(m_Seed);
-				for (int i = 0; i < m_numTrees; i++) {
-					data.randomize(r);
-					m_trees[i] = new Tree(new Instances(data, 0, m_subsampleSize), r, 0,
-							(int) Math.ceil(Utils.log2(data.numInstances())));
+		for (int i = 0; i < m_numTrees; i++) {
+			data.randomize(r);
+			m_trees[i] = new Tree(new Instances(data, 0, m_subsampleSize), r, 0,
+					(int) Math.ceil(Utils.log2(data.numInstances())));
+		}
+		
+		ifScores = new LinkedList<IsolationForestScore>();
+		for(Instance in : data){
+			ifScores.add(new IsolationForestScore(in, classifyInstance(in)));
+		}		
+		
+	}
+	
+	public void printScores(File file){
+		BufferedWriter writer;
+		try {
+			if(ifScores != null && ifScores.size() > 0){
+				if(file.exists())
+					file.delete();
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("data (enclosed in {});Isolation Forest score\n");
+				for(IsolationForestScore ifs : ifScores){
+					writer.write("{" + ifs.getInstance().toString() + "};" + ifs.getScore() + "\n");
 				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write IsolationForest scores file");
+		} 
+	}
+	
+	public void loadScores(File file){
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				ifScores = new LinkedList<IsolationForestScore>();
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						String[] splitted = readed.split(";")[0].replace("{", "").replace("}", "").split(",");
+						Instance inst = new DenseInstance(splitted.length-1);
+						for(int i=0;i<splitted.length-1;i++){
+							inst.setValue(i, Double.parseDouble(splitted[i].trim()));
+						}
+						//inst.setClassValue(splitted[splitted.length-1]);
+						ifScores.add(new IsolationForestScore(inst, Double.parseDouble(readed.split(",")[1].trim())));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write IsolationForest scores file");
+		} 
 	}
 
 	/**
@@ -457,6 +549,38 @@ TechnicalInformationHandler, Serializable {
 				return m_successors[1].pathLength(inst) + 1.0;
 			}
 		}
+	}
+	
+	private class IsolationForestScore implements Serializable {
+		
+		private static final long serialVersionUID = 1L;
+
+		private Instance instance;
+		
+		private double score;
+
+		public IsolationForestScore(Instance instance, double score) {
+			this.instance = instance;
+			this.score = score;
+		}
+
+		public Instance getInstance() {
+			return instance;
+		}
+
+		public double getScore() {
+			return score;
+		}
+		
+	}
+
+	public List<Double> getScores() {
+		List<Double> list = new LinkedList<Double>();
+		for(IsolationForestScore ifs : ifScores){
+			list.add(ifs.getScore());
+		}
+		Collections.sort(list);
+		return list;
 	}
 }
 

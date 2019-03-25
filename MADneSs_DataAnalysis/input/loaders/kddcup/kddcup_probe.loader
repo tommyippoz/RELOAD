@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = KDDCup99/KDDCup99_Probe.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-2
+TRAIN_RUN_IDS = 7-10
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = KDDCup99/KDDCup99_Probe.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 0-2
+VALIDATION_RUN_IDS = 11-14
 
 
 * Parsing Dataset
@@ -38,4 +38,4 @@ LABEL_COLUMN = 41
 EXPERIMENT_ROWS = 100
 
 * Tags Identifying an Attack in This Dataset
-FAULTY_TAGS = ipsweep, nmap, portsweep, satan
+FAULTY_TAGS = yes, 'yes', "yes"

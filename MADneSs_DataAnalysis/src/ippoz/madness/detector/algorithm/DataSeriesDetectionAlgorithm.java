@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm;
 
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
@@ -59,10 +60,10 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	}
 
 	@Override
-	protected double evaluateSnapshot(Knowledge knowledge, int currentIndex) {
+	protected AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		return evaluateDataSeriesSnapshot(knowledge, knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
 	}
 
-	protected abstract double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
+	protected abstract AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
 	
 }

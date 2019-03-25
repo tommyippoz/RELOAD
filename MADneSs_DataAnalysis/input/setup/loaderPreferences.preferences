@@ -1,5 +1,7 @@
 * Default loader preferences file for 'MADneSs'. Comments with '*'.
-* Uncomment the loaders corresponding to the datasets you want to use. 
+* Uncomment the loaders corresponding to the datasets you want to use.
+
+* youtube.loader
 
 * KDD CUP
 
@@ -17,19 +19,19 @@ nslkdd/nslkdd_probe.loader
 
 nslkdd/nslkdd_dos.loader
 
-*nslkdd/nslkdd_r2l.loader
+* nslkdd/nslkdd_r2l.loader
 
-*nslkdd/nslkdd_u2r.loader
+* nslkdd/nslkdd_u2r.loader
 
 * ISCX 2012
 
-*iscx/iscx_bruteforce.loader
+* iscx/iscx_bruteforce.loader
 
-*iscx/iscx_DoS.loader
+* iscx/iscx_DoS.loader
 
-*iscx/iscx_DDoS.loader
+* iscx/iscx_DDoS.loader
 
-*iscx/iscx_infiltrator.loader
+* iscx/iscx_infiltrator.loader
 
 * UNSW-NB15
 
@@ -51,3 +53,8 @@ nslkdd/nslkdd_dos.loader
 
 *unsw/unsw_shellcode.loader
 
+
+* sint\iscx_synthetic_contextual.loader
+
+* sint\iscx_synthetic_point.loader
+* sint\iscx_synthetic_collective.loader

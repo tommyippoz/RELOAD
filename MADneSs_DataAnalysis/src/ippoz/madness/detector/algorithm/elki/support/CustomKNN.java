@@ -3,6 +3,9 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
+
+import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +36,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
  * @author Tommy
  *
  */
-public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm {
+public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	  /**
 	   * The logger for this class.
 	   */
@@ -43,6 +46,8 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * The parameter k (including query point!)
 	   */
 	  private int k;
+	  
+	  private List<Double> scores;
 
 	  /**
 	   * Constructor for a single kNN query.
@@ -60,18 +65,18 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   *
 	   * @param relation Data relation
 	   */
-	  public List<Double> run(Relation<NumberVector> relation) {
+	  public Object run(Relation<NumberVector> relation) {
 	    final DistanceQuery<NumberVector> distanceQuery = relation.getDistanceQuery(getDistanceFunction());
 	    final KNNQuery<NumberVector> knnQuery = relation.getKNNQuery(distanceQuery, k);
-	    List<Double> nnScores = new LinkedList<Double>();
+	    scores = new LinkedList<Double>();
 	    for(DBIDIter it = relation.iterDBIDs(); it.valid(); it.advance()) {
 	      // distance to the kth nearest neighbor
 	      // (assuming the query point is always included, with distance 0)
 	      final double dkn = knnQuery.getKNNForDBID(it, k).getKNNDistance();
-	      nnScores.add(dkn);
+	      scores.add(dkn);
 	    }
-	    Collections.sort(nnScores);
-	    return nnScores;
+	    Collections.sort(scores);
+	    return scores;
 	  }
 	  
 	  public Double calculateKNN(Vector vector, Database db) {
@@ -145,6 +150,33 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	      return new KNNOutlier<>(distanceFunction, k);
 	    }
 	  }
+
+	@Override
+	public void loadFile(String filename) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Double> getScoresList() {
+		return scores;
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "knn";
+	}
+
+	@Override
+	public void printFile(File file) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Object run(Database db, Relation<NumberVector> relation) {
+		return run(relation);
+	}
 	  
 }
 

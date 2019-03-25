@@ -5,13 +5,6 @@ package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.algorithm.elki.ABODELKI;
-import ippoz.madness.detector.algorithm.elki.COFELKI;
-import ippoz.madness.detector.algorithm.elki.FastABODELKI;
-import ippoz.madness.detector.algorithm.elki.LOFELKI;
-import ippoz.madness.detector.algorithm.elki.ODINELKI;
-import ippoz.madness.detector.algorithm.elki.SVMELKI;
-import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
@@ -30,6 +23,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -60,8 +54,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes) {
-		super(map, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes);
+	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+		super(map, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -79,8 +73,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param simplePearson 
 	 * @param algTypes2 the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, false, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -96,8 +90,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -113,69 +107,19 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString) {
-		this(setupFolder, dsDomain, scoresFolder, outputFolder, map, confList, metric, reputation, algTypes);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
+		this(setupFolder, dsDomain, scoresFolder, outputFolder, map, confList, metric, reputation, algTypes, kfold);
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public List<DataSeries> generateDataSeries(DataCategory[] dataTypes, double pearsonSimple, double pearsonComplex) {
-		if(dsDomain.equals("ALL")){
-			return DataSeries.allCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("UNION")){
-			return DataSeries.unionCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(getIndicators(), dataTypes);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(getIndicators(), dataTypes, readPossibleIndCombinations());
-	}
-	
 	private void clearTmpFolders(List<AlgorithmType> algTypes) {
-		File tempFolder;
-		for(AlgorithmType at : algTypes){
-			if(at.equals(AlgorithmType.ELKI_ABOD)){
-				tempFolder = new File(ABODELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_FASTABOD)){
-				tempFolder = new File(FastABODELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_LOF)){
-				tempFolder = new File(LOFELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_COF)){
-				tempFolder = new File(COFELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_ODIN)){
-				tempFolder = new File(ODINELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.ELKI_SVM)){
-				tempFolder = new File(SVMELKI.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
-			} else if(at.equals(AlgorithmType.WEKA_ISOLATIONFOREST)){
-				tempFolder = new File(IsolationForestWEKA.DEFAULT_TMP_FOLDER);
-				if(tempFolder.exists()){
-					tempFolder.delete();
-					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + tempFolder.getPath() + "'");
-				}
+		File rootFolder = new File(new File(".").getAbsolutePath().substring(0, new File(".").getAbsolutePath().length()-2));
+		for(File file : rootFolder.listFiles()){
+			if(file.isDirectory() && file.getName().endsWith("_tmp_RELOAD")){
+				if(file.delete())
+					AppLogger.logInfo(getClass(), "Clearing temporary folder '" + file.getPath() + "'");
+				else AppLogger.logInfo(getClass(), "Failed to clean folder '" + file.getPath() + "'");
 			}
 		}
 	}
@@ -183,27 +127,31 @@ public class TrainerManager extends TrainDataManager {
 	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		List<DataSeries> finalDs = new LinkedList<DataSeries>();
 		List<DataSeries> allFeatures = new LinkedList<DataSeries>();
-		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, 0.9);
-		for(String dsString : selectedSeriesString){
-			for(DataSeries ds : all){
-				if(ds.toString().equals(dsString)) {
-					finalDs.add(ds);
-					if(ds instanceof IndicatorDataSeries){
-						boolean flag = false;
-						for(DataSeries dsall : allFeatures){
-							if(dsall.getName().equals(ds.getName())) {
-								flag = true;
-								break;
+		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, false);
+		if(all != null && all.size() > 1) {
+			for(String dsString : selectedSeriesString){
+				for(DataSeries ds : all){
+					if(ds.toString().equals(dsString)) {
+						finalDs.add(ds);
+						if(ds instanceof IndicatorDataSeries){
+							boolean flag = false;
+							for(DataSeries dsall : allFeatures){
+								if(dsall.getName().equals(ds.getName())) {
+									flag = true;
+									break;
+								}
 							}
+							if(!flag)
+								allFeatures.add(ds);
 						}
-						if(!flag)
-							allFeatures.add(ds);
+						break;
 					}
-					break;
 				}
 			}
+			finalDs.add(new MultipleDataSeries(allFeatures));
+		} else if (all != null && all.size() == 1){
+			finalDs = all;
 		}
-		finalDs.add(new MultipleDataSeries(allFeatures));
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
 		return finalDs;
 	}
@@ -256,7 +204,7 @@ public class TrainerManager extends TrainDataManager {
 					case PEA:
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getScoresFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
+						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType), kfold);
 						pcManager.calculatePearsonIndexes(0.9, 0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
@@ -264,7 +212,7 @@ public class TrainerManager extends TrainDataManager {
 					default:
 						for(DataSeries dataSeries : seriesList){
 							if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType)));
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), kfold));
 						}
 						break;
 				}
@@ -273,7 +221,7 @@ public class TrainerManager extends TrainDataManager {
 			}	
 		}
 		setThreadList(trainerList);
-		AppLogger.logInfo(getClass(), "Train is Starting");
+		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting");
 	}
 
 	/* (non-Javadoc)
@@ -292,7 +240,7 @@ public class TrainerManager extends TrainDataManager {
 		AlgorithmTrainer at = ((AlgorithmTrainer)t);
 		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
 				(at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
-				" Score: " + at.getMetricScore());		
+				" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");		
 		at.flush();
 	}
 	
@@ -335,11 +283,12 @@ public class TrainerManager extends TrainDataManager {
 						scoreWriter.write(trainer.getSeriesDescription() + "§" + 
 								trainer.getAlgType() + "§" +
 								trainer.getReputationScore() + "§" + 
-								trainer.getMetricScore() + "§" +  
+								trainer.getMetricAvgScore() + "§" +  
+								trainer.getMetricStdScore() + "§" + 
 								trainer.getBestConfiguration().toFileRow(false) + "\n");
 						statMap.get(trainer.getAlgType())[0] += 1.0;
 						statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
-						statMap.get(trainer.getAlgType())[2] += trainer.getMetricScore();
+						statMap.get(trainer.getAlgType())[2] += trainer.getMetricAvgScore();
 						if(count <= 10)
 							statMap.get(trainer.getAlgType())[3] += 1.0;
 						if(count <= 50)
@@ -347,11 +296,11 @@ public class TrainerManager extends TrainDataManager {
 						if(count <= 100)
 							statMap.get(trainer.getAlgType())[5] += 1.0;
 						if(count <= 10)
-							statMap.get(trainer.getAlgType())[6] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[6] += trainer.getMetricAvgScore();
 						if(count <= 50)
-							statMap.get(trainer.getAlgType())[7] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[7] += trainer.getMetricAvgScore();
 						if(count <= 100)
-							statMap.get(trainer.getAlgType())[8] += trainer.getMetricScore();
+							statMap.get(trainer.getAlgType())[8] += trainer.getMetricAvgScore();
 					}
 				}			
 			}

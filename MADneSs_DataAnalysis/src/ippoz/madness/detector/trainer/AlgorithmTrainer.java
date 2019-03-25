@@ -11,12 +11,16 @@ import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.madness.detector.commons.support.ValueSeries;
 import ippoz.madness.detector.metric.BetterMaxMetric;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class AlgorithmTrainer.
@@ -45,13 +49,18 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private AlgorithmConfiguration bestConf;
 	
 	/** The metric score. */
-	protected double metricScore;
+	protected ValueSeries metricScore;
+	
+	/** The metric score. */
+	protected ValueSeries trainScore;
 	
 	/** The reputation score. */
 	private double reputationScore;
 	
 	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
 	private boolean sameResultFlag;
+	
+	protected int kfold;
 	
 	private long trainingTime;
 	
@@ -65,44 +74,28 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, int kfold) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
 		this.reputation = reputation;
 		this.kList = kList;
+		this.kfold = kfold;
 	}
 	
 	/**
-	 * Loads the snapshots of all the training experiments.
+	 * Instantiates a new algorithm trainer.
 	 *
-	 * @return the hash map of the snapshots
+	 * @param algTag the algorithm tag
+	 * @param dataSeries the data series
+	 * @param metric the used metric
+	 * @param reputation the used reputation metric
+	 * @param tTiming the t timing
+	 * @param kList the considered train data
 	 */
-	/*private HashMap<String, LinkedList<Snapshot>> loadAlgExpSnapshots() {
-		HashMap<String, LinkedList<Snapshot>> expAlgMap = new HashMap<String, LinkedList<Snapshot>>();
-		for(ExperimentData expData : expList){
-			expAlgMap.put(expData.getName(), expData.buildSnapshotsFor(algTag, dataSeries, bestConf));
-		}
-		return expAlgMap;
-	}*/
-	
-	/**
-	 * Deep clone of the experiment list.
-	 *
-	 * @param trainData the train data
-	 * @return the cloned experiment list
-	 */
-	/*private List<ExperimentData> deepClone(List<ExperimentData> trainData) {
-		List<ExperimentData> list = new ArrayList<ExperimentData>(trainData.size());
-		try {
-			for(ExperimentData eData : trainData){
-				list.add(eData.clone());
-			}
-		} catch (CloneNotSupportedException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to clone Experiment");
-		}
-		return list;
-	}*/
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
+		this(algTag, dataSeries, metric, reputation, kList, 1);
+	}
 	
 	/**
 	 * Checks if is valid train.
@@ -126,7 +119,15 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		if(getReputationScore() > 0.0)
 			bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 		else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
-		bestConf.addItem(AlgorithmConfiguration.SCORE, String.valueOf(getMetricScore()));
+		bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
+		bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainScore.getAvg());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainScore.getStd());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainScore.getMin());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainScore.getQ1());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
+		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
 	}
 	
 	public long getTrainingTime() {
@@ -147,35 +148,19 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	private double evaluateMetricScore(){
+	private ValueSeries evaluateMetricScore(){
 		double[] metricEvaluation = null;
-		List<Double> metricResults = new ArrayList<Double>(kList.size());
+		ValueSeries metricResults = new ValueSeries();
 		List<Double> algResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
 			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
-			metricResults.add(metricEvaluation[0]);
+			metricResults.addValue(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
 		sameResultFlag = kList.size() > 1 && AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
-		return AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()]));
+		return metricResults;
 	}
-	
-	/**
-	 * Evaluate reputation score on a specified set of experiments.
-	 *
-	 * @param list the train data
-	 * @param algExpSnapshots the alg exp snapshots
-	 * @return the reputation score
-	 */
-	/*private double evaluateReputationScore(){
-		List<Double> reputationResults = new ArrayList<Double>(kList.size());
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
-		for(Knowledge knowledge : kList){
-			reputationResults.add(reputation.evaluateReputation(algorithm, knowledge));
-		}
-		return AppUtility.calcAvg(reputationResults.toArray(new Double[reputationResults.size()]));
-	}*/
 
 	/**
 	 * Gets the data series.
@@ -205,12 +190,39 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 
 	/**
-	 * Gets the exp list.
+	 * Gets the exp list, considering the kfold parameter.
 	 *
 	 * @return the exp list
 	 */
-	protected List<Knowledge> getKnowledgeList() {
-		return kList;
+	protected List<Map<String, List<Knowledge>>> getKnowledgeList() {
+		List<Map<String, List<Knowledge>>> outList = new LinkedList<Map<String, List<Knowledge>>>();
+		List<List<Knowledge>> subsets = new ArrayList<List<Knowledge>>(kfold);
+		List<Knowledge> partialList;
+		Map<String, List<Knowledge>> map;
+		if(kfold <= 1 || kfold == Integer.MAX_VALUE || kfold > kList.size()){
+			map = new HashMap<String, List<Knowledge>>();
+			map.put("TRAIN", kList);
+			map.put("TEST", kList);
+			outList.add(map);
+		} else {
+			for(int i=0;i<kList.size();i++){
+				if(subsets.size() <= i%kfold || subsets.get(i%kfold) == null)
+					subsets.add(i%kfold, new LinkedList<Knowledge>());
+				subsets.get(i%kfold).add(kList.get(i));
+			}
+			for(int k=0;k<kfold;k++){
+				map = new HashMap<String, List<Knowledge>>();
+				partialList = new LinkedList<Knowledge>();
+				for(int i=0;i<kfold;i++){
+					if(i==k)
+						map.put("TEST", subsets.get(k));
+					else partialList.addAll(subsets.get(i));
+				}
+				map.put("TRAIN", partialList);
+				outList.add(map);
+			}
+		}
+		return outList;
 	}
 	
 	public int getExpNumber(){
@@ -222,8 +234,17 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	public double getMetricScore() {
-		return metricScore;
+	public double getMetricAvgScore() {
+		return metricScore.getAvg();
+	}
+	
+	/**
+	 * Gets the metric score.
+	 *
+	 * @return the metric score
+	 */
+	public double getMetricStdScore() {
+		return metricScore.getStd();
 	}
 	
 	/**
@@ -292,8 +313,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
 		if(metric instanceof BetterMaxMetric)
-			return Double.compare(other.getMetricScore(), getMetricScore());
-		else return -1*Double.compare(other.getMetricScore(), getMetricScore());
+			return Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
+		else return -1*Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
 	}
 
 	/**

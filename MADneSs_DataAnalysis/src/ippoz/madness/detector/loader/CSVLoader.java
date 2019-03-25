@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy
@@ -22,9 +23,9 @@ public abstract class CSVLoader extends SimpleLoader {
 	protected File csvFile;
 	protected int labelCol;
 	protected int experimentRows;
-	protected LinkedList<Indicator> header;
+	protected List<Indicator> header;
 
-	protected CSVLoader(LinkedList<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows) {
+	protected CSVLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows) {
 		super(runs);
 		this.csvFile = csvFile;
 		this.labelCol = labelCol;
@@ -88,6 +89,11 @@ public abstract class CSVLoader extends SimpleLoader {
 			}
 		}
 		return readLine;
+	}
+
+	@Override
+	public String getName() {
+		return "CSV - " + csvFile.getName().split(".")[0];
 	}
 
 }

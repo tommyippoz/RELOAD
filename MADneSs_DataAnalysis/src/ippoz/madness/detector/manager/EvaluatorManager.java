@@ -4,9 +4,11 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
+import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.support.AppLogger;
@@ -52,6 +54,8 @@ public class EvaluatorManager extends DataManager {
 	
 	private List<Map<Metric, Double>> expMetricEvaluations;
 	
+	private List<Map<Date, Map<AlgorithmVoter, AlgorithmResult>>> detailedEvaluations;
+	
 	/** The anomaly threshold. Votings over that threshold raise alarms. */
 	private double anomalyTreshold;
 	
@@ -85,6 +89,10 @@ public class EvaluatorManager extends DataManager {
 		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
 		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
 		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+	}
+	
+	public double getAnomalyThreshold(){
+		return anomalyTreshold;
 	}
 	
 	private double getVoterTreshold(String voterTreshold) {
@@ -131,11 +139,11 @@ public class EvaluatorManager extends DataManager {
 			case "ALL":
 				return checkers;
 			case "HALF":
-				return (int)(checkers/2);
+				return Math.ceil(checkers/2.0);
 			case "THIRD":
-				return (int)(checkers/3);
+				return Math.ceil(checkers/3.0);
 			case "QUARTER":
-				return (int)(checkers/4);
+				return Math.ceil(checkers/4.0);
 			default:
 				return Double.parseDouble(anTresholdString);
 		}
@@ -150,6 +158,7 @@ public class EvaluatorManager extends DataManager {
 		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(experimentsSize());
 		Map<KnowledgeType, Knowledge> redKMap;
 		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
+		detailedEvaluations = new ArrayList<Map<Date, Map<AlgorithmVoter, AlgorithmResult>>>(voterList.size());
 		if(printOutput){
 			setupResultsFile();
 		}
@@ -178,7 +187,11 @@ public class EvaluatorManager extends DataManager {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		expMetricEvaluations.add(((ExperimentVoter)t).printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+		ExperimentVoter ev = (ExperimentVoter)t;
+		if(ev.getFailuresNumber() > 0){
+			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+			detailedEvaluations.add(ev.getSingleAlgorithmScores());
+		}
 	}
 	
 	/**
@@ -206,7 +219,7 @@ public class EvaluatorManager extends DataManager {
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = readed.split("§");
 							if(splitted.length > 3 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 4 ? splitted[4] : null));
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 5 ? splitted[5] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
 									case PEA:
@@ -218,7 +231,8 @@ public class EvaluatorManager extends DataManager {
 								}
 								if(conf != null){
 									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 								}
 								addVoter(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])), voterList);
 							}
@@ -272,14 +286,13 @@ public class EvaluatorManager extends DataManager {
 			for(Metric met : validationMetrics){
 				pw.append(met.getMetricName() + ",");
 			}
-			pw.append("AUC\n");
 			pw.close();
 		} catch (FileNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to find results file");
 		} 		
 	}
 	
-	public Map<String, List<TimedValue>> getDetailedEvaluations() {
+	public Map<String, List<TimedValue>> getTimedEvaluations() {
 		Map<String, List<TimedValue>> outMap = new TreeMap<String, List<TimedValue>>();
 		for(Thread t : getThreadList()){
 			ExperimentVoter ev = (ExperimentVoter)t;
@@ -290,6 +303,28 @@ public class EvaluatorManager extends DataManager {
 	
 	public List<Map<Metric, Double>> getMetricsEvaluations() {
 		return expMetricEvaluations;
+	}
+	
+	public Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> getDetailedEvaluations() {
+		Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmVoter, AlgorithmResult>>>();
+		for(int i=0;i<getThreadList().size();i++){
+			ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
+			outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmVoter, AlgorithmResult>>());
+			Map<Date,Map<AlgorithmVoter,AlgorithmResult>> map = detailedEvaluations.get(i);
+			for(Date mapEntry : map.keySet()){
+				outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
+			}
+		}
+		return outMap;
+	}
+	
+	public Map<String, List<InjectedElement>> getFailures(){
+		Map<String, List<InjectedElement>> outMap = new TreeMap<String, List<InjectedElement>>();
+		for(int i=0;i<getThreadList().size();i++){
+			ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
+			outMap.put(ev.getExperimentName(), ev.getFailuresList());
+		}
+		return outMap;
 	}
 	
 	public Integer getCheckersNumber() {

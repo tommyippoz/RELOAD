@@ -10,6 +10,7 @@ import ippoz.madness.detector.commons.service.ServiceCall;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -62,6 +63,15 @@ public class MultipleSnapshot extends Snapshot {
 			}
 			return dsMap.get(iterator.next()).getSnapValue();
 		} else return null;
+	}
+
+	@Override
+	public List<SnapshotValue> listValues() {
+		List<SnapshotValue> list = new LinkedList<SnapshotValue>();		
+		for(int i=0;i<dsMap.size();i++){
+			list.add(getSeriesValue(i));
+		}
+		return list;
 	}
 
 }

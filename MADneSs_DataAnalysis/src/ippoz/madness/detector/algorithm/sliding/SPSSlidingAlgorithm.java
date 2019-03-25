@@ -4,12 +4,17 @@
 package ippoz.madness.detector.algorithm.sliding;
 
 import ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
+import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -71,28 +76,35 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		dynamicWeights = (Double.parseDouble(conf.getItem(SPS_DYN_WEIGHT)) == 1.0);	
 	}
 	
+	@Override
+	protected DecisionFunction buildClassifier() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	/* (non-Javadoc)
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		double[] thresholds = calculateTreshold(parseBlocks(snapList));
-		double snapValue = ((DataSeriesSnapshot)dsSnapshot).getSnapValue().getFirst();
-		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return 0.0;
-		else return 1.0;
-	}
-	
-	/* (non-Javadoc)
-	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateDataSeriesSnapshot(ippoz.madness.detector.commons.knowledge.Knowledge, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot, int)
-	 */
-	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		double[] thresholds = calculateTreshold(parseBlocks(knowledge.toArray(getAlgorithmType(), getDataSeries())));
-		double snapValue = ((DataSeriesSnapshot) sysSnapshot).getSnapValue().getFirst();
-		if(snapValue <= thresholds[1] && snapValue >= thresholds[0])
-			return 0.0;
-		else return 1.0;
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		AlgorithmResult ar = null;
+		DataVector[] thresholds = calculateTreshold(parseBlocks(snapList));
+		DataVector snapValue = snapToDataVector(dsSnapshot);
+		double d1 = snapValue.calculateDistance(thresholds[1]);
+		double d0 = snapValue.calculateDistance(thresholds[0]);
+		double dt = thresholds[0].calculateDistance(thresholds[1]);
+		if(Double.isFinite(dt)){
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), d1 + d0 - dt);
+			if(snapValue.compareTo(thresholds[1]) <= 0 && snapValue.compareTo(thresholds[0]) >= 0)
+				ar.setScoreEvaluation(AnomalyResult.NORMAL);
+			else {
+				ar.setScoreEvaluation(AnomalyResult.ANOMALY);
+			}
+		} else {
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), Double.NaN);
+			ar.setScoreEvaluation(AnomalyResult.NORMAL);
+		}
+		return ar;
 	}
 
 	/**
@@ -105,30 +117,56 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		List<SPSBlock> blockList = new LinkedList<SPSBlock>();
 		for(Snapshot snap : array){
 			if(blockList.size() == 0)
-				blockList.add(new SPSBlock(((DataSeriesSnapshot) snap).getSnapValue().getFirst(), snap.getTimestamp(), null));
-			else blockList.add(new SPSBlock(((DataSeriesSnapshot) snap).getSnapValue().getFirst(), snap.getTimestamp(), blockList.get(blockList.size()-1)));
+				blockList.add(new SPSBlock(snapToDataVector(snap), snap.getTimestamp(), null));
+			else blockList.add(new SPSBlock(snapToDataVector(snap), snap.getTimestamp(), blockList.get(blockList.size()-1)));
 		}
 		return blockList;
 	}
 		
+	private DataVector snapToDataVector(Snapshot snap) {
+		DataVector result = new DataVector();
+		if(getDataSeries().size() == 1){
+			result.add(((DataSeriesSnapshot)snap).getSnapValue().getFirst());
+		} else {
+			for(int j=0;j<getDataSeries().size();j++){
+				result.add(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * Calculates the new thresholds.
 	 *
 	 * @param observedValues the observed values
 	 * @return the new thresholds
 	 */
-	public double[] calculateTreshold(List<SPSBlock> observedValues){
-		double calcTreshold = 0;
+	public DataVector[] calculateTreshold(List<SPSBlock> observedValues){
+		DataVector calcTreshold = null;
 		if(observedValues == null || observedValues.size() == 0)
-			return new double[]{Double.MIN_VALUE, Double.MAX_VALUE};
+			return new DataVector[]{DataVector.generateSingleDataVector(Double.MIN_VALUE, getDataSeries().size()), DataVector.generateSingleDataVector(Double.MAX_VALUE, getDataSeries().size())};
 		else if(observedValues.size() == 1){
-			if(observedValues.get(0).getObs() >= 0)
-				return new double[]{0.0, 2*observedValues.get(0).getObs()};
-			else return new double[]{2*observedValues.get(0).getObs(), 0.0};
+			return singleThresholds(observedValues.get(0).getObs());
 		} else {
 			calcTreshold = computeThreshold(observedValues);
-			return new double[]{observedValues.get(observedValues.size()-1).getObs() - calcTreshold, observedValues.get(observedValues.size()-1).getObs() + calcTreshold};
+			return new DataVector[]{observedValues.get(observedValues.size()-1).getObs().less(calcTreshold), observedValues.get(observedValues.size()-1).getObs().plus(calcTreshold)};
 		}
+	}
+	
+	private DataVector[] singleThresholds(DataVector ref){
+		DataVector[] single = new DataVector[2];
+		single[0] = new DataVector();
+		single[1] = new DataVector();
+		for(Double value : ref){
+			if(value >= 0){
+				single[0].add(0.0);
+				single[1].add(2*value);
+			} else {
+				single[0].add(2*value);
+				single[1].add(0.0);
+			}
+		}
+		return single;
 	}
 
 	/**
@@ -137,20 +175,26 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * @param observedValues the observed values
 	 * @return the computed threshold
 	 */
-	private double computeThreshold(List<SPSBlock> observedValues) {
-		double bounds[] = calculateBounds(observedValues);
-		double pred = Erf.erf(pdv)*Math.sqrt(2.0*bounds[0])*(2.0/3)*Math.pow(observedValues.get(observedValues.size()-1).getTimeDiff(), (3/2));
-		double sm = Erf.erf(pov)*Math.sqrt(2.0*bounds[1]);
-		return pred + sm;
+	private DataVector computeThreshold(List<SPSBlock> observedValues) {
+		double bounds[];
+		DataVector threshold = new DataVector();
+		for(int i=0;i<getDataSeries().size();i++){
+			bounds = calculateBounds(observedValues, i);
+			double pred = Erf.erf(pdv)*Math.sqrt(2.0*bounds[0])*(2.0/3)*Math.pow(observedValues.get(observedValues.size()-1).getTimeDiff(), (3/2));
+			double sm = Erf.erf(pov)*Math.sqrt(2.0*bounds[1]);
+			threshold.add(pred + sm);
+		}
+		return threshold;
 	}
 	
 	/**
 	 * Calculate bounds.
 	 *
 	 * @param observedValues the observed values
+	 * @param dataVectorIndex 
 	 * @return the double[]
 	 */
-	private double[] calculateBounds(List<SPSBlock> observedValues){
+	private double[] calculateBounds(List<SPSBlock> observedValues, int dataVectorIndex){
 		int dof = observedValues.size() - 1;
 		ChiSquaredDistribution chiSq = new ChiSquaredDistribution(dof);
 		double wdf = 0, wof = 0;
@@ -159,15 +203,15 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		double weigthDMean = 0, weigthOMean = 0;
 		
 		for(int i=0;i<observedValues.size();i++){
-			weigthDMean = weigthDMean + getWeigth(i, observedValues)*observedValues.get(i).getDrift();
-			weigthOMean = weigthOMean + getWeigth(i, observedValues)*observedValues.get(i).getOffset();
+			weigthDMean = weigthDMean + getWeigth(i, observedValues)*observedValues.get(i).getDrift().get(dataVectorIndex);
+			weigthOMean = weigthOMean + getWeigth(i, observedValues)*observedValues.get(i).getOffset().get(dataVectorIndex);
 		}
 		
 		weigthDMean = weigthDMean/weigthSum;
 		weigthOMean = weigthOMean/weigthSum;
 		for(int i=0;i<observedValues.size();i++){
-			wdf = wdf + (getWeigth(i, observedValues)/weigthSum)*Math.pow(observedValues.get(i).getDrift() - weigthDMean, 2);
-			wof = wof + (getWeigth(i, observedValues)/weigthSum)*Math.pow(observedValues.get(i).getOffset() - weigthOMean, 2);
+			wdf = wdf + (getWeigth(i, observedValues)/weigthSum)*Math.pow(observedValues.get(i).getDrift().get(dataVectorIndex) - weigthDMean, 2);
+			wof = wof + (getWeigth(i, observedValues)/weigthSum)*Math.pow(observedValues.get(i).getOffset().get(dataVectorIndex) - weigthOMean, 2);
 		}
 		
 		double result[] = new double[2];
@@ -227,16 +271,16 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	private class SPSBlock {
 		
 		/** The observation value. */
-		private double obs;
+		private DataVector obs;
 		
 		/** The timestamp. */
 		private Date timestamp;
 		
 		/** The drift. */
-		private double drift;
+		private DataVector drift;
 		
 		/** The offset. */
-		private double offset;
+		private DataVector offset;
 		
 		/** The time difference. */
 		private int timeDiff;
@@ -248,12 +292,12 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 * @param timestamp the timestamp
 		 * @param last the last
 		 */
-		public SPSBlock(double obs, Date timestamp, SPSBlock last) {
+		public SPSBlock(DataVector obs, Date timestamp, SPSBlock last) {
 			this.obs = obs;
 			this.timestamp = timestamp;
 			if(last != null){
-				drift = (obs - last.getDrift())/2;
-				offset = obs - last.getObs();
+				drift = obs.less(last.getDrift()).fraction(2);
+				offset = obs.less(last.getObs());
 				timeDiff = (int) ((timestamp.getTime() - last.getTimestamp().getTime())/1000);
 			} else {
 				drift = obs;
@@ -267,7 +311,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 *
 		 * @return the observation
 		 */
-		public double getObs() {
+		public DataVector getObs() {
 			return obs;
 		}
 		
@@ -276,7 +320,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 *
 		 * @return the drift
 		 */
-		public double getDrift() {
+		public DataVector getDrift() {
 			return drift;
 		}
 		
@@ -285,7 +329,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 *
 		 * @return the offset
 		 */
-		public double getOffset() {
+		public DataVector getOffset() {
 			return offset;
 		}
 		
@@ -305,6 +349,108 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 */
 		public Date getTimestamp(){
 			return timestamp;
+		}
+		
+	}
+	
+	private static class DataVector extends LinkedList<Double> implements Comparable<DataVector>{
+		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		
+		public DataVector(){
+			super();
+		}
+
+		public double calculateDistance(DataVector other){
+			double dist = 0;
+			if(other != null && size() == other.size()){
+				for(int i=0;i<size();i++){
+					dist = dist + Math.pow(get(i) - other.get(i), 2);
+				}
+				dist = Math.sqrt(dist);
+				return dist;
+			} else {
+				AppLogger.logError(getClass(), "WrongVectorSize", "Vectors have different sizes");
+				return Double.NaN;			
+			}
+		}
+		
+		public DataVector less(DataVector other){
+			DataVector result = new DataVector();
+			if(other != null && size() > 0 && size() == other.size()){
+				for(int i=0;i<size();i++){
+					if(other.get(i) != null){
+						
+						result.add(get(i) - other.get(i));
+					}
+				}
+			}
+			return result;
+		}
+		
+		public DataVector plus(DataVector other) {
+			DataVector result = new DataVector();
+			if(other != null && size() > 0 && size() == other.size()){
+				for(int i=0;i<size();i++){
+					if(other != null){
+						result.add(get(i) + other.get(i));
+					}
+				}
+			}
+			return result;
+		}
+		
+		public DataVector fraction(double value){
+			DataVector result = new DataVector();
+			for(int i=0;i<size();i++){
+				if(Double.isFinite(value)){
+					result.add(get(i)/value);
+				}
+			}
+			return result;
+		}
+		
+		public DataVector times(double value){
+			DataVector result = new DataVector();
+			for(int i=0;i<size();i++){
+				if(Double.isFinite(value)){
+					result.set(i, get(i)*value);
+				}
+			}
+			return result;
+		}
+		
+		private static DataVector generateSingleDataVector(Double value, int size){
+			DataVector dv = new DataVector();
+			for(int i=0;i<size;i++){
+				dv.add(value);
+			}
+			return dv;
+		}
+
+		@Override
+		public int compareTo(DataVector other) {
+			boolean equal = true;
+			boolean biggerThan = true;
+			if(other != null && size() == other.size()){
+				for(int i=0;i<size();i++){
+					if(get(i) != other.get(i))
+						equal = false;
+					if(get(i) < other.get(i))
+						biggerThan = false;
+				}
+				if(equal)
+					return 0;
+				else if(biggerThan)
+					return 1;
+				else return -1;
+			} else {
+				AppLogger.logError(getClass(), "WrongVectorSize", "Vectors have different sizes");
+				return -1;			
+			}
 		}
 		
 	}

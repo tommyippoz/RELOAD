@@ -5,6 +5,7 @@ package ippoz.madness.detector.algorithm.weka;
 
 import ippoz.madness.detector.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.madness.detector.algorithm.DataSeriesExternalAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -119,10 +120,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract void automaticWEKATraining(Instances db, boolean createOutput);
 
 	@Override
-	protected double evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		return evaluateWEKASnapshot(sysSnapshot);
 	}
 	
-	protected abstract double evaluateWEKASnapshot(Snapshot sysSnapshot);
+	protected abstract AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot);
 
 }

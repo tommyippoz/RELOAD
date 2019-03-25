@@ -3,14 +3,21 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import libsvm.svm;
 import libsvm.svm_model;
@@ -24,6 +31,7 @@ import de.lmu.ifi.dbs.elki.algorithm.outlier.svm.LibSVMOneClassOutlierDetection;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.data.type.TypeInformation;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
+import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.database.datastore.DataStoreFactory;
 import de.lmu.ifi.dbs.elki.database.datastore.DataStoreUtil;
 import de.lmu.ifi.dbs.elki.database.datastore.WritableDoubleDataStore;
@@ -36,6 +44,7 @@ import de.lmu.ifi.dbs.elki.database.relation.Relation;
 import de.lmu.ifi.dbs.elki.database.relation.RelationUtil;
 import de.lmu.ifi.dbs.elki.logging.Logging;
 import de.lmu.ifi.dbs.elki.math.DoubleMinMax;
+import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 import de.lmu.ifi.dbs.elki.result.outlier.BasicOutlierScoreMeta;
 import de.lmu.ifi.dbs.elki.result.outlier.OutlierResult;
 import de.lmu.ifi.dbs.elki.result.outlier.OutlierScoreMeta;
@@ -49,7 +58,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.EnumParameter;
  * @author Tommy
  *
  */
-public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm {
+public class CustomSVM extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	  /**
 	   * Class logger.
 	   */
@@ -80,6 +89,8 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	  private double minScore;
 	  
 	  private double maxScore;
+	  
+	  private List<SVMScore> scoresList;
 	  
 	  /**
 	   * Constructor.
@@ -139,9 +150,10 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	   * @param relation Data relation
 	   * @return Outlier result.
 	   */
-	  public OutlierResult run(Relation<V> relation) {
+	  public OutlierResult run(Relation<NumberVector> relation) {
 	    final int dim = RelationUtil.dimensionality(relation);
 	    final ArrayDBIDs ids = DBIDUtil.ensureArray(relation.getDBIDs());
+	    scoresList = new LinkedList<SVMScore>();
 
 	    svm.svm_set_print_string_function(LOG_HELPER);
 
@@ -155,7 +167,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	    {
 	      DBIDIter iter = ids.iter();
 	      for(int i = 0; i < prob.l && iter.valid(); iter.advance(), i++) {
-	        V vec = relation.get(iter);
+	    	  NumberVector vec = relation.get(iter);
 	        // TODO: support compact sparse vectors, too!
 	        svm_node[] x = new svm_node[dim];
 	        for(int d = 0; d < dim; d++) {
@@ -177,7 +189,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	    DBIDIter iter = ids.iter();
 	      double[] buf = new double[svm.svm_get_nr_class(model)];
 	      for(int i = 0; i < prob.l && iter.valid(); iter.advance(), i++) {
-	        V vec = relation.get(iter);
+	    	NumberVector vec = relation.get(iter);
 	        svm_node[] x = new svm_node[dim];
 	        for(int d = 0; d < dim; d++) {
 	          x[d] = new svm_node();
@@ -189,6 +201,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	        // Unfortunately, libsvm one-class currently yields a binary decision.
 	        scores.putDouble(iter, score);
 	        mm.put(score);
+	        scoresList.add(new SVMScore(vec, score));
 	      }
 	      minScore = mm.getMin();
 	      maxScore = mm.getMax();
@@ -198,7 +211,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	    return new OutlierResult(scoreMeta, scoreResult);
 	  }
 	  
-	  private double calculateSVM(V newInstance){
+	  public double calculateSVM(NumberVector newInstance){
 		  	int dim = newInstance.getDimensionality(); 
 			double[] buf = new double[svm.svm_get_nr_class(model)];
 			svm_node[] x = new svm_node[dim];
@@ -212,7 +225,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 			return -buf[0] / model.param.gamma; 
 	  }
 	  
-	  public boolean evaluateSVM(V newInstance){
+	  public boolean evaluateSVM(NumberVector newInstance){
 		  double score = calculateSVM(newInstance);
 		  return score < minScore || score > maxScore;
 	  }
@@ -248,7 +261,7 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	   * 
 	   * @param <V> Vector type
 	   */
-	  public static class Parameterizer<V extends NumberVector> extends AbstractParameterizer {
+	  public static class Parameterizer extends AbstractParameterizer {
 	    /**
 	     * Parameter for kernel function.
 	     */
@@ -272,8 +285,8 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	    }
 
 	    @Override
-	    protected CustomSVM<V> makeInstance() {
-	      return new CustomSVM<>(kernel, mynu);
+	    protected CustomSVM makeInstance() {
+	      return new CustomSVM(kernel, mynu);
 	    }
 	  }
 	  
@@ -303,11 +316,11 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 	  
 	  private static final String MAXSCORE = "MAXSCORE";
 	  
-	  public void loadFile(String item) {
-			PreferencesManager pManager;
+	  private void loadParametersFile(File file){
+		  PreferencesManager pManager;
 			try {
-				if(new File(item).exists()){
-					pManager = new PreferencesManager(new File(item));
+				if(file.exists()){
+					pManager = new PreferencesManager(file);
 					if(pManager.isValidFile()){
 						
 						model = new svm_model();
@@ -383,11 +396,53 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 							maxScore = Double.valueOf(pManager.getPreference(MAXSCORE));
 						else AppLogger.logError(getClass(), "MissingPreferenceError", "Missing or wrong preference: " + MAXSCORE);
 												
-					} else AppLogger.logError(getClass(), "SVMFileError", "Unable to find the '" + item + "' SVM preference file");
+					} else AppLogger.logError(getClass(), "SVMFileError", "Unable to find the '" + file.getName() + "' SVM preference file");
 				}
 			} catch (Exception ex) {
 				AppLogger.logException(getClass(), ex, "Unable to read SVM file");
 			} 
+	  }
+	  
+	  private void loadScoresFile(File file){
+		  BufferedReader reader;
+			String readed;
+			try {
+				if(file.exists()){
+					scoresList = new LinkedList<SVMScore>();
+					reader = new BufferedReader(new FileReader(file));
+					reader.readLine();
+					while(reader.ready()){
+						readed = reader.readLine();
+						if(readed != null){
+							readed = readed.trim();
+							if(readed.length() > 0 && readed.split(";").length >= 2 && AppUtility.isNumber(readed.split(";")[1]))
+								scoresList.add(new SVMScore(stringToVector(readed.split(";")[0]), Double.parseDouble(readed.split(";")[1])));
+						}
+					}
+					reader.close();
+				}
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to read SVM Scores file");
+			} 
+	
+	  }
+	  
+	  private Vector stringToVector(String string) {
+		  string = string.replace("{", "").replace("}", "");
+		  String[] sSplitted;
+		  if(string.contains(","))
+			  sSplitted = string.trim().split(",");
+		  else sSplitted = string.trim().split(" ");
+		  Vector vec = new Vector(sSplitted.length);
+		  for(int i=0; i<sSplitted.length;i++){
+			  vec.set(i, Double.parseDouble(sSplitted[i].trim()));
+		  }
+		  return vec;
+	}
+
+	public void loadFile(String item) {
+			loadParametersFile(new File(item));
+			loadScoresFile(new File(item + "scores"));
 		}
 	  
 	  private int[] stringToIntArray(String s, String sep){
@@ -444,7 +499,29 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 			return res.substring(0,  res.length()-1);
 		}
 		
-		public void printFile(File file) {
+		private void printScoresFile(File file){
+			BufferedWriter writer;
+			try {
+				if(file.exists())
+					file.delete();
+				
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write("* Preferences for SVM Model.");
+				
+				writer.write("data (enclosed in {});svm score");
+				
+				for(SVMScore score : scoresList){
+					writer.write("{" + score.getVector().toString() + "};" + score.getScore() + "\n");
+				}
+				writer.write("\n");
+				
+				writer.close();
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to write SVM file");
+			} 
+		}
+		
+		private void printParametersFile(File file){
 			BufferedWriter writer;
 			String partial;
 			try {
@@ -487,5 +564,51 @@ public class CustomSVM<V extends NumberVector> extends AbstractAlgorithm<Outlier
 			} catch (IOException ex) {
 				AppLogger.logException(getClass(), ex, "Unable to write SVM file");
 			} 
+		}
+		
+		public void printFile(File file) {
+			printParametersFile(file);
+			printScoresFile(new File(file.getPath() + "scores"));
+		}
+
+		@Override
+		public List<Double> getScoresList() {
+			List<Double> list = new ArrayList<Double>(scoresList.size());
+			for(SVMScore score : scoresList){
+				list.add(score.getScore());
+			}
+			Collections.sort(list);
+			return list;
+		}
+
+		@Override
+		public String getAlgorithmName() {
+			return "svm";
+		}
+
+		@Override
+		public Object run(Database db, Relation<NumberVector> relation) {
+			return run(relation);
+		}
+		
+		public class SVMScore {
+			
+			private NumberVector vec;
+			
+			private double score;
+
+			public SVMScore(NumberVector vec, double score) {
+				this.vec = vec;
+				this.score = score;
+			}
+
+			public NumberVector getVector() {
+				return vec;
+			}
+
+			public double getScore() {
+				return score;
+			}		
+			
 		}
 }

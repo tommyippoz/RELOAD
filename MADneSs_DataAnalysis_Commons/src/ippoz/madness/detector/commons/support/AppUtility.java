@@ -110,13 +110,16 @@ public class AppUtility {
 	
 	public static Double calcAvg(Collection<? extends Number> values){
 		double mean = 0;
+		int uncountable = 0;
 		if(values != null && values.size() > 0) {
 			for(Number d : values){
-				if(d instanceof Long)
+				if(d instanceof Long && d.longValue() != Long.MAX_VALUE && d.longValue() != Long.MIN_VALUE)
 					mean = mean + d.longValue();
-				else mean = mean + d.doubleValue();
+				else if(Double.isFinite(d.doubleValue()))
+					mean = mean + d.doubleValue();
+				else uncountable++;
 			}
-			return mean / values.size();
+			return mean / (values.size() - uncountable);
 		} else return 0.0;
 	}
 	
@@ -136,7 +139,7 @@ public class AppUtility {
 		int count = 0;
 		double std = 0;
 		for(Double d : values){
-			if(d != null){
+			if(d != null && Double.isFinite(d)){
 				std = std + Math.pow(d-mean, 2);
 				count++;
 			}

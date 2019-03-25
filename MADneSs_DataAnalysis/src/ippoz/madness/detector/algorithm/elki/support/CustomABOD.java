@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -55,7 +56,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.ObjectParameter;
  * @author Tommy
  *
  */
-public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm {
+public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<V> {
 	
 	/**
 	   * The logger for this class.
@@ -363,6 +364,21 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
 		} 
+	}
+
+	@Override
+	public List<Double> getScoresList() {
+		ArrayList<Double> list = new ArrayList<Double>(resList.size());
+		for(ABODResult abof : resList){
+			list.add(abof.getABOF());
+		}
+		Collections.sort(list);
+		return list;
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "abod";
 	}
 	
 	

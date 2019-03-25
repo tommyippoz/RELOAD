@@ -38,4 +38,4 @@ LABEL_COLUMN = 41
 EXPERIMENT_ROWS = 100
 
 * Tags Identifying an Attack in This Dataset
-FAULTY_TAGS = ipsweep, nmap, portsweep, satan
+FAULTY_TAGS = ipsweep, nmap, portsweep, satan, aaasasa

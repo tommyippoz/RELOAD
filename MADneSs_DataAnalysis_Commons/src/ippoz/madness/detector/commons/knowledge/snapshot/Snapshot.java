@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author Tommy
  */
-public class Snapshot {
+public abstract class Snapshot {
 	
 	/** The list of services called at that time instant. */
 	private List<ServiceCall> sCall;
@@ -76,5 +76,17 @@ public class Snapshot {
 	public InjectedElement getInjectedElement() {
 		return injEl;
 	}
+	
+	public List<Double> listValues(boolean first){
+		List<Double> list = new LinkedList<Double>();
+		for(SnapshotValue sv : listValues()){
+			if(first)
+				list.add(sv.getFirst());
+			else list.add(sv.getLast());
+		}
+		return list;
+	}
+	
+	public abstract List<SnapshotValue> listValues();
 	
 }

@@ -14,18 +14,24 @@ import ippoz.madness.detector.algorithm.elki.sliding.ABODSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.madness.detector.algorithm.elki.sliding.KNNSlidingELKI;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.madness.detector.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
+import ippoz.madness.detector.commons.algorithm.AlgorithmFamily;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.KnowledgeType;
 import ippoz.madness.detector.commons.service.StatPair;
 import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.madness.detector.commons.support.ValueSeries;
+import ippoz.madness.detector.decisionfunction.AnomalyResult;
+import ippoz.madness.detector.decisionfunction.DecisionFunction;
+
+import java.util.List;
 
 /**
  * The Class DetectionAlgorithm.
@@ -37,6 +43,10 @@ public abstract class DetectionAlgorithm {
 	/** The configuration. */
 	protected AlgorithmConfiguration conf;
 	
+	protected ValueSeries loggedScores;
+	
+	protected DecisionFunction decisionFunction;
+	
 	/**
 	 * Instantiates a new detection algorithm.
 	 *
@@ -44,6 +54,36 @@ public abstract class DetectionAlgorithm {
 	 */
 	public DetectionAlgorithm(AlgorithmConfiguration conf){
 		this.conf = conf;
+		loggedScores = new ValueSeries();
+		decisionFunction = null;
+	}
+	
+	protected DecisionFunction buildClassifier() {
+		if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD))
+			return DecisionFunction.getClassifier(loggedScores, conf.getItem(AlgorithmConfiguration.THRESHOLD));
+		else return null;
+	}
+	
+	protected void setDecisionFunction(){
+		decisionFunction = buildClassifier();
+	}
+	
+	protected DecisionFunction getDecisionFunction(){
+		return decisionFunction;
+	}
+	
+	protected void logScore(double score){
+		loggedScores.addValue(score);
+	}
+	
+	protected void logScores(List<Double> list) {
+		for(Double score : list){
+			logScore(score);
+		}
+	}
+	
+	public void clearLoggedScores() {
+		loggedScores.clear();
 	}
 	
 	/**
@@ -52,12 +92,19 @@ public abstract class DetectionAlgorithm {
 	 * @param anomalyValue the anomaly value
 	 * @return the double
 	 */
-	protected static double anomalyTrueFalse(double anomalyValue){
-		if(anomalyValue > 0.0)
-			return 1.0;
-		else if(anomalyValue == -1.0)
-			return -1.0;
-		else return 0.0;	
+	public static double convertResultIntoDouble(AnomalyResult anomalyResult){
+		switch (anomalyResult){
+			case ANOMALY:
+				return 1.0;
+			case NORMAL:
+				return 0.0;
+			case MAYBE:
+				return Double.NaN;
+			case UNKNOWN:
+				return 0.0;
+			default:
+				return Double.NaN;
+		}
 	}
 	
 	/**
@@ -69,23 +116,6 @@ public abstract class DetectionAlgorithm {
 	 */
 	public static DetectionAlgorithm buildAlgorithm(AlgorithmType algType, DataSeries dataSeries, AlgorithmConfiguration conf) {
 		switch(algType){
-			case HIST:
-				return new HistoricalIndicatorChecker(dataSeries, conf);
-			case CONF:
-				return new ConfidenceIntervalChecker(dataSeries, conf);
-			case RCC:
-				return new RemoteCallChecker(conf);
-			case WER:
-				return new WesternElectricRulesChecker(dataSeries, conf);
-			case INV:
-				if(dataSeries instanceof MultipleDataSeries)
-					return new InvariantChecker((MultipleDataSeries)dataSeries, conf);
-				else {
-					AppLogger.logError(DetectionAlgorithm.class, "DataSeriesError", "Cannot create INV checker with just simple data series '" + dataSeries.getName() + "'");
-					return null;
-				}
-			case PEA:
-				return new PearsonIndexChecker(conf);
 			case HBOS:
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
 			case ELKI_KMEANS:
@@ -105,7 +135,6 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 				return new IsolationForestWEKA(dataSeries, conf);
 			case SLIDING_SPS:
-				//return new SPSDetector(dataSeries, conf);
 				return new SPSSlidingAlgorithm(dataSeries, conf);
 			case SLIDING_ELKI_ABOD:
 				return new ABODSlidingELKI(dataSeries, conf);
@@ -117,6 +146,43 @@ public abstract class DetectionAlgorithm {
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
+			default:
+				return null;
+			
+		}
+	}
+	
+	public static AlgorithmFamily getFamily(AlgorithmType algType) {
+		switch(algType){
+			case HIST:
+			case CONF:
+			case RCC:
+			case WER:
+			case PEA:
+				return AlgorithmFamily.STATISTICAL;
+			case INV:
+				return AlgorithmFamily.CLASSIFICATION;
+			case HBOS:
+			case SLIDING_SPS:
+				return AlgorithmFamily.STATISTICAL;
+			case ELKI_KMEANS:
+			case SLIDING_ELKI_CLUSTERING:
+				return AlgorithmFamily.CLUSTERING;
+			case ELKI_ABOD:
+			case ELKI_FASTABOD:
+			case SLIDING_ELKI_ABOD:
+				return AlgorithmFamily.ANGLE;
+			case ELKI_LOF:
+			case ELKI_COF:
+			case SLIDING_ELKI_COF:
+				return AlgorithmFamily.DENSITY;
+			case ELKI_ODIN:
+			case SLIDING_ELKI_KNN:
+				return AlgorithmFamily.NEIGHBOUR;
+			case ELKI_SVM:
+			case WEKA_ISOLATIONFOREST:
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return AlgorithmFamily.CLASSIFICATION;
 			default:
 				return null;
 			
@@ -136,12 +202,36 @@ public abstract class DetectionAlgorithm {
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
-		return (dataSeries.size() == 2 && algType == AlgorithmType.INV) || 
-				(dataSeries.size() == 1 && (algType == AlgorithmType.SLIDING_SPS || algType == AlgorithmType.HIST)) ||
-				(dataSeries.size() > 1 && (algType == AlgorithmType.WEKA_ISOLATIONFOREST || algType == AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST)) ||
-				(dataSeries.size() == 1 && algType.equals(AlgorithmType.ELKI_ODIN)) ||
-				(!algType.equals(AlgorithmType.ELKI_ODIN) && algType.toString().contains("ELKI_") ||
-				(algType.toString().contains("HBOS")));
+		switch(algType){
+			case ELKI_ABOD:
+			case ELKI_COF:
+			case ELKI_FASTABOD:
+			case ELKI_KMEANS:
+			case ELKI_LOF:
+			case ELKI_ODIN:
+			case ELKI_SVM:
+			case HBOS:
+			case SLIDING_ELKI_ABOD:
+			case SLIDING_ELKI_CLUSTERING:
+			case SLIDING_ELKI_COF:
+			case SLIDING_ELKI_KNN:
+				return true;
+			case TEST:
+			case WER:
+			case PEA:
+			case RCC:
+			case CONF:
+			case HIST:
+			case SLIDING_SPS:
+				return true; //dataSeries.size() == 1;
+			case INV:
+				return dataSeries.size() == 2;
+			case SLIDING_WEKA_ISOLATIONFOREST:
+			case WEKA_ISOLATIONFOREST:
+				return dataSeries.size() > 1;
+			default:
+				return false;
+		}
 	}
 	
 	/**
@@ -158,13 +248,7 @@ public abstract class DetectionAlgorithm {
 	
 	private boolean usesSimpleSeries(DataSeries container, DataSeries serie) {
 		if(container == null){
-			if(getAlgorithmType().equals(AlgorithmType.RCC))
-				return false;
-			else if(getAlgorithmType().equals(AlgorithmType.PEA))
-				return ((PearsonIndexChecker)this).getDs1().contains(serie) || ((PearsonIndexChecker)this).getDs2().contains(serie);
-			else if(getAlgorithmType().equals(AlgorithmType.INV))
-				return false;
-			else return false;
+			return false;
 		} else {
 			return container.contains(serie);
 		}
@@ -189,9 +273,13 @@ public abstract class DetectionAlgorithm {
 	 * @param sysSnapshot the given snapshot
 	 * @return the anomaly rate of the snapshot
 	 */
-	public double snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
-		return anomalyTrueFalse(evaluateSnapshot(knowledge, currentIndex));//*getWeight();
+	public AlgorithmResult snapshotAnomalyRate(Knowledge knowledge, int currentIndex){
+		if(getDecisionFunction() == null)
+			setDecisionFunction();
+		return evaluateSnapshot(knowledge, currentIndex);//*getWeight();
 	}
+	
+	// TODO
 	
 	/**
 	 * Evaluates a snapshot.
@@ -200,7 +288,7 @@ public abstract class DetectionAlgorithm {
 	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	protected abstract double evaluateSnapshot(Knowledge knowledge, int currentIndex);
+	protected abstract AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
 	
 	/**
 	 * Prints the results of the detection.
@@ -330,5 +418,48 @@ public abstract class DetectionAlgorithm {
 	 * @return the data series
 	 */
 	public abstract DataSeries getDataSeries();
+
+	public ValueSeries getTrainScore() {
+		return loggedScores;
+	}
+
+	public static boolean isSliding(AlgorithmType algType) {
+		return algType.toString().contains("SLIDING");
+	}
+
+	public static String explainParameters(AlgorithmType algType) {
+		String base = "Parameters: (threshold) string defining the DecisionFunction converting numeric to boolean scores";
+		switch(algType){
+			case ELKI_ABOD:
+			case SLIDING_ELKI_ABOD:
+				return base;
+			case ELKI_LOF:
+			case ELKI_COF:
+			case SLIDING_ELKI_COF:
+				return base + ", (k) the number of neighbours.";
+			case ELKI_FASTABOD:
+				return base + ", (k) the number of neighbours.";
+			case ELKI_KMEANS:
+			case SLIDING_ELKI_CLUSTERING:
+				return base + ", (k) the number of clusters.";
+			case ELKI_SVM:
+				return base + ", (kernel) the type of kernel, (nu) an upper bound on the fraction of margin "
+						+ "errors and a lower bound of the fraction of support vectors relative to training set "
+						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified "
+						+ "and at least 5% of training examples being support vectors.";
+			case HBOS:
+				return base + ", (k) the number of histograms to generate for each indicator.";
+			case ELKI_ODIN:
+			case SLIDING_ELKI_KNN:
+				return base + ", (k) the number of neighbours.";
+			case SLIDING_SPS:
+				return "";
+			case WEKA_ISOLATIONFOREST:
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return "Parameters: (ntrees) number of trees in the forest, (sample_size) instances to be sampled to train each tree.";
+			default:
+				return "Parameters are shown in the table.";
+		}
+	}
 
 }

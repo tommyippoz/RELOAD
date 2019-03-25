@@ -5,15 +5,10 @@ package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomSVM;
 import ippoz.madness.detector.algorithm.elki.support.CustomSVM.SVMKernel;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-
-import java.io.File;
-
-import de.lmu.ifi.dbs.elki.data.NumberVector;
-import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
-import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
@@ -26,19 +21,14 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	
 	private static final String KERNEL = "kernel";
 	
-	private static final String TMP_FILE = "tmp_file";
-	
-	public static final String DEFAULT_TMP_FOLDER = "svm_tmp";
-	
-	private CustomSVM<NumberVector> cSVM;
-	
 	public SVMELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, true);
+	}
+	
+	@Override
+	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		SVMKernel kernel = getKernel(conf);
-		cSVM = new CustomSVM<NumberVector>(kernel != null ? kernel : SVMKernel.LINEAR, getNU(conf));
-		if(conf.hasItem(TMP_FILE)){
-			cSVM.loadFile(conf.getItem(TMP_FILE));
-		}
+		return new CustomSVM(kernel != null ? kernel : SVMKernel.LINEAR, getNU(conf));
 	}
 
 	private double getNU(AlgorithmConfiguration conf) {
@@ -66,29 +56,20 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	}
 
 	@Override
-	protected void automaticElkiTraining(Database db, boolean createOutput) {
-
-		cSVM.run(db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-		
-		conf.addItem(TMP_FILE, getFilename());
-	    
-	    if(createOutput){
-	    	if(!new File(DEFAULT_TMP_FOLDER).exists())
-	    		new File(DEFAULT_TMP_FOLDER).mkdirs();
-	    	cSVM.printFile(new File(getFilename()));
-	    }
-	}
-	
-	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".svm";
+	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
+		Vector v = convertSnapToVector(sysSnapshot);
+		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomSVM)getAlgorithm()).calculateSVM(v));
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
 	@Override
-	protected double evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			return cSVM.evaluateSVM(v) ? 1.0 : 0.0;
-		} else return 0.0;
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

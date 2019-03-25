@@ -4,6 +4,7 @@
 package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.DataSeriesExternalSlidingAlgorithm;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
@@ -12,9 +13,9 @@ import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 
-import java.util.Arrays;
 import java.util.List;
 
+import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.database.StaticArrayDatabase;
 import de.lmu.ifi.dbs.elki.datasource.ArrayAdapterDatabaseConnection;
@@ -27,17 +28,31 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  */
 public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalSlidingAlgorithm {
 	
+	private ELKIAlgorithm<?> customELKI;
+	
 	public DataSeriesSlidingELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 	}
-
-	@Override
-	protected double evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		// TODO
-		return evaluateSlidingELKISnapshot(sKnowledge, translateSnapList(snapList, true), convertSnapToVector(dsSnapshot)); 
+	
+	protected ELKIAlgorithm<?> getAlgorithm(){
+		return customELKI;
 	}
 
-	protected abstract double evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance);
+	protected abstract ELKIAlgorithm<?> generateELKIAlgorithm();
+
+	@Override
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		Database windowDb = translateSnapList(snapList, true);
+		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
+			customELKI = generateELKIAlgorithm();
+			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
+			logScores(customELKI.getScoresList());
+			setDecisionFunction();
+			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot); 
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+	}
+
+	protected abstract AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
 
 	private Database translateSnapList(List<Snapshot> kList, boolean includeFaulty){
 		double[][] dataMatrix = convertSnapshotListIntoMatrix(kList, includeFaulty);

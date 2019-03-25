@@ -17,9 +17,7 @@ import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
-import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
-import ippoz.madness.detector.loader.MySQLLoader;
 import ippoz.madness.detector.metric.FalsePositiveRate_Metric;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.output.DetectorOutput;
@@ -124,37 +122,25 @@ public class DetectionManager {
 	private List<Loader> buildLoaderList(String loaderTag, int anomalyWindow){
 		List<Loader> lList = new LinkedList<>();
 		Loader newLoader;
-		LinkedList<Integer> runs;
+		List<Integer> runs;
 		int nRuns;
 		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? Loader.FILTERING_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE));
 		if(runsString != null && runsString.length() > 0){
 			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
 				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));
-				runs = readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
+				runs = iManager.readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
 				for(int i=0;i<runs.size();i=i+nRuns){
-					newLoader = buildSingleLoader(new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
+					newLoader = iManager.buildSingleLoader(loaderPref, new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
 					if(newLoader != null)
 						lList.add(newLoader);
 				}
 			} else {
-				newLoader = buildSingleLoader(readRunIds(runsString), loaderTag, anomalyWindow);
+				newLoader = iManager.buildSingleLoader(loaderPref, iManager.readRunIds(runsString), loaderTag, anomalyWindow);
 				if(newLoader != null)
 					lList.add(newLoader);
 			}
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
 		return lList;
-	}
-	
-	private Loader buildSingleLoader(LinkedList<Integer> list, String loaderTag, int anomalyWindow){
-		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
-		if(loaderType != null && loaderType.equalsIgnoreCase("MYSQL"))
-			return new MySQLLoader(list, loaderPref, loaderTag, iManager.getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.equalsIgnoreCase("CSVALL"))
-			return new CSVPreLoader(list, loaderPref, loaderTag, anomalyWindow, iManager.getDatasetsFolder());
-		else {
-			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
-			return null;
-		} 
 	}
 	
 	/**
@@ -177,7 +163,7 @@ public class DetectionManager {
 	 *
 	 * @return true if training is needed
 	 */
-	public boolean needTest(){
+	public boolean needTraining(){
 		return iManager.getTrainingFlag();
 	}
 	
@@ -192,7 +178,7 @@ public class DetectionManager {
 		FilterManager fManager;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), generateKnowledge(buildLoader("filter").get(0).fetch()), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
+				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), generateKnowledge(buildLoader("filter").get(0).fetch()), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS, windowSize, sPolicy), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				selectedDataSeries = fManager.filter(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_filtered.csv");
 				fManager.flush();
 			}
@@ -211,13 +197,13 @@ public class DetectionManager {
 	public void train(){
 		TrainerManager tManager;
 		try {
-			if(needTest()) {
+			if(needTraining()) {
 				if(selectedDataSeries == null && !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))))
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold());
+					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				else {
 					if(selectedDataSeries == null){
-						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString());
-					} else tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes), metric, reputation, algTypes, selectedDataSeries); 
+						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString(), iManager.getKFoldCounter());
+					} else tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, algTypes, selectedDataSeries, iManager.getKFoldCounter()); 
 				}
 				tManager.train(buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_scores.csv");
 				tManager.flush();
@@ -245,7 +231,7 @@ public class DetectionManager {
 			if(map.containsKey(KnowledgeType.SINGLE))
 				map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
 		}
-		AppLogger.logInfo(getClass(), expList.size() + " runs loaded");
+		AppLogger.logInfo(getClass(), expList.size() + " runs loaded (K-Fold:" + iManager.getKFoldCounter() + ")");
 		return map;
 	}
 
@@ -347,8 +333,11 @@ public class DetectionManager {
 		return new DetectorOutput(Double.isFinite(bestScore) ? bestScore : 0.0,
 				getBestSetup(evaluations, metList, anomalyTresholds), metric, metList, 
 				getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
-				nVoters, bestEManager != null ? bestEManager.getDetailedEvaluations() : null, 
-				evaluations, getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
+				nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, 
+				evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
+				bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
+				bestEManager != null ? bestEManager.getFailures() : null,		
+				getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
 	}
 	
 	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){
@@ -416,29 +405,6 @@ public class DetectionManager {
 			}
 		}
 		return bSetup;
-	}
-	
-	/**
-	 * Returns run IDs parsing a specific tag.
-	 *
-	 * @param runTag the run tag
-	 * @return the list of IDs
-	 */
-	private LinkedList<Integer> readRunIds(String idPref){
-		String from, to;
-		LinkedList<Integer> idList = new LinkedList<Integer>();
-		if(idPref != null && idPref.length() > 0){
-			for(String id : idPref.split(",")){
-				if(id.contains("-")){
-					from = id.split("-")[0].trim();
-					to = id.split("-")[1].trim();
-					for(int i=Integer.parseInt(from);i<=Integer.parseInt(to);i++){
-						idList.add(i);
-					}
-				} else idList.add(Integer.parseInt(id.trim()));
-			}
-		}
-		return idList;
 	}
 
 	public void flush() {

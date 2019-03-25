@@ -4,12 +4,17 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.commons.algorithm.AlgorithmType;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
+import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.PreferencesManager;
+import ippoz.madness.detector.loader.CSVPreLoader;
+import ippoz.madness.detector.loader.Loader;
+import ippoz.madness.detector.loader.MySQLLoader;
 import ippoz.madness.detector.metric.AUC_Metric;
 import ippoz.madness.detector.metric.Accuracy_Metric;
 import ippoz.madness.detector.metric.Custom_Metric;
@@ -60,7 +65,7 @@ public class InputManager {
 	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
 	/** The Constant INV_DOMAIN. */
-	public static final String DATA_SERIES_DOMAIN = "DATA_SERIES_DOMAIN";
+	public static final String INDICATOR_SELECTION = "INDICATOR_SELECTION";
 	
 	/** The Constant OUTPUT_FORMAT. */
 	public static final String OUTPUT_FORMAT = "OUTPUT_TYPE";
@@ -85,6 +90,9 @@ public class InputManager {
 	
 	/** The Constant FILTERING_TRESHOLD. */
 	public static final String FILTERING_TRESHOLD = "FILTERING_TRESHOLD"; 
+	
+	/** The Constant KFOLD_COUNTER. */
+	public static final String KFOLD_COUNTER = "KFOLD_COUNTER"; 
 	
 	public static final String ANOMALY_WINDOW = "ANOMALY_WINDOW"; 
 	
@@ -152,9 +160,9 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue){
+	public boolean updatePreference(String tag, String newValue, boolean updateFile){
 		if(tag != null && prefManager.hasPreference(tag)){
-			prefManager.updatePreference(tag, newValue);
+			prefManager.updatePreference(tag, newValue, updateFile);
 			return true;
 		} else return false;
 	}
@@ -238,7 +246,6 @@ public class InputManager {
 					}
 				}
 			}
-			metricList.add(getMetric("AUC"));
 			reader.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
@@ -361,9 +368,12 @@ public class InputManager {
 				return new FMeasure_Metric(validAfter);
 			case "F-SCORE":
 			case "FSCORE":
-				return new FScore_Metric(Double.valueOf(param), validAfter);
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new FScore_Metric(Double.valueOf(param), validAfter);
+				else return new FMeasure_Metric(validAfter);
 			case "FPR":
 				return new FalsePositiveRate_Metric(validAfter);
+			case "MCC":
 			case "MATTHEWS":
 				return new Matthews_Coefficient(validAfter);
 			case "AUC":
@@ -479,24 +489,26 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(at);
-		return loadConfigurations(list);
+		return loadConfigurations(list, windowSize, sPolicy);
 	}
 
 	/**
 	 * Loads the possible configurations for all the algorithms.
+	 * @param sPolicy 
+	 * @param windowSize 
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
 		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
 		AlgorithmConfiguration alConf;
 		AlgorithmType algType;
 		BufferedReader reader = null;
-		String[] header;
+		String[] header = null;
 		String readed;
 		int i;
 		try {
@@ -506,27 +518,35 @@ public class InputManager {
 						algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
 						if(algType != null && algTypes.contains(algType)) {
 							reader = new BufferedReader(new FileReader(confFile));
-							readed = reader.readLine();
-							if(readed != null){
-								header = readed.split(",");
-								while(reader.ready()){
-									readed = reader.readLine();
-									if(readed != null){
-										readed = readed.trim();
-										if(readed.length() > 0){
-											i = 0;
-											alConf = AlgorithmConfiguration.getConfiguration(algType, null);
-											for(String element : readed.split(",")){
-												alConf.addItem(header[i++], element);
-											}
-											if(confList.get(algType) == null)
-												confList.put(algType, new LinkedList<AlgorithmConfiguration>());
-											confList.get(algType).add(alConf);
+							// Eats the header
+							while(reader.ready()){
+								readed = reader.readLine();
+								if(readed != null && readed.trim().length() > 0 && !readed.trim().startsWith("*")){
+									header = readed.split(",");
+									break;
+								}
+							}
+							while(reader.ready()){
+								readed = reader.readLine();
+								if(readed != null){
+									readed = readed.trim();
+									if(readed.length() > 0 && !readed.startsWith("*")){
+										i = 0;
+										alConf = AlgorithmConfiguration.getConfiguration(algType, null);
+										for(String element : readed.split(",")){
+											alConf.addItem(header[i++], element);
 										}
+										if(DetectionAlgorithm.isSliding(algType)){
+											alConf.addItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE, windowSize);
+											alConf.addItem(AlgorithmConfiguration.SLIDING_POLICY, sPolicy.toString());
+										}
+										if(confList.get(algType) == null)
+											confList.put(algType, new LinkedList<AlgorithmConfiguration>());
+										confList.get(algType).add(alConf);
 									}
 								}
-								AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 							}
+							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 						}
 					} catch(Exception ex){
 						AppLogger.logError(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
@@ -543,6 +563,36 @@ public class InputManager {
 			}
 		}
 		return confList;
+	}
+	
+	public void updateConfiguration(AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+		BufferedWriter writer = null;
+		File outFile = new File(getConfigurationFolder() + algType.toString() + ".conf");
+		try {
+			if(confList != null && confList.size() > 0) {
+				writer = new BufferedWriter(new FileWriter(outFile));
+				writer.write("* Configuration file for algorithm '" + algType.toString() + "'\n\n");
+				for(String tag : confList.get(0).listLabels()){
+					writer.write(tag + ",");
+				}
+				writer.write("\n");
+				for(AlgorithmConfiguration conf : confList){
+					for(String tag : confList.get(0).listLabels()){
+						writer.write(conf.getItem(tag) + ",");
+					}
+					writer.write("\n");
+				}
+				AppLogger.logInfo(getClass(), "Configuration file '" + outFile.getName() + "' updated.");
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read configurations");
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to read configurations");
+			}
+		}
 	}
 
 	public boolean getTrainingFlag() {
@@ -595,6 +645,16 @@ public class InputManager {
 		}
 	}
 	
+	public int getKFoldCounter() {
+		if(prefManager.hasPreference(KFOLD_COUNTER) && AppUtility.isNumber(prefManager.getPreference(KFOLD_COUNTER)))
+			return Integer.parseInt(prefManager.getPreference(KFOLD_COUNTER));
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					KFOLD_COUNTER + " not found. Using default value of '1'");
+			return 1;
+		}
+	}
+	
 	public String getScoresFile(String prequel){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
 			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + prefManager.getPreference(SCORES_FILE);
@@ -616,13 +676,20 @@ public class InputManager {
 	}
 
 	public String getDataSeriesDomain() {
-		if(prefManager.hasPreference(DATA_SERIES_DOMAIN))
-			return prefManager.getPreference(DATA_SERIES_DOMAIN);
+		if(prefManager.hasPreference(INDICATOR_SELECTION))
+			return prefManager.getPreference(INDICATOR_SELECTION);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DATA_SERIES_DOMAIN + " not found. Using default value of 'PEARSON(0.90)'");
-			return "PEARSON(0.90)";
+					INDICATOR_SELECTION + " not found. Using default value of 'PEARSON(0.9)'");
+			return "PEARSON(0.9)";
 		}
+	}
+	
+	public String getDataSeriesBaseDomain() {
+		String toRet = getDataSeriesDomain();
+		if(toRet.contains("("))
+			toRet = toRet.substring(0, toRet.indexOf("("));
+		return toRet;
 	}
 	
 	private static PreferencesManager generateDefaultMADneSsPreferences() throws IOException {
@@ -645,6 +712,8 @@ public class InputManager {
 						"FILTERING_FLAG = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
 						"TRAIN_FLAG = 1\n");
+				writer.write("\n* K for the K-Fold Evaluation (Default is 1).\n" + 
+						"KFOLD_COUNTER = 1\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
 						"METRIC = FSCORE(2)\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
@@ -819,6 +888,246 @@ public class InputManager {
 
 	public boolean filteringResultExists(String datasetName) {
 		return new File(getScoresFolder() + datasetName + "_filtered.csv").exists();
+	}
+
+	public void removeDataset(String option) {
+		String a = option.split("-")[1].trim();
+		String b = a.split(" ")[0];
+		removeFromFile(new File(getSetupFolder() + "loaderPreferences.preferences"), b.trim(), true);
 	}	
+	
+	public void removeAlgorithm(String option) {
+		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.split(" ")[0], false);
+	}
+	
+	private void removeFromFile(File file, String toRemove, boolean partialMatching){
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							if(readed.equalsIgnoreCase(toRemove) || (partialMatching && readed.endsWith(toRemove))){
+								readed = fileLines.remove(fileLines.size()-1);
+								readed = "* " + readed;
+								fileLines.add(readed);
+								found = true;
+							}
+						}
+					}
+				}
+				reader.close();
+				if(found){
+					writer = new BufferedWriter(new FileWriter(file));
+					for(String st : fileLines){
+						writer.write(st + "\n");
+					}
+					writer.close();
+				}
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 		
+	}
+	
+	public void addDataset(String option) {
+		addToFile(new File(getSetupFolder() + "loaderPreferences.preferences"), option);
+	}	
+	
+	public void addAlgorithm(String option) {
+		addToFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option);
+	}
+
+	private void addToFile(File file, String toAdd){
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && readed.trim().startsWith("*")){
+							readed = readed.substring(1).trim();
+							if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
+								readed = fileLines.remove(fileLines.size()-1);
+								readed = readed.substring(1).trim();
+								fileLines.add(readed);
+								found = true;
+							}
+						}
+					}
+				}
+				reader.close();
+				if(!found){
+					fileLines.add(toAdd);
+				}
+				writer = new BufferedWriter(new FileWriter(file));
+				for(String st : fileLines){
+					writer.write(st + "\n");
+				}
+				writer.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 		
+	}
+	
+	public List<PreferencesManager> readLoaders() {
+		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
+		File loadersFile = new File(getSetupFolder() + "loaderPreferences.preferences");
+		PreferencesManager pManager;
+		BufferedReader reader;
+		String readed;
+		try {
+			if(loadersFile.exists()){
+				reader = new BufferedReader(new FileReader(loadersFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							readed = readed.trim();
+							if(readed.endsWith(".loader")){
+								pManager = getLoaderPreferences(readed);
+								if(pManager != null)
+									lList.add(pManager);
+							} else if(new File(getLoaderFolder() + readed).exists() && new File(getLoaderFolder() + readed).isDirectory()){
+								readed = getLoaderFolder() + readed; 
+								if(!readed.endsWith("" + File.separatorChar))
+									readed = readed + File.separatorChar;
+								for(File f : new File(readed).listFiles()){
+									if(f.getName().endsWith(".loader")){
+										lList.add(new PreferencesManager(readed + f.getName()));
+									}
+								}
+							}
+						}
+					}
+				}
+				reader.close();
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
+						loadersFile.getPath() + " not found. Will be generated. Using default value of ''");
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read loaders list");
+		}
+		return lList;	
+	}
+	
+	public Loader buildSingleLoader(PreferencesManager lPref, List<Integer> list, String loaderTag, int anomalyWindow){
+		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
+		if(loaderType != null && loaderType.equalsIgnoreCase("MYSQL"))
+			return new MySQLLoader(list, lPref, loaderTag, getConsideredLayers(), null);
+		else if(loaderType != null && loaderType.equalsIgnoreCase("CSVALL"))
+			return new CSVPreLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+		else {
+			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
+			return null;
+		} 
+	}
+	
+	/**
+	 * Returns run IDs parsing a specific tag.
+	 *
+	 * @param runTag the run tag
+	 * @return the list of IDs
+	 */
+	public List<Integer> readRunIds(String idPref){
+		String from, to;
+		LinkedList<Integer> idList = new LinkedList<Integer>();
+		if(idPref != null && idPref.length() > 0){
+			for(String id : idPref.split(",")){
+				if(id.contains("-")){
+					from = id.split("-")[0].trim();
+					to = id.split("-")[1].trim();
+					for(int i=Integer.parseInt(from);i<=Integer.parseInt(to);i++){
+						idList.add(i);
+					}
+				} else idList.add(Integer.parseInt(id.trim()));
+			}
+		}
+		return idList;
+	}
+
+	public PreferencesManager getLoaderPreferencesByName(String loaderString) {
+		for(PreferencesManager pFile : readLoaders()){
+			if(pFile.getFilename().endsWith(loaderString.trim())){
+				return pFile;
+			}
+		}
+		return null;
+	}
+
+	public PreferencesManager generateDefaultLoaderPreferences(String loaderName) {
+		File file = createDefaultLoader(loaderName);
+		return new PreferencesManager(file);
+	}
+
+	private File createDefaultLoader(String loaderName) {
+		BufferedWriter writer = null;
+		File lFile = new File(getLoaderFolder() + loaderName);
+		try {
+			if(!lFile.exists()){
+				writer = new BufferedWriter(new FileWriter(lFile));
+				
+				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
+				
+				writer.write("\n\n* Loader type (MYSQL, CSVALL).\n" + 
+						"LOADER_TYPE = CSVALL\n");
+				writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
+						"CONSIDERED_LAYERS = NO_LAYER\n");
+				
+				writer.write("\n* Data Partitioning.\n\n");
+				
+				writer.write("\n* File Used for Filtering\n" +
+						"FILTERING_CSV_FILE = \n");
+				writer.write("\n* Golden Runs.\n" + 
+						"GOLDEN_RUN_IDS = 1 - 10\n");
+				writer.write("\n* File Used for Training\n" +
+						"TRAIN_CSV_FILE = \n");
+				writer.write("\n* Train Runs.\n" + 
+						"TRAIN_RUN_IDS = 1 - 10\n");
+				writer.write("\n* File Used for Validation\n" +
+						"VALIDATION_CSV_FILE = \n");
+				writer.write("\n* Validation Runs.\n" + 
+						"VALIDATION_RUN_IDS = 1 - 10\n");
+				
+				writer.write("\n* Parsing Dataset.\n\n");
+				
+				writer.write("\n* Features to Skip\n" + 
+						"SKIP_COLUMNS = 0\n");
+				writer.write("\n* Column Containing the 'Label' Feature\n" + 
+						"LABEL_COLUMN = 1\n");
+				writer.write("\n* Size of Each Experiment.\n" + 
+						"EXPERIMENT_ROWS = 100\n");
+				writer.write("\n* Tags Identifying an Attack in This Dataset.\n" + 
+						"FAULTY_TAGS = \n");	
+				
+				writer.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "'");
+		}
+		return lFile;
+	}
+	
+	public static String[] getIndicatorSelectionPolicies(){
+		return new String[]{"ALL", "UNION", "PEARSON", "SIMPLE"};
+	}
 	
 }

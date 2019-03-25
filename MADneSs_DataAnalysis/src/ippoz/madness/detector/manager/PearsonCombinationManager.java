@@ -44,11 +44,13 @@ public class PearsonCombinationManager {
 	
 	private List<Knowledge> kList;
 	
+	private int kfold;
+	
 	private Map<DataSeries, Map<String, List<Double>>> seriesExpData;
 	
 	private List<PearsonResult> pResults;
 	
-	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, List<Knowledge> kList){
+	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, List<Knowledge> kList, int kfold){
 		this.indexesFile = indexesFile;
 		this.seriesList = seriesList;
 		this.kList = kList;
@@ -193,7 +195,7 @@ public class PearsonCombinationManager {
 	public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
 		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>(pResults.size());
 		for(PearsonResult pr : pResults){
-			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, kList, adaptConf(confList, pr).get(AlgorithmType.PEA)));
+			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, kList, adaptConf(confList, pr).get(AlgorithmType.PEA), kfold));
 		}
 		return trainerList;
 	}

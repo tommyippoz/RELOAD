@@ -3,6 +3,7 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
 import ippoz.madness.detector.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -60,7 +61,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
  * @author Tommy
  *
  */
-public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm {
+public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	  /**
 	   * The logger for this class.
 	   */
@@ -92,6 +93,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @param relation Data to process
 	   * @return LOF outlier result
 	   */
+	  @Override
 	  public OutlierResult run(Database database, Relation<NumberVector> relation) {
 	    //StepProgress stepprog = LOG.isVerbose() ? new StepProgress("LOF", 3) : null;
 	    DBIDs ids = relation.getDBIDs();
@@ -301,6 +303,15 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    return LOG;
 	  }
 	  
+	  public List<Double> getScoresList(){
+			ArrayList<Double> list = new ArrayList<Double>(size());
+			for(OFScore of : resList){
+				list.add(of.getOF());
+			}
+			Collections.sort(list);
+			return list;
+		}
+	  
 	  private class OFScore implements Comparable<OFScore> {
 
 			private NumberVector data;
@@ -443,7 +454,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						readed = reader.readLine();
 						if(readed != null){
 							readed = readed.trim();
-							resList.add(new OFScore(readed.split(";")[0], readed.split(";")[1], readed.split(";")[2]));
+							resList.add(new OFScore(readed.split(";")[0].trim().substring(1, readed.split(";")[0].trim().length()-1), readed.split(";")[2].trim(), readed.split(";")[3].trim()));
 						}
 					}
 					reader.close();
@@ -461,9 +472,9 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					if(file.exists())
 						file.delete();
 					writer = new BufferedWriter(new FileWriter(file));
-					writer.write("data;lrd;lof\n");
+					writer.write("data(vector enclosed in {});k;Local Reachability Distance (lrd);Local Outrlier Factor (lof)\n");
 					for(OFScore ar : resList){
-						writer.write(ar.getVector().toString() + ";" + ar.getLRD() + ";" + ar.getOF()+ "\n");
+						writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getLRD() + ";" + ar.getOF()+ "\n");
 					}
 					writer.close();
 				}
@@ -480,5 +491,10 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			if(ratio >= 1 && ratio <= size()){
 				return resList.get(ratio-1).getOF();
 			} else return 1.0;
+		}
+
+		@Override
+		public String getAlgorithmName() {
+			return "lof";
 		}
 }

@@ -3,22 +3,15 @@
  */
 package ippoz.madness.detector.graphics;
 
-import ippoz.madness.detector.algorithm.SPSDetector;
-
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.util.Map;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.util.ShapeUtilities;
 
 /**
  * The Class XYChartDrawer.
@@ -45,7 +38,7 @@ public class XYChartDrawer extends ChartDrawer {
 	 */
 	@Override
 	protected void setupChart(Map<String, Map<Double, Double>> data) {
-		XYPlot plot = chart.getXYPlot( );
+		/*XYPlot plot = chart.getXYPlot( );
 	     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 	     int i = 0;
 	     for(String seriesName : data.keySet()){
@@ -82,7 +75,7 @@ public class XYChartDrawer extends ChartDrawer {
 	    	 }
 	    	 i++;
 	     }
-	     plot.setRenderer(renderer);
+	     plot.setRenderer(renderer);*/
 		
 	}
 

@@ -3,6 +3,8 @@
  */
 package ippoz.madness.detector.algorithm.elki.support;
 
+import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -57,7 +59,7 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
  * @author Tommy
  *
  */
-public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm {
+public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	
 		  /**
 		   * The logger for this class.
@@ -520,6 +522,21 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				if(ratio >= 1 && ratio <= size()){
 					return resList.get(ratio-1).getOF();
 				} else return 1.0;
+			}
+
+			@Override
+			public List<Double> getScoresList() {
+				ArrayList<Double> list = new ArrayList<Double>(size());
+				for(OFScore of : resList){
+					list.add(of.getOF());
+				}
+				Collections.sort(list);
+				return list;
+			}
+
+			@Override
+			public String getAlgorithmName() {
+				return "cof";
 			}
 
 }

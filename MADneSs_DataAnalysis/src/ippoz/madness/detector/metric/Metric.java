@@ -8,6 +8,7 @@ import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
 import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.commons.support.TimedValue;
+import ippoz.madness.detector.commons.support.ValueSeries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public abstract class Metric implements Comparable<Metric> {
 		Knowledge knowledge = know.cloneKnowledge();
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
-			snapValue = alg.snapshotAnomalyRate(knowledge, i);
+			snapValue = DetectionAlgorithm.convertResultIntoDouble(alg.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
 			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), snapValue));
 			if(snapValue >= 0.0) {
 				average = average + anomalyEvaluations.get(i).getValue();
@@ -152,7 +153,9 @@ public abstract class Metric implements Comparable<Metric> {
 	public int compareTo(Metric o) {
 		return o.getMetricName().compareTo(getMetricName());
 	}
-	
-	
 
+	public int compareResults(ValueSeries m1, ValueSeries m2) {
+		return compareResults(m1.getAvg(), m2.getAvg());
+	}
+	
 }

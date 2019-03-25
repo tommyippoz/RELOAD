@@ -6,7 +6,9 @@ FN
 FPR
 Precision
 Recall
+FScore(0.5)
 FMeasure
 FScore(2.0)
 Accuracy
 MATTHEWS
+AUC

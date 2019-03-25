@@ -40,7 +40,7 @@ public class TrainingTiming {
 		resList = new LinkedList<TrainingResult>();
 		for(Thread tThread : list){
 			trainer = (AlgorithmTrainer)tThread;
-			resList.add(new TrainingResult(trainer.getAlgType(), trainer.getMetricScore()));
+			resList.add(new TrainingResult(trainer.getAlgType(), trainer.getMetricAvgScore()));
 		}
 		Collections.sort(resList);
 		computeStats(((AlgorithmTrainer)list.iterator().next()).getExpNumber());

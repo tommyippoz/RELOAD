@@ -10,7 +10,6 @@ import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
 import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
 import ippoz.madness.detector.commons.service.ServiceCall;
 import ippoz.madness.detector.commons.service.ServiceStat;
 import ippoz.madness.detector.commons.support.AppLogger;
@@ -175,10 +174,6 @@ public class MonitoredData {
 
 	public DataSeriesSnapshot generateDataSeriesSnapshot(DataSeries dataSeries, int index) {
 		return new DataSeriesSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
-	}
-
-	public Snapshot generateSnapshot(int index) {
-		return new Snapshot(obsList.get(index).getTimestamp(), callList, injMap.get(obsList.get(index).getTimestamp()));
 	}
 
 	public Observation get(int i) {

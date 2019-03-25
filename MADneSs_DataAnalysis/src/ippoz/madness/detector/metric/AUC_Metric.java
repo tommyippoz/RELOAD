@@ -3,7 +3,6 @@
  */
 package ippoz.madness.detector.metric;
 
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.commons.support.TimedValue;
 
@@ -14,33 +13,28 @@ import java.util.List;
  *
  */
 public class AUC_Metric extends BetterMaxMetric {
-	
-	private AlgorithmConfiguration conf; 
 
 	public AUC_Metric(boolean validAfter) {
-		super(null, validAfter);
+		super(MetricType.AUC, validAfter);
 		// TODO Auto-generated constructor stub
-	}
-	
-	public void setConf(AlgorithmConfiguration conf){
-		this.conf = conf;
 	}
 
 	@Override
 	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
-		// TODO Auto-generated method stub
-		return 0;
+		double tpr = new TruePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double auc = (tpr * fpr)/2 + (tpr+1)*(1-fpr)/2;
+		return auc;
 	}
 
 	@Override
 	public String getMetricName() {
-		return "AUC";
+		return "Area Under ROC Curve";
 	}
 
 	@Override
 	public String getMetricShortName() {
-		// TODO Auto-generated method stub
-		return null;
+		return "AUC";
 	}
 
 }

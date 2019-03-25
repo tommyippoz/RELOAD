@@ -4,18 +4,14 @@
 package ippoz.madness.detector.algorithm.elki;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans;
+import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
+import ippoz.madness.detector.algorithm.result.AlgorithmResult;
+import ippoz.madness.detector.algorithm.result.ClusteringResult;
 import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.commons.dataseries.DataSeries;
 import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
-
-import java.util.List;
-
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
-import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
-import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 import de.lmu.ifi.dbs.elki.math.random.RandomFactory;
@@ -25,29 +21,23 @@ import de.lmu.ifi.dbs.elki.math.random.RandomFactory;
  *
  */
 public class KMeansELKI extends DataSeriesELKIAlgorithm {
-	
-	public static final String KMEANS_CLUSTERS = "clusters";
 
 	public static final String K = "k";
 	
-	public static final String THRESHOLD = "threshold";
-	
 	public static final int DEFAULT_K = 3;
-	
-	private List<KMeansModel> clusters;
-	
-	private SquaredEuclideanDistanceFunction dist;
 	
 	public KMeansELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, false);
-		dist = SquaredEuclideanDistanceFunction.STATIC;
-		if(conf.hasItem(KMEANS_CLUSTERS))
-			clusters = CustomKMeans.loadClusters(conf.getItem(KMEANS_CLUSTERS));
 	}
 
 	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO
+	}
+
+	/*@Override
 	protected void automaticElkiTraining(Database db, boolean createOutput) {
-	    CustomKMeans<NumberVector> km = new CustomKMeans<>(dist, 
+	    CustomKMeans<NumberVector> km = new CustomKMeans<>(SquaredEuclideanDistanceFunction.STATIC, 
 	    		(conf != null && conf.hasItem(K)) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K, 
 	    		0, 
 	    		new RandomlyGeneratedInitialMeans(RandomFactory.DEFAULT), 
@@ -56,14 +46,31 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	    km.run(db);
 	    clusters = km.getClusters();
 	    conf.addItem(KMEANS_CLUSTERS, km.clustersToString());
-	}
+	}*/
 	
 	@Override
-	protected double evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		return evaluateThreshold(sysSnapshot) ? 1.0 : 0.0;
+	protected ELKIAlgorithm<NumberVector> generateELKIAlgorithm() {
+		return new CustomKMeans<>(SquaredEuclideanDistanceFunction.STATIC, 
+	    		(conf != null && conf.hasItem(K)) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K, 
+	    		0, 
+	    		new RandomlyGeneratedInitialMeans(RandomFactory.DEFAULT), 
+	    		null);
 	}
 	
-	private boolean evaluateThreshold(Snapshot sysSnapshot){
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+		AlgorithmResult ar;
+		Vector v = convertSnapToVector(sysSnapshot);
+		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
+			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
+			ar = new ClusteringResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
+			getDecisionFunction().classifyScore(ar);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	}
+	
+	/*private boolean evaluateThreshold(Snapshot sysSnapshot){
 		String prefValue;
 		double partial;
 		double minValue = Double.MAX_VALUE;
@@ -116,6 +123,6 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 				}
 			}
 		}
-	}
+	}*/
 
 }
