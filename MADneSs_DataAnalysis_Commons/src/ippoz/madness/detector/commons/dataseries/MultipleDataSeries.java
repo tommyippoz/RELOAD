@@ -30,6 +30,8 @@ public class MultipleDataSeries extends DataSeries {
 		for(DataSeries is : pList){
 			dsList.add(is);
 		}
+		if(dsList.size() == 0)
+			dsList = null;
 	}
 	
 	private static String aggregateSeriesName(List<? extends DataSeries> pList){
@@ -102,10 +104,12 @@ public class MultipleDataSeries extends DataSeries {
 	@Override
 	public String toCompactString() {
 		String string = "";
-		for(DataSeries ds : dsList){
-			string = string + ds.getName() + ds.getDataCategory().name().substring(0, 1) + ";";
-		}
-		return string.substring(0, string.length()-1);
+		if(dsList!= null && dsList.size() > 0){
+			for(DataSeries ds : dsList){
+				string = string + ds.getName() + ds.getDataCategory().name().substring(0, 1) + ";";
+			}
+			return string.substring(0, string.length()-1);
+		} else return "";
 	}
 	
 	

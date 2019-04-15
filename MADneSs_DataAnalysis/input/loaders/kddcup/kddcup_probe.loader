@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = KDDCup99/KDDCup99_Probe.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 7-10
+TRAIN_RUN_IDS = 7-12, 32-37, 205-253
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = KDDCup99/KDDCup99_Probe.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 11-14
+VALIDATION_RUN_IDS = 7-12, 32-37, 205-253
 
 
 * Parsing Dataset

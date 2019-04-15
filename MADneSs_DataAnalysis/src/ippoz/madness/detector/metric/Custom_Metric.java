@@ -18,7 +18,7 @@ import java.util.List;
 public class Custom_Metric extends BetterMaxMetric {
 
 	public Custom_Metric(boolean validAfter) {
-		super(null, validAfter);
+		super(MetricType.CUSTOM, validAfter);
 	}
 
 	/* (non-Javadoc)
@@ -26,10 +26,12 @@ public class Custom_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
-		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
 		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
-		if(p + r > 0)
-			return 1.25*p*r/(0.25*p+r);
+		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(knowledge, anomalyEvaluations);
+		fpr = 1 - fpr;
+		if(fpr + r > 0)
+			return acc*acc*5*fpr*r/(fpr+4*r);
 		else return 0.0;
 	}
 

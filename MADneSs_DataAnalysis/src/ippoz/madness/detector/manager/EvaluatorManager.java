@@ -307,12 +307,16 @@ public class EvaluatorManager extends DataManager {
 	
 	public Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> getDetailedEvaluations() {
 		Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmVoter, AlgorithmResult>>>();
-		for(int i=0;i<getThreadList().size();i++){
-			ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
-			outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmVoter, AlgorithmResult>>());
-			Map<Date,Map<AlgorithmVoter,AlgorithmResult>> map = detailedEvaluations.get(i);
-			for(Date mapEntry : map.keySet()){
-				outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
+		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
+			for(int i=0;i<getThreadList().size();i++){
+				ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
+				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmVoter, AlgorithmResult>>());
+				if(i < detailedEvaluations.size()){
+					Map<Date,Map<AlgorithmVoter,AlgorithmResult>> map = detailedEvaluations.get(i);
+					for(Date mapEntry : map.keySet()){
+						outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
+					}
+				}
 			}
 		}
 		return outMap;

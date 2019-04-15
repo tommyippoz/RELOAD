@@ -148,7 +148,8 @@ public class TrainerManager extends TrainDataManager {
 					}
 				}
 			}
-			finalDs.add(new MultipleDataSeries(allFeatures));
+			if(allFeatures.size() > 0)
+				finalDs.add(new MultipleDataSeries(allFeatures));
 		} else if (all != null && all.size() == 1){
 			finalDs = all;
 		}

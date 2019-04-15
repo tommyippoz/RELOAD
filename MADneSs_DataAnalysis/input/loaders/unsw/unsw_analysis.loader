@@ -11,19 +11,19 @@ CONSIDERED_LAYERS = NO_LAYER
 FILTERING_CSV_FILE = UNSW-NB15/UNSW-NB15_Analysis.csv
 
 * Golden Runs.
-GOLDEN_RUN_IDS = 1 - 5
+GOLDEN_RUN_IDS = 0-20
 
 * File Used for Training
 TRAIN_CSV_FILE = UNSW-NB15/UNSW-NB15_Analysis.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 5 - 10
+TRAIN_RUN_IDS = 486-530
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = UNSW-NB15/UNSW-NB15_Analysis.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 10 - 15
+VALIDATION_RUN_IDS = 531-573
 
 
 * Parsing Dataset

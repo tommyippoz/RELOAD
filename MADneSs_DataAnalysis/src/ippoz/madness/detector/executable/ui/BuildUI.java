@@ -853,9 +853,11 @@ public class BuildUI {
 	
 	private void showDetectorOutputs(List<DetectorOutput> outList) {
 		OutputFrame of = new OutputFrame(iManager, outList.size());
-		of.buildSummaryPanel(outList);
-		for(DetectorOutput dOut : outList){
-			of.addOutput(dOut);
+		if(outList.size() > 0){
+			of.buildSummaryPanel(outList);
+			for(DetectorOutput dOut : outList){
+				of.addOutput(dOut);
+			}
 		}
 		of.setVisible(true);
 	}

@@ -168,7 +168,7 @@ public class DetectionManager {
 	}
 	
 	public boolean needFiltering() {
-		return !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))) && iManager.getFilteringFlag();
+		return !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))) || iManager.getFilteringFlag();
 	}
 
 	/**
@@ -305,7 +305,7 @@ public class DetectionManager {
 	
 	private DetectorOutput singleEvaluation(Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput){
 		EvaluatorManager bestEManager = null;
-		double bestScore = 0;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
 		String[] voterTresholds = iManager.parseVoterTresholds();
 		Map<String, Integer> nVoters = new HashMap<String, Integer>();
@@ -371,7 +371,7 @@ public class DetectionManager {
 	
 	private double getBestScore(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
 		double score;
-		double bestScore = 0;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		for(String voterTreshold : evaluations.keySet()){
 			for(String anomalyTreshold : anomalyTresholds){
 				for(Metric met : metList){

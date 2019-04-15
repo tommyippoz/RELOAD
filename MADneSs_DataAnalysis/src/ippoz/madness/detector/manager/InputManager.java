@@ -328,6 +328,7 @@ public class InputManager {
 	}
 	
 	public MetricType getMetricType() {
+		MetricType a = getMetric(prefManager.getPreference(METRIC)).getMetricType();
 		return getMetric(prefManager.getPreference(METRIC)).getMetricType();
 	}
 	

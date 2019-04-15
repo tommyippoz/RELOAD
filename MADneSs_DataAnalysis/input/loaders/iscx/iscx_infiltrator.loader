@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 1 - 5
 TRAIN_CSV_FILE = ISCX2012/ISCX2012_Infiltration.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 333 - 337
+TRAIN_RUN_IDS = 2657-2659, 2346-2370
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = ISCX2012/ISCX2012_Infiltration.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 333 - 337
+VALIDATION_RUN_IDS = 2261-2276
 
 
 * Parsing Dataset

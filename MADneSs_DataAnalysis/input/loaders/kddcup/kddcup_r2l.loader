@@ -11,19 +11,19 @@ CONSIDERED_LAYERS = NO_LAYER
 FILTERING_CSV_FILE = KDDCup99/KDDCup99_R2L.csv
 
 * Golden Runs.
-GOLDEN_RUN_IDS = 0-5
+GOLDEN_RUN_IDS = 0-20
 
 * File Used for Training
 TRAIN_CSV_FILE = KDDCup99/KDDCup99_R2L.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-2
+TRAIN_RUN_IDS = 71-140
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = KDDCup99/KDDCup99_R2L.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 0-2
+VALIDATION_RUN_IDS = 141-200
 
 
 * Parsing Dataset
@@ -38,4 +38,4 @@ LABEL_COLUMN = 41
 EXPERIMENT_ROWS = 100
 
 * Tags Identifying an Attack in This Dataset
-FAULTY_TAGS = ftp_write, imap, guess_passwd, multihop, phf, spy, warezclient, warezmaster
+FAULTY_TAGS = "yes", yes

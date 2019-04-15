@@ -83,8 +83,10 @@ public class OutputFrame {
 	}
 
 	public void addOutput(DetectorOutput dOut) {
-		JPanel outPanel = buildOutputPanel(dOut);
-		tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+		if(dOut != null) {
+			JPanel outPanel = buildOutputPanel(dOut);
+			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+		}
 	}
 
 	public void setVisible(boolean b) {
@@ -123,14 +125,25 @@ public class OutputFrame {
 		fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(tb);
 		fPanel.setLayout(null);
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, dOutList.get(0).getReferenceMetric().getMetricName()));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (dOutList != null && dOutList.size() > 0) ? dOutList.get(0).getReferenceMetric().getMetricName() : "-"));			
 		summaryPanel.add(fPanel);
 		
-		summaryPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight()));
-		int i = 1;
+		JPanel contentPanel = new JPanel();
+		contentPanel.setBackground(Color.WHITE);
+		contentPanel.setBounds(0, 0, summaryPanel.getWidth(), dOutList.size()*labelSpacing);
+		contentPanel.setLayout(null);
+		
+		summaryPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing));
+		int i = 0;
 		for(DetectorOutput dOut : dOutList){
-			summaryPanel.add(buildOutputSummaryPanel(dOut, summaryPanel, i++, fPanel.getHeight()));
+			contentPanel.add(buildOutputSummaryPanel(dOut, contentPanel, i++, 0));
 		}
+		
+		JScrollPane scroll = new JScrollPane(contentPanel);
+        scroll.setBounds(0, fPanel.getHeight() + 2*labelSpacing, contentPanel.getWidth(), summaryPanel.getHeight() - fPanel.getHeight() - 3*labelSpacing);
+		
+		summaryPanel.add(scroll);
+		
 		tabbedPane.add("Summary", summaryPanel);
 	}
 	
@@ -138,14 +151,14 @@ public class OutputFrame {
 		int elements = 7;
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setBounds((int) (root.getWidth()*0.02), tabY + labelSpacing*(i+1), (int) (root.getWidth()*0.96), labelSpacing);
+		panel.setBounds((int) (root.getWidth()*0.02), tabY + labelSpacing*(i), (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(0, 0, root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(0, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -153,7 +166,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(root.getWidth()/elements, 0, 2*root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()/elements, 0, 2*panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -161,7 +174,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(root.getWidth()*3/elements, 0, root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*3/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -169,7 +182,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(root.getWidth()*4/elements, 0, root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -177,7 +190,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(root.getWidth()*5/elements, 0, root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -185,7 +198,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(root.getWidth()*6/elements, 0, root.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*6/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		

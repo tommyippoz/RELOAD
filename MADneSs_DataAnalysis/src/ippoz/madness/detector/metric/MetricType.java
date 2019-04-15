@@ -9,6 +9,6 @@ package ippoz.madness.detector.metric;
  */
 public enum MetricType {
 	
-	TN, TP, FN, FP, FPR, FNR, TPR, PRECISION, RECALL, ACCURACY, FMEASURE, FSCORE, MATTHEWS, AUC
+	TN, TP, FN, FP, FPR, FNR, TPR, PRECISION, RECALL, ACCURACY, FMEASURE, FSCORE, MATTHEWS, AUC, CUSTOM
 
 }

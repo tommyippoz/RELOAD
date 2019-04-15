@@ -9,10 +9,10 @@ FILTERING_FLAG = 1
 TRAIN_FLAG = 1
 
 * K Counter for K-Fold Training/Validation
-KFOLD_COUNTER = 1
+KFOLD_COUNTER = 5
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
-METRIC = MATTHEWS
+METRIC = CUSTOM
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = absolute
@@ -30,7 +30,7 @@ VALID_AFTER_INJECTION = true
 REPUTATION = 1.0
 
 * Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted
-INDICATOR_SELECTION = PEARSON(0.8)
+INDICATOR_SELECTION = PEARSON(0.9)
 
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
@@ -47,10 +47,10 @@ PEARSON_TOLERANCE = 0.9
 PEARSON_NUPLES_TOLERANCE = 0.95
 
 * Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
-SLIDING_WINDOW_POLICY = FIFO
+SLIDING_WINDOW_POLICY = FIFO, FIFO_Normal
 
 * Size of the sliding window buffer
-SLIDING_WINDOW_SIZE = 100, 200
+SLIDING_WINDOW_SIZE = 100
 
 
 * Path Setup.

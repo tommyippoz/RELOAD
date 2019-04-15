@@ -219,19 +219,21 @@ public class DetectorMain {
 		File drFile = new File(DEFAULT_REPORT_FILE);
 		BufferedWriter writer;
 		try {
-			if(!drFile.exists()){
-				writer = new BufferedWriter(new FileWriter(drFile, false));
-				writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
-				writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
-				for(Metric met : dOut.getEvaluationMetrics()){
-					writer.write("," + met.getMetricName());
+			if(dOut != null){
+				if(!drFile.exists()){
+					writer = new BufferedWriter(new FileWriter(drFile, false));
+					writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
+					writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+					for(Metric met : dOut.getEvaluationMetrics()){
+						writer.write("," + met.getMetricName());
+					}
+					writer.write("\n");
+				} else {
+					writer = new BufferedWriter(new FileWriter(drFile, true));
 				}
-				writer.write("\n");
-			} else {
-				writer = new BufferedWriter(new FileWriter(drFile, true));
+				writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
+				writer.close();
 			}
-			writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
-			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");
 		}

@@ -5,19 +5,19 @@
 
 * KDD CUP
 
-*kddcup/kddcup_dos.loader
+* kddcup/kddcup_dos.loader
 
-*kddcup/kddcup_probe.loader
+* kddcup/kddcup_probe.loader
 
-*kddcup/kddcup_r2l.loader
+* kddcup/kddcup_r2l.loader
 
-*kddcup/kddcup_u2r.loader
+* kddcup/kddcup_u2r.loader
 
 * NSL-KDD
 
-nslkdd/nslkdd_probe.loader
+* nslkdd/nslkdd_probe.loader
 
-nslkdd/nslkdd_dos.loader
+* nslkdd/nslkdd_dos.loader
 
 * nslkdd/nslkdd_r2l.loader
 
@@ -35,26 +35,29 @@ nslkdd/nslkdd_dos.loader
 
 * UNSW-NB15
 
-*unsw/unsw_analysis.loader
+* unsw/unsw_analysis.loader
 
-*unsw/unsw_backdoor.loader
+* unsw/unsw_backdoor.loader
 
-*unsw/unsw_fuzzers.loader
+* unsw/unsw_fuzzers.loader
 
-*unsw/unsw_DoS.loader
+* unsw/unsw_DoS.loader
 
-*unsw/unsw_exploits.loader
+* unsw/unsw_exploits.loader
 
-*unsw/unsw_generic.loader
+* unsw/unsw_generic.loader
 
-*unsw/unsw_reconnaissance.loader
+* unsw/unsw_reconnaissance.loader
 
-*unsw/unsw_worms.loader
+* unsw/unsw_worms.loader
 
-*unsw/unsw_shellcode.loader
+* unsw/unsw_shellcode.loader
 
 
-* sint\iscx_synthetic_contextual.loader
+sint\iscx_synthetic_contextual.loader
 
-* sint\iscx_synthetic_point.loader
-* sint\iscx_synthetic_collective.loader
+sint\iscx_synthetic_point.loader
+sint\iscx_synthetic_collective.loader
+* kddcup\kddcup_r2l_500.loader
+* iscx\iscx_infiltrator_500.loader
+* nslkdd\nslkdd_probe_500.loader

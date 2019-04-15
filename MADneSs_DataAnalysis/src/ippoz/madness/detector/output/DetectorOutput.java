@@ -86,7 +86,8 @@ public class DetectorOutput {
 		Map<AlgorithmVoter, AlgorithmResult> map;
 		Date timedRef;
 		try {
-			if(detailedKnowledgeScores != null && detailedKnowledgeScores.size() > 0){
+			if(detailedKnowledgeScores != null && detailedKnowledgeScores.size() > 0 &&
+					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
 				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
 				header2 = ",,,,,";
@@ -105,11 +106,13 @@ public class DetectorOutput {
 								(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
 								(detailedKnowledgeScores.get(expName).get(i).getValue() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
 								detailedKnowledgeScores.get(expName).get(i).getValue() + ",");
-						map = detailedExperimentsScores.get(expName).get(i);
-						for(AlgorithmVoter av : map.keySet()){
-							writer.write(map.get(av).getScore() + "," + 
-									(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
-									map.get(av).getScoreEvaluation() + ",");
+						if(i < detailedExperimentsScores.get(expName).size()){
+							map = detailedExperimentsScores.get(expName).get(i);
+							for(AlgorithmVoter av : map.keySet()){
+								writer.write(map.get(av).getScore() + "," + 
+										(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
+										map.get(av).getScoreEvaluation() + ",");
+							}
 						}
 						writer.write("\n");
 					}

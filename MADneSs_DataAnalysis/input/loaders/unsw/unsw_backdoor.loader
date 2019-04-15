@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 1 - 5
 TRAIN_CSV_FILE = UNSW-NB15/UNSW-NB15_Backdoor.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 5 - 10
+TRAIN_RUN_IDS = 483-530
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = UNSW-NB15/UNSW-NB15_Backdoor.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 10 - 15
+VALIDATION_RUN_IDS = 531-572
 
 
 * Parsing Dataset

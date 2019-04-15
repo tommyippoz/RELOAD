@@ -139,7 +139,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		String snapValue = "{";
 		if(getDataSeries().size() == 1){
 			snapValue = snapValue + ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-		} else {
+		} else if(getDataSeries().size() > 1){
 			for(int j=0;j<getDataSeries().size();j++){
 				snapValue = snapValue + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ", ";
 			}

@@ -1,9 +1,0 @@
-FILTERING_CSV_FILE = datasets/UNSW-NB15/UNSW-NB15_Analysis.csv
-TRAIN_CSV_FILE = datasets/UNSW-NB15/UNSW-NB15_Analysis.csv
-VALIDATION_CSV_FILE = datasets/UNSW-NB15/UNSW-NB15_Analysis.csv
-
-SKIP_COLUMNS = 0, 2, 3, 4, 43, 44
-LABEL_COLUMN = 43
-EXPERIMENT_ROWS = 100
-
-FAULTY_TAGS = Analysis, "Analysis"

@@ -160,11 +160,14 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	
 	public static List<DataSeries> unionCombinations(Indicator[] indicators) {
 		LinkedList<DataSeries> unionInd = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		LinkedList<DataSeries> simpleIndPlain = new LinkedList<DataSeries>();
+		LinkedList<DataSeries> simpleIndDiff = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
-				simpleInd.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
+			simpleIndPlain.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
+			simpleIndDiff.add(new IndicatorDataSeries(ind, DataCategory.DIFFERENCE));
 		}
-		unionInd.add(new MultipleDataSeries(simpleInd));
+		unionInd.add(new MultipleDataSeries(simpleIndPlain));
+		unionInd.add(new MultipleDataSeries(simpleIndDiff));
 		return unionInd;
 	}
 	
