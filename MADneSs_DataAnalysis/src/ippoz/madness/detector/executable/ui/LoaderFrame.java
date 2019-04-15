@@ -3,11 +3,11 @@
  */
 package ippoz.madness.detector.executable.ui;
 
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
 import ippoz.madness.detector.manager.InputManager;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.awt.Color;
 import java.awt.Dimension;

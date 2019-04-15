@@ -4,7 +4,7 @@
 package ippoz.madness.detector.decisionfunction;
 
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
-import ippoz.madness.detector.commons.support.ValueSeries;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * @author Tommy

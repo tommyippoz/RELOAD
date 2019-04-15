@@ -4,11 +4,11 @@
 package ippoz.madness.detector.output;
 
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
-import ippoz.madness.detector.commons.failure.InjectedElement;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.TimedValue;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.voter.AlgorithmVoter;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.TimedValue;
 
 import java.io.BufferedWriter;
 import java.io.File;

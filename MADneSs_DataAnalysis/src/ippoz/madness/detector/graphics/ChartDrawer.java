@@ -3,7 +3,7 @@
  */
 package ippoz.madness.detector.graphics;
 
-import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.File;
 import java.io.IOException;

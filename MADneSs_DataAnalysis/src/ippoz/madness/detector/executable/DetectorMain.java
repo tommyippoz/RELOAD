@@ -3,16 +3,16 @@
  */
 package ippoz.madness.detector.executable;
 
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.manager.DetectionManager;
 import ippoz.madness.detector.manager.InputManager;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.output.DetectorOutput;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,9 +33,9 @@ import java.util.List;
  */
 public class DetectorMain { 
 	
-	private static final String DEFAULT_REPORT_FILE = "madnessreport.csv";
+	private static final String DEFAULT_REPORT_FILE = "reloadreport.csv";
 	
-	public static final String DEFAULT_PREF_FILE = "madness.preferences";
+	public static final String DEFAULT_PREF_FILE = "reload.preferences";
 	
 	/**
 	 * The main method.

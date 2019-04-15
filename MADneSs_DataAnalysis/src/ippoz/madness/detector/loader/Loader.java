@@ -3,7 +3,7 @@
  */
 package ippoz.madness.detector.loader;
 
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.data.MonitoredData;
 
 import java.util.List;
 

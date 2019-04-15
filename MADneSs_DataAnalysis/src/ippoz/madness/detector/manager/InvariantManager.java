@@ -3,18 +3,18 @@
  */
 package ippoz.madness.detector.manager;
 
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.dataseries.IndicatorDataSeries;
-import ippoz.madness.detector.commons.invariants.DataSeriesMember;
-import ippoz.madness.detector.commons.invariants.Invariant;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.performance.TrainingTiming;
 import ippoz.madness.detector.reputation.Reputation;
 import ippoz.madness.detector.trainer.AlgorithmTrainer;
 import ippoz.madness.detector.trainer.FixedConfigurationTrainer;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.IndicatorDataSeries;
+import ippoz.reload.commons.invariants.DataSeriesMember;
+import ippoz.reload.commons.invariants.Invariant;
+import ippoz.reload.commons.knowledge.Knowledge;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

@@ -3,9 +3,9 @@
  */
 package ippoz.madness.detector.reputation;
 
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.support.TimedValue;
 import ippoz.madness.detector.metric.TP_Metric;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.TimedValue;
 
 import java.util.List;
 

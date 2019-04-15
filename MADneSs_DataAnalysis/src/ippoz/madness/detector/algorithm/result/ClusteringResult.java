@@ -4,7 +4,7 @@
 package ippoz.madness.detector.algorithm.result;
 
 import ippoz.madness.detector.algorithm.elki.support.CustomKMeans.KMeansScore;
-import ippoz.madness.detector.commons.failure.InjectedElement;
+import ippoz.reload.commons.failure.InjectedElement;
 
 import java.util.List;
 

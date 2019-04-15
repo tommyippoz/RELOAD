@@ -3,7 +3,7 @@
  */
 package ippoz.madness.detector.algorithm;
 
-import ippoz.madness.detector.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.Knowledge;
 
 import java.util.List;
 

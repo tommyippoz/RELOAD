@@ -18,18 +18,18 @@ import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.madness.detector.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.madness.detector.algorithm.weka.IsolationForestWEKA;
-import ippoz.madness.detector.commons.algorithm.AlgorithmFamily;
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.ComplexDataSeries;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.service.StatPair;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.ValueSeries;
 import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.reload.commons.algorithm.AlgorithmFamily;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.ComplexDataSeries;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.service.StatPair;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.ValueSeries;
 
 import java.util.List;
 

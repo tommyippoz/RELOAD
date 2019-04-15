@@ -5,16 +5,16 @@ package ippoz.madness.detector.algorithm.sliding;
 
 import ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm;
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.dataseries.MultipleDataSeries;
-import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
-import ippoz.madness.detector.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.madness.detector.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
-import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.util.Date;
 import java.util.LinkedList;

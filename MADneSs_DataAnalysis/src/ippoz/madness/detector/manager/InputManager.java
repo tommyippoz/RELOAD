@@ -5,13 +5,6 @@ package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
 import ippoz.madness.detector.loader.MySQLLoader;
@@ -34,6 +27,13 @@ import ippoz.madness.detector.reputation.BetaReputation;
 import ippoz.madness.detector.reputation.ConstantReputation;
 import ippoz.madness.detector.reputation.MetricReputation;
 import ippoz.madness.detector.reputation.Reputation;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

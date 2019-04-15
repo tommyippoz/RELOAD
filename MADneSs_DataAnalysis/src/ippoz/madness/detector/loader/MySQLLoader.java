@@ -4,13 +4,13 @@
 package ippoz.madness.detector.loader;
 
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.madness.detector.commons.datafetcher.DataFetcher;
-import ippoz.madness.detector.commons.datafetcher.DatabaseFetcher;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.PreferencesManager;
-import ippoz.madness.detector.commons.support.ThreadScheduler;
 import ippoz.madness.detector.manager.TimingsManager;
+import ippoz.reload.commons.datafetcher.DataFetcher;
+import ippoz.reload.commons.datafetcher.DatabaseFetcher;
+import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.PreferencesManager;
+import ippoz.reload.commons.support.ThreadScheduler;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

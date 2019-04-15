@@ -4,11 +4,11 @@
 package ippoz.madness.detector.executable.ui;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
 import ippoz.madness.detector.decisionfunction.DecisionFunctionType;
 import ippoz.madness.detector.manager.InputManager;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 
 import java.awt.Color;
 import java.awt.Component;

@@ -4,11 +4,11 @@
 package ippoz.madness.detector.metric;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.SlidingKnowledge;
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.TimedValue;
-import ippoz.madness.detector.commons.support.ValueSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.ValueSeries;
 
 import java.util.ArrayList;
 import java.util.List;

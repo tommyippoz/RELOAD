@@ -4,13 +4,6 @@
 package ippoz.madness.detector.executable.ui;
 
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
-import ippoz.madness.detector.commons.algorithm.AlgorithmFamily;
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.madness.detector.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.executable.DetectorMain;
 import ippoz.madness.detector.loader.CSVPreLoader;
 import ippoz.madness.detector.loader.Loader;
@@ -19,6 +12,13 @@ import ippoz.madness.detector.manager.DetectionManager;
 import ippoz.madness.detector.manager.InputManager;
 import ippoz.madness.detector.metric.MetricType;
 import ippoz.madness.detector.output.DetectorOutput;
+import ippoz.reload.commons.algorithm.AlgorithmFamily;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.awt.Color;
 import java.awt.Desktop;

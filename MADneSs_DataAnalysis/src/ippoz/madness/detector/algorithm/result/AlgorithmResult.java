@@ -3,9 +3,9 @@
  */
 package ippoz.madness.detector.algorithm.result;
 
-import ippoz.madness.detector.commons.failure.InjectedElement;
 import ippoz.madness.detector.decisionfunction.AnomalyResult;
 import ippoz.madness.detector.decisionfunction.DecisionFunction;
+import ippoz.reload.commons.failure.InjectedElement;
 
 import java.util.List;
 

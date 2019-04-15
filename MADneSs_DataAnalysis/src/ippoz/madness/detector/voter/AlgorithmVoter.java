@@ -6,10 +6,10 @@ package ippoz.madness.detector.voter;
 import ippoz.madness.commons.layers.LayerType;
 import ippoz.madness.detector.algorithm.DetectionAlgorithm;
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
 
 /**
  * The Class AlgorithmVoter.

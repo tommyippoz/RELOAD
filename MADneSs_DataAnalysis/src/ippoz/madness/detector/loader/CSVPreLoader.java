@@ -4,12 +4,12 @@
 package ippoz.madness.detector.loader;
 
 import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.madness.detector.commons.failure.InjectedElement;
-import ippoz.madness.detector.commons.knowledge.data.IndicatorData;
-import ippoz.madness.detector.commons.knowledge.data.MonitoredData;
-import ippoz.madness.detector.commons.knowledge.data.Observation;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.PreferencesManager;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.data.IndicatorData;
+import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.io.BufferedReader;
 import java.io.File;

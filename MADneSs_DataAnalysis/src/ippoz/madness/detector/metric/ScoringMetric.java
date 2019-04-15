@@ -3,8 +3,8 @@
  */
 package ippoz.madness.detector.metric;
 
-import ippoz.madness.detector.commons.failure.InjectedElement;
-import ippoz.madness.detector.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 /**
  * @author Tommy

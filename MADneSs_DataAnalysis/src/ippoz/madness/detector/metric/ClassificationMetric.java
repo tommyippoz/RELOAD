@@ -3,9 +3,9 @@
  */
 package ippoz.madness.detector.metric;
 
-import ippoz.madness.detector.commons.failure.InjectedElement;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.support.TimedValue;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.TimedValue;
 
 import java.util.Date;
 import java.util.LinkedList;

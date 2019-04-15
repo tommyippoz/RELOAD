@@ -4,9 +4,9 @@
 package ippoz.madness.detector.manager;
 
 import ippoz.madness.commons.indicator.Indicator;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.knowledge.KnowledgeType;
-import ippoz.madness.detector.commons.support.ThreadScheduler;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.support.ThreadScheduler;
 import ippoz.utils.logging.AppLogger;
 
 import java.util.List;

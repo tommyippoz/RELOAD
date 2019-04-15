@@ -1,9 +1,9 @@
 package ippoz.madness.detector.executable;
 
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.PreferencesManager;
 import ippoz.madness.detector.executable.ui.BuildUI;
 import ippoz.madness.detector.manager.InputManager;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.awt.EventQueue;
 import java.io.File;
@@ -14,7 +14,7 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 public class DetectorUI {
 	
-	private static final String DEFAULT_PREF_FILE = "madness.preferences";
+	private static final String DEFAULT_PREF_FILE = "reload.preferences";
 
 	private JFrame frame;
 

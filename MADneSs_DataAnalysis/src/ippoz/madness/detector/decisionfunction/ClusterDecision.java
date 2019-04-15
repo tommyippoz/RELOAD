@@ -5,8 +5,8 @@ package ippoz.madness.detector.decisionfunction;
 
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
 import ippoz.madness.detector.algorithm.result.ClusteringResult;
-import ippoz.madness.detector.commons.support.AppLogger;
-import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * @author Tommy

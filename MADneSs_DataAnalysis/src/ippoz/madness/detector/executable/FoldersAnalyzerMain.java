@@ -3,7 +3,7 @@
  */
 package ippoz.madness.detector.executable;
 
-import ippoz.madness.detector.commons.support.AppUtility;
+import ippoz.reload.commons.support.AppUtility;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -10,7 +10,7 @@
 	<classpathentry kind="lib" path="libs/elki-bundle-0.7.1.jar"/>
 	<classpathentry kind="lib" path="libs/weka/weka.jar" sourcepath="libs/weka/weka-src.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MADneSs_Commons"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/MADneSs_DataAnalysis_Commons"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Ippoz_Utils"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RELOAD_Commons"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

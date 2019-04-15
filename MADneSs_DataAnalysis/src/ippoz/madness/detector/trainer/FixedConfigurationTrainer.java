@@ -3,13 +3,13 @@
  */
 package ippoz.madness.detector.trainer;
 
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.configuration.AlgorithmConfiguration;
-import ippoz.madness.detector.commons.dataseries.DataSeries;
-import ippoz.madness.detector.commons.knowledge.Knowledge;
-import ippoz.madness.detector.commons.support.AppLogger;
 import ippoz.madness.detector.metric.Metric;
 import ippoz.madness.detector.reputation.Reputation;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.util.List;
 

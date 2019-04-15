@@ -3,9 +3,9 @@
  */
 package ippoz.madness.detector.performance;
 
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.support.AppUtility;
 import ippoz.madness.detector.trainer.AlgorithmTrainer;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.support.AppUtility;
 
 import java.util.Collections;
 import java.util.HashMap;

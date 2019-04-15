@@ -4,8 +4,8 @@
 package ippoz.madness.detector.decisionfunction;
 
 import ippoz.madness.detector.algorithm.result.AlgorithmResult;
-import ippoz.madness.detector.commons.support.AppUtility;
-import ippoz.madness.detector.commons.support.ValueSeries;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 import ippoz.utils.logging.AppLogger;
 
 /**

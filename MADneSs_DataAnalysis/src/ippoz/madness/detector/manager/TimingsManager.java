@@ -3,8 +3,8 @@
  */
 package ippoz.madness.detector.manager;
 
-import ippoz.madness.detector.commons.algorithm.AlgorithmType;
-import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedWriter;
 import java.io.File;

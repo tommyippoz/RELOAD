@@ -4,7 +4,7 @@
 package ippoz.madness.detector.algorithm.elki.support;
 
 import ippoz.madness.detector.algorithm.elki.ELKIAlgorithm;
-import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

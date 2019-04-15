@@ -3,7 +3,7 @@
  */
 package ippoz.madness.detector.metric;
 
-import ippoz.madness.detector.commons.failure.InjectedElement;
+import ippoz.reload.commons.failure.InjectedElement;
 
 import java.util.Date;
 import java.util.List;

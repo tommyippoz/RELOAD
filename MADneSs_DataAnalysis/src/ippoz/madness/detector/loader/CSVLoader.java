@@ -5,7 +5,7 @@ package ippoz.madness.detector.loader;
 
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.madness.detector.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
 import java.io.File;
