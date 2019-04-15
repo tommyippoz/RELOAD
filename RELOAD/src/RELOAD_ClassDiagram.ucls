@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.2.3" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
+  <class id="1" language="java" name="ippoz.madness.detector.manager.DetectionManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/DetectionManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="656" width="698" x="-51" y="-148"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="ippoz.madness.detector.manager.FilterManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/FilterManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="256" width="1320" x="1556" y="2564"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="ippoz.madness.detector.manager.TrainDataManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/TrainDataManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="536" width="1508" x="800" y="548"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="ippoz.madness.detector.manager.InvariantManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/InvariantManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="316" width="879" x="43" y="2920"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="ippoz.madness.detector.manager.TimingsManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/TimingsManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="556" width="344" x="938" y="-148"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="ippoz.madness.detector.manager.DataManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/DataManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="236" width="417" x="1574" y="-148"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="7" language="java" name="ippoz.madness.detector.manager.PearsonCombinationManager.PearsonResult" 
+    project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/PearsonCombinationManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="276" width="363" x="3227" y="548"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="8" language="java" name="ippoz.madness.detector.manager.PearsonCombinationManager" 
+    project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/PearsonCombinationManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="376" width="927" x="3227" y="-148"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="9" language="java" name="ippoz.madness.detector.manager.TrainerManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/TrainerManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="316" width="1473" x="43" y="2564"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="10" language="java" name="ippoz.madness.detector.manager.EvaluatorManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/EvaluatorManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="616" width="839" x="2348" y="548"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="11" language="java" name="ippoz.madness.detector.manager.InputManager" project="MADneSs_DataAnalysis" 
+    file="/MADneSs_DataAnalysis/src/ippoz/madness/detector/manager/InputManager.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="1976" width="811" x="-51" y="548"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <nesting id="12">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="7"/>  
+  </nesting>  
+  <generalization id="13">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <generalization id="14">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <association id="15">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="16" name="iManager"/>      
+      <multiplicity id="17" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="11" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="18">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="19" name="iManager"/>      
+      <multiplicity id="20" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="4" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="21">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <association id="22">    
+    <end type="SOURCE" refId="8" navigable="false">      
+      <attribute id="23" name="pResults"/>      
+      <multiplicity id="24" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="25">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <classifier-display autosize="true" stereotype="false" package="false" initial-value="false" signature="true" 
+    sort-features="false" accessors="true" visibility="false">    
+    <attributes public="false" package="false" protected="false" private="false" static="false"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
