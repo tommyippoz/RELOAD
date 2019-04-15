@@ -22,7 +22,7 @@ public class DetectorUI {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		final InputManager iManager;
+		final InputManager iManager;   
 		try {
 			try {
 			    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
