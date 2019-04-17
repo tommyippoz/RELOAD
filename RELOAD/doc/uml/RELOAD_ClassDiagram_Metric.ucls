@@ -3,7 +3,7 @@
   associations="true" dependencies="true" nesting-relationships="true" router="FAN">  
   <class id="1" language="java" name="ippoz.reload.metric.Metric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/Metric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="288" y="42"/>    
+    <position height="-1" width="-1" x="277" y="39"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
@@ -12,7 +12,7 @@
   </class>  
   <class id="2" language="java" name="ippoz.reload.metric.BetterMaxMetric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/BetterMaxMetric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="327" y="102"/>    
+    <position height="-1" width="-1" x="323" y="112"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
@@ -21,7 +21,7 @@
   </class>  
   <class id="3" language="java" name="ippoz.reload.metric.AUC_Metric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/AUC_Metric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="321" y="163"/>    
+    <position height="-1" width="-1" x="321" y="171"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
@@ -30,7 +30,7 @@
   </class>  
   <class id="4" language="java" name="ippoz.reload.metric.Recall_Metric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/Recall_Metric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="137" y="150"/>    
+    <position height="-1" width="-1" x="137" y="157"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
@@ -39,74 +39,70 @@
   </class>  
   <class id="5" language="java" name="ippoz.reload.metric.ScoringMetric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/ScoringMetric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="431" y="41"/>    
+    <position height="-1" width="-1" x="431" y="58"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="ippoz.reload.manager.DetectionManager" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/manager/DetectionManager.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="106" y="41"/>    
-    <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
-      sort-features="false" accessors="true" visibility="false">      
-      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
-      <operations public="false" package="false" protected="false" private="false" static="true"/>    
-    </display>  
-  </class>  
-  <class id="7" language="java" name="ippoz.reload.metric.BetterMinMetric" project="RELOAD" 
+  <class id="6" language="java" name="ippoz.reload.metric.BetterMinMetric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/BetterMinMetric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="540" y="103"/>    
+    <position height="-1" width="-1" x="541" y="112"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="8" language="java" name="ippoz.reload.metric.FalseNegativeRate_Metric" project="RELOAD" 
+  <class id="7" language="java" name="ippoz.reload.metric.FalseNegativeRate_Metric" project="RELOAD" 
     file="/RELOAD/src/ippoz/reload/metric/FalseNegativeRate_Metric.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="542" y="162"/>    
+    <position height="-1" width="-1" x="544" y="168"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
       <attributes public="false" package="false" protected="false" private="false" static="false"/>      
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
+  <enumeration id="8" language="java" name="ippoz.reload.metric.MetricType" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/metric/MetricType.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="145" y="77"/>    
+    <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
+      sort-features="false" accessors="true" visibility="false">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
+    </display>  
+  </enumeration>  
   <generalization id="9">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <generalization id="10">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="2"/>  
+  </generalization>  
+  <association id="11">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="12" name="mType"/>      
+      <multiplicity id="13" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="8" navigable="true"/>    
+    <display labels="false" multiplicity="true"/>  
+  </association>  
+  <generalization id="14">    
     <end type="SOURCE" refId="5"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
-  <generalization id="10">    
+  <generalization id="15">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="5"/>  
   </generalization>  
-  <generalization id="11">    
-    <end type="SOURCE" refId="7"/>    
+  <generalization id="16">    
+    <end type="SOURCE" refId="6"/>    
     <end type="TARGET" refId="5"/>  
   </generalization>  
-  <association id="12">    
-    <end type="SOURCE" refId="6" navigable="false">      
-      <attribute id="13" name="metric">        
-        <position height="0" width="0" x="-566" y="-219"/>      
-      </attribute>      
-      <multiplicity id="14" minimum="0" maximum="1">        
-        <position height="0" width="0" x="-566" y="-219"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="1" navigable="true"/>    
-    <display labels="false" multiplicity="true"/>  
-  </association>  
-  <generalization id="15">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="16">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="7"/>  
-  </generalization>  
   <generalization id="17">    
-    <end type="SOURCE" refId="3"/>    
+    <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <classifier-display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 

@@ -210,7 +210,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
-		else if((partialResult = hasResult(newInstance)) != Double.NaN)
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
 			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
@@ -265,7 +265,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 				}
 				
 			}
-			
+			if(!Double.isNaN(s.getNaiveVariance()))
+				s = s;
 			return s.getNaiveVariance();
 		}
 	}

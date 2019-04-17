@@ -39,6 +39,8 @@ public abstract class DecisionFunction {
 							return new IQRFunction(1.5, scores.getQ1(), scores.getQ3());
 						else if(thresholdTag.equals("LEFT_IQR"))
 							return new LeftIQRFunction(1.5, scores.getQ1(), scores.getQ3());
+						else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
+							return new LeftPositiveIQRFunction(1.5, scores.getQ1(), scores.getQ3());
 						else if(thresholdTag.equals("RIGHT_IQR"))
 							return new RightIQRFunction(1.5, scores.getQ1(), scores.getQ3());
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
@@ -46,6 +48,8 @@ public abstract class DecisionFunction {
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_IQR"))
 									return new LeftIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
+								else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
+									return new LeftPositiveIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
 								else if(thresholdTag.contains("RIGHT_IQR"))
 									return new RightIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
 								else return new IQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
@@ -58,6 +62,8 @@ public abstract class DecisionFunction {
 							return new ConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
 						else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
 							return new LeftConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
+						else if(thresholdTag.equals("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
+							return new LeftPositiveConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
 						else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
 							return new RightConfidenceIntervalFunction(1.0, scores.getAvg(), scores.getStd());
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
@@ -65,6 +71,8 @@ public abstract class DecisionFunction {
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_CONFIDENCE_INTERVAL"))
 									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
+								else if(thresholdTag.contains("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
+									return new LeftPositiveConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
 								else if(thresholdTag.contains("RIGHT_CONFIDENCE_INTERVAL"))
 									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
 								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), scores.getAvg(), scores.getStd());
