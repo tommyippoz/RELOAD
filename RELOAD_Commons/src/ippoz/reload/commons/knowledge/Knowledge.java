@@ -9,14 +9,19 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
+import ippoz.utils.logging.AppLogger;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +30,8 @@ import java.util.Map;
  *
  */
 public abstract class Knowledge implements Cloneable {
+	
+	private static int MAX_RANGE = 100;
 	
 	protected MonitoredData baseData;
 	
@@ -39,7 +46,7 @@ public abstract class Knowledge implements Cloneable {
 	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries){
 		List<Snapshot> outList = new ArrayList<Snapshot>(size());
 		for(int i=0;i<size();i++){
-			outList.add(buildSnapshotFor(algType, i, dataSeries));
+			outList.add(buildSnapshotFor(i, dataSeries));
 		}
 		return outList;
 	}
@@ -52,10 +59,10 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries, List<Integer> indexes){
+	public List<Snapshot> buildSnapshotsFor(DataSeries dataSeries, List<Integer> indexes){
 		List<Snapshot> outList = new ArrayList<Snapshot>(indexes.size());
 		for(Integer index : indexes){
-			outList.add(buildSnapshotFor(algType, index, dataSeries));
+			outList.add(buildSnapshotFor(index, dataSeries));
 		}
 		return outList;
 	}
@@ -74,6 +81,12 @@ public abstract class Knowledge implements Cloneable {
 	
 	public MultipleSnapshot generateMultipleSnapshot(int index,	MultipleDataSeries invDs) {
 		return baseData.generateMultipleSnapshot(invDs, index);
+	}
+	
+	public Snapshot buildSnapshotFor(int index, DataSeries dataSeries){
+		if(dataSeries.size() == 1)
+			return baseData.generateDataSeriesSnapshot(dataSeries, index);
+		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
 	}
 	
 	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries){
@@ -117,7 +130,7 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.getDataTag();
 	}
 	
-	public abstract List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries);
+	public abstract List<Snapshot> toArray(DataSeries dataSeries);
 	
 	public abstract KnowledgeType getKnowledgeType();
 
@@ -155,7 +168,109 @@ public abstract class Knowledge implements Cloneable {
 		}
 		return count;
 	}
-
+ 
 	public abstract Knowledge cloneKnowledge();
+	
+	public static double[][] convertKnowledgeIntoMatrix(List<Knowledge> kList, DataSeries ds, boolean includeFaulty, boolean needNormalization) {
+		return convertSnapshotListIntoMatrix(toSnapList(kList, ds), ds, includeFaulty, needNormalization);
+	}
+	
+	public static String[] extractLabels(List<Knowledge> kList, DataSeries ds, boolean includeFaulty) {
+		return extractLabels(includeFaulty, toSnapList(kList, ds));
+	}
+	
+	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
+		int insertIndex = 0;
+		String[] anomalyLabels;
+		if(includeFaulty)
+			anomalyLabels = new String[kSnapList.size()];
+		else anomalyLabels = new String[Knowledge.goldenPointsSize(kSnapList)]; 
+		if(anomalyLabels.length > 0) {
+			for(int i=0;i<kSnapList.size();i++){
+				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
+					anomalyLabels[insertIndex] = kSnapList.get(i).getInjectedElement() == null ? "no" : "yes";
+					insertIndex++;
+				}
+			}
+		}
+		return anomalyLabels;
+	}
+	
+	public static double[][] convertSnapshotListIntoMatrix(List<Snapshot> kSnapList, DataSeries ds, boolean includeFaulty, boolean needNormalization) {
+		int insertIndex = 0;
+		double[][] dataMatrix;
+		double[][] minmax = new double[ds.size()][2];
+		if(includeFaulty)
+			dataMatrix = new double[kSnapList.size()][ds.size()];
+		else dataMatrix = new double[Knowledge.goldenPointsSize(kSnapList)][ds.size()]; 
+		if(dataMatrix.length > 0) {
+			for(int i=0;i<kSnapList.size();i++){
+				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
+					if(ds.size() == 1){
+						dataMatrix[insertIndex][0] = ((DataSeriesSnapshot)kSnapList.get(i)).getSnapValue().getFirst();
+						if(insertIndex == 0){
+							minmax[0][0] = dataMatrix[insertIndex][0];
+							minmax[0][1] = dataMatrix[insertIndex][0];
+						} else {
+							if(dataMatrix[insertIndex][0] < minmax[0][0])
+								minmax[0][0] = dataMatrix[insertIndex][0];
+							if(dataMatrix[insertIndex][0] > minmax[0][1])
+								minmax[0][1] = dataMatrix[insertIndex][0];
+						}
+					} else {
+						for(int j=0;j<ds.size();j++){
+							if(((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue() == null){
+								AppLogger.logError(Knowledge.class, "UnrecognizableSnapshot", ((MultipleDataSeries)ds).getSeries(j).getName() + " - " + i + " - " + j);
+								dataMatrix[insertIndex][j] = 0.0;
+							} else dataMatrix[insertIndex][j] = ((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue().getFirst();
+							if(insertIndex == 0){
+								minmax[j][0] = dataMatrix[insertIndex][0];
+								minmax[j][1] = dataMatrix[insertIndex][0];
+							} else {
+								if(dataMatrix[insertIndex][0] < minmax[j][0])
+									minmax[j][0] = dataMatrix[insertIndex][0];
+								if(dataMatrix[insertIndex][0] > minmax[j][1])
+									minmax[j][1] = dataMatrix[insertIndex][0];
+							}
+						}
+					}
+					insertIndex++;
+				}
+			}
+			if(needNormalization){
+				for(int j=0;j<ds.size();j++){
+					if(minmax[j][1] - minmax[j][0] >= MAX_RANGE){
+						for(int i=0;i<dataMatrix.length;i++){
+							dataMatrix[i][j] = (dataMatrix[i][j] - minmax[j][0])/(minmax[j][1] - minmax[j][0]);
+						}
+					}
+				}
+			}
+		}
+		return dataMatrix;
+	}
+
+	public static List<Snapshot> toSnapList(List<Knowledge> kList, DataSeries ds) {
+		List<Snapshot> kSnapList = null;
+		for(Knowledge knowledge : kList){
+			if(kSnapList == null)
+				kSnapList = knowledge.toArray(ds);
+			else kSnapList.addAll(knowledge.toArray(ds));
+		}
+		return kSnapList;
+	}
+	
+	public static List<Knowledge> generateKnowledge(List<MonitoredData> expList, KnowledgeType kt, SlidingPolicyType sPolicy, int windowSize) {
+		List<Knowledge> map = new LinkedList<Knowledge>();
+		for(int i=0;i<expList.size();i++){
+			if(kt == KnowledgeType.GLOBAL)
+				map.add(new GlobalKnowledge(expList.get(i)));
+			if(kt == KnowledgeType.SLIDING)
+				map.add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
+			if(kt == KnowledgeType.SINGLE)
+				map.add(new SingleKnowledge(expList.get(i)));
+		}
+		return map;
+	}
 
 }

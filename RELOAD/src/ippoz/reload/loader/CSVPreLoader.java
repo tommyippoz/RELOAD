@@ -24,12 +24,14 @@ import java.util.List;
  *
  */
 public class CSVPreLoader extends CSVLoader {
-	
-	public static final String FILTERING_CSV_FILE = "FILTERING_CSV_FILE";
 
 	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
+	
+	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
 
 	public static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
+	
+	public static final String VALIDATION_FAULTY_TAGS = "VALIDATION_FAULTY_TAGS";
 
 	public static final String SKIP_COLUMNS = "SKIP_COLUMNS";
 
@@ -37,7 +39,7 @@ public class CSVPreLoader extends CSVLoader {
 
 	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 	
-	public static final String FAULTY_TAGS = "FAULTY_TAGS";
+	
 	
 	private List<MonitoredData> dataList;
 	
@@ -46,7 +48,21 @@ public class CSVPreLoader extends CSVLoader {
 	private int anomalyWindow;
 	
 	public CSVPreLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
-		this(list, new File(datasetsFolder + prefManager.getPreference(tag.equals("filtering") ? FILTERING_CSV_FILE : tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE)), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), prefManager.getPreference(FAULTY_TAGS), anomalyWindow);
+		this(list, extractFile(prefManager, datasetsFolder, tag), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), extractFaultyTags(prefManager, tag), anomalyWindow);
+	}
+		private static String extractFaultyTags(PreferencesManager prefManager, String tag) {
+		if(tag.equals("train") && prefManager.hasPreference(TRAIN_FAULTY_TAGS))
+			return prefManager.getPreference(TRAIN_FAULTY_TAGS);
+		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_FAULTY_TAGS))
+			return prefManager.getPreference(VALIDATION_FAULTY_TAGS);
+		else return prefManager.getPreference("FAULTY_TAGS");
+	}
+
+	
+	private static File extractFile(PreferencesManager prefManager, String datasetsFolder, String tag){
+		String filename = datasetsFolder;
+		filename = datasetsFolder + prefManager.getPreference(tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE);
+		return new File(filename);
 	}
 
 	public CSVPreLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, int anomalyWindow) {

@@ -3,7 +3,7 @@
 * MADneSs Execution.
 
 * Perform Filtering of Indicators (0 = NO, 1 = YES).
-FILTERING_FLAG = 1
+FEATURE_SELECTION_FLAG = 0
 
 * Perform Training (0 = NO, 1 = YES).
 TRAIN_FLAG = 1
@@ -30,21 +30,17 @@ VALID_AFTER_INJECTION = true
 REPUTATION = 1.0
 
 * Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted
-INDICATOR_SELECTION = UNION
+INDICATOR_SELECTION = PEARSON(0.9)
 
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
 
+* Optimization
+
+* Perform Optimization (0 = NO, 1 = YES).
+OPTIMIZATION_FLAG = 1
+
 * Filtering
-
-* Threshold for filtering i.e., minimum value of FPR accepted.
-FILTERING_TRESHOLD = 0.8
-
-* Threshold for Pearson Correlations
-PEARSON_TOLERANCE = 0.9
-
-* Threshold for n-uples of indicators correlated by Pearson
-PEARSON_NUPLES_TOLERANCE = 0.95
 
 * Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
 SLIDING_WINDOW_POLICY = FIFO, FIFO_Normal

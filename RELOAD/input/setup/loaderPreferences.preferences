@@ -41,7 +41,7 @@
 
 * unsw/unsw_fuzzers.loader
 
-* unsw/unsw_DoS.loader
+unsw/unsw_DoS.loader
 
 * unsw/unsw_exploits.loader
 
@@ -54,7 +54,7 @@
 * unsw/unsw_shellcode.loader
 
 
-sint\iscx_synthetic_contextual.loader
+* sint\iscx_synthetic_contextual.loader
 
 * sint\iscx_synthetic_point.loader
 * sint\iscx_synthetic_collective.loader

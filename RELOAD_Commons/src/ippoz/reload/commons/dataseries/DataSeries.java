@@ -26,7 +26,7 @@ import java.util.List;
  */
 public abstract class DataSeries implements Comparable<DataSeries> {
 	
-	private static final int COMPACT_STRING_SIZE_LIMIT = 50;
+	private static final int COMPACT_STRING_SIZE_LIMIT = 60;
 
 	private String seriesName;
 	private DataCategory dataCategory;
@@ -158,6 +158,16 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return simpleInd;
 	}
 	
+	public static List<DataSeries> basicCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
+		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		for(Indicator ind : indicators){
+			for(DataCategory dCat : dataTypes){
+				simpleInd.add(new IndicatorDataSeries(ind, dCat));
+			}
+		}
+		return simpleInd;
+	}
+	
 	public static List<DataSeries> unionCombinations(Indicator[] indicators) {
 		LinkedList<DataSeries> unionInd = new LinkedList<DataSeries>();
 		LinkedList<DataSeries> simpleIndPlain = new LinkedList<DataSeries>();
@@ -248,5 +258,16 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 	
 	protected abstract String toCompactString();
+
+	public static List<DataSeries> fromString(String[] sStrings, boolean show) {
+		DataSeries ds;
+		List<DataSeries> outList = new LinkedList<DataSeries>();
+		for(String ss : sStrings){
+			ds = DataSeries.fromString(ss, show);
+			if(ds != null)
+				outList.add(ds);
+		}
+		return outList;
+	}
 		
 }

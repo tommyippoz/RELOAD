@@ -62,9 +62,9 @@ public class DetectorMain {
 						}
 					}
 				}
-				AppLogger.logInfo(DetectorMain.class, dmList.size() + " MADneSs instances found.");
+				AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 				for(int i=0;i<dmList.size();i++){
-					AppLogger.logInfo(DetectorMain.class, "Running MADneSs [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
+					AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
 					runMADneSs(dmList.get(i));
 				}
 			} else {

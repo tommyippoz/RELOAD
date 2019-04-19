@@ -101,8 +101,8 @@ public class FilterManager extends TrainDataManager {
 					case PEA:
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType), kfold);
-						pcManager.calculatePearsonIndexes(0.9, 0.9);
+						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
+						pcManager.calculatePearsonIndexes(0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
 						break;

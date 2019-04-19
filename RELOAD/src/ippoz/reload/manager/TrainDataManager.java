@@ -159,8 +159,8 @@ public abstract class TrainDataManager extends DataManager {
 	private void pearsonCorrelation(List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
 		PearsonCombinationManager pcManager;
 		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge(), kfold);
-		pcManager.calculatePearsonIndexes(pearsonSimple, pearsonComplex);
+		pcManager = new PearsonCombinationManager(pearsonFile, list, getKnowledge());
+		pcManager.calculatePearsonIndexes(pearsonSimple);
 		pcManager.flush();
 	}
 	

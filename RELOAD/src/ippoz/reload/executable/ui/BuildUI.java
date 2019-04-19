@@ -69,11 +69,9 @@ public class BuildUI {
 	
 	private static final String SETUP_LABEL_OUTPUT = "Output Format";
 	
-	private static final String SETUP_IND_SELECTION = "Indicators Selection";
+	private static final String SETUP_IND_SELECTION = "Feature Aggregation";
 	
-	private static final String SETUP_LABEL_FILTERING = "Filtering";
-	
-	private static final String SETUP_LABEL_FILTERING_THRESHOLD = "FPR Threshold";
+	private static final String SETUP_LABEL_FILTERING = "Feature Selection";
 	
 	private static final String SETUP_LABEL_TRAINING = "Training";
 	
@@ -94,6 +92,8 @@ public class BuildUI {
 	private static final String PATH_LABEL_SCORES_FOLDER = "Scores Folder";
 	
 	private static final String PATH_LABEL_DETECTION_PREFERENCES = "Detection Preferences";
+
+	private static final String SETUP_LABEL_OPTIMIZATION = "Optimization";
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
@@ -179,8 +179,6 @@ public class BuildUI {
 				return InputManager.OUTPUT_FORMAT;
 			case SETUP_LABEL_FILTERING:
 				return InputManager.FILTERING_NEEDED_FLAG;
-			case SETUP_LABEL_FILTERING_THRESHOLD:
-				return InputManager.FILTERING_TRESHOLD;
 			case SETUP_LABEL_TRAINING:
 				return InputManager.TRAIN_NEEDED_FLAG;
 			case SETUP_LABEL_SLIDING_POLICY:
@@ -312,13 +310,18 @@ public class BuildUI {
 					}
 					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(dmList.size());
+					DetectorOutput newOut;
 					for(int i=0;i<dmList.size();i++){
 						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-						outList.add(DetectorMain.runMADneSs(dmList.get(i)));
+						newOut = DetectorMain.runMADneSs(dmList.get(i));
+						if(newOut != null)
+							outList.add(newOut);
 						pBar.moveNext();
 					}
 					pBar.deleteFrame();
-					showDetectorOutputs(outList);
+					if(outList.size() > 0)
+						showDetectorOutputs(outList);
+					else AppLogger.logInfo(getClass(), "No outputs will be shown.");
 				} catch(Exception ex) {
 					AppLogger.logException(getClass(), ex, "");
 				}
@@ -575,29 +578,30 @@ public class BuildUI {
 		pathPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Paths", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 7*bigLabelSpacing + 2*labelSpacing);
+		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 8*bigLabelSpacing + 2*labelSpacing);
 		pathPanel.setBorder(tb);
 		pathPanel.setLayout(null);
 		
-		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, bigLabelSpacing, iManager.getInputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getOutputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getConfigurationFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 6*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
+		addToPanel(pathPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, pathPanel, bigLabelSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
+		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getInputFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getOutputFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getConfigurationFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 6*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 7*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 7*bigLabelSpacing, (int)(setupPanel.getWidth()*0.96), bigLabelSpacing);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 8*bigLabelSpacing, (int)(setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
-		JButton button = new JButton("Open Scoring Preferences");
+		JButton button = new JButton("Open RELOAD Preferences");
 		button.setVisible(true);
 		button.setFont(labelFont);
 		button.setBounds(0, 0, pathPanel.getWidth()*2/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
-					Desktop.getDesktop().open(new File(iManager.getInputFolder() + iManager.getDetectionPreferencesFile()));
+					Desktop.getDesktop().open(new File(DetectorMain.DEFAULT_PREF_FILE));
 				} catch (IOException e1) {
 					AppLogger.logException(getClass(), e1, "");
 				}
@@ -618,43 +622,66 @@ public class BuildUI {
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
-		addToPanel(setupPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, setupPanel, optionSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
-		
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, 2*optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 3*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
-		addToPanel(setupPanel, SETUP_IND_SELECTION, createLCBPanel(SETUP_IND_SELECTION, setupPanel, 4*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION), setupMap);
-		
-		comp = createLTPanel(SETUP_LABEL_FILTERING_THRESHOLD, setupPanel, 6*optionSpacing, Double.toString(iManager.getFilteringTreshold()), InputManager.FILTERING_TRESHOLD, iManager);
-		comp.setVisible(iManager.getFilteringFlag());
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 5*optionSpacing, iManager.getFilteringFlag(), comp, InputManager.FILTERING_NEEDED_FLAG), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING_THRESHOLD, comp, setupMap);
-		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 8*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 7*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
-		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
-		
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 9*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 10*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 2*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 4*optionSpacing - optionSpacing/3, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
+		
+		JButton button = new JButton("Feature Selection Strategies");
+		button.setFont(labelFont);
+		button.setBounds(0, 0, setupPanel.getWidth()*3/5, labelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				FeatureSelectionFrame fsf;
+				try {
+					fsf = new FeatureSelectionFrame(iManager, iManager.getFeatureSelectors());
+					fsf.setVisible(true);
+				} catch(Exception ex){
+					AppLogger.logException(getClass(), ex, "Unable to open feature selection preferences");
+				}
+			} } );
+		seePrefPanel.setVisible(iManager.getFilteringFlag());
+		seePrefPanel.add(button);
+		setupPanel.add(seePrefPanel);
+		
+		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION);
+		comp.setVisible(iManager.getFilteringFlag());
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel, comp}, InputManager.FILTERING_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
+		
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
+		
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
+		
+		seePrefPanel = new JPanel();
+		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
-		JButton button = new JButton("Open Preferences");
+		button = new JButton("Open Optimization Preferences");
 		button.setVisible(true);
-		button.setFont(bigFont);
-		button.setBounds(0, 0, setupPanel.getWidth()*2/5, labelSpacing);
+		button.setFont(labelFont);
+		button.setBounds(0, 0, setupPanel.getWidth()*3/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {
-					Desktop.getDesktop().open(new File(DetectorMain.DEFAULT_PREF_FILE));
+					Desktop.getDesktop().open(new File(iManager.getInputFolder() + iManager.getDetectionPreferencesFile()));
 				} catch (IOException e1) {
 					AppLogger.logException(getClass(), e1, "");
 				}
 			} } );
+		seePrefPanel.setVisible(iManager.getOptimizationFlag());
 		seePrefPanel.add(button);
 		setupPanel.add(seePrefPanel);
+		
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG), setupMap);
+		
+		
 		
 		return setupPanel;
 	}
@@ -765,6 +792,10 @@ public class BuildUI {
 	}
 	
 	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag){
+		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag);
+	}
+	
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
@@ -775,12 +806,15 @@ public class BuildUI {
 		cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
 		
-		if(comp != null){
+		if(comp != null ){
 			cb.addActionListener(new ActionListener() {
 			    @Override
 			    public void actionPerformed(ActionEvent event) {
 			        JCheckBox cb = (JCheckBox) event.getSource();
-			        comp.setVisible(cb.isSelected());
+			        for(JPanel linkedPanel : comp){
+			        	if(linkedPanel != null)
+			        		linkedPanel.setVisible(cb.isSelected());
+			        }
 			        if(!isUpdating){
 			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true);
 			        	reload();

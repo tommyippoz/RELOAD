@@ -9,8 +9,6 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
-import java.util.List;
-
 // TODO: Auto-generated Javadoc
 /**
  * The Class IndicatorDetectionAlgorithm.
@@ -47,16 +45,6 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	@Override
 	public DataSeries getDataSeries() {
 		return dataSeries;
-	}
-	
-	protected List<Snapshot> toSnapList(List<Knowledge> kList){
-		List<Snapshot> kSnapList = null;
-		for(Knowledge knowledge : kList){
-			if(kSnapList == null)
-				kSnapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
-			else kSnapList.addAll(knowledge.toArray(getAlgorithmType(), getDataSeries()));
-		}
-		return kSnapList;
 	}
 
 	@Override

@@ -18,7 +18,6 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.loader.Loader;
-import ippoz.reload.metric.FalsePositiveRate_Metric;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
@@ -175,12 +174,15 @@ public class DetectionManager {
 	 * Starts the train process.
 	 */
 	public void filterIndicators(){
-		FilterManager fManager;
+		List<Knowledge> kList;
+		FeatureSelectorManager fsm;
 		try {
 			if(needFiltering()) {
-				fManager = new FilterManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), generateKnowledge(buildLoader("filter").get(0).fetch()), iManager.loadConfiguration(AlgorithmType.ELKI_KMEANS, windowSize, sPolicy), new FalsePositiveRate_Metric(true), reputation, dataTypes, iManager.getFilteringTreshold(), iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
-				selectedDataSeries = fManager.filter(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_filtered.csv");
-				fManager.flush();
+				kList = Knowledge.generateKnowledge(buildLoader("train").get(0).fetch(), KnowledgeType.SINGLE, null, 0);
+				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
+				fsm.selectFeatures(kList, iManager.getScoresFolder(), loaderPref.getFilename());
+				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), iManager.getScoresFolder());
+				fsm.saveFilteredSeries(iManager.getScoresFolder(), loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_filtered.csv");
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
@@ -242,12 +244,15 @@ public class DetectionManager {
 		File dsF = new File(iManager.getScoresFolder() + buildOutFilePrequel() + "_filtered.csv");
 		try {
 			reader = new BufferedReader(new FileReader(dsF));
+			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
 			while(reader.ready()){
 				readed = reader.readLine();
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						sSeries.add(readed.trim());
+						if(readed.contains(","))
+							sSeries.add(readed.trim().split(",")[0].trim());
+						else sSeries.add(readed.trim());
 					}
 				}
 			}

@@ -34,6 +34,15 @@ public class MultipleDataSeries extends DataSeries {
 			dsList = null;
 	}
 	
+	public MultipleDataSeries(DataSeries ds1, DataSeries ds2) {
+		super(ds1.toString() + "@" + ds2.toString(), DataCategory.PLAIN);
+		dsList = new ArrayList<DataSeries>(2);
+		dsList.add(ds1);
+		dsList.add(ds2);
+		if(dsList.size() == 0)
+			dsList = null;
+	}
+	
 	private static String aggregateSeriesName(List<? extends DataSeries> pList){
 		String aggName = "";
 		if(pList != null && pList.size() >= 2){

@@ -27,10 +27,10 @@ public class SingleKnowledge extends Knowledge {
 	}
 
 	@Override
-	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
+	public List<Snapshot> toArray(DataSeries dataSeries) {
 		List<Snapshot> snapArray = new ArrayList<Snapshot>(baseData.size());
 		for(int i=0;i<baseData.size();i++){
-			snapArray.add(buildSnapshotFor(algType, i, dataSeries));
+			snapArray.add(buildSnapshotFor(i, dataSeries));
 		}
 		return snapArray;
 	}

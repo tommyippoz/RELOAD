@@ -46,12 +46,12 @@ public class SlidingKnowledge extends Knowledge {
 	}
 
 	@Override
-	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
+	public List<Snapshot> toArray(DataSeries dataSeries) {
 		List<Integer> indexes = new LinkedList<Integer>();
 		for(WeightedIndex wi : indexList){
 			indexes.add(wi.getIndex());
 		}
-		return buildSnapshotsFor(algType, dataSeries, indexes);
+		return buildSnapshotsFor(dataSeries, indexes);
 	}
 
 	public void slide(int index, double anomalyScore) {

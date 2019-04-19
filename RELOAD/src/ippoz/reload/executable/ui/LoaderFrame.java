@@ -122,35 +122,34 @@ public class LoaderFrame {
 		runsPanel.setBorder(tb);
 		runsPanel.setLayout(null);
 		
-		showPreferenceLabels(runsPanel, bigLabelSpacing, CSVPreLoader.FILTERING_CSV_FILE, 
-				loaderPref.getPreference(CSVPreLoader.FILTERING_CSV_FILE), 
-				"Specify filtering file path, starting from '" + iManager.getLoaderFolder() + "'");
-		
-		showPreferenceLabels(runsPanel, 2*bigLabelSpacing, Loader.FILTERING_RUN_PREFERENCE, 
-				loaderPref.getPreference(Loader.FILTERING_RUN_PREFERENCE), 
-				"Specify runs to be used for filtering, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
-		
-		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
+		showPreferenceLabels(runsPanel, 1*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 2*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
 				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 5*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
+		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVPreLoader.TRAIN_FAULTY_TAGS, 
+				loaderPref.hasPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training");
+		
+		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 5*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
+		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, CSVPreLoader.VALIDATION_FAULTY_TAGS, 
+				loaderPref.hasPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation");
 		containerPanel.add(runsPanel);
 		
 		JPanel dataPanel = new JPanel();
 		dataPanel.setBackground(Color.WHITE);
-		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 5*bigLabelSpacing + 10);
+		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Data Setup ", 
 				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		dataPanel.setBorder(tb);
@@ -164,11 +163,7 @@ public class LoaderFrame {
 				loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.");
 		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.FAULTY_TAGS, 
-				loaderPref.getPreference(CSVPreLoader.FAULTY_TAGS), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data");
-		
-		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
+		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
 				loaderPref.getPreference(CSVPreLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.");
 		
@@ -223,12 +218,6 @@ public class LoaderFrame {
 				!loaderPref.getPreference(Loader.CONSIDERED_LAYERS).equals("NO_LAYER")){
 			output = output + "Wrong CONSIDERED_LAYERS value: consider trying with 'NO_LAYER'.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.FILTERING_CSV_FILE) || 
-				loaderPref.getPreference(CSVPreLoader.FILTERING_CSV_FILE).trim().length() == 0){
-			output = output + "Wrong FILTERING_CSV_FILE value: remember to specify file for filtering.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.FILTERING_CSV_FILE)).exists()){
-			output = output + "FILTERING_CSV_FILE does not exist.\n";
-		}
 		if(!loaderPref.hasPreference(CSVPreLoader.TRAIN_CSV_FILE) || 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE).trim().length() == 0){
 			output = output + "Wrong TRAIN_CSV_FILE value: remember to specify file for training.\n";
@@ -240,10 +229,6 @@ public class LoaderFrame {
 			output = output + "Wrong VALIDATION_CSV_FILE value: remember to specify file for validation.\n";
 		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE)).exists()){
 			output = output + "VALIDATION_CSV_FILE does not exist.\n";
-		}
-		if(!loaderPref.hasPreference(CSVPreLoader.FILTERING_RUN_PREFERENCE) || 
-				loaderPref.getPreference(CSVPreLoader.FILTERING_RUN_PREFERENCE).trim().length() == 0){
-			output = output + "Wrong FILTERING_RUN_PREFERENCE value: remember to specify runs for filtering.\n";
 		}
 		if(!loaderPref.hasPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE) || 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){

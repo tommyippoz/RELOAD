@@ -62,7 +62,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	}
 	
 	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".hbos";
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + ".hbos";
 	}
 	
 	private String getDefaultTmpFolder(){
@@ -115,11 +115,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	@Override
 	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
-			generateDynamicHistograms(toSnapList(kList));
-		else generateStaticHistograms(toSnapList(kList), getK());
+			generateDynamicHistograms(Knowledge.toSnapList(kList, getDataSeries()));
+		else generateStaticHistograms(Knowledge.toSnapList(kList, getDataSeries()), getK());
 		
 		scores = new LinkedList<HBOSScore>();
-		for(Snapshot snap : toSnapList(kList)){
+		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			scores.add(new HBOSScore(snapToString(snap), calculateHBOS(snap)));
 		}
 		clearLoggedScores();

@@ -22,8 +22,6 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 
 	private static final String MINMAX = "MINMAX";
 	
-	private static int MAX_RANGE = 100;
-	
 	protected boolean needNormalization;
 	
 	protected double[][] minmax;
@@ -66,11 +64,11 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 	}
 	
 	protected double[][] convertKnowledgeIntoMatrix(List<Knowledge> kList, boolean includeFaulty) {
-		return convertSnapshotListIntoMatrix(toSnapList(kList), includeFaulty);
+		return convertSnapshotListIntoMatrix(Knowledge.toSnapList(kList, getDataSeries()), includeFaulty);
 	}
 	
 	protected String[] extractLabels(List<Knowledge> kList, boolean includeFaulty) {
-		return extractLabels(includeFaulty, toSnapList(kList));
+		return extractLabels(includeFaulty, Knowledge.toSnapList(kList, getDataSeries()));
 	}
 	
 	protected String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
@@ -133,7 +131,7 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 			}
 			if(needNormalization){
 				for(int j=0;j<getDataSeries().size();j++){
-					if(minmax[j][1] - minmax[j][0] >= MAX_RANGE){
+					if(minmax[j][1] - minmax[j][0] >= 100){
 						for(int i=0;i<dataMatrix.length;i++){
 							dataMatrix[i][j] = (dataMatrix[i][j] - minmax[j][0])/(minmax[j][1] - minmax[j][0]);
 						}

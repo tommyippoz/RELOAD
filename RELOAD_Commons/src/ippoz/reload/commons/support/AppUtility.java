@@ -193,7 +193,9 @@ public class AppUtility {
 	public static double[] toPrimitiveArray(List<Double> toPrim){
 		double[] target = new double[toPrim.size()];
 		for (int i = 0; i < target.length; i++) {
-		   target[i] = toPrim.get(i);                
+			if(Double.isFinite(toPrim.get(i)))
+				target[i] = toPrim.get(i);
+			else target[i] = 0.0;
 		}
 		return target;
 	}

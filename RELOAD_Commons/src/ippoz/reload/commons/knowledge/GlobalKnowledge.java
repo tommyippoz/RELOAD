@@ -26,7 +26,7 @@ public class GlobalKnowledge extends Knowledge {
 	}
 
 	@Override
-	public List<Snapshot> toArray(AlgorithmType algType, DataSeries dataSeries) {
+	public List<Snapshot> toArray(DataSeries dataSeries) {
 		// TODO Auto-generated method stub
 		return null;
 	}

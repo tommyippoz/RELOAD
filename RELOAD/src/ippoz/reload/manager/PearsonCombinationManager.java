@@ -3,10 +3,14 @@
  */
 package ippoz.reload.manager;
 
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.FractionDataSeries;
 import ippoz.reload.commons.dataseries.IndicatorDataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.dataseries.ProductDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.StatPair;
@@ -50,7 +54,7 @@ public class PearsonCombinationManager {
 	
 	private List<PearsonResult> pResults;
 	
-	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, List<Knowledge> kList, int kfold){
+	public PearsonCombinationManager(File indexesFile, List<DataSeries> seriesList, List<Knowledge> kList){
 		this.indexesFile = indexesFile;
 		this.seriesList = seriesList;
 		this.kList = kList;
@@ -109,7 +113,7 @@ public class PearsonCombinationManager {
 		}
 	}
 	
-	public void calculatePearsonIndexes(double pearsonSimple, double pearsonComplex){
+	public void calculatePearsonIndexes(double pearsonThreshold){
 		Integer correlationSize = 2;
 		PearsonResult pr;
 		List<Double> pExp;
@@ -130,7 +134,7 @@ public class PearsonCombinationManager {
 						dsList.add(ds1);
 						dsList.add(ds2);
 						pr = new PearsonResult(dsList, pExp);
-						if(pr.isValid(pMap.get(2), pearsonSimple))
+						if(pr.isValid(pMap.get(2), pearsonThreshold))
 							pMap.get(2).add(pr);
 					}
 				}
@@ -151,7 +155,7 @@ public class PearsonCombinationManager {
 								if(!pMap.containsKey(dsList.size()))
 									pMap.put(dsList.size(), new LinkedList<PearsonResult>());
 								pr = new PearsonResult(dsList, Math.abs(res.getAvg()) <= Math.abs(otherRes.getAvg()) ? res.getAvg() : otherRes.getAvg(), res.getStd() + otherRes.getStd());
-								if(pr.isValid(pMap.get(dsList.size()), pearsonComplex))
+								if(pr.isValid(pMap.get(dsList.size()), pearsonThreshold))
 									pMap.get(dsList.size()).add(pr);
 							}
 						}
@@ -176,6 +180,21 @@ public class PearsonCombinationManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Error while calculating pearson correlations");
 		}
+	}
+	
+	public List<DataSeries> getPearsonCombinedSeries(){
+		List<DataSeries> pSeries = new LinkedList<DataSeries>();
+		if(pResults != null){
+			for(PearsonResult pr : pResults){
+				pSeries.add(new MultipleDataSeries(pr.getDataSeries()));
+				if(pr.getDataSeries().size() == 2){
+					if(pr.getAvg() > 0)
+						pSeries.add(new ProductDataSeries(pr.getDataSeries().get(0), pr.getDataSeries().get(1), DataCategory.PLAIN));
+					else pSeries.add(new FractionDataSeries(pr.getDataSeries().get(0), pr.getDataSeries().get(1), DataCategory.PLAIN));
+				}
+			}
+		}
+		return pSeries;
 	}
 	
 	private void printPearsonResults() {

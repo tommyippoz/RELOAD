@@ -8,8 +8,6 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
@@ -23,7 +21,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -125,36 +122,9 @@ public class TrainerManager extends TrainDataManager {
 	}
 	
 	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
-		List<DataSeries> finalDs = new LinkedList<DataSeries>();
-		List<DataSeries> allFeatures = new LinkedList<DataSeries>();
-		List<DataSeries> all = generateDataSeries(dataTypes, 0.9, false);
-		if(all != null && all.size() > 1) {
-			for(String dsString : selectedSeriesString){
-				for(DataSeries ds : all){
-					if(ds.toString().equals(dsString)) {
-						finalDs.add(ds);
-						if(ds instanceof IndicatorDataSeries){
-							boolean flag = false;
-							for(DataSeries dsall : allFeatures){
-								if(dsall.getName().equals(ds.getName())) {
-									flag = true;
-									break;
-								}
-							}
-							if(!flag)
-								allFeatures.add(ds);
-						}
-						break;
-					}
-				}
-			}
-			if(allFeatures.size() > 0)
-				finalDs.add(new MultipleDataSeries(allFeatures));
-		} else if (all != null && all.size() == 1){
-			finalDs = all;
-		}
-		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalDs.size());
-		return finalDs;
+		List<DataSeries> finalList = DataSeries.fromString(selectedSeriesString, false);
+		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalList.size());
+		return finalList;
 	}
 
 	/**
@@ -205,8 +175,8 @@ public class TrainerManager extends TrainDataManager {
 					case PEA:
 						PearsonCombinationManager pcManager;
 						File pearsonFile = new File(getScoresFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType), kfold);
-						pcManager.calculatePearsonIndexes(0.9, 0.9);
+						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
+						pcManager.calculatePearsonIndexes(0.9);
 						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
 						pcManager.flush();
 						break;

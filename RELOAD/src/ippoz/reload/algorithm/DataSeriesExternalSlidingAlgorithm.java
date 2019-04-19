@@ -40,7 +40,7 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesExter
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
-			snapList = knowledge.toArray(getAlgorithmType(), getDataSeries());
+			snapList = knowledge.toArray(getDataSeries());
 			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= ((SlidingKnowledge)knowledge).getWindowSize())
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
 			else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

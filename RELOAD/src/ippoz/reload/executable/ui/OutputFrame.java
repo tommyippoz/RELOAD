@@ -125,7 +125,7 @@ public class OutputFrame {
 		fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(tb);
 		fPanel.setLayout(null);
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (dOutList != null && dOutList.size() > 0) ? dOutList.get(0).getReferenceMetric().getMetricName() : "-"));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (dOutList != null && dOutList.size() > 0 && dOutList.get(0) != null && dOutList.get(0).getReferenceMetric() != null) ? dOutList.get(0).getReferenceMetric().getMetricName() : "-"));			
 		summaryPanel.add(fPanel);
 		
 		JPanel contentPanel = new JPanel();

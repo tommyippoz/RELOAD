@@ -86,7 +86,7 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	}
 	
 	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + "." + customELKI.getAlgorithmName();
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + customELKI.getAlgorithmName();
 	}
 
 	@Override

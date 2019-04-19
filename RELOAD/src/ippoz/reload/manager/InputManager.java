@@ -12,6 +12,9 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
+import ippoz.reload.featureselection.FeatureSelector;
+import ippoz.reload.featureselection.FeatureSelectorType;
+import ippoz.reload.featureselection.VarianceFeatureSelector;
 import ippoz.reload.loader.CSVPreLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.MySQLLoader;
@@ -52,7 +55,7 @@ import java.util.Map;
  */
 public class InputManager {
 	
-	private static final String DEFAULT_GLOBAL_PREF_FILE = "madness.preferences";
+	private static final String DEFAULT_GLOBAL_PREF_FILE = "reload.preferences";
 	
 	private static final String DEFAULT_SCORING_PREF_FILE = "scoringPreferences.preferences";
 	
@@ -117,7 +120,7 @@ public class InputManager {
 	public static final String TRAIN_NEEDED_FLAG = "TRAIN_FLAG";
 	
 	/** The Constant FILTERING_NEEDED_FLAG. */
-	public static final String FILTERING_NEEDED_FLAG = "FILTERING_FLAG";
+	public static final String FILTERING_NEEDED_FLAG = "FEATURE_SELECTION_FLAG";
 	
 	/** The Constant DETECTION_PREFERENCES_FILE. */
 	public static final String DETECTION_PREFERENCES_FILE = "DETECTION_PREFERENCES_FILE";
@@ -138,6 +141,8 @@ public class InputManager {
 	public static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
 	
 	public static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
+
+	public static final String OPTIMIZATION_NEEDED_FLAG = "OPTIMIZATION_FLAG";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -328,7 +333,6 @@ public class InputManager {
 	}
 	
 	public MetricType getMetricType() {
-		MetricType a = getMetric(prefManager.getPreference(METRIC)).getMetricType();
 		return getMetric(prefManager.getPreference(METRIC)).getMetricType();
 	}
 	
@@ -615,6 +619,16 @@ public class InputManager {
 			return true;
 		}
 	}
+	
+	public boolean getOptimizationFlag() {
+		if(prefManager.hasPreference(OPTIMIZATION_NEEDED_FLAG))
+			return !prefManager.getPreference(OPTIMIZATION_NEEDED_FLAG).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					OPTIMIZATION_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
+	}
 
 	public String getOutputFolder() {
 		if(prefManager.hasPreference(OUTPUT_FOLDER))
@@ -628,7 +642,7 @@ public class InputManager {
 
 	public boolean getOutputVisibility() {
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
-			return prefManager.getPreference(OUTPUT_FORMAT).equals("null");
+			return !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					OUTPUT_FORMAT + " not found. Using default value of 'not visible'");
@@ -1129,6 +1143,65 @@ public class InputManager {
 	
 	public static String[] getIndicatorSelectionPolicies(){
 		return new String[]{"ALL", "UNION", "PEARSON", "SIMPLE"};
+	}
+
+	public List<FeatureSelector> getFeatureSelectors() {
+		List<FeatureSelector> fsList = new LinkedList<FeatureSelector>();
+		File featuresFile = new File(getSetupFolder() + "featureSelection.preferences");
+		FeatureSelector toAdd;
+		BufferedReader reader;
+		String[] splitted;
+		String readed;
+		try {
+			if(featuresFile.exists()){
+				reader = new BufferedReader(new FileReader(featuresFile));
+				while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							readed = readed.trim();
+							if(readed.contains(",")){
+								splitted = readed.split(",");
+								try {
+									toAdd = FeatureSelector.createSelector(FeatureSelectorType.valueOf(splitted[0].trim()), Double.valueOf(splitted[1].trim()));
+									if(toAdd != null)
+										fsList.add(toAdd);
+								} catch(Exception ex){
+									AppLogger.logError(getClass(), "FeatureSelectionStrategyError", "Unable to load '" + splitted[0] + "' strategy");
+								}
+							}
+						}
+					}
+				}
+				reader.close();
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
+						featuresFile.getPath() + " not found. Using 'Variance' selector");
+				fsList.add(new VarianceFeatureSelector(1.0));
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read loaders list");
+		}
+		return fsList;
+	}
+
+	public void updateFeatureSelectionPolicies(List<FeatureSelector> fsList) {
+		BufferedWriter writer = null;
+		try {
+			if(fsList != null){
+				writer = new BufferedWriter(new FileWriter(new File(getSetupFolder() + "featureSelection.preferences")));
+				writer.write("* This file reports on the feature selection techniques to be applied\n");
+				writer.write("\nfeature_selection_strategy,threshold\n");
+				for(FeatureSelector fs : fsList){
+					writer.write(fs.getFeatureSelectorType() + "," + fs.getSelectorThreshold() + "\n");
+				}
+				writer.close();
+			} else AppLogger.logInfo(getClass(), "Unable to update Feature Selection preferences");
+		} catch(IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
+		}
 	}
 	
 }

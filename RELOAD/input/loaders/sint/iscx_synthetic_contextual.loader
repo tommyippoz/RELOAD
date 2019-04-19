@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = Synthetic/ISCX2012_BruteForce_CONTEXTUAL.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-5
+TRAIN_RUN_IDS = 0-50
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = Synthetic/ISCX2012_BruteForce_CONTEXTUAL.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 71-80
+VALIDATION_RUN_IDS = 51-80
 
 
 * Parsing Dataset
