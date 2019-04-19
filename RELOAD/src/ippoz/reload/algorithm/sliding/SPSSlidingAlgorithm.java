@@ -413,16 +413,6 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 			return result;
 		}
 		
-		public DataVector times(double value){
-			DataVector result = new DataVector();
-			for(int i=0;i<size();i++){
-				if(Double.isFinite(value)){
-					result.set(i, get(i)*value);
-				}
-			}
-			return result;
-		}
-		
 		private static DataVector generateSingleDataVector(Double value, int size){
 			DataVector dv = new DataVector();
 			for(int i=0;i<size;i++){

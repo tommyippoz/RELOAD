@@ -265,8 +265,6 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 				}
 				
 			}
-			if(!Double.isNaN(s.getNaiveVariance()))
-				s = s;
 			return s.getNaiveVariance();
 		}
 	}
