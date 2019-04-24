@@ -1,5 +1,5 @@
 * This file reports on the feature selection techniques to be applied
 
 feature_selection_strategy,threshold
-VARIANCE,1.0
+VARIANCE,3.0
 INFORMATION_GAIN,0.05

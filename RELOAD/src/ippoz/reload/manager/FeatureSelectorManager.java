@@ -122,7 +122,7 @@ public class FeatureSelectorManager {
 	public void saveFilteredSeries(String setupFolder, String filename) {
 		BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(setupFolder + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
 			writer.write("data_series,type\n");
 			for(DataSeries ds : selectedFeatures){
 				writer.write(ds.toString() + ",single\n");			

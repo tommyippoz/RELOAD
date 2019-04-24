@@ -95,6 +95,8 @@ public class BuildUI {
 
 	private static final String SETUP_LABEL_OPTIMIZATION = "Optimization";
 	
+	private static final String SETUP_LABEL_EVALUATION = "Evaluation";
+	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
 	private Map<String, JPanel> setupMap, pathMap;
@@ -309,8 +311,8 @@ public class BuildUI {
 						}
 					}
 					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
-					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(dmList.size());
-					DetectorOutput newOut;
+					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(dmList.size());
+					DetectorOutput[] newOut;
 					for(int i=0;i<dmList.size();i++){
 						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
 						newOut = DetectorMain.runMADneSs(dmList.get(i));
@@ -618,7 +620,7 @@ public class BuildUI {
 		setupPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
-		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 6*optionSpacing + 6*bigLabelSpacing);
+		setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
@@ -680,8 +682,7 @@ public class BuildUI {
 		setupPanel.add(seePrefPanel);
 		
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG), setupMap);
-		
-		
+		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG), setupMap);
 		
 		return setupPanel;
 	}
@@ -885,11 +886,11 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private void showDetectorOutputs(List<DetectorOutput> outList) {
+	private void showDetectorOutputs(List<DetectorOutput[]> outList) {
 		OutputFrame of = new OutputFrame(iManager, outList.size());
 		if(outList.size() > 0){
 			of.buildSummaryPanel(outList);
-			for(DetectorOutput dOut : outList){
+			for(DetectorOutput[] dOut : outList){
 				of.addOutput(dOut);
 			}
 		}

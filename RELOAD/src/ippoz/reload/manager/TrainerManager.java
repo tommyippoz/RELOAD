@@ -22,10 +22,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * The Class TrainerManager.
@@ -139,12 +142,70 @@ public class TrainerManager extends TrainDataManager {
 			join();
 			Collections.sort((List<AlgorithmTrainer>)getThreadList());
 			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
-			saveScores(filterTrainers(getThreadList()), outFilename);
+			saveScores(filterTrainers(getThreadList()), outFilename + "_scores.csv");
+			saveThresholdRelevance(filterTrainers(getThreadList()), outFilename + "_thresholdrelevance.csv");
 			AppLogger.logInfo(getClass(), "Training scores saved");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
 		}
 	}
+
+	private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
+		BufferedWriter thresholdRelevanceWriter;
+		AlgorithmConfiguration conf;
+		AlgorithmTrainer trainer;
+		Map<String,Integer> statMap = new HashMap<String, Integer>();
+		try {
+			for(Thread tThread : list){
+				trainer = (AlgorithmTrainer)tThread;
+				if(trainer.isValidTrain()){
+					conf = trainer.getBestConfiguration();
+					if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD)) {
+						if(statMap.containsKey(conf.getItem(AlgorithmConfiguration.THRESHOLD))){
+							statMap.put(conf.getItem(AlgorithmConfiguration.THRESHOLD), statMap.get(conf.getItem(AlgorithmConfiguration.THRESHOLD)) + 1);
+						} else statMap.put(conf.getItem(AlgorithmConfiguration.THRESHOLD), 1);
+					}
+				}			
+			}
+			if(statMap.size() > 0) {
+				statMap = sortByComparator(statMap, false);
+				thresholdRelevanceWriter = new BufferedWriter(new FileWriter(new File(filename)));
+				thresholdRelevanceWriter.write("threshold,optimal_configurations\n");
+				for(String thresholdKey : statMap.keySet()){
+					thresholdRelevanceWriter.write(thresholdKey + "," + statMap.get(thresholdKey) + "\n");
+				}
+				thresholdRelevanceWriter.close();	
+			}
+		} catch(IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to write scores");
+		}
+	}
+	
+	 private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, boolean ascending)
+	    {
+
+	        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+
+	        // Sorting the list based on values
+	        Collections.sort(list, new Comparator<Entry<String, Integer>>()
+	        {
+	            public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+	                if (ascending) {
+	                    return o1.getValue().compareTo(o2.getValue());
+	                } else {
+	                    return o2.getValue().compareTo(o1.getValue());
+	                }
+	            }
+	        });
+
+	        // Maintaining insertion order with the help of LinkedList
+	        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+	        for (Entry<String, Integer> entry : list) {
+	            sortedMap.put(entry.getKey(), entry.getValue());
+	        }
+
+	        return sortedMap;
+	    }
 
 	private List<? extends Thread> filterTrainers(List<? extends Thread> trainerList) {
 		LinkedList<AlgorithmTrainer> invList = new LinkedList<AlgorithmTrainer>();
@@ -244,7 +305,7 @@ public class TrainerManager extends TrainDataManager {
 			for(AlgorithmType at : algTypes){
 				statMap.put(at, new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 			}
-			scoreWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + filename)));
+			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
 			scoreWriter.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;

@@ -130,8 +130,9 @@ public class DetectionManager {
 				runs = iManager.readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
 				for(int i=0;i<runs.size();i=i+nRuns){
 					newLoader = iManager.buildSingleLoader(loaderPref, new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
-					if(newLoader != null)
+					if(newLoader != null){
 						lList.add(newLoader);
+					}
 				}
 			} else {
 				newLoader = iManager.buildSingleLoader(loaderPref, iManager.readRunIds(runsString), loaderTag, anomalyWindow);
@@ -167,7 +168,15 @@ public class DetectionManager {
 	}
 	
 	public boolean needFiltering() {
-		return !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))) || iManager.getFilteringFlag();
+		return iManager.getFilteringFlag();
+	}
+	
+	public boolean needOptimization() {
+		return iManager.getOptimizationFlag();
+	}
+	
+	public boolean needEvaluation() {
+		return iManager.getEvaluationFlag();
 	}
 
 	/**
@@ -176,13 +185,17 @@ public class DetectionManager {
 	public void filterIndicators(){
 		List<Knowledge> kList;
 		FeatureSelectorManager fsm;
+		String scoresFolderName;
 		try {
 			if(needFiltering()) {
+				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar;
+				if(!new File(scoresFolderName).exists())
+					new File(scoresFolderName).mkdirs();
 				kList = Knowledge.generateKnowledge(buildLoader("train").get(0).fetch(), KnowledgeType.SINGLE, null, 0);
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
-				fsm.selectFeatures(kList, iManager.getScoresFolder(), loaderPref.getFilename());
-				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), iManager.getScoresFolder());
-				fsm.saveFilteredSeries(iManager.getScoresFolder(), loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_filtered.csv");
+				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
+				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
+				fsm.saveFilteredSeries(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
@@ -198,8 +211,12 @@ public class DetectionManager {
 	 */
 	public void train(){
 		TrainerManager tManager;
+		String scoresFolderName;
 		try {
 			if(needTraining()) {
+				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel();
+				if(!new File(scoresFolderName).exists())
+					new File(scoresFolderName).mkdirs();
 				if(selectedDataSeries == null && !iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'))))
 					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.getSimplePearsonThreshold(), iManager.getComplexPearsonThreshold(), iManager.getKFoldCounter());
 				else {
@@ -207,7 +224,7 @@ public class DetectionManager {
 						tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, loadSelectedDataSeriesString(), iManager.getKFoldCounter());
 					} else tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), iManager.getOutputFolder(), generateKnowledge(buildLoader("train").iterator().next().fetch()), iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, algTypes, selectedDataSeries, iManager.getKFoldCounter()); 
 				}
-				tManager.train(buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_scores.csv");
+				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1));
 				tManager.flush();
 			}
 		} catch(Exception ex){
@@ -241,7 +258,7 @@ public class DetectionManager {
 		LinkedList<String> sSeries = new LinkedList<String>();
 		String readed;
 		BufferedReader reader = null;
-		File dsF = new File(iManager.getScoresFolder() + buildOutFilePrequel() + "_filtered.csv");
+		File dsF = new File(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_filtered.csv");
 		try {
 			reader = new BufferedReader(new FileReader(dsF));
 			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
@@ -264,13 +281,13 @@ public class DetectionManager {
 	}
 
 	/**
-	 * Starts the evaluation process.
+	 * Starts the optimization process.
 	 * @return 
 	 */
-	public DetectorOutput evaluate(){
+	public DetectorOutput optimize(){
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
-		List<Loader> lList = buildLoader("validation");
+		List<Loader> lList = buildLoader("train");
 		List<MonitoredData> bestExpList = null;
 		List<MonitoredData> expList;
 		DetectorOutput dOut = null;
@@ -283,7 +300,7 @@ public class DetectionManager {
 				for(Loader l : lList){
 					expList = l.fetch();
 					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-					score = singleEvaluation(metList, generateKnowledge(expList), printOutput).getBestScore();
+					score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
 					if(score > bestScore){
 						bestRuns = l.getRuns();
 						bestExpList = expList;
@@ -291,24 +308,24 @@ public class DetectionManager {
 					}
 					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 				}
-				dOut = singleEvaluation(metList, generateKnowledge(bestExpList), printOutput);
+				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
 				dOut.setBestRuns(bestRuns);
 			} else {
 				Loader l = lList.iterator().next();
 				bestExpList = l.fetch();
-				dOut = singleEvaluation(metList, generateKnowledge(bestExpList), printOutput);
+				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
 				dOut.setBestRuns(l.getRuns());
 			}	
 			dOut.summarizeCSV(iManager.getOutputFolder());
-			dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
-			AppLogger.logInfo(getClass(), "Final score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+			//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+			AppLogger.logInfo(getClass(), "Final Optimized score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
 		}
 		return dOut;
 	}
 	
-	private DetectorOutput singleEvaluation(Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput){
+	private DetectorOutput singleOptimization(Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput){
 		EvaluatorManager bestEManager = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
@@ -318,7 +335,7 @@ public class DetectionManager {
 		for(String voterTreshold : voterTresholds){
 			evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
 			for(String anomalyTreshold : anomalyTresholds){
-				EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
+				EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
 				if(eManager.detectAnomalies()) {
 					evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
 				}
@@ -415,6 +432,99 @@ public class DetectionManager {
 	public void flush() {
 		iManager = null;
 		selectedDataSeries = null;
+	}
+
+	public DetectorOutput evaluate(DetectorOutput optOut) {
+		if(optOut == null || optOut.getBestSetup() == null){
+			return evaluateAll();
+		} else {
+			return optimizedEvaluation(optOut.getBestSetup());
+		}
+	}
+	
+	private DetectorOutput optimizedEvaluation(String bestSetup){
+		Metric[] metList = iManager.loadValidationMetrics();
+		boolean printOutput = iManager.getOutputVisibility();
+		List<Loader> lList = buildLoader("validation");
+		List<MonitoredData> expList;
+		DetectorOutput dOut = null;
+		try {
+			if(bestSetup != null && bestSetup.length() > 0 && bestSetup.contains("-")) {
+				if(lList.size() > 1)
+					AppLogger.logError(getClass(), "TooManyLoaders", "Too many validation loaders. Evaluating just the first.");
+				Loader l = lList.iterator().next();
+				expList = l.fetch();
+				dOut = singleEvaluation(metList, generateKnowledge(expList), bestSetup.split("-")[1].trim(), bestSetup.split("-")[0].trim(), printOutput);
+				dOut.setBestRuns(l.getRuns());	
+				//dOut.summarizeCSV(iManager.getOutputFolder());
+				dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+				AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to decode '" + bestSetup + "' threhsolds");
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
+		}
+		return dOut;
+	}
+	
+	public DetectorOutput singleEvaluation(Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, String anomalyThreshold, String voterThreshold, boolean printOutput){
+		Map<String, Integer> nVoters = new HashMap<String, Integer>();
+		Map<String, Map<String, List<Map<Metric, Double>>>> evaluations = new HashMap<String, Map<String, List<Map<Metric,Double>>>>();
+		EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyThreshold.trim(), iManager.getConvergenceTime(), voterThreshold.trim(), printOutput);
+		evaluations.put(voterThreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
+		if(eManager.detectAnomalies()) {
+			evaluations.get(voterThreshold.trim()).put(anomalyThreshold.trim(), eManager.getMetricsEvaluations());
+		}
+		nVoters.put(voterThreshold.trim(), eManager.getCheckersNumber());
+		String a = Metric.getAverageMetricValue(evaluations.get(voterThreshold.trim()).get(anomalyThreshold.trim()), metric);
+		double score = Double.parseDouble(a);
+		return new DetectorOutput(Double.isFinite(score) ? score : 0.0,
+			getBestSetup(evaluations, metList, new String[]{anomalyThreshold}), metric, metList, 
+			getMetricScores(evaluations, metList, new String[]{anomalyThreshold}), new String[]{anomalyThreshold},
+			nVoters, eManager.getTimedEvaluations(), 
+			evaluations, eManager.getDetailedEvaluations(),
+			eManager.getAnomalyThreshold(), eManager.getFailures(),		
+			getWritableTag(), eManager.getInjectionsRatio());
+	}
+	
+	public DetectorOutput evaluateAll(){
+		Metric[] metList = iManager.loadValidationMetrics();
+		boolean printOutput = iManager.getOutputVisibility();
+		List<Loader> lList = buildLoader("validation");
+		List<MonitoredData> bestExpList = null;
+		List<MonitoredData> expList;
+		DetectorOutput dOut = null;
+		String bestRuns = null;
+		double bestScore = 0;
+		double score;
+		int index = 0;
+		try {
+			if(lList.size() > 1){
+				for(Loader l : lList){
+					expList = l.fetch();
+					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
+					score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
+					if(score > bestScore){
+						bestRuns = l.getRuns();
+						bestExpList = expList;
+						bestScore = score;
+					}
+					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
+				}
+				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
+				dOut.setBestRuns(bestRuns);
+			} else {
+				Loader l = lList.iterator().next();
+				bestExpList = l.fetch();
+				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
+				dOut.setBestRuns(l.getRuns());
+			}	
+			//dOut.summarizeCSV(iManager.getOutputFolder());
+			dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+			AppLogger.logInfo(getClass(), "Final Validation score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
+		}
+		return dOut;
 	}
 		
 }

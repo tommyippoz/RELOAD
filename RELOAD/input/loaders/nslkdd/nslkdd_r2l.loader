@@ -14,16 +14,16 @@ FILTERING_CSV_FILE = NSLKDD/KDDTrain+.csv
 GOLDEN_RUN_IDS = 0-5
 
 * File Used for Training
-TRAIN_CSV_FILE = NSLKDD/KDDTrain+.csv
+TRAIN_CSV_FILE = NSLKDD/KDDTest+.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-2
+TRAIN_RUN_IDS = 50-100
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = NSLKDD/KDDTest+.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 0-60
+VALIDATION_RUN_IDS = 101-130
 
 
 * Parsing Dataset

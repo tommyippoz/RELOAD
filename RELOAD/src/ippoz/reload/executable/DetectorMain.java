@@ -194,8 +194,8 @@ public class DetectorMain {
 		return false;
 	}
 
-	public static DetectorOutput runMADneSs(DetectionManager dManager){
-		DetectorOutput dOut = null;
+	public static DetectorOutput[] runMADneSs(DetectionManager dManager){
+		DetectorOutput oOut = null, dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
@@ -205,14 +205,22 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 
-			AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
-			dOut = dManager.evaluate();
+			if(dManager.needOptimization()){
+				AppLogger.logInfo(DetectorMain.class, "Starting Optimization Process");
+				oOut = dManager.optimize();
+			}
+			if(dManager.needEvaluation()){
+				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
+				dOut = dManager.evaluate(oOut);
+			}
 			report(dOut);
 			AppLogger.logInfo(DetectorMain.class, "Done.");
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
 		dManager = null;
-		return dOut;
+		if(oOut != null || dOut != null)
+			return new DetectorOutput[]{oOut, dOut};
+		else return null;
 	}
 
 	private static void report(DetectorOutput dOut){

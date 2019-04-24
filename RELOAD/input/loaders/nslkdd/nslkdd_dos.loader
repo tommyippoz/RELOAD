@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 0-5
 TRAIN_CSV_FILE = NSLKDD/KDDTrain+.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 0-5
+TRAIN_RUN_IDS = 0-50
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = NSLKDD/KDDTest+.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 30-70
+VALIDATION_RUN_IDS = 51-80
 
 
 * Parsing Dataset

@@ -82,10 +82,12 @@ public class OutputFrame {
 		tabbedPane.setBounds(0, labelSpacing + 40, outFrame.getWidth() - 10, outFrame.getHeight() - labelSpacing - 50);		
 	}
 
-	public void addOutput(DetectorOutput dOut) {
+	public void addOutput(DetectorOutput[] dOut) {
 		if(dOut != null) {
-			JPanel outPanel = buildOutputPanel(dOut);
-			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+			JPanel outPanel = buildOutputPanel(dOut[0], dOut[1]);
+			if(dOut[1] != null) {
+				tabbedPane.addTab("DB: " + dOut[1].getDataset() + " - Alg: " + dOut[1].getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+			} else tabbedPane.addTab("DB: " + dOut[0].getDataset() + " - Alg: " + dOut[0].getAlgorithm().replace("[", "").replace("]", ""), outPanel);
 		}
 	}
 
@@ -113,7 +115,7 @@ public class OutputFrame {
 		outFrame.setResizable(false);
 	}
 	
-	public void buildSummaryPanel(List<DetectorOutput> dOutList){
+	public void buildSummaryPanel(List<DetectorOutput[]> outList){
 		JPanel summaryPanel = new JPanel();
 		summaryPanel.setBackground(Color.WHITE);
 		summaryPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
@@ -125,18 +127,18 @@ public class OutputFrame {
 		fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(tb);
 		fPanel.setLayout(null);
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (dOutList != null && dOutList.size() > 0 && dOutList.get(0) != null && dOutList.get(0).getReferenceMetric() != null) ? dOutList.get(0).getReferenceMetric().getMetricName() : "-"));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? (outList.get(0)[0] != null ? outList.get(0)[0].getReferenceMetric().getMetricName() : (outList.get(0)[1] != null ? outList.get(0)[1].getReferenceMetric().getMetricName() : "-")) : "-")));			
 		summaryPanel.add(fPanel);
 		
 		JPanel contentPanel = new JPanel();
 		contentPanel.setBackground(Color.WHITE);
-		contentPanel.setBounds(0, 0, summaryPanel.getWidth(), dOutList.size()*labelSpacing);
+		contentPanel.setBounds(0, 0, summaryPanel.getWidth(), outList.size()*labelSpacing);
 		contentPanel.setLayout(null);
 		
 		summaryPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing));
 		int i = 0;
-		for(DetectorOutput dOut : dOutList){
-			contentPanel.add(buildOutputSummaryPanel(dOut, contentPanel, i++, 0));
+		for(DetectorOutput[] dOuts : outList){
+			contentPanel.add(buildOutputSummaryPanel((dOuts[1] != null ? dOuts[1] : dOuts[0]), contentPanel, i++, 0));
 		}
 		
 		JScrollPane scroll = new JScrollPane(contentPanel);
@@ -205,7 +207,7 @@ public class OutputFrame {
 		return panel;
 	}
 	
-	private JPanel buildOutputPanel(DetectorOutput dOut) {	
+	private JPanel buildOutputPanel(DetectorOutput oOut, DetectorOutput dOut) {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
 		containerPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
@@ -214,53 +216,96 @@ public class OutputFrame {
 		JPanel miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		miscPanel.setBounds(5, 10, containerPanel.getWidth()/2 - 10, 2*labelSpacing + 3*bigLabelSpacing);
+		miscPanel.setBounds(5, 10, containerPanel.getWidth()/2 - 10, 3*labelSpacing + 2*bigLabelSpacing);
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(null);
-		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getDataset()));
-		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm().replace("[", "").replace("]", "")));
-		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut.getReferenceMetric().getMetricName()));			
+		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getDataset() : oOut.getDataset()));
+		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : oOut.getAlgorithm().replace("[", "").replace("]", "")));
+		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut != null ? dOut.getReferenceMetric().getMetricName() : oOut.getReferenceMetric().getMetricName()));			
 		containerPanel.add(miscPanel);
 		
 		miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Details ", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		miscPanel.setBounds(containerPanel.getWidth()/2 + 5, 10, containerPanel.getWidth()/2 - 10, 2*labelSpacing + 3*bigLabelSpacing);
+		miscPanel.setBounds(containerPanel.getWidth()/2 + 5, 10, containerPanel.getWidth()/2 - 10, 3*labelSpacing + 2*bigLabelSpacing);
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(null);
-		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getBestSetup()));
-		miscPanel.add(createLPanel(true, "Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getBestRuns()));
-		miscPanel.add(createLPanel(true, "Best Score (" + dOut.getReferenceMetric().getMetricShortName() + ")", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, String.valueOf(dOut.getBestScore())));			
+		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getBestSetup() : oOut.getBestSetup()));
+		miscPanel.add(createLPanel(true, "Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getBestRuns() : oOut.getBestRuns()));
+		miscPanel.add(createLPanel(true, "Best Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, dOut != null ? String.valueOf(dOut.getBestScore()) : String.valueOf(oOut.getBestScore())));			
 		containerPanel.add(miscPanel);
 		   
-        String[] columnNames = new String[dOut.getEvaluationMetrics().length + 3];
+        String[] columnNames = new String[(dOut != null ? dOut.getEvaluationMetrics().length : oOut.getEvaluationMetrics().length) + 3];
         columnNames[0] = "Voter";
         columnNames[1] = "Anomaly";
         columnNames[2] = "Checkers";
 		int i = 3;
-        for(Metric met : dOut.getEvaluationMetrics()){
+        for(Metric met : (dOut != null ? dOut.getEvaluationMetrics() : oOut.getEvaluationMetrics())){
 			columnNames[i++] = met.getMetricType() != null ? met.getMetricShortName() : "AUC";
 		}	 
         
-        JTable table = new JTable(dOut.getEvaluationGrid(), columnNames);
-        table.setFillsViewportHeight(true);
+        int yDist = miscPanel.getHeight() + labelSpacing/2;
+        
+        JTable table;
+        int refWidth = -1;
+        JScrollPane scroll1 = null, scroll2 = null;
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment( JLabel.CENTER );
-        for(int x=0;x<table.getColumnCount();x++){
-        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
-        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
+        
+        if(oOut != null){
+        	JLabel lbl = new JLabel("Optimization Results");
+    		lbl.setFont(labelFont);
+    		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
+    		lbl.setBounds(containerPanel.getWidth()*2/5, yDist, containerPanel.getWidth()/5, bigLabelSpacing);
+    		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+    		containerPanel.add(lbl);
+    		
+    		yDist = yDist + bigLabelSpacing;
+    		
+	        table = new JTable(oOut.getEvaluationGrid(), columnNames);
+	        table.setFillsViewportHeight(true);
+	        for(int x=0;x<table.getColumnCount();x++){
+	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
+	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
+	        }
+	        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+	        refWidth = resizeColumnWidth(table, -1);
+	
+	        scroll1 = new JScrollPane(table);
+	        scroll1.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
+	        containerPanel.add(scroll1);
+	        yDist = yDist + scroll1.getHeight();
         }
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        resizeColumnWidth(table);
-
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBounds(5, miscPanel.getHeight() + labelSpacing, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
-        containerPanel.add(scroll);
+        
+        if(dOut != null) {
+        	JLabel lbl = new JLabel("Evaluation Results");
+    		lbl.setFont(labelFont);
+    		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
+    		lbl.setBounds(containerPanel.getWidth()*2/5, yDist, containerPanel.getWidth()/5, bigLabelSpacing);
+    		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+    		containerPanel.add(lbl);
+    		
+    		yDist = yDist + bigLabelSpacing;
+    		
+	        table = new JTable(dOut.getEvaluationGrid(), columnNames);
+	        table.setFillsViewportHeight(true);
+	        for(int x=0;x<table.getColumnCount();x++){
+	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
+	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
+	        }
+	        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+	        resizeColumnWidth(table, refWidth);
+	        
+	        scroll2 = new JScrollPane(table);
+	        scroll2.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
+	        containerPanel.add(scroll2);
+	        yDist = yDist + scroll2.getHeight() + labelSpacing/2;
+        }
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Additional Files ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(outFrame.getWidth()/4, miscPanel.getHeight() + scroll.getHeight() + 2*labelSpacing, outFrame.getWidth()/2, 2*bigLabelSpacing);
+		fPanel.setBounds(outFrame.getWidth()/4, yDist, outFrame.getWidth()/2, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
 		fPanel.setLayout(null);
 		
@@ -283,21 +328,25 @@ public class OutputFrame {
 		return containerPanel;
 	}
 	
-	public void resizeColumnWidth(JTable table) {
+	public int resizeColumnWidth(JTable table, int refWidth) {
 	    final TableColumnModel columnModel = table.getColumnModel();
 	    int width = 60; // Min width
 	    
 	    for (int column = 0; column < table.getColumnCount(); column++) {
 	        
-	        for (int row = 0; row < table.getRowCount(); row++) {
-	            TableCellRenderer renderer = table.getCellRenderer(row, column);
-	            Component comp = table.prepareRenderer(renderer, row, column);
-	            width = Math.max(comp.getPreferredSize().width +1 , width);
-	        }
-	        if(width > 100)
-	            width = 100;
+	        if(refWidth <= 0) {
+		    	for (int row = 0; row < table.getRowCount(); row++) {
+		            TableCellRenderer renderer = table.getCellRenderer(row, column);
+		            Component comp = table.prepareRenderer(renderer, row, column);
+		            width = Math.max(comp.getPreferredSize().width +1 , width);
+		        }
+		        if(width > 100)
+		            width = 100;
+	        } else width = refWidth;
 	        columnModel.getColumn(column).setPreferredWidth(width);
 	    }
+	    
+	    return width;
 	}
 	
 	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){

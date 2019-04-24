@@ -41,7 +41,7 @@
 
 * unsw/unsw_fuzzers.loader
 
-unsw/unsw_DoS.loader
+* unsw/unsw_DoS.loader
 
 * unsw/unsw_exploits.loader
 
@@ -53,11 +53,11 @@ unsw/unsw_DoS.loader
 
 * unsw/unsw_shellcode.loader
 
-
-* sint\iscx_synthetic_contextual.loader
+sint\iscx_synthetic_contextual.loader
 
 * sint\iscx_synthetic_point.loader
 * sint\iscx_synthetic_collective.loader
 * kddcup\kddcup_r2l_500.loader
 * iscx\iscx_infiltrator_500.loader
 * nslkdd\nslkdd_probe_500.loader
+* financial_distress.loader

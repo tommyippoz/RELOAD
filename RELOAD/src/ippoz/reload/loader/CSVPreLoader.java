@@ -134,7 +134,6 @@ public class CSVPreLoader extends CSVLoader {
 									i++;
 								}
 								obList.add(current);
-								//System.out.println(readLine);
 								if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
 									injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
 							}

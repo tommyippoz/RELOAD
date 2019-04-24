@@ -91,13 +91,15 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		// Get the objects to process, and a data storage for counting and output:
 		DBIDs ids = relation.getDBIDs();
 		WritableDoubleDataStore scores = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_DB, 0.);
-
+		WritableDoubleDataStore distances = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_DB, 0.);
+		
 		double inc = 1. / (k - 1);
 		double min = Double.POSITIVE_INFINITY, max = 0.0;
 		// Process all objects
 		for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
 			// Find the nearest neighbors (using an index, if available!)
 			DBIDs neighbors = knnq.getKNNForDBID(iter, k);
+			double maxDist = -1;
 			// For each neighbor, except ourselves, increase the in-degree:
 			for(DBIDIter nei = neighbors.iter(); nei.valid(); nei.advance()) {
 				if(DBIDUtil.equal(iter, nei)) {
@@ -111,13 +113,19 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 					max = value;
 				}
 				scores.put(nei, value);
+				
+				double instDist = dq.distance(iter, nei);
+				if(instDist > maxDist)
+					maxDist = instDist;
+				
 			}
+			distances.put(iter, maxDist);
 		}
 
 		resList = new ArrayList<ODINScore>(ids.size());
 		ids = relation.getDBIDs();
 		for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
-			resList.add(new ODINScore(database.getBundle(iter), scores.doubleValue(iter)));
+			resList.add(new ODINScore(database.getBundle(iter), scores.doubleValue(iter), distances.doubleValue(iter)));
 		}
 		Collections.sort(resList);
 
@@ -131,7 +139,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
-		else if(!Double.isNaN(partialResult = hasResult(newInstance)))
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
 			double odin = 0;
@@ -142,36 +150,17 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 			}
 			extList.add(new ODINScore(newInstance, 0.0));
 			for(ODINScore os : resList){
-				if(!os.getVector().equals(newInstance) && isKNN(newInstance, extList, os))
+				if(!os.getVector().equals(newInstance) && isKNN(newInstance, os))
 					odin = odin + inc;
 			}
 			return odin;			
 		}
 	}
 	
-	private boolean isKNN(NumberVector toCheck, List<ODINScore> scoreList, ODINScore os){
-		List<KNNValue> list = new ArrayList<KNNValue>() {
-		    private static final long serialVersionUID = 1L;
-
-			public boolean add(KNNValue mt) {
-		        int index = Collections.binarySearch(this, mt);
-		        if (index < 0) 
-		        	index = ~index;
-		        super.add(index, mt);
-		        return true;
-		    }
-		};
+	private boolean isKNN(NumberVector toCheck, ODINScore os){
 		DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
 		double refDist = getSimilarity(sq, toCheck, os.getVector());
-		for(int j=0;j<scoreList.size();j++) {
-			if(!os.getVector().equals(scoreList.get(j).getVector())){
-				list.add(new KNNValue(getSimilarity(sq, os.getVector(), scoreList.get(j).getVector()), j));
-				if(list.size() > k && list.get(k).getScore() < refDist)
-					return false;
-			}
-		}
-		return true;
-
+		return refDist <= os.getDistanceToKthNeighbour();
 	} 
 
 	private double getSimilarity(DistanceQuery<NumberVector> sq, NumberVector arg0, NumberVector arg1) {
@@ -195,24 +184,38 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	protected Logging getLogger() {
 		return LOG;
 	}
+	
+	public static Vector extractVector(SingleObjectBundle bundle){
+		double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
+		Vector data = new Vector(bValues.length);
+		for(int i=0;i<data.getDimensionality();i++){
+			((Vector)data).set(i, bValues[i]);
+		}
+		return data;
+	}
 
 	private class ODINScore implements Comparable<ODINScore> {
 
 		private NumberVector data;
 
 		private double odin;
+		
+		private double distanceToKthNeighbour;
 
-		public ODINScore(SingleObjectBundle bundle, double odin) {
+		public ODINScore(SingleObjectBundle bundle, double odin, double distanceToKthNeighbour) {
 			this.odin = odin;
+			this.distanceToKthNeighbour = distanceToKthNeighbour;
 			double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
 			data = new Vector(bValues.length);
 			for(int i=0;i<data.getDimensionality();i++){
 				((Vector)data).set(i, bValues[i]);
 			}
 		}
+	
 
-		public ODINScore(String vString, String odin) {
+		public ODINScore(String vString, String odin, String distK) {
 			this.odin = Double.parseDouble(odin);
+			this.distanceToKthNeighbour = Double.parseDouble(distK);
 			String[] splitted = vString.split(",");
 			data = new Vector(splitted.length);
 			for(int i=0;i<data.getDimensionality();i++){
@@ -228,6 +231,10 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		public double getODIN() {
 			return odin;
 		}
+		
+		public double getDistanceToKthNeighbour(){
+			return distanceToKthNeighbour;
+		}
 
 		public NumberVector getVector(){
 			return data;
@@ -241,33 +248,6 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		@Override
 		public String toString() {
 			return "ODINScore [data=" + data.toString() + ", odin=" + odin + "]";
-		}
-
-	}
-
-	private class KNNValue implements Comparable<KNNValue>{
-
-		private double score;
-
-		private int index;
-
-		public KNNValue(double score, int index) {
-			this.score = score;
-			this.index = index;
-		}
-
-		public double getScore() {
-			return score;
-		}
-		
-		@Override
-		public int compareTo(KNNValue o) {
-			return Double.compare(score, o.getScore());
-		}
-
-		@Override
-		public String toString() {
-			return "KNNValue [score=" + score + ", index=" + index + "]";
 		}
 
 	}
@@ -331,7 +311,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						resList.add(new ODINScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2]));
+						resList.add(new ODINScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2], readed.split(";")[3]));
 					}
 				}
 				reader.close();
@@ -349,14 +329,14 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("data (enclosed in {});k;odin\n");
+				writer.write("data (enclosed in {});k;odin;distanceToKthNeighbour\n");
 				for(ODINScore ar : resList){
-					writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getODIN() + "\n");
+					writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getODIN() + ";" + ar.getDistanceToKthNeighbour() + "\n");
 				}
 				writer.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to write LOF file");
+			AppLogger.logException(getClass(), ex, "Unable to write ODIB file");
 		} 
 	}
 

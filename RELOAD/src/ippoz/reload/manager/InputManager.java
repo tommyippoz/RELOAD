@@ -144,6 +144,8 @@ public class InputManager {
 
 	public static final String OPTIMIZATION_NEEDED_FLAG = "OPTIMIZATION_FLAG";
 	
+	public static final String EVALUATION_NEEDED_FLAG = "EVALUATION_FLAG";
+	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
 	
@@ -629,6 +631,16 @@ public class InputManager {
 			return true;
 		}
 	}
+	
+	public boolean getEvaluationFlag() {
+		if(prefManager.hasPreference(EVALUATION_NEEDED_FLAG))
+			return !prefManager.getPreference(EVALUATION_NEEDED_FLAG).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					EVALUATION_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
+	}
 
 	public String getOutputFolder() {
 		if(prefManager.hasPreference(OUTPUT_FOLDER))
@@ -902,7 +914,7 @@ public class InputManager {
 	}
 
 	public boolean filteringResultExists(String datasetName) {
-		return new File(getScoresFolder() + datasetName + "_filtered.csv").exists();
+		return new File(getScoresFolder() + datasetName + File.separatorChar + datasetName + "_filtered.csv").exists();
 	}
 
 	public void removeDataset(String option) {
@@ -1203,5 +1215,7 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
 		}
 	}
+
+	
 	
 }

@@ -9,6 +9,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppUtility;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +28,8 @@ public class PearsonFeatureSelector extends FeatureSelector {
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
 		double corr = 0;
-		double newCorr = 0;
-		int count = 0;
+		List<Double> values = new LinkedList<Double>();
+		List<Double> labels = new LinkedList<Double>();
 		List<Snapshot> snapList = null;
 		Map<DataSeries, Double> outMap = new HashMap<DataSeries, Double>();
 		for(DataSeries ds : seriesList){
@@ -36,15 +37,23 @@ public class PearsonFeatureSelector extends FeatureSelector {
 				corr = 0;
 				for(Knowledge know : kList){
 					snapList = toSnapList(know, ds);
-					newCorr = new PearsonsCorrelation().correlation(
-							AppUtility.toPrimitiveArray(getSnapValues(snapList)), 
-							AppUtility.toPrimitiveArray(getSnapLabels(snapList)));
-					if(Double.isFinite(newCorr)){
-						corr = corr + newCorr;
-						count++;
-					}
+					values.addAll(getSnapValues(snapList));
+					labels.addAll(getSnapLabels(snapList));
 				}
-				outMap.put(ds, (corr/count));
+				for(int i=0;i<values.size();i++){
+					if(!Double.isFinite(values.get(i))){
+						values.remove(i);
+						values.add(i, 0.0);
+					} 
+					if(!Double.isFinite(labels.get(i))){
+						labels.remove(i);
+						labels.add(i, 0.0);
+					} 
+				}
+				corr = new PearsonsCorrelation().correlation(
+						AppUtility.toPrimitiveArray(values), 
+						AppUtility.toPrimitiveArray(labels));
+				outMap.put(ds, corr);
 			}
 		}
 		return outMap;
