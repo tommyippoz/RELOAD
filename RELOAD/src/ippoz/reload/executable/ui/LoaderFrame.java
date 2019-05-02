@@ -16,8 +16,11 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -116,13 +119,13 @@ public class LoaderFrame {
 		
 		JPanel runsPanel = new JPanel();
 		runsPanel.setBackground(Color.WHITE);
-		runsPanel.setBounds(5, generalPanel.getHeight() + 10, containerPanel.getWidth()-10, 7*bigLabelSpacing + 10);
+		runsPanel.setBounds(5, generalPanel.getHeight() + 10, containerPanel.getWidth()-10, 9*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Runs Setup ", 
 				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		runsPanel.setBorder(tb);
 		runsPanel.setLayout(null);
 		
-		showPreferenceLabels(runsPanel, 1*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
+		showPreferenceButton(runsPanel, 1*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
@@ -134,17 +137,26 @@ public class LoaderFrame {
 				loaderPref.hasPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training");
 		
-		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
+		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVPreLoader.TRAIN_SKIP_ROWS, 
+				loaderPref.hasPreference(CSVPreLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVPreLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
+		
+		showPreferenceButton(runsPanel, 5*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
 				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 5*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
+		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, CSVPreLoader.VALIDATION_FAULTY_TAGS, 
+		showPreferenceLabels(runsPanel, 7*bigLabelSpacing, CSVPreLoader.VALIDATION_FAULTY_TAGS, 
 				loaderPref.hasPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation");
+		
+		showPreferenceLabels(runsPanel, 8*bigLabelSpacing, CSVPreLoader.VALIDATION_SKIP_ROWS, 
+				loaderPref.hasPreference(CSVPreLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVPreLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
+		
 		containerPanel.add(runsPanel);
 		
 		JPanel dataPanel = new JPanel();
@@ -222,13 +234,13 @@ public class LoaderFrame {
 				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE).trim().length() == 0){
 			output = output + "Wrong TRAIN_CSV_FILE value: remember to specify file for training.\n";
 		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE)).exists()){
-			output = output + "TRAIN_CSV_FILE does not exist.\n";
+			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE)) +  ") does not exist.\n";
 		}
 		if(!loaderPref.hasPreference(CSVPreLoader.VALIDATION_CSV_FILE) || 
 				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_CSV_FILE value: remember to specify file for validation.\n";
 		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE)).exists()){
-			output = output + "VALIDATION_CSV_FILE does not exist.\n";
+			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE)) +  ") does not exist.\n";
 		}
 		if(!loaderPref.hasPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE) || 
 				loaderPref.getPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
@@ -283,7 +295,7 @@ public class LoaderFrame {
 
 			public void workOnUpdate() {
 				if (textField.getText() != null && textField.getText().length() > 0){
-	        		loaderPref.updatePreference(prefName, textField.getText(), false);
+	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
 	        	}
 			}
 		});
@@ -292,7 +304,38 @@ public class LoaderFrame {
 		
 	}
 	
-private void showPreference2Labels(JPanel root, int panelY, String prefName, String textFieldText, String description){
+	private void showPreferenceButton(JPanel root, int panelY, String prefName, String textFieldText, String description){
+		
+		JLabel lbl = new JLabel(prefName);
+		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);
+		lbl.setFont(bigFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		
+		root.add(lbl);
+		
+		JButton button = new JButton(textFieldText);
+		button.setVisible(true);
+		button.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, bigLabelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				JFileChooser jfc = new JFileChooser(new File("").getAbsolutePath());
+				int returnValue = jfc.showOpenDialog(null);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+					File selectedFile = jfc.getSelectedFile();
+					Path pathAbsolute = Paths.get(selectedFile.getAbsolutePath());
+			        Path pathBase = Paths.get(new File(iManager.getDatasetsFolder()).getAbsolutePath());
+					if(!selectedFile.isDirectory()){
+						button.setText(pathBase.relativize(pathAbsolute).toString());
+						loaderPref.updatePreference(prefName, pathBase.relativize(pathAbsolute).toString(), true, false);
+					} else JOptionPane.showMessageDialog(lFrame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a folder");
+				}
+			} } );
+		root.add(button);		
+	}
+	
+	private void showPreference2Labels(JPanel root, int panelY, String prefName, String textFieldText, String description){
 		
 		JLabel lbl = new JLabel(prefName);
 		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);

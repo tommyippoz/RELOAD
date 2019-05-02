@@ -1121,18 +1121,22 @@ public class InputManager {
 				
 				writer.write("\n* Data Partitioning.\n\n");
 				
-				writer.write("\n* File Used for Filtering\n" +
-						"FILTERING_CSV_FILE = \n");
-				writer.write("\n* Golden Runs.\n" + 
-						"GOLDEN_RUN_IDS = 1 - 10\n");
 				writer.write("\n* File Used for Training\n" +
 						"TRAIN_CSV_FILE = \n");
 				writer.write("\n* Train Runs.\n" + 
 						"TRAIN_RUN_IDS = 1 - 10\n");
+				writer.write("\n* Train Faulty Tags.\n" + 
+						"TRAIN_FAULTY_TAGS = attack\n");
+				writer.write("\n* Train Runs.\n" + 
+						"TRAIN_SKIP_ROWS = \n");
 				writer.write("\n* File Used for Validation\n" +
 						"VALIDATION_CSV_FILE = \n");
 				writer.write("\n* Validation Runs.\n" + 
 						"VALIDATION_RUN_IDS = 1 - 10\n");
+				writer.write("\n* Train Faulty Tags.\n" + 
+						"VALIDATION_FAULTY_TAGS = attack\n");
+				writer.write("\n* Train Runs.\n" + 
+						"VALIDATION_SKIP_ROWS = \n");
 				
 				writer.write("\n* Parsing Dataset.\n\n");
 				
@@ -1141,9 +1145,7 @@ public class InputManager {
 				writer.write("\n* Column Containing the 'Label' Feature\n" + 
 						"LABEL_COLUMN = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
-						"EXPERIMENT_ROWS = 100\n");
-				writer.write("\n* Tags Identifying an Attack in This Dataset.\n" + 
-						"FAULTY_TAGS = \n");	
+						"EXPERIMENT_ROWS = 100\n");	
 				
 				writer.close();
 			}

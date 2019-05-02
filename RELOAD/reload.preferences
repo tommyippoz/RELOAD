@@ -9,13 +9,13 @@ FEATURE_SELECTION_FLAG = 0
 TRAIN_FLAG = 1
 
 * K Counter for K-Fold Training/Validation
-KFOLD_COUNTER = 10
+KFOLD_COUNTER = 2
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
 METRIC = CUSTOM
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
-METRIC_TYPE = absolute
+METRIC_TYPE = relative
 
 * Expected duration of injected faults (observations).
 ANOMALY_WINDOW = 0
@@ -40,10 +40,10 @@ OPTIMIZATION_FLAG = 1
 * Filtering
 
 * Strategy to slide windows. Accepted Values are FIFO, FIFO_NORMAL, RANKED
-SLIDING_WINDOW_POLICY = FIFO, FIFO_Normal
+SLIDING_WINDOW_POLICY = FIFO
 
 * Size of the sliding window buffer
-SLIDING_WINDOW_SIZE = 100
+SLIDING_WINDOW_SIZE = 20, 50, 100
 
 * Evaluation
 

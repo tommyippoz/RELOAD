@@ -96,6 +96,8 @@ public class BuildUI {
 	private static final String SETUP_LABEL_OPTIMIZATION = "Optimization";
 	
 	private static final String SETUP_LABEL_EVALUATION = "Evaluation";
+
+	private static final String PATH_LABEL_DATASETS_FOLDER = "Datasets Folder";
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
@@ -171,7 +173,7 @@ public class BuildUI {
 		return frame;
 	}
 	
-	private String panelToPreference(String textName) {
+	public static String panelToPreference(String textName) {
 		switch(textName){
 			case SETUP_LABEL_PREFFILE:
 				return null;
@@ -580,7 +582,7 @@ public class BuildUI {
 		pathPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Paths", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 8*bigLabelSpacing + 2*labelSpacing);
+		pathPanel.setBounds(frame.getWidth()/3 + 10, tabY, frame.getWidth()/3 - 20, 9*bigLabelSpacing + 2*labelSpacing);
 		pathPanel.setBorder(tb);
 		pathPanel.setLayout(null);
 		
@@ -588,13 +590,14 @@ public class BuildUI {
 		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getInputFolder(), true), pathMap);
 		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getOutputFolder(), true), pathMap);
 		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getConfigurationFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 6*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 7*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DATASETS_FOLDER, createFCHPanel(PATH_LABEL_DATASETS_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getDatasetsFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 6*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 7*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 8*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 8*bigLabelSpacing, (int)(setupPanel.getWidth()*0.96), bigLabelSpacing);
+		seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 9*bigLabelSpacing, (int)(setupPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Open RELOAD Preferences");
 		button.setVisible(true);

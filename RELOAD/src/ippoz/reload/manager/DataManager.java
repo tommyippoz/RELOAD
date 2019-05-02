@@ -25,7 +25,7 @@ public abstract class DataManager extends ThreadScheduler {
 	public DataManager(Map<KnowledgeType, List<Knowledge>> map) {
 		super();
 		kMap = map;
-		if(kMap != null && kMap.size() > 0)
+		if(isValidKnowledge())
 			AppLogger.logInfo(getClass(), "Instances Loaded with " + getInjectionsRatio() + "% of Faults/Attacks");
 	}      
 	
@@ -53,6 +53,10 @@ public abstract class DataManager extends ThreadScheduler {
 			} else return null;
 		} else return null;
 
+	}
+	
+	public boolean isValidKnowledge(){
+		return kMap != null && !kMap.isEmpty() && getKnowledge(kMap.keySet().iterator().next()) != null && !getKnowledge(kMap.keySet().iterator().next()).isEmpty();
 	}
 	
 	public List<Knowledge> getKnowledge() {

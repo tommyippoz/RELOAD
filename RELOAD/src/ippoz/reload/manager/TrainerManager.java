@@ -138,13 +138,15 @@ public class TrainerManager extends TrainDataManager {
 	public void train(String outFilename){
 		long start = System.currentTimeMillis();
 		try {
-			start();
-			join();
-			Collections.sort((List<AlgorithmTrainer>)getThreadList());
-			AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
-			saveScores(filterTrainers(getThreadList()), outFilename + "_scores.csv");
-			saveThresholdRelevance(filterTrainers(getThreadList()), outFilename + "_thresholdrelevance.csv");
-			AppLogger.logInfo(getClass(), "Training scores saved");
+			if(isValidKnowledge()){
+				start();
+				join();
+				Collections.sort((List<AlgorithmTrainer>)getThreadList());
+				AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
+				saveScores(filterTrainers(getThreadList()), outFilename + "_scores.csv");
+				saveThresholdRelevance(filterTrainers(getThreadList()), outFilename + "_thresholdrelevance.csv");
+				AppLogger.logInfo(getClass(), "Training scores saved");
+			} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
 		}

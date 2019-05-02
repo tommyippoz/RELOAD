@@ -79,6 +79,14 @@ public class PreferencesManager {
 				updatePreferencesFile(tag, newValue);
 		}
 	}
+	
+	public void updatePreference(String tag, String newValue, boolean createNew, boolean updateFile) {
+		if(createNew || hasPreference(tag)){
+			preferences.put(tag, newValue);
+			if(updateFile)
+				updatePreferencesFile(tag, newValue);
+		}
+	}
 
 	private void updatePreferencesFile(String tag, String newValue) {
 		BufferedReader reader = null;

@@ -60,9 +60,8 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		}
 		if (knowledge.size() > 0) {
 			if (!absolute)
-				return 1.0
-						* detectionHits
-						/ (knowledge.size() - getUndetectable(overallInj) - undetectableCount);
+				// getUndetectable?
+				return 1.0 * detectionHits / (knowledge.size() - undetectableCount);
 			else
 				return detectionHits;
 		} else

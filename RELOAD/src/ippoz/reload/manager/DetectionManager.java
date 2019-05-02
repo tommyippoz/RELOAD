@@ -234,23 +234,25 @@ public class DetectionManager {
 	
 	private Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
 		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
-		for(AlgorithmType at : algTypes){
-			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(at)))
-				map.put(DetectionAlgorithm.getKnowledgeType(at), new ArrayList<Knowledge>(expList.size()));
+		if(expList != null && !expList.isEmpty()){
+			for(AlgorithmType at : algTypes){
+				if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(at)))
+					map.put(DetectionAlgorithm.getKnowledgeType(at), new ArrayList<Knowledge>(expList.size()));
+			}
+			if(needFiltering()){
+				if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS)))
+					map.put(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS), new ArrayList<Knowledge>(expList.size()));
+			}
+			for(int i=0;i<expList.size();i++){
+				if(map.containsKey(KnowledgeType.GLOBAL))
+					map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
+				if(map.containsKey(KnowledgeType.SLIDING))
+					map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
+				if(map.containsKey(KnowledgeType.SINGLE))
+					map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
+			}
+			AppLogger.logInfo(getClass(), expList.size() + " runs loaded (K-Fold:" + iManager.getKFoldCounter() + ")");
 		}
-		if(needFiltering()){
-			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS)))
-				map.put(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS), new ArrayList<Knowledge>(expList.size()));
-		}
-		for(int i=0;i<expList.size();i++){
-			if(map.containsKey(KnowledgeType.GLOBAL))
-				map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
-			if(map.containsKey(KnowledgeType.SLIDING))
-				map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
-			if(map.containsKey(KnowledgeType.SINGLE))
-				map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
-		}
-		AppLogger.logInfo(getClass(), expList.size() + " runs loaded (K-Fold:" + iManager.getKFoldCounter() + ")");
 		return map;
 	}
 
@@ -299,14 +301,16 @@ public class DetectionManager {
 			if(lList.size() > 1){
 				for(Loader l : lList){
 					expList = l.fetch();
-					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-					score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
-					if(score > bestScore){
-						bestRuns = l.getRuns();
-						bestExpList = expList;
-						bestScore = score;
-					}
-					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
+					if(expList != null && expList.size() > 0){
+						AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
+						score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
+						if(score > bestScore){
+							bestRuns = l.getRuns();
+							bestExpList = expList;
+							bestScore = score;
+						}
+						AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
+					} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 				}
 				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
 				dOut.setBestRuns(bestRuns);
@@ -454,11 +458,13 @@ public class DetectionManager {
 					AppLogger.logError(getClass(), "TooManyLoaders", "Too many validation loaders. Evaluating just the first.");
 				Loader l = lList.iterator().next();
 				expList = l.fetch();
-				dOut = singleEvaluation(metList, generateKnowledge(expList), bestSetup.split("-")[1].trim(), bestSetup.split("-")[0].trim(), printOutput);
-				dOut.setBestRuns(l.getRuns());	
-				//dOut.summarizeCSV(iManager.getOutputFolder());
-				dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
-				AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+				if(expList != null && expList.size() > 0){
+					dOut = singleEvaluation(metList, generateKnowledge(expList), bestSetup.split("-")[1].trim(), bestSetup.split("-")[0].trim(), printOutput);
+					dOut.setBestRuns(l.getRuns());	
+					//dOut.summarizeCSV(iManager.getOutputFolder());
+					dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+					AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validatioon data");
 			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to decode '" + bestSetup + "' threhsolds");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");

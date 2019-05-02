@@ -28,10 +28,14 @@ public class CSVPreLoader extends CSVLoader {
 	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
 	
 	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
+	
+	public static final String TRAIN_SKIP_ROWS = "TRAIN_SKIP_ROWS";
 
 	public static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
 	
 	public static final String VALIDATION_FAULTY_TAGS = "VALIDATION_FAULTY_TAGS";
+	
+	public static final String VALIDATION_SKIP_ROWS = "VALIDATION_SKIP_ROWS";
 
 	public static final String SKIP_COLUMNS = "SKIP_COLUMNS";
 
@@ -39,16 +43,24 @@ public class CSVPreLoader extends CSVLoader {
 
 	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 	
-	
-	
 	private List<MonitoredData> dataList;
 	
 	private List<String> faultyTagList;
 	
+	private List<String> avoidTagList;
+	
 	private int anomalyWindow;
 	
+	public CSVPreLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
+		super(runs, csvFile, skip, labelCol, experimentRows);
+		this.anomalyWindow = anomalyWindow;
+		parseFaultyTags(faultyTags);
+		parseAvoidTags(avoidTags);
+		readCsv();
+	}
+	
 	public CSVPreLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
-		this(list, extractFile(prefManager, datasetsFolder, tag), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), extractFaultyTags(prefManager, tag), anomalyWindow);
+		this(list, extractFile(prefManager, datasetsFolder, tag), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), extractFaultyTags(prefManager, tag), extractAvoidTags(prefManager, tag), anomalyWindow);
 	}
 		private static String extractFaultyTags(PreferencesManager prefManager, String tag) {
 		if(tag.equals("train") && prefManager.hasPreference(TRAIN_FAULTY_TAGS))
@@ -57,25 +69,34 @@ public class CSVPreLoader extends CSVLoader {
 			return prefManager.getPreference(VALIDATION_FAULTY_TAGS);
 		else return prefManager.getPreference("FAULTY_TAGS");
 	}
-
+	
+	private static String extractAvoidTags(PreferencesManager prefManager, String tag) {
+		if(tag.equals("train") && prefManager.hasPreference(TRAIN_SKIP_ROWS))
+			return prefManager.getPreference(TRAIN_SKIP_ROWS);
+		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_SKIP_ROWS))
+			return prefManager.getPreference(VALIDATION_SKIP_ROWS);
+		else return prefManager.getPreference("SKIP_ROWS");
+	}
 	
 	private static File extractFile(PreferencesManager prefManager, String datasetsFolder, String tag){
 		String filename = datasetsFolder;
 		filename = datasetsFolder + prefManager.getPreference(tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE);
 		return new File(filename);
-	}
-
-	public CSVPreLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, int anomalyWindow) {
-		super(runs, csvFile, skip, labelCol, experimentRows);
-		this.anomalyWindow = anomalyWindow;
-		parseFaultyTags(faultyTags);
-		readCsv();
-	}
+	}	
 	
 	private void parseFaultyTags(String faultyTags) {
 		faultyTagList = new LinkedList<String>();
 		for(String str : faultyTags.split(",")){
 			faultyTagList.add(str.trim());
+		}
+	}
+	
+	private void parseAvoidTags(String avoidTags) {
+		avoidTagList = new LinkedList<String>();
+		if(avoidTags != null && avoidTags.trim().length() > 0) {
+			for(String str : avoidTags.split(",")){
+				avoidTagList.add(str.trim());
+			}
 		}
 	}
 	
@@ -98,6 +119,7 @@ public class CSVPreLoader extends CSVLoader {
 		int rowIndex = 0, i;
 		try {
 			dataList = new LinkedList<MonitoredData>();
+			AppLogger.logInfo(getClass(), "Loading " + csvFile.getPath());
 			if(csvFile != null && csvFile.exists()){
 				reader = new BufferedReader(new FileReader(csvFile));
 				while(reader.ready() && readLine == null){
@@ -133,14 +155,19 @@ public class CSVPreLoader extends CSVLoader {
 									} 
 									i++;
 								}
-								obList.add(current);
-								if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
-									injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
+								if(readLine.split(",")[labelCol] != null) { 
+									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
+										obList.add(current);
+										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
+											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
+									}
+								}
 							}
 							rowIndex++;
 						}
 					}
 				}
+				AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 				reader.close();
 			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + csvFile.getPath() + "' not found");
 		} catch (IOException ex){
