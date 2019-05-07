@@ -55,10 +55,18 @@
 
 * sint\iscx_synthetic_contextual.loader
 
-sint\iscx_synthetic_point.loader
+* sint\iscx_synthetic_point.loader
 * sint\iscx_synthetic_collective.loader
 * kddcup\kddcup_r2l_500.loader
 * iscx\iscx_infiltrator_500.loader
 * nslkdd\nslkdd_probe_500.loader
 * financial_distress.loader
 * id_kaggle.loader
+* nslkdd\nslkdd_probe_to_unknown.loader
+
+sint\unsw_sint_collective.loader
+* sint\unsw_sint_contextual.loader
+* sint\unsw_sint_point.loader
+* sint\kdd_sint_collective.loader
+* sint\kdd_sint_contextual.loader
+* sint\kdd_sint_point.loader

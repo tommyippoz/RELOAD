@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +93,9 @@ public class DetectorOutput {
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
 				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
 				header2 = ",,,,,";
-				map = detailedExperimentsScores.get(detailedExperimentsScores.keySet().iterator().next()).get(0);
+				String tag = null;
+				//while((tag = ))
+				map = detailedExperimentsScores.get("expRun_52").get(0);
 				for(AlgorithmVoter av : map.keySet()){
 					header1 = header1 + av.getAlgorithmType() + "(" + av.getDataSeries().toString() + ")" + ",,,";
 					header2 = header2 + "score,decision_function,eval,";
@@ -99,22 +103,24 @@ public class DetectorOutput {
 				writer.write(header1 + "\n" + header2 + "\n");
 				
 				for(String expName : detailedKnowledgeScores.keySet()){
-					timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
-					for(int i=0;i<detailedKnowledgeScores.get(expName).size();i++){
-						writer.write(expName + "," + 
-								detailedKnowledgeScores.get(expName).get(i).getDateOffset(timedRef) + "," + 
-								(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
-								(detailedKnowledgeScores.get(expName).get(i).getValue() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
-								detailedKnowledgeScores.get(expName).get(i).getValue() + ",");
-						if(i < detailedExperimentsScores.get(expName).size()){
-							map = detailedExperimentsScores.get(expName).get(i);
-							for(AlgorithmVoter av : map.keySet()){
-								writer.write(map.get(av).getScore() + "," + 
-										(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
-										map.get(av).getScoreEvaluation() + ",");
+					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
+						timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
+						for(int i=0;i<detailedKnowledgeScores.get(expName).size();i++){
+							writer.write(expName + "," + 
+									detailedKnowledgeScores.get(expName).get(i).getDateOffset(timedRef) + "," + 
+									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
+									(detailedKnowledgeScores.get(expName).get(i).getValue() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
+									detailedKnowledgeScores.get(expName).get(i).getValue() + ",");
+							if(i < detailedExperimentsScores.get(expName).size()){
+								map = detailedExperimentsScores.get(expName).get(i);
+								for(AlgorithmVoter av : map.keySet()){
+									writer.write(map.get(av).getScore() + "," + 
+											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
+											map.get(av).getScoreEvaluation() + ",");
+								}
 							}
+							writer.write("\n");
 						}
-						writer.write("\n");
 					}
 				}
 				writer.close();
@@ -256,6 +262,33 @@ public class DetectorOutput {
 			}
 		}
 		return result;
+	}
+	
+	public Map<String, List<LabelledResult>> getLabelledScores(){
+		Map<AlgorithmVoter, AlgorithmResult> map;
+		Map<String, List<LabelledResult>> outMap = new HashMap<>();
+		AlgorithmVoter bestVoter = null;
+		if(detailedKnowledgeScores != null && detailedKnowledgeScores.size() > 0 && detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
+			for(String expName : detailedKnowledgeScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
+					map = detailedExperimentsScores.get(expName).get(0);
+					bestVoter = null;
+					for(AlgorithmVoter av : map.keySet()){
+						if(bestVoter == null || referenceMetric.compareResults(bestVoter.getMetricScore(), av.getMetricScore()) > 0)
+							bestVoter = av;
+					}
+					outMap.put(expName, new LinkedList<LabelledResult>());
+					for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
+						boolean tag = injections.get(expName).get(i) != null;
+						if(i < detailedExperimentsScores.get(expName).size()){
+							if(detailedExperimentsScores.get(expName).get(i).get(bestVoter) != null)
+								outMap.get(expName).add(new LabelledResult(tag, detailedExperimentsScores.get(expName).get(i).get(bestVoter)));
+						}
+					}
+				}
+			}
+		}
+		return outMap;
 	}
 
 }

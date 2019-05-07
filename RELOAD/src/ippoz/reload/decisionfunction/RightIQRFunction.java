@@ -29,7 +29,8 @@ public class RightIQRFunction extends IQRFunction {
 	
 	@Override
 	public String toCompactString() {
-		return "RIQR(" + q3 + " " + ratio + ")";
+		double iqr = q3 - q1;
+		return "RIQR(Q1:" + q1 + " Q3:" + q3 + " ratio:" + ratio + ") - {ANOMALY: value > " + (q3 + ratio*iqr) + "}";
 	}
 
 }

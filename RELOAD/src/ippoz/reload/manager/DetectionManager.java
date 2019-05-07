@@ -195,6 +195,7 @@ public class DetectionManager {
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
 				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
+				fsm.finalizeSelection(iManager.getDataSeriesDomain());
 				fsm.saveFilteredSeries(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
@@ -461,7 +462,6 @@ public class DetectionManager {
 				if(expList != null && expList.size() > 0){
 					dOut = singleEvaluation(metList, generateKnowledge(expList), bestSetup.split("-")[1].trim(), bestSetup.split("-")[0].trim(), printOutput);
 					dOut.setBestRuns(l.getRuns());	
-					//dOut.summarizeCSV(iManager.getOutputFolder());
 					dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
 					AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validatioon data");

@@ -12,11 +12,11 @@ import ippoz.reload.commons.support.AppUtility;
  * @author Tommy
  *
  */
-public class ClusterDecision extends DecisionFunction {
+public class KMeansDecision extends DecisionFunction {
 	
 	private String functionText;
 
-	public ClusterDecision(String functionText) {
+	public KMeansDecision(String functionText) {
 		super("cluster", DecisionFunctionType.CLUSTER);
 		this.functionText = functionText;
 	}
@@ -57,5 +57,7 @@ public class ClusterDecision extends DecisionFunction {
 	public String toCompactString() {
 		return "CLUSTER(" + functionText + ")";
 	}
+	
+	
 
 }

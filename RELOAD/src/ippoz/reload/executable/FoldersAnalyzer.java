@@ -24,7 +24,7 @@ public class FoldersAnalyzer {
 	
 	private static String targetFile = "summary.csv";
 	
-	private static String folderName = "../../../Desktop/RELOAD_Data/output_sint_fm/";
+	private static String folderName = "../../../Desktop/RELOAD_Data/output_nsliscxunsw/";
 	
 	private static int refIndex = 16;
 

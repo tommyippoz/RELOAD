@@ -35,7 +35,7 @@ public class RightConfidenceIntervalFunction extends DecisionFunction {
 	
 	@Override
 	public String toCompactString() {
-		return "RCONF(" + avg + " + " + ratio + "*" + std + ")";
+		return "RCONF(avg:" + avg + " ratio:" + ratio + " std:" + std + ")  - {ANOMALY: value > " + (avg +ratio*std) + "}";
 	}
 
 }

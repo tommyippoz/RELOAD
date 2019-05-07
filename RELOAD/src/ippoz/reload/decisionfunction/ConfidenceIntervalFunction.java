@@ -37,7 +37,7 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 
 	@Override
 	public String toCompactString() {
-		return "CONF(" + avg + " +- " + ratio + "*" + std + ")";
+		return "CONF(avg:" + avg + " ratio:" + ratio + " std:" + std + ") - {ANOMALY: value < " + (avg -ratio*std) + " or value > " + (avg +ratio*std) + "}";
 	}
 
 }

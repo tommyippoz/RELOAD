@@ -34,7 +34,12 @@ public class ThresholdDecision extends DecisionFunction {
 
 	@Override
 	public String toCompactString() {
-		return "THR(" + threshold + ")";
+		int index = (int)(threshold*scores.size())-1;
+		if(index < 0)
+			index = 0;
+		else if(index == scores.size())
+			index--;
+		return "THR(" + threshold + ") - {ANOMALY: value >= " + scores.get(index) + "}";
 	}
 
 }

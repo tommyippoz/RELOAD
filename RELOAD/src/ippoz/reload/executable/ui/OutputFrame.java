@@ -311,7 +311,7 @@ public class OutputFrame {
 		
 		JButton button = new JButton("Open Output Folder");
 		button.setVisible(true);
-		button.setBounds(miscPanel.getWidth()/4, labelSpacing, miscPanel.getWidth()/2, labelSpacing);
+		button.setBounds(miscPanel.getWidth()/7, labelSpacing, miscPanel.getWidth()*2/7, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				Desktop desktop = Desktop.getDesktop();
@@ -323,6 +323,21 @@ public class OutputFrame {
 				}
 			} } );	
 		fPanel.add(button);
+		
+		button = new JButton("Plot Results");
+		button.setVisible(true);
+		button.setBounds(miscPanel.getWidth()*4/7, labelSpacing, miscPanel.getWidth()*2/7, labelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				OutputDetailFrame odf;
+				if(dOut != null)
+					odf = new OutputDetailFrame(dOut);
+				else odf = new OutputDetailFrame(oOut);
+				odf.buildMainPanel();
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
 		containerPanel.add(fPanel);
 		
 		return containerPanel;

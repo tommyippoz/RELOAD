@@ -36,7 +36,8 @@ public class IQRFunction extends DecisionFunction {
 
 	@Override
 	public String toCompactString() {
-		return "IQR(" + q1 + " " + q3 + " " + ratio + ")";
+		double iqr = q3 - q1;
+		return "IQR(Q1:" + q1 + " Q3:" + q3 + " ratio:" + ratio + ") - {ANOMALY: value < " + (q1 - ratio*iqr) + " or value > " + (q3 + ratio*iqr) + "}";
 	}
 
 }

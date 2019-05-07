@@ -35,7 +35,7 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	
 	@Override
 	public String toCompactString() {
-		return "LCONF(" + avg + " - " + ratio + "*" + std + ")";
+		return "LCONF(avg:" + avg + " ratio:" + ratio + " std:" + std + ")  - {ANOMALY: value < " + (avg - ratio*std) + "}";
 	}
 
 }

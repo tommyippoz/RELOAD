@@ -82,7 +82,7 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	}
 	
 	private String getDefaultTmpFolder(){
-		return customELKI.getAlgorithmName() + "_tmp_RELOAD";
+		return "/tmp/" + customELKI.getAlgorithmName() + "_tmp_RELOAD";
 	}
 	
 	private String getFilename(){

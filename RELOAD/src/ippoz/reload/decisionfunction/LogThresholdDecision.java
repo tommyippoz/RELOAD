@@ -29,7 +29,7 @@ public class LogThresholdDecision extends DecisionFunction {
 
 	@Override
 	public String toCompactString() {
-		return "LOG(" + perc + "% " + size + ")";
+		return "LOG(" + perc + "% " + size + ") - {ANOMALY: value > " + (size*Math.log(1.0/(perc))) + "}";
 	}
 
 }

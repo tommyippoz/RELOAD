@@ -29,7 +29,8 @@ public class LeftIQRFunction extends IQRFunction {
 	
 	@Override
 	public String toCompactString() {
-		return "LIQR(" + q1 + " " + ratio + ")";
+		double iqr = q3 - q1;
+		return "LIQR(Q1:" + q1 + " Q3:" + q3 + " ratio:" + ratio + ") - {ANOMALY: value < " + (q1 - ratio*iqr) + "}";
 	}
 
 }

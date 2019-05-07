@@ -92,6 +92,9 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	 */
 	@Override
 	public OutlierResult run(Database db, Relation<V> relation) {
+		
+		long start = System.currentTimeMillis();
+		
 		DBIDs ids = relation.getDBIDs();
 		// Build a kernel matrix, to make O(n^3) slightly less bad.
 		SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
@@ -116,6 +119,9 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		// Build result representation.
 		DoubleRelation scoreResult = new MaterializedDoubleRelation("Angle-Based Outlier Degree", "abod-outlier", abodvalues, relation.getDBIDs());
 		OutlierScoreMeta scoreMeta = new InvertedOutlierScoreMeta(minmaxabod.getMin(), minmaxabod.getMax(), 0.0, Double.POSITIVE_INFINITY);
+		
+		System.out.println("TRAIN TIME: " + (System.currentTimeMillis() - start));
+		
 		return new OutlierResult(scoreMeta, scoreResult);
 
 	}
@@ -213,6 +219,9 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
+			
+			long start = System.currentTimeMillis();
+			
 			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
 			MeanVariance s = new MeanVariance();
 			List<KNNValue> nn = new LinkedList<KNNValue>();
@@ -265,6 +274,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 				}
 				
 			}
+			
+			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
 			return s.getNaiveVariance();
 		}
 	}

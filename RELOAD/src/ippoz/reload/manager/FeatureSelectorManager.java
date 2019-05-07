@@ -31,6 +31,8 @@ public class FeatureSelectorManager {
 	
 	private List<DataSeries> combinedFeatures;
 	
+	private List<DataSeries> finalizedFeatures;
+	
 	private DataCategory[] dataTypes;
 	
 	public FeatureSelectorManager(List<FeatureSelector> selectorsList, DataCategory[] dataTypes){
@@ -86,6 +88,21 @@ public class FeatureSelectorManager {
 		return combinedFeatures;
 	}
 	
+	public List<DataSeries> finalizeSelection(String dsDomain){
+		finalizedFeatures = new LinkedList<DataSeries>();
+		if(dsDomain.equals("ALL")){
+			finalizedFeatures.addAll(selectedFeatures);
+			finalizedFeatures.addAll(combinedFeatures);
+		} else if(dsDomain.equals("UNION")){
+			finalizedFeatures.addAll(combinedFeatures);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			finalizedFeatures.addAll(selectedFeatures);
+			finalizedFeatures.addAll(combinedFeatures);
+		}
+		AppLogger.logInfo(getClass(), "Finalized Data Series : " + finalizedFeatures.size());
+		return combinedFeatures;
+	}
+	
 	private void allCombinations(){
 		for(int i=0;i<selectedFeatures.size();i++){
 			for(int j=i+1;j<selectedFeatures.size();j++){
@@ -124,11 +141,8 @@ public class FeatureSelectorManager {
 		try {
 			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
 			writer.write("data_series,type\n");
-			for(DataSeries ds : selectedFeatures){
-				writer.write(ds.toString() + ",single\n");			
-			}
-			for(DataSeries ds : combinedFeatures){
-				writer.write(ds.toString() + ",composed\n");			
+			for(DataSeries ds : finalizedFeatures){
+				writer.write(ds.toString() + "\n");			
 			}
 			writer.close();
 		} catch(IOException ex){

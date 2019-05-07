@@ -3,7 +3,6 @@
  */
 package ippoz.reload.commons.knowledge;
 
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
