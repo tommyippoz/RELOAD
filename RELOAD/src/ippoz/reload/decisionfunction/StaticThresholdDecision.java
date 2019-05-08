@@ -30,4 +30,9 @@ public class StaticThresholdDecision extends DecisionFunction {
 		return "STHR(" + threshold + ")";
 	}
 
+	@Override
+	public String getClassifierTag() {
+		return "STATIC_THRESHOLD(" + threshold + ")";
+	}
+
 }

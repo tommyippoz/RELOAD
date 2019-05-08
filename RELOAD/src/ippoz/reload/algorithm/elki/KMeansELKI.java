@@ -65,7 +65,7 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
 			ar = new ClusteringResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
-			getDecisionFunction().classifyScore(ar);
+			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}

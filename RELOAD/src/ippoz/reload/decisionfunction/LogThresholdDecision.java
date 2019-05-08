@@ -32,4 +32,9 @@ public class LogThresholdDecision extends DecisionFunction {
 		return "LOG(" + perc + "% " + size + ") - {ANOMALY: value > " + (size*Math.log(1.0/(perc))) + "}";
 	}
 
+	@Override
+	public String getClassifierTag() {
+		return "LOG_THRESHOLD(" + perc + ")";
+	}
+
 }

@@ -39,7 +39,7 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomLOF)getAlgorithm()).calculateSingleOF(v));
-			getDecisionFunction().classifyScore(ar);
+			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}

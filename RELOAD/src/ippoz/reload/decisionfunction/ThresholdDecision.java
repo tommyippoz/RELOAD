@@ -39,7 +39,12 @@ public class ThresholdDecision extends DecisionFunction {
 			index = 0;
 		else if(index == scores.size())
 			index--;
-		return "THR(" + threshold + ") - {ANOMALY: value >= " + scores.get(index) + "}";
+		return "THRESHOLD(" + threshold + ") - {ANOMALY: value >= " + scores.get(index) + "}";
+	}
+
+	@Override
+	public String getClassifierTag() {
+		return "THRESHOLD(" + threshold + ")";
 	}
 
 }

@@ -42,7 +42,7 @@ public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
 			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomABOD<NumberVector>) getAlgorithm()).rankSingleABOF(newInstance));
-			getDecisionFunction().classifyScore(ar);
+			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}

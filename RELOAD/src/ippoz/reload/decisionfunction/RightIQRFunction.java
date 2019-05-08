@@ -3,16 +3,27 @@
  */
 package ippoz.reload.decisionfunction;
 
+import java.text.DecimalFormat;
+
 import ippoz.reload.algorithm.result.AlgorithmResult;
 
 /**
  * @author Tommy
  *
  */
-public class RightIQRFunction extends IQRFunction {
+public class RightIQRFunction extends DecisionFunction {
 	
+	protected double q1;
+	
+	protected double q3;
+	
+	protected double ratio;
+
 	protected RightIQRFunction(double ratio, double q1, double q3) {
-		super(ratio, q1, q3);
+		super("RIGHT_IQR", DecisionFunctionType.RIGHT_IQR);
+		this.q1 = q1;
+		this.q3 = q3;
+		this.ratio = ratio;
 	}
 
 	/* (non-Javadoc)
@@ -30,7 +41,15 @@ public class RightIQRFunction extends IQRFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		return "RIQR(Q1:" + q1 + " Q3:" + q3 + " ratio:" + ratio + ") - {ANOMALY: value > " + (q3 + ratio*iqr) + "}";
+		DecimalFormat df = new DecimalFormat("#.000");
+		return "RIGHT_IQR(Q1:" + df.format(q1) + " Q3:" + df.format(q3) + " ratio:" + ratio + ") - {ANOMALY: value > " + df.format(q3 + ratio*iqr) + "}";
 	}
+
+	@Override
+	public String getClassifierTag() {
+		return "RIGHT_IQR(" + ratio + ")";
+	}
+	
+	
 
 }

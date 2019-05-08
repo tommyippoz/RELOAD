@@ -57,6 +57,11 @@ public class KMeansDecision extends DecisionFunction {
 	public String toCompactString() {
 		return "CLUSTER(" + functionText + ")";
 	}
+
+	@Override
+	public String getClassifierTag() {
+		return "CLUSTER(" + functionText + ")";
+	}
 	
 	
 

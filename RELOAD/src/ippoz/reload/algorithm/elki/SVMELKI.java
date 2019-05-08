@@ -61,7 +61,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomSVM)getAlgorithm()).calculateSVM(v));
-			getDecisionFunction().classifyScore(ar);
+			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}

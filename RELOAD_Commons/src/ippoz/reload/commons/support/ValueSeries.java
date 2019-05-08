@@ -35,6 +35,7 @@ public class ValueSeries {
 	
 	public void addValue(double newValue){
 		values.add(newValue);
+		sorted = false;
 	}
 	
 	public double getMin(){

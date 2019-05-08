@@ -58,7 +58,7 @@ public class COFSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
 			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomCOF) getAlgorithm()).calculateSingleOF(newInstance));
-			getDecisionFunction().classifyScore(ar);
+			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}

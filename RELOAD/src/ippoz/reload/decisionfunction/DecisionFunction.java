@@ -104,6 +104,8 @@ public abstract class DecisionFunction {
 						return true;
 					else if(thresholdTag.equals("LEFT_IQR"))
 						return true;
+					else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
+						return true;
 					else if(thresholdTag.equals("RIGHT_IQR"))
 						return true;
 					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
@@ -116,6 +118,8 @@ public abstract class DecisionFunction {
 					if(thresholdTag.equals("CONFIDENCE_INTERVAL"))
 						return true;
 					else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
+						return true;
+					else if(thresholdTag.equals("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
 						return true;
 					else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
 						return true;
@@ -139,18 +143,22 @@ public abstract class DecisionFunction {
 	public String getClassifierName() {
 		return classifierName;
 	}
+	
+	public abstract String getClassifierTag();
 
 	public DecisionFunctionType getClassifierType() {
 		return classifierType;
 	}
 	
-	public void classifyScore(AlgorithmResult aResult){
+	public AnomalyResult classifyScore(AlgorithmResult aResult, boolean updateResult){
+		AnomalyResult anRes = null;
 		if(aResult != null){
 			aResult.setDecisionFunction(this);
-			//if(Double.isFinite(aResult.getScore()))
-				aResult.setScoreEvaluation(classify(aResult));
-			//else aResult.setScoreEvaluation(AnomalyResult.UNKNOWN);
+			anRes = classify(aResult);
+			if(updateResult)
+				aResult.setScoreEvaluation(anRes);
 		}
+		return anRes;
 	}
 
 	protected abstract AnomalyResult classify(AlgorithmResult aResult);

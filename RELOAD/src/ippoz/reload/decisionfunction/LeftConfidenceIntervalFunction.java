@@ -3,6 +3,8 @@
  */
 package ippoz.reload.decisionfunction;
 
+import java.text.DecimalFormat;
+
 import ippoz.reload.algorithm.result.AlgorithmResult;
 
 /**
@@ -35,7 +37,13 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	
 	@Override
 	public String toCompactString() {
-		return "LCONF(avg:" + avg + " ratio:" + ratio + " std:" + std + ")  - {ANOMALY: value < " + (avg - ratio*std) + "}";
+		DecimalFormat df = new DecimalFormat("#.000"); 
+		return "LCONF(avg:" + df.format(avg) + " ratio:" + ratio + " std:" + df.format(std) + ")  - {ANOMALY: value < " + df.format(avg - ratio*std) + "}";
+	}
+	
+	@Override
+	public String getClassifierTag() {
+		return "LEFT_CONFIDENCE_INTERVAL(" + ratio + ")";
 	}
 
 }

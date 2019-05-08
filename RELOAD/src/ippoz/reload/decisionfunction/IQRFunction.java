@@ -3,6 +3,8 @@
  */
 package ippoz.reload.decisionfunction;
 
+import java.text.DecimalFormat;
+
 import ippoz.reload.algorithm.result.AlgorithmResult;
 
 /**
@@ -20,8 +22,13 @@ public class IQRFunction extends DecisionFunction {
 	protected IQRFunction(double ratio, double q1, double q3) {
 		super("IQR", DecisionFunctionType.IQR);
 		this.ratio = ratio;
-		this.q1 = q1;
-		this.q3 = q3;
+		if(q1 <= q3) {
+			this.q1 = q1;
+			this.q3 = q3;
+		} else {
+			this.q1 = q3;
+			this.q3 = q1;
+		}
 	}
 
 	@Override
@@ -37,7 +44,13 @@ public class IQRFunction extends DecisionFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		return "IQR(Q1:" + q1 + " Q3:" + q3 + " ratio:" + ratio + ") - {ANOMALY: value < " + (q1 - ratio*iqr) + " or value > " + (q3 + ratio*iqr) + "}";
+		DecimalFormat df = new DecimalFormat("#.000"); 
+		return "IQR(Q1:" + df.format(q1) + " Q3:" + df.format(q3) + " ratio:" + ratio + ") - {ANOMALY: value < " + df.format(q1 - ratio*iqr) + " or value > " + df.format(q3 + ratio*iqr) + "}";
+	}
+
+	@Override
+	public String getClassifierTag() {
+		return "IQR(" + ratio + ")";
 	}
 
 }
