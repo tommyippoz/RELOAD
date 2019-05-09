@@ -6,13 +6,13 @@
 FEATURE_SELECTION_FLAG = 0
 
 * Perform Training (0 = NO, 1 = YES).
-TRAIN_FLAG = 1
+TRAIN_FLAG = 0
 
 * K Counter for K-Fold Training/Validation
 KFOLD_COUNTER = 5
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
-METRIC = CUSTOM
+METRIC = FMEASURE
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = relative

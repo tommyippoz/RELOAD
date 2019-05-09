@@ -191,6 +191,9 @@ public class EvaluatorManager extends DataManager {
 		if(ev.getFailuresNumber() > 0){
 			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
 			detailedEvaluations.add(ev.getSingleAlgorithmScores());
+		} else {
+			expMetricEvaluations.add(null);
+			detailedEvaluations.add(null);
 		}
 	}
 	
@@ -313,9 +316,11 @@ public class EvaluatorManager extends DataManager {
 				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmVoter, AlgorithmResult>>());
 				if(i < detailedEvaluations.size()){
 					Map<Date,Map<AlgorithmVoter,AlgorithmResult>> map = detailedEvaluations.get(i);
-					for(Date mapEntry : map.keySet()){
-						outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
-					}
+					if(map != null){
+						for(Date mapEntry : map.keySet()){
+							outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
+						}
+					} 
 				}
 			}
 		}

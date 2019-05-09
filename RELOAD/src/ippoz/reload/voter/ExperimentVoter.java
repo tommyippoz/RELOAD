@@ -149,7 +149,7 @@ public class ExperimentVoter extends Thread {
 		boolean undetectable = true;
 		for(AlgorithmVoter aVoter : algList){
 			double algScore = DetectionAlgorithm.convertResultIntoDouble(snapVoting.get(aVoter).getScoreEvaluation());
-			if(algScore >= 0.0){
+			if(algScore >= 0.0){				
 				undetectable = false;
 				if(aVoter.getReputationScore() > 0)
 					snapScore = snapScore + 1.0*aVoter.getReputationScore()*algScore;

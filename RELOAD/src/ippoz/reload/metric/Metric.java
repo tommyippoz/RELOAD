@@ -160,13 +160,15 @@ public abstract class Metric implements Comparable<Metric> {
 		List<Double> dataList = new ArrayList<Double>();
 		if (list != null) {
 			for (Map<Metric, Double> map : list) {
-				if (map.get(met) != null)
-					dataList.add(map.get(met));
-				else {
-					for (Metric m : map.keySet()) {
-						if (m.equals(met)) {
-							dataList.add(map.get(m));
-							break;
+				if(map != null) {
+					if (map.get(met) != null)
+						dataList.add(map.get(met));
+					else {
+						for (Metric m : map.keySet()) {
+							if (m.equals(met)) {
+								dataList.add(map.get(m));
+								break;
+							}
 						}
 					}
 				}

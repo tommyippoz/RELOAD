@@ -48,7 +48,7 @@ public abstract class DecisionFunction {
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_IQR"))
 									return new LeftIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
-								else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
+								else if(thresholdTag.contains("LEFT_POSITIVE_IQR"))
 									return new LeftPositiveIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());
 								else if(thresholdTag.contains("RIGHT_IQR"))
 									return new RightIQRFunction(Double.parseDouble(partial), scores.getQ1(), scores.getQ3());

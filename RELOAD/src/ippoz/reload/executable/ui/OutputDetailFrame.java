@@ -4,26 +4,22 @@
 package ippoz.reload.executable.ui;
 
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
-import ippoz.reload.metric.Metric;
-import ippoz.reload.metric.TP_Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.output.LabelledResult;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import javax.swing.JCheckBox;
@@ -32,8 +28,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -41,7 +35,6 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableCellRenderer;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -115,17 +108,29 @@ public class OutputDetailFrame {
 		}
 		return null;
 	}
+	
 
 	private ValueSeries createScoresValueSeries() {
 		ValueSeries series = new ValueSeries();
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			for(LabelledResult lr : list){
-				if(Double.isFinite(lr.getValue().getScore()))
-					series.addValue(lr.getValue().getScore());
+			if(containsPostiveLabel(list)) {
+				for(LabelledResult lr : list){
+					if(Double.isFinite(lr.getValue().getScore()))
+						series.addValue(lr.getValue().getScore());
+				}
 			}
 		}
 		return series;
+	}
+	
+
+	private boolean containsPostiveLabel(List<LabelledResult> list){
+		for(LabelledResult lr : list){
+			if(lr.getLabel())
+				return true;
+		}
+		return false;
 	}
 
 	private void reload() {
@@ -332,7 +337,6 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			for(LabelledResult lr : list){
 				if(Double.isFinite(lr.getValue().getScore())){
-					System.out.println(lr.getValue().getScore() +  " - " + algorithmScores.getMax());
 					AnomalyResult aRes = dFunction.classifyScore(lr.getValue(), false);
 					if(lr.getLabel()){
 						if(aRes == AnomalyResult.ANOMALY)
@@ -347,7 +351,18 @@ public class OutputDetailFrame {
 			}
 		}
 		
+		DecimalFormat df = new DecimalFormat("#0.00"); 
 		outString = "TP: " + tp + ", TN: " + tn + " FP: " + fp + " FN: " + fn;
+		double fpr = fp/(fp+tn);
+		outString = outString + " FPR: " + df.format(fpr);
+		double p = tp/(fp+tp);
+		outString = outString + " P: " + df.format(p);
+		double r = tp/(fn+tp);
+		outString = outString + " R: " + df.format(r);
+		outString = outString + " F1: " + df.format(2*p*r/(p+r));
+		outString = outString + " ACC: " + df.format((tp+tn)/(fn+tn+fp+tp));
+		outString = outString + " MCC: " + df.format((tp*tn - fp*fn)/Math.sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn)));
+		outString = outString + " AUC: " + df.format((r * fpr) / 2 + (r + 1) * (1 - fpr) / 2);
 
 		return outString;
 	}
@@ -357,20 +372,23 @@ public class OutputDetailFrame {
 		double maxValue = Double.NEGATIVE_INFINITY;
 		int countN = 0;
 		int countA = 0;
+		int countErr = 0;
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			for(LabelledResult lr : list){
-				if(Double.isFinite(lr.getValue().getScore())){
-					if(lr.getValue().getScore() > maxValue)
-						maxValue = lr.getValue().getScore();
-					if(lr.getValue().getScore() < minValue)
-						minValue = lr.getValue().getScore();
-					if(lr.getLabel())
-						countA++;
-					else countN++;
+			if(containsPostiveLabel(list)){
+				for(LabelledResult lr : list){
+					if(Double.isFinite(lr.getValue().getScore())){
+						if(lr.getValue().getScore() > maxValue)
+							maxValue = lr.getValue().getScore();
+						if(lr.getValue().getScore() < minValue)
+							minValue = lr.getValue().getScore();
+						if(lr.getLabel())
+							countA++;
+						else countN++;
+					}
 				}
-			}
+			} else countErr = countErr + list.size();
 		}
 
 		if(numIntervals <= 0){
@@ -384,7 +402,7 @@ public class OutputDetailFrame {
 
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + countN + " normal and " + countA + " anomalies", 
+				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + countN + " normal and " + countA + " anomalies (" + countErr + " discarded)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   
@@ -412,16 +430,18 @@ public class OutputDetailFrame {
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			for(LabelledResult lr : list){
-				if(Double.isFinite(lr.getValue().getScore())){
-					double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
-					int dataIndex = (int) (normalizedScore*numIntervals);
-					if(dataIndex == numIntervals)
-						dataIndex--;
-					if(lr.getLabel()){
-						anomalyCount[dataIndex]++;
-					} else {
-						normalCount[dataIndex]++;
+			if(containsPostiveLabel(list)){
+				for(LabelledResult lr : list){
+					if(Double.isFinite(lr.getValue().getScore())){
+						double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
+						int dataIndex = (int) (normalizedScore*numIntervals);
+						if(dataIndex == numIntervals)
+							dataIndex--;
+						if(lr.getLabel()){
+							anomalyCount[dataIndex]++;
+						} else {
+							normalCount[dataIndex]++;
+						}
 					}
 				}
 			}
@@ -454,21 +474,23 @@ public class OutputDetailFrame {
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			for(LabelledResult lr : list){
-				if(Double.isFinite(lr.getValue().getScore())){
-					double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
-					AnomalyResult aRes = dFunction.classifyScore(lr.getValue(), false);
-					int dataIndex = (int) (normalizedScore*numIntervals);
-					if(dataIndex == numIntervals)
-						dataIndex--;
-					if(lr.getLabel()){
-						if(aRes == AnomalyResult.ANOMALY)
-							tpCount[dataIndex]++;
-						else fnCount[dataIndex]++;
-					} else {
-						if(aRes == AnomalyResult.ANOMALY)
-							fpCount[dataIndex]++;
-						else tnCount[dataIndex]++;
+			if(containsPostiveLabel(list)){
+				for(LabelledResult lr : list){
+					if(Double.isFinite(lr.getValue().getScore())){
+						double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
+						AnomalyResult aRes = dFunction.classifyScore(lr.getValue(), false);
+						int dataIndex = (int) (normalizedScore*numIntervals);
+						if(dataIndex == numIntervals)
+							dataIndex--;
+						if(lr.getLabel()){
+							if(aRes == AnomalyResult.ANOMALY)
+								tpCount[dataIndex]++;
+							else fnCount[dataIndex]++;
+						} else {
+							if(aRes == AnomalyResult.ANOMALY)
+								fpCount[dataIndex]++;
+							else tnCount[dataIndex]++;
+						}
 					}
 				}
 			}

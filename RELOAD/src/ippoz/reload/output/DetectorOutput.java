@@ -95,7 +95,7 @@ public class DetectorOutput {
 				header2 = ",,,,,";
 				String tag = null;
 				//while((tag = ))
-				map = detailedExperimentsScores.get("expRun_52").get(0);
+				map = detailedExperimentsScores.get("expRun_93").get(0);
 				for(AlgorithmVoter av : map.keySet()){
 					header1 = header1 + av.getAlgorithmType() + "(" + av.getDataSeries().toString() + ")" + ",,,";
 					header2 = header2 + "score,decision_function,eval,";

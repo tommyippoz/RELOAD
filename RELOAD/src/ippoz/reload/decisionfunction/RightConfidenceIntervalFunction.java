@@ -3,9 +3,9 @@
  */
 package ippoz.reload.decisionfunction;
 
-import java.text.DecimalFormat;
-
 import ippoz.reload.algorithm.result.AlgorithmResult;
+
+import java.text.DecimalFormat;
 
 /**
  * @author Tommy

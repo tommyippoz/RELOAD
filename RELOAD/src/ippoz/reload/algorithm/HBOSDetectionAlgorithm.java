@@ -218,16 +218,28 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	private double calculateHBOS(Snapshot snap){
 		double snapValue;
 		double hbos;
+		double temp;
 		if(getDataSeries().size() == 1){
 			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			if(histograms == null || histograms.get(getDataSeries().getName()) == null)
-				hbos = Math.log(1.0/histograms.get(histograms.keySet().iterator().next()).getScore(snapValue));
-			else hbos = Math.log(1.0/histograms.get(getDataSeries().getName()).getScore(snapValue));
+			if(histograms == null || histograms.get(getDataSeries().getName()) == null){
+				temp = histograms.get(histograms.keySet().iterator().next()).getScore(snapValue);
+				if(temp > 0)
+					hbos = Math.log(1.0/temp);
+				else hbos = Double.MAX_VALUE;
+			} else {
+				temp = histograms.get(getDataSeries().getName()).getScore(snapValue);
+				if(temp > 0)
+					hbos = Math.log(1.0/temp);
+				else hbos = Double.MAX_VALUE;
+			}
 		} else {
 			hbos = 0;
 			for(int j=0;j<getDataSeries().size();j++){
 				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				hbos = hbos + Math.log(1.0/histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapValue));
+				temp = histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapValue);
+				if(temp > 0)
+					hbos = hbos + Math.log(1.0/temp);
+				else hbos = Double.MAX_VALUE;
 			}
 		}
 		return hbos;
