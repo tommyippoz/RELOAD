@@ -83,4 +83,8 @@ public class AlgorithmResult {
 				dFunction.getClassifierType();
 	}
 
+	public void setScore(double value) {
+		score = value;		
+	}
+
 }

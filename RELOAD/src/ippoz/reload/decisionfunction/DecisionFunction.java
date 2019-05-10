@@ -31,8 +31,16 @@ public abstract class DecisionFunction {
 				if(AppUtility.isNumber(thresholdTag)){
 					double ratio = Double.parseDouble(thresholdTag);
 					return new ThresholdDecision(ratio, scores);
+				} else if(thresholdTag.contains("THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
+					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+					if(thresholdTag.contains("STATIC")){
+						if(thresholdTag.contains("GREATER"))
+							return new StaticThresholdGreaterThanDecision(Double.valueOf(partial.trim()));
+						else return new StaticThresholdLowerThanDecision(Double.valueOf(partial.trim()));
+					} else return new ThresholdDecision(Double.valueOf(partial.trim()), scores);
 				} else if(thresholdTag.endsWith("%")) {
-					
+					partial = thresholdTag.replace("%", "");
+					return new ThresholdDecision(Double.valueOf(partial.trim())/100.0, scores);
 				} else if(thresholdTag.contains("IQR")) {
 					if(scores != null && scores.size() > 0){
 						if(thresholdTag.equals("IQR"))
@@ -169,19 +177,29 @@ public abstract class DecisionFunction {
 			case CLUSTER:
 				return "Threshold can depend on VAR and STD of the nearest cluster.\n Try with 'VAR' or 'STD' to check if score exceeds such quantities.\n Allowed combinations are also 'nVAR' or 'nSTD' where n is a real positive number.\n Default n = 1";
 			case CONFIDENCE_INTERVAL:
-				return "Checks if result exceeds the confidence interval avg +/- std.\n Combinations as CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
+				return "Checks if result exceeds the confidence interval avg +/- n*std.\n Combinations as CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
+			case LEFT_CONFIDENCE_INTERVAL:
+				return "Checks if result exceeds the confidence interval avg - n*std.\n Combinations as LEFT_CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
+			case LEFT_POSITIVE_CONFIDENCE_INTERVAL:
+				return "Checks if result exceeds the confidence interval avg - n*std.\n If avg - n*std < 0, value will be defaulted to 0.\nCombinations as LEFT_CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
+			case RIGHT_CONFIDENCE_INTERVAL:
+				return "Checks if result exceeds the confidence interval avg + n*std.\n Combinations as RIGHT_CONFIDENCE_INTERVAL(n), where n is a real positive number, are accepted.\n Default n = 1.";
 			case DOUBLE_THRESHOLD:
 				return "Checks if result is inside two thresholds m and n,\n that should be specified as DOUBLE_THRESHOLD(m,n).";
 			case IQR:
-				return "Checks if result is in the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result < Q3 + 1.5 IQR,\n where IQR = Q3 - Q1.\n Combinations as IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+				return "Checks if result is in the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result < Q3 + 1.5 IQR, where IQR = Q3 - Q1.\n Combinations as IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
 			case LEFT_IQR:
-				return "Checks if result is before the left threshold of the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result,\n where IQR = Q3 - Q1.\n Combinations as LEFT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+				return "Checks if result is before the left threshold of the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result, where IQR = Q3 - Q1.\n Combinations as LEFT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+			case LEFT_POSITIVE_IQR:
+				return "Checks if result is before the left threshold of the Interquartile Range IQR,\n defined as Q1 - 1.5IQR < result, where IQR = Q3 - Q1.\n If Q1 - 1.5IQR < 0, value will be defaulted to 0.\n Combinations as LEFT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
 			case RIGHT_IQR:
-				return "Checks if result is over the right threshold in the Interquartile Range IQR,\n defined as result < Q3 + 1.5 IQR,\n where IQR = Q3 - Q1.\n Combinations as RIGHT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
+				return "Checks if result is over the right threshold in the Interquartile Range IQR,\n defined as result < Q3 + 1.5 IQR, where IQR = Q3 - Q1.\n Combinations as RIGHT_IQR(n), where n is a real positive number, are accepted.\n Default n = 1.5.";
 			case LOG_THRESHOLD:
 				return "Checks if result is over the averaged sum of heights of histograms,\n for statistical histogram-based algorithms.";
-			case STATIC_THRESHOLD:
-				return "Checks if result is greather than n,\n a real number that should be specified as STATIC_THRESHOLD(n).";
+			case STATIC_THRESHOLD_GREATERTHAN:
+				return "Checks if result is greather than n,\n a real number that should be specified as STATIC_THRESHOLD_GREATERTHAN(n).";
+			case STATIC_THRESHOLD_LOWERTHAN:
+				return "Checks if result is greather than n,\n a real number that should be specified as STATIC_THRESHOLD_LOWERTHAN(n).";
 			case THRESHOLD:
 				return "Checks if result is greather than n,\n a real number that should be specified as THRESHOLD(n).";
 			default:

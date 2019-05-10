@@ -331,6 +331,7 @@ public class DetectionManager {
 	}
 	
 	private DetectorOutput singleOptimization(Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput){
+		List<Knowledge> expKnowledge = null;
 		EvaluatorManager bestEManager = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
 		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
@@ -341,6 +342,8 @@ public class DetectionManager {
 			evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
 			for(String anomalyTreshold : anomalyTresholds){
 				EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
+				if(expKnowledge == null)
+					expKnowledge = eManager.getKnowledge();
 				if(eManager.detectAnomalies()) {
 					evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
 				}
@@ -357,7 +360,7 @@ public class DetectionManager {
 			}
 		}
 		bestScore = getBestScore(evaluations, metList, anomalyTresholds);
-		return new DetectorOutput(Double.isFinite(bestScore) ? bestScore : 0.0,
+		return new DetectorOutput(expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
 				getBestSetup(evaluations, metList, anomalyTresholds), metric, metList, 
 				getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
 				nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, 
@@ -483,7 +486,7 @@ public class DetectionManager {
 		nVoters.put(voterThreshold.trim(), eManager.getCheckersNumber());
 		String a = Metric.getAverageMetricValue(evaluations.get(voterThreshold.trim()).get(anomalyThreshold.trim()), metric);
 		double score = Double.parseDouble(a);
-		return new DetectorOutput(Double.isFinite(score) ? score : 0.0,
+		return new DetectorOutput(eManager.getKnowledge(), Double.isFinite(score) ? score : 0.0,
 			getBestSetup(evaluations, metList, new String[]{anomalyThreshold}), metric, metList, 
 			getMetricScores(evaluations, metList, new String[]{anomalyThreshold}), new String[]{anomalyThreshold},
 			nVoters, eManager.getTimedEvaluations(), 

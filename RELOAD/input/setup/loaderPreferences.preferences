@@ -27,7 +27,7 @@
 
 * iscx/iscx_bruteforce.loader
 
-* iscx/iscx_DoS.loader
+iscx/iscx_DoS.loader
 
 * iscx/iscx_DDoS.loader
 
@@ -64,7 +64,7 @@
 * id_kaggle.loader
 * nslkdd\nslkdd_probe_to_unknown.loader
 
-sint\unsw_sint_collective.loader
+* sint\unsw_sint_collective.loader
 * sint\unsw_sint_contextual.loader
 * sint\unsw_sint_point.loader
 * sint\kdd_sint_collective.loader

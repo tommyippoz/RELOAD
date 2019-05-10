@@ -4,7 +4,10 @@
 package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.metric.Metric;
@@ -18,6 +21,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +31,8 @@ import java.util.Map;
  *
  */
 public class DetectorOutput {
+	
+	private List<Knowledge> knowledgeList;
 	
 	private double bestScore;
 	
@@ -58,13 +64,14 @@ public class DetectorOutput {
 	
 	private double faultsRatio;
 	
-	public DetectorOutput(double bestScore, String bestSetup, Metric referenceMetric, 
+	public DetectorOutput(List<Knowledge> knowledgeList, double bestScore, String bestSetup, Metric referenceMetric, 
 			Metric[] evaluationMetrics, String evaluationMetricsScores, String[] anomalyTresholds, Map<String, Integer> nVoters, 
 			Map<String, List<TimedValue>> detailedKnowledgeScores,
 			Map<String, Map<String, List<Map<Metric, Double>>>> evaluations,
 			Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores,
 			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
 			String writableTag, double faultsRatio) {
+		this.knowledgeList = knowledgeList;
 		this.bestScore = bestScore;
 		this.bestSetup = bestSetup;
 		this.referenceMetric = referenceMetric;
@@ -93,13 +100,32 @@ public class DetectorOutput {
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
 				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
 				header2 = ",,,,,";
-				String tag = null;
-				//while((tag = ))
-				map = detailedExperimentsScores.get("expRun_93").get(0);
-				for(AlgorithmVoter av : map.keySet()){
-					header1 = header1 + av.getAlgorithmType() + "(" + av.getDataSeries().toString() + ")" + ",,,";
-					header2 = header2 + "score,decision_function,eval,";
+				
+				Iterator<String> it = detailedExperimentsScores.keySet().iterator();
+				String tag = it.next();
+				while(it.hasNext() && detailedExperimentsScores.get(tag) != null){
+					tag = it.next();
 				}
+				
+				map = detailedExperimentsScores.get(tag).get(0);
+				for(AlgorithmVoter av : map.keySet()){
+					header1 = header1 + "," + av.getAlgorithmType() + ",,," + av.getDataSeries().toString() + ",";
+					header2 = header2 + ",score,decision_function,eval,";
+					if(av.getDataSeries().size() == 1){
+						header1 = header1 + ",";
+						header2 = header2 + av.getDataSeries().getName() + ",";
+					} else {
+						for(int i=0;i<av.getDataSeries().size();i++){
+							header1 = header1 + ",";
+							header2 = header2 + ((MultipleDataSeries)av.getDataSeries()).getSeries(i).getName() + ",";
+						}
+					}
+					header2 = header2 + ",";					
+				}
+				
+				writer.write("* This file reports on the scores each anomaly checker (couple of algorithm and indicator/feature) gives for each data point considered in the evaluation set. \n"
+						+ "Data points are identified by name of the experiment and index inside the experiment, we report the true label of the data point (the one in the dataset) and the prediction made by RELOAD. \n"
+						+ "In addition, for each anomaly checker we report a triple <score, decision function, evaluation> where the evaluation is calculated by applying such decision function to the score.\n");
 				writer.write(header1 + "\n" + header2 + "\n");
 				
 				for(String expName : detailedKnowledgeScores.keySet()){
@@ -114,7 +140,7 @@ public class DetectorOutput {
 							if(i < detailedExperimentsScores.get(expName).size()){
 								map = detailedExperimentsScores.get(expName).get(i);
 								for(AlgorithmVoter av : map.keySet()){
-									writer.write(map.get(av).getScore() + "," + 
+									writer.write("," + map.get(av).getScore() + "," + 
 											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
 											map.get(av).getScoreEvaluation() + ",");
 								}

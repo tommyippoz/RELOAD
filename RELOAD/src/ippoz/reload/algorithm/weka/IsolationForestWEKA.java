@@ -11,7 +11,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.decisionfunction.StaticThresholdDecision;
+import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -142,7 +142,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 
 	@Override
 	protected DecisionFunction buildClassifier() {
-		return new StaticThresholdDecision(0.5);
+		return new StaticThresholdGreaterThanDecision(0.5);
 	}
 
 }

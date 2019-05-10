@@ -573,11 +573,14 @@ public class CustomSVM extends AbstractAlgorithm<OutlierResult> implements Outli
 
 		@Override
 		public List<Double> getScoresList() {
-			List<Double> list = new ArrayList<Double>(scoresList.size());
-			for(SVMScore score : scoresList){
-				list.add(score.getScore());
-			}
-			Collections.sort(list);
+			List<Double> list = null;
+			if(scoresList != null){
+				list = new ArrayList<Double>(scoresList.size());
+				for(SVMScore score : scoresList){
+					list.add(score.getScore());
+				}
+				Collections.sort(list);
+			} else list = new LinkedList<Double>();
 			return list;
 		}
 

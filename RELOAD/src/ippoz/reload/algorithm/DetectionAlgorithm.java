@@ -428,7 +428,7 @@ public abstract class DetectionAlgorithm {
 	}
 
 	public static String explainParameters(AlgorithmType algType) {
-		String base = "Parameters: (threshold) string defining the DecisionFunction converting numeric to boolean scores";
+		String base = "Parameters: (threshold) string defining the DecisionFunction converting numeric to boolean scores <br>";
 		switch(algType){
 			case ELKI_ABOD:
 			case SLIDING_ELKI_ABOD:
@@ -436,29 +436,87 @@ public abstract class DetectionAlgorithm {
 			case ELKI_LOF:
 			case ELKI_COF:
 			case SLIDING_ELKI_COF:
-				return base + ", (k) the number of neighbours.";
+				return base + "(k) the number of neighbours.";
 			case ELKI_FASTABOD:
-				return base + ", (k) the number of neighbours.";
+				return base + "(k) the number of neighbours.";
 			case ELKI_KMEANS:
 			case SLIDING_ELKI_CLUSTERING:
-				return base + ", (k) the number of clusters.";
+				return base + "(k) the number of clusters.";
 			case ELKI_SVM:
-				return base + ", (kernel) the type of kernel, (nu) an upper bound on the fraction of margin "
-						+ "errors and a lower bound of the fraction of support vectors relative to training set "
-						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified "
-						+ "and at least 5% of training examples being support vectors.";
+				return base + "(kernel) the type of kernel, <br>"
+						+ "(nu) an upper bound on the fraction of margin errors and a lower bound <br>"
+						+ " of the fraction of support vectors relative to training set <br>"
+						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified <br>"
+						+ " and at least 5% of training examples being support vectors.";
 			case HBOS:
-				return base + ", (k) the number of histograms to generate for each indicator.";
+				return base + "(k) the number of histograms to generate for each indicator.";
 			case ELKI_ODIN:
 			case SLIDING_ELKI_KNN:
-				return base + ", (k) the number of neighbours.";
+				return base + "(k) the number of neighbours.";
 			case SLIDING_SPS:
 				return "";
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return "Parameters: (ntrees) number of trees in the forest, (sample_size) instances to be sampled to train each tree.";
+				return "Parameters: (ntrees) number of trees in the forest, <br>"
+						+ "(sample_size) instances to be sampled to train each tree.";
 			default:
 				return "Parameters are shown in the table.";
+		}
+	}
+
+	public static String explainAlgorithm(AlgorithmType algType) {
+		switch(algType){
+			case ELKI_ABOD:
+				return "Angle-based algorithm. <br>"
+						+ "Angles between the new data point and all the possible couples of data points of <br>"
+						+ "the training set are calculated, and then their variance (ABOF) is calsulated. <br>"
+						+ "The smaller the ABOF, the greater the anomality of the data point.";
+			case SLIDING_ELKI_ABOD:
+				return "Sliding version of ABOD.";
+			case ELKI_LOF:
+				return "Local Outlier Factor algorithm. <br>"
+						+ "LOF is based on a concept of a local density, where locality is given by kNN, <br>"
+						+ "whose distance with respect to the data point is used to estimate the density. <br>"
+						+ "The lower the density, the greater the anomality of the data point.";
+			case ELKI_COF:
+				return "Connectivity-based Outlier Factor algorithm. <br>"
+						+ "COF computes the connectivity-based outlier factor for data points through the comparison <br>"
+						+ "of chaining-distances between data points subject to neighboring observations. <br>"
+						+ "The greater the COF, the greater the anomality of the data point.";
+			case SLIDING_ELKI_COF:
+				return "Sliding version of the COF algorithm.";
+			case ELKI_FASTABOD:
+				return "Fast (Quadratic) version of ABOD, considering agnles with the kNN of the data point.";
+			case ELKI_KMEANS:
+				return "Classic clustering algorithm, given the K number of clusters. <br>"
+						+ "During training, clusters are created. Then, a new data point is scored as anomalous if it is too far <br>"
+						+ "from the nearest cluster, evaluated using Euclidean Distance.";
+			case SLIDING_ELKI_CLUSTERING:
+				return "Sliding version of K-Means";
+			case ELKI_SVM:
+				return "Support Vector Machines. <br>"
+						+ "Support vectors are the data points that lie closest to the decision surface (or hyperplane), <br>"
+						+ "and have direct bearing on the optimum location of the decision surface. <br>"
+						+ "The algorithm tries to reconstruct such hyperplane that differentiates between normal and anomalous data. <br>"
+						+ "The score reprsent the distance with respect to the boundary: big negative distances represent anomalies. ";
+			case HBOS:
+				return "Generates histograms for each feature that describes the frequence of occurrence of specific values. <br> "
+						+ "Then, a data point is scored with an high HBOS is falls in an area of the histogram with short bars.";		
+			case ELKI_ODIN:	
+				return "Outlier Detection using Indegree Number. <br>"
+						+ "Calculates the odin according to the KNN graph. <br>"
+						+ "The lower the ODIN, the higher the probability of anomaly.";
+			case SLIDING_ELKI_KNN:
+				return "Sliding version of KNN";
+			case SLIDING_SPS:
+				return "Statistical Predictor and Safety Margin Algorithm. <br> "
+						+ "It predicts an acceptability interval in which the next value must fall.";
+			case WEKA_ISOLATIONFOREST:
+				return "Creates a forest of Isolation Trees, which are evaluated as an ensemble.";
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return "Sliding version of Isolation Forest";
+			default:
+				return "Algorithms' details not available.";
 		}
 	}
 

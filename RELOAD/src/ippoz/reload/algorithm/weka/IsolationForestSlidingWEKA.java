@@ -12,7 +12,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.decisionfunction.StaticThresholdDecision;
+import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -57,7 +57,7 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	
 	@Override
 	protected DecisionFunction buildClassifier() {
-		return new StaticThresholdDecision(0.5);
+		return new StaticThresholdGreaterThanDecision(0.5);
 	}
 	
 	private int loadSampleSize() {

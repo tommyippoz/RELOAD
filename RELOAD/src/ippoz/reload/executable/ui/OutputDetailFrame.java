@@ -19,6 +19,8 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -238,6 +240,18 @@ public class OutputDetailFrame {
 		lbl.setFont(labelFont);
 		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	String desc = "Description of available Decision Functions \n";
+            	for(DecisionFunctionType dft : DecisionFunctionType.values()){
+            		desc = desc + "- " + dft.toString() + ": " + DecisionFunction.getParameterDetails(dft.toString()) + "\n";
+            	}
+            	JOptionPane.showMessageDialog(detFrame, desc,
+					    "Decision Function Detail", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        });
 		footerPanel.add(lbl);
 		
 		cbDecisionFunction = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
@@ -252,6 +266,8 @@ public class OutputDetailFrame {
 		        	String descriptionString = "Insert parameter for " + newValue;
 		        	if(newValue.contains("IQR") || newValue.contains("CONF")){
 		        		descriptionString = "Insert range parameter (range >= 0) for " + newValue;
+		        	} else if(newValue.contains("STATIC_THRESHOLD")){
+		        		descriptionString = "Insert threshold parameter (any real number) for " + newValue;
 		        	} else if(newValue.contains("THRESHOLD")){
 		        		descriptionString = "Insert threshold parameter (0 <= threshold <= 1) for " + newValue;
 		        	} else if(newValue.contains("CLUSTER")){
@@ -354,12 +370,12 @@ public class OutputDetailFrame {
 		DecimalFormat df = new DecimalFormat("#0.00"); 
 		outString = "TP: " + tp + ", TN: " + tn + " FP: " + fp + " FN: " + fn;
 		double fpr = fp/(fp+tn);
-		outString = outString + " FPR: " + df.format(fpr);
+		outString = outString + " FPR: " + (fp+tn > 0 ? df.format(fpr) : "0.00");
 		double p = tp/(fp+tp);
-		outString = outString + " P: " + df.format(p);
+		outString = outString + " P: " + (fp+tp > 0 ? df.format(p) : "0.00");
 		double r = tp/(fn+tp);
-		outString = outString + " R: " + df.format(r);
-		outString = outString + " F1: " + df.format(2*p*r/(p+r));
+		outString = outString + " R: " + (fn+tp > 0 ? df.format(r) : "0.00");
+		outString = outString + " F1: " + (p+r > 0 ? df.format(2*p*r/(p+r)) : "0.00");
 		outString = outString + " ACC: " + df.format((tp+tn)/(fn+tn+fp+tp));
 		outString = outString + " MCC: " + df.format((tp*tn - fp*fn)/Math.sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn)));
 		outString = outString + " AUC: " + df.format((r * fpr) / 2 + (r + 1) * (1 - fpr) / 2);
@@ -391,7 +407,7 @@ public class OutputDetailFrame {
 			} else countErr = countErr + list.size();
 		}
 
-		if(numIntervals <= 0){
+		if(numIntervals <= 0 || numIntervals > 100000){
 			numIntervals = NUM_INTERVALS;
 		}
 		
@@ -427,11 +443,13 @@ public class OutputDetailFrame {
 		double[] normalCount = new double[numIntervals];
 		double[] anomalyCount = new double[numIntervals];
 		
-		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
+					if(Double.isInfinite(lr.getValue().getScore())){
+						lr.getValue().setScore(maxValue);
+					}
 					if(Double.isFinite(lr.getValue().getScore())){
 						double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
 						int dataIndex = (int) (normalizedScore*numIntervals);

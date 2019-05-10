@@ -41,7 +41,7 @@ public class TrainerManager extends TrainDataManager {
 	/** The output folder. */
 	//private String outputFolder;
 		
-	private InvariantManager iManager;
+	private InvariantManager invManager;
 	
 	/**
 	 * Instantiates a new trainer manager.
@@ -211,12 +211,12 @@ public class TrainerManager extends TrainDataManager {
 
 	private List<? extends Thread> filterTrainers(List<? extends Thread> trainerList) {
 		LinkedList<AlgorithmTrainer> invList = new LinkedList<AlgorithmTrainer>();
-		if(iManager != null){
+		if(invManager != null){
 			for(Thread t : trainerList){
 				if(((AlgorithmTrainer)t).getAlgType().equals(AlgorithmType.INV))
 					invList.add((AlgorithmTrainer)t);
 			}
-			trainerList.removeAll(iManager.filterInvType(invList));
+			trainerList.removeAll(invManager.filterInvType(invList));
 		}
 		return trainerList;
 	}
@@ -308,6 +308,7 @@ public class TrainerManager extends TrainDataManager {
 				statMap.put(at, new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
+			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
 			scoreWriter.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;

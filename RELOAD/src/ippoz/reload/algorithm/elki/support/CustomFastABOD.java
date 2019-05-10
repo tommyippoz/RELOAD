@@ -218,10 +218,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			return Double.MAX_VALUE;
 		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
-		else {
-			
-			long start = System.currentTimeMillis();
-			
+		else {			
 			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
 			MeanVariance s = new MeanVariance();
 			List<KNNValue> nn = new LinkedList<KNNValue>();

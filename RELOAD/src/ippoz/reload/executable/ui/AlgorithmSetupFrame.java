@@ -13,13 +13,16 @@ import ippoz.reload.manager.InputManager;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -32,6 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
@@ -46,10 +50,6 @@ import javax.swing.table.TableColumnModel;
 public class AlgorithmSetupFrame {
 	
 	private JFrame asFrame;
-	
-	private int labelSpacing;
-	
-	private int bigLabelSpacing;
 	
 	private Font labelFont;
 	
@@ -79,9 +79,6 @@ public class AlgorithmSetupFrame {
 		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
 		labelBoldFont = new Font("Times", Font.BOLD, (int)((15 + rate)/2));
 		
-		labelSpacing = (int)(asFrame.getHeight()/25);
-		bigLabelSpacing = (int)(asFrame.getHeight()/18);
-		
 		algPanel = buildMainPanel();
 	}
 
@@ -98,7 +95,7 @@ public class AlgorithmSetupFrame {
 		asFrame = new JFrame();
 		asFrame.setTitle("Setup of Algorithm '" + algType + "'");
 		if(screenSize.getWidth() > 1000)
-			asFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.5));
+			asFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.8));
 		else asFrame.setBounds(0, 0, 500, 600);
 		asFrame.setBackground(Color.WHITE);
 		asFrame.setResizable(false);
@@ -107,54 +104,66 @@ public class AlgorithmSetupFrame {
 	private JPanel buildMainPanel() {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
-		containerPanel.setBounds(0, 0, asFrame.getWidth() - 10, asFrame.getHeight() - 10);
-		containerPanel.setLayout(null);
+		containerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.Y_AXIS));
+		containerPanel.setAlignmentX(SwingConstants.CENTER);
+		
+		// Algorithm Description
+		
+		JPanel expPanel = new JPanel();
+		expPanel.setBackground(Color.WHITE);
+		expPanel.setLayout(new FlowLayout());
+		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Algorithm Description", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
+		expPanel.setBorder(tb);
+
+		JLabel lbl = new JLabel("<html><div style='text-align: center;'> " + 
+				DetectionAlgorithm.explainAlgorithm(algType) + "</div></html>");
+		lbl.setFont(labelFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		expPanel.add(lbl);
+		
+		containerPanel.add(expPanel);
 		
 		// HEADER
 		
 		JPanel headerPanel = new JPanel();
-		headerPanel.setBounds(containerPanel.getWidth()/4, 0, containerPanel.getWidth()/2, bigLabelSpacing*3);
 		headerPanel.setBackground(Color.WHITE);
-		headerPanel.setLayout(null);
+		headerPanel.setBorder(new EmptyBorder(0, asFrame.getWidth()/5, 0, asFrame.getWidth()/5));
+		headerPanel.setLayout(new GridLayout(3, 2));
 		
-		JLabel lbl = new JLabel("Algorithm:");
+		lbl = new JLabel("Algorithm:");
 		lbl.setFont(labelBoldFont);
-		lbl.setBounds(0, 0, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
 		
 		lbl = new JLabel(algType.toString());
 		lbl.setFont(labelFont);
-		lbl.setBounds(headerPanel.getWidth()/2, 0, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
 		
 		lbl = new JLabel("Parameters:");
 		lbl.setFont(labelBoldFont);
-		lbl.setBounds(0, bigLabelSpacing, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
 		
 		lbl = new JLabel(Arrays.toString(algParams));
 		lbl.setFont(labelFont);
-		lbl.setBounds(headerPanel.getWidth()/2, bigLabelSpacing, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
 		
 		lbl = new JLabel("Combinations:");
 		lbl.setFont(labelBoldFont);
-		lbl.setBounds(0, 2*bigLabelSpacing, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
 		
 		lbl = new JLabel(String.valueOf(confList.size()));
 		lbl.setFont(labelFont);
-		lbl.setBounds(headerPanel.getWidth()/2, 2*bigLabelSpacing, headerPanel.getWidth()/2, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		headerPanel.add(lbl);
@@ -163,18 +172,16 @@ public class AlgorithmSetupFrame {
 		
 		// EXPLANATION
 		
-		JPanel expPanel = new JPanel();
+		expPanel = new JPanel();
 		expPanel.setBackground(Color.WHITE);
-		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Description", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		expPanel.setBounds((int)(containerPanel.getWidth()*0.02), headerPanel.getHeight() + labelSpacing/2, (int)(containerPanel.getWidth()*0.96), 4*bigLabelSpacing + labelSpacing);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Parameters Description", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
+		expPanel.setLayout(new FlowLayout());
 		expPanel.setBorder(tb);
-		expPanel.setLayout(null);
 		
-		lbl = new JLabel("<html> " + DetectionAlgorithm.explainParameters(algType) + " <br> " + 
-				"Press Add # to add a new configuration below the clicked row. " + 
-				"Press Remove # to remove the configuration reported in the clicked row. </html>");
+		lbl = new JLabel("<html><div style='text-align: center;'> " + DetectionAlgorithm.explainParameters(algType) + " <br> " + 
+				"Press Add # to add a new configuration below the clicked row.  <br> " + 
+				"Press Remove # to remove the configuration reported in the clicked row. </div></html>");
 		lbl.setFont(labelFont);
-		lbl.setBounds((int)(expPanel.getWidth()*0.02), labelSpacing/2, (int)(expPanel.getWidth()*0.95), 4*bigLabelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		expPanel.add(lbl);
@@ -206,7 +213,6 @@ public class AlgorithmSetupFrame {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBounds(containerPanel.getWidth()/8, headerPanel.getHeight() + expPanel.getHeight() + labelSpacing, containerPanel.getWidth()*3/4, (int)table.getPreferredSize().getHeight() + labelSpacing);
         containerPanel.add(scroll);
 		
 		// FOOTER
@@ -214,24 +220,22 @@ public class AlgorithmSetupFrame {
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Apply Changes", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(containerPanel.getWidth()/4, headerPanel.getHeight() + expPanel.getHeight() + scroll.getHeight() + labelSpacing, containerPanel.getWidth()/2, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(null);
+		fPanel.setLayout(new GridLayout(1, 2));
 		
 		JButton button = new JButton("Save Changes");
 		button.setVisible(true);
 		button.setFont(labelBoldFont);
-		button.setBounds(30, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				iManager.updateConfiguration(algType, confList);
+				asFrame.setVisible(false);
 			} } );	
 		fPanel.add(button);
 		
 		button = new JButton("Discard Changes");
 		button.setVisible(true);
 		button.setFont(labelBoldFont);
-		button.setBounds(fPanel.getWidth()/2 + 30, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				asFrame.setVisible(false);
@@ -239,10 +243,7 @@ public class AlgorithmSetupFrame {
 		fPanel.add(button);
 		
 		containerPanel.add(fPanel);
-		
-		if(asFrame.getHeight() < headerPanel.getHeight() + expPanel.getHeight() + scroll.getHeight() + fPanel.getHeight() + 70)
-			asFrame.setBounds(asFrame.getX(), asFrame.getY(), asFrame.getWidth(), headerPanel.getHeight() + expPanel.getHeight() + scroll.getHeight() + fPanel.getHeight() + 70);
-        		
+				
 		return containerPanel;
 	}
 	
@@ -329,7 +330,11 @@ public class AlgorithmSetupFrame {
 								break;
 							case LOG_THRESHOLD:
 								break;
-							case STATIC_THRESHOLD:
+							case STATIC_THRESHOLD_GREATERTHAN:
+								suggestedValue = "(1)";
+								break;
+							case STATIC_THRESHOLD_LOWERTHAN:
+								suggestedValue = "(1)";
 								break;
 							case THRESHOLD:
 								suggestedValue = "0.9";

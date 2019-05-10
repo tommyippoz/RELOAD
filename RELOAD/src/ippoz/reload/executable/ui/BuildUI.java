@@ -661,8 +661,13 @@ public class BuildUI {
 		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager), setupMap);
+		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
+		
+		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
 		seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);

@@ -199,6 +199,7 @@ public class LoaderFrame {
 					loaderPref.updateToFile();
 				} else JOptionPane.showMessageDialog(lFrame, checkParameters,
 					    "Error while setting parameters", JOptionPane.ERROR_MESSAGE);
+				lFrame.setVisible(false);
 			} } );	
 		fPanel.add(button);
 		
