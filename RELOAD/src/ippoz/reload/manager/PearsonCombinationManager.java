@@ -124,18 +124,20 @@ public class PearsonCombinationManager {
 			pMap = new HashMap<Integer, List<PearsonResult>>();
 			pMap.put(2, new LinkedList<PearsonResult>());
 			for(DataSeries ds1 : seriesExpData.keySet()){
-				for(DataSeries ds2 : seriesExpData.keySet()){
-					if(!ds1.equals(ds2)){
-						pExp = new ArrayList<Double>(kList.size());
-						for(Knowledge kItem : kList){
-							pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
+				if(ds1.getDataCategory() != DataCategory.DIFFERENCE){
+					for(DataSeries ds2 : seriesExpData.keySet()){
+						if(!ds1.equals(ds2) && ds2.getDataCategory() != DataCategory.DIFFERENCE){
+							pExp = new ArrayList<Double>(kList.size());
+							for(Knowledge kItem : kList){
+								pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
+							}
+							dsList = new ArrayList<DataSeries>(2);
+							dsList.add(ds1);
+							dsList.add(ds2);
+							pr = new PearsonResult(dsList, pExp);
+							if(pr.isValid(pMap.get(2), pearsonThreshold))
+								pMap.get(2).add(pr);
 						}
-						dsList = new ArrayList<DataSeries>(2);
-						dsList.add(ds1);
-						dsList.add(ds2);
-						pr = new PearsonResult(dsList, pExp);
-						if(pr.isValid(pMap.get(2), pearsonThreshold))
-							pMap.get(2).add(pr);
 					}
 				}
 			}

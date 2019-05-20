@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
 import ippoz.reload.algorithm.elki.KMeansELKI;
+import ippoz.reload.algorithm.elki.KNNELKI;
 import ippoz.reload.algorithm.elki.LOFELKI;
 import ippoz.reload.algorithm.elki.ODINELKI;
 import ippoz.reload.algorithm.elki.SVMELKI;
@@ -128,6 +129,8 @@ public abstract class DetectionAlgorithm {
 				return new LOFELKI(dataSeries, conf);
 			case ELKI_COF:
 				return new COFELKI(dataSeries, conf);
+			case ELKI_KNN:
+				return new KNNELKI(dataSeries, conf);
 			case ELKI_ODIN:
 				return new ODINELKI(dataSeries, conf);
 			case ELKI_SVM:
@@ -148,7 +151,6 @@ public abstract class DetectionAlgorithm {
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			default:
 				return null;
-			
 		}
 	}
 	
@@ -176,6 +178,7 @@ public abstract class DetectionAlgorithm {
 			case ELKI_COF:
 			case SLIDING_ELKI_COF:
 				return AlgorithmFamily.DENSITY;
+			case ELKI_KNN:
 			case ELKI_ODIN:
 			case SLIDING_ELKI_KNN:
 				return AlgorithmFamily.NEIGHBOUR;
@@ -210,6 +213,7 @@ public abstract class DetectionAlgorithm {
 			case ELKI_LOF:
 			case ELKI_ODIN:
 			case ELKI_SVM:
+			case ELKI_KNN:
 			case HBOS:
 			case SLIDING_ELKI_ABOD:
 			case SLIDING_ELKI_CLUSTERING:

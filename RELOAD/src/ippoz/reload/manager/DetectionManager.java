@@ -298,32 +298,38 @@ public class DetectionManager {
 		double bestScore = 0;
 		double score;
 		int index = 0;
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
 		try {
-			if(lList.size() > 1){
-				for(Loader l : lList){
-					expList = l.fetch();
-					if(expList != null && expList.size() > 0){
-						AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-						score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
-						if(score > bestScore){
-							bestRuns = l.getRuns();
-							bestExpList = expList;
-							bestScore = score;
-						}
-						AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
-					} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
-				}
-				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
-				dOut.setBestRuns(bestRuns);
+			if(iManager.countAvailableVoters(scoresFileString) > 0){
+				if(lList.size() > 1){
+					for(Loader l : lList){
+						expList = l.fetch();
+						if(expList != null && expList.size() > 0){
+							AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
+							score = singleOptimization(metList, generateKnowledge(expList), printOutput).getBestScore();
+							if(score > bestScore){
+								bestRuns = l.getRuns();
+								bestExpList = expList;
+								bestScore = score;
+							}
+							AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
+						} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
+					}
+					dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
+					dOut.setBestRuns(bestRuns);
+				} else {
+					Loader l = lList.iterator().next();
+					bestExpList = l.fetch();
+					dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
+					dOut.setBestRuns(l.getRuns());
+				}	
+				dOut.summarizeCSV(iManager.getOutputFolder());
+				//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+				AppLogger.logInfo(getClass(), "Final Optimized score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 			} else {
-				Loader l = lList.iterator().next();
-				bestExpList = l.fetch();
-				dOut = singleOptimization(metList, generateKnowledge(bestExpList), printOutput);
-				dOut.setBestRuns(l.getRuns());
-			}	
-			dOut.summarizeCSV(iManager.getOutputFolder());
-			//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
-			AppLogger.logInfo(getClass(), "Final Optimized score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
+				return null;
+			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
 		}
@@ -338,36 +344,42 @@ public class DetectionManager {
 		String[] voterTresholds = iManager.parseVoterTresholds();
 		Map<String, Integer> nVoters = new HashMap<String, Integer>();
 		Map<String, Map<String, List<Map<Metric, Double>>>> evaluations = new HashMap<String, Map<String, List<Map<Metric,Double>>>>();
-		for(String voterTreshold : voterTresholds){
-			evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
-			for(String anomalyTreshold : anomalyTresholds){
-				EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
-				if(expKnowledge == null)
-					expKnowledge = eManager.getKnowledge();
-				if(eManager.detectAnomalies()) {
-					evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		if(iManager.countAvailableVoters(scoresFileString) > 0){
+			for(String voterTreshold : voterTresholds){
+				evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
+				for(String anomalyTreshold : anomalyTresholds){
+					EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(scoresFileString), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
+					if(expKnowledge == null)
+						expKnowledge = eManager.getKnowledge();
+					if(eManager.detectAnomalies()) {
+						evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
+					}
+					nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
+					String a = Metric.getAverageMetricValue(evaluations.get(voterTreshold.trim()).get(anomalyTreshold.trim()), metric);
+					double score = Double.parseDouble(a);
+					if(score > bestScore) {
+						bestScore = score;
+						if(bestEManager != null){
+							bestEManager.flush();
+						} 
+						bestEManager = eManager;
+					} else eManager.flush();
 				}
-				nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
-				String a = Metric.getAverageMetricValue(evaluations.get(voterTreshold.trim()).get(anomalyTreshold.trim()), metric);
-				double score = Double.parseDouble(a);
-				if(score > bestScore) {
-					bestScore = score;
-					if(bestEManager != null){
-						bestEManager.flush();
-					} 
-					bestEManager = eManager;
-				} else eManager.flush();
 			}
+			bestScore = getBestScore(evaluations, metList, anomalyTresholds);
+			return new DetectorOutput(expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
+					getBestSetup(evaluations, metList, anomalyTresholds), metric, metList, 
+					getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
+					nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, 
+					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
+					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
+					bestEManager != null ? bestEManager.getFailures() : null,		
+					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
+		} else {
+			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
+			return null;
 		}
-		bestScore = getBestScore(evaluations, metList, anomalyTresholds);
-		return new DetectorOutput(expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
-				getBestSetup(evaluations, metList, anomalyTresholds), metric, metList, 
-				getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
-				nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, 
-				evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
-				bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
-				bestEManager != null ? bestEManager.getFailures() : null,		
-				getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
 	}
 	
 	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){
@@ -443,10 +455,16 @@ public class DetectionManager {
 	}
 
 	public DetectorOutput evaluate(DetectorOutput optOut) {
-		if(optOut == null || optOut.getBestSetup() == null){
-			return evaluateAll();
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		if(iManager.countAvailableVoters(scoresFileString) > 0){
+			if(optOut == null || optOut.getBestSetup() == null){
+				return evaluateAll();
+			} else {
+				return optimizedEvaluation(optOut.getBestSetup());
+			}
 		} else {
-			return optimizedEvaluation(optOut.getBestSetup());
+			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
+			return null;
 		}
 	}
 	

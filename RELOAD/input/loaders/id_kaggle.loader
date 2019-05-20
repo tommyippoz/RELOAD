@@ -14,7 +14,7 @@ CONSIDERED_LAYERS = NO_LAYER
 TRAIN_CSV_FILE = intrusion_detection_kaggle/Train_data.csv
 
 * Train Runs.
-TRAIN_RUN_IDS = 1-20
+TRAIN_RUN_IDS = 1-5
 
 * Train Faulty Tags.
 TRAIN_FAULTY_TAGS = probe

@@ -4,8 +4,15 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.commons.support.AppLogger;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +29,7 @@ import de.lmu.ifi.dbs.elki.database.ids.DBIDIter;
 import de.lmu.ifi.dbs.elki.database.query.distance.DistanceQuery;
 import de.lmu.ifi.dbs.elki.database.query.knn.KNNQuery;
 import de.lmu.ifi.dbs.elki.database.relation.Relation;
+import de.lmu.ifi.dbs.elki.datasource.bundle.SingleObjectBundle;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.DistanceFunction;
 import de.lmu.ifi.dbs.elki.logging.Logging;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -47,7 +55,7 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   */
 	  private int k;
 	  
-	  private List<Double> scores;
+	  private List<KNNScore> resList;
 
 	  /**
 	   * Constructor for a single kNN query.
@@ -68,16 +76,42 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	  public Object run(Relation<NumberVector> relation) {
 	    final DistanceQuery<NumberVector> distanceQuery = relation.getDistanceQuery(getDistanceFunction());
 	    final KNNQuery<NumberVector> knnQuery = relation.getKNNQuery(distanceQuery, k);
-	    scores = new LinkedList<Double>();
+	    resList = new LinkedList<KNNScore>();
 	    for(DBIDIter it = relation.iterDBIDs(); it.valid(); it.advance()) {
 	      // distance to the kth nearest neighbor
 	      // (assuming the query point is always included, with distance 0)
 	      final double dkn = knnQuery.getKNNForDBID(it, k).getKNNDistance();
-	      scores.add(dkn);
+	      resList.add(new KNNScore(relation.get(it), dkn));
 	    }
-	    Collections.sort(scores);
-	    return scores;
+	    Collections.sort(resList);
+	    return null;
 	  }
+	  
+	  public double calculateSingleKNN(Vector newInstance) {
+		  double partialResult;
+			if(resList == null || resList.size() == 0) 
+				return Double.MAX_VALUE;
+			else if(Double.isFinite(partialResult = hasResult(newInstance)))
+				return partialResult;
+			else {
+				DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
+				List<Double> distances = new ArrayList<Double>(resList.size());
+				for(KNNScore ks : resList){
+					if(ks != null)
+						distances.add(getSimilarity(sq, newInstance, ks.getVector()));
+				}
+				Collections.sort(distances);
+				return distances.get(k);			
+			}
+		}
+	  
+	  private double hasResult(NumberVector newInstance){
+			for(KNNScore ar : resList){
+				if(ar.getVector().equals(newInstance))
+					return ar.getDistanceToKthNeighbour();
+			}
+			return Double.NaN;
+		}
 	  
 	  public Double calculateKNN(Vector vector, Database db) {
 		  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
@@ -151,16 +185,66 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    }
 	  }
 
-	@Override
-	public void loadFile(String filename) {
-		// TODO Auto-generated method stub
-		
-	}
+	  public void loadFile(String item) {
+			BufferedReader reader;
+			String readed;
+			try {
+				resList = new LinkedList<KNNScore>();
+				if(new File(item).exists()){
+					reader = new BufferedReader(new FileReader(new File(item)));
+					reader.readLine();
+					while(reader.ready()){
+						readed = reader.readLine();
+						if(readed != null){
+							readed = readed.trim();
+							resList.add(new KNNScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2]));
+						}
+					}
+					reader.close();
+					Collections.sort(resList);
+				}
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to read LOF file");
+			} 
+		}
 
-	@Override
-	public List<Double> getScoresList() {
-		return scores;
-	}
+		public void printFile(File file) {
+			BufferedWriter writer;
+			try {
+				if(resList != null && resList.size() > 0){
+					if(file.exists())
+						file.delete();
+					writer = new BufferedWriter(new FileWriter(file));
+					writer.write("data (enclosed in {});k;distanceToKthNeighbour\n");
+					for(KNNScore ar : resList){
+						writer.write("{" + ar.getVector().toString().replace(" ", ",") + "};" + (k-1) + ";" + ar.getDistanceToKthNeighbour() + "\n");
+					}
+					writer.close();
+				}
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to write ODIB file");
+			} 
+		}
+
+		public int size() {
+			return resList.size();
+		}
+
+		public double getScore(int ratio) {
+			if(ratio >= 1 && ratio <= size()){
+				return resList.get(ratio-1).getDistanceToKthNeighbour();
+			} else return 1.0;
+		}
+
+		@Override
+		public List<Double> getScoresList() {
+			ArrayList<Double> list = new ArrayList<Double>(size());
+			for(KNNScore os : resList){
+				list.add(os.getDistanceToKthNeighbour());
+			}
+			Collections.sort(list);
+			return list;
+		}
 
 	@Override
 	public String getAlgorithmName() {
@@ -168,14 +252,64 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	}
 
 	@Override
-	public void printFile(File file) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public Object run(Database db, Relation<NumberVector> relation) {
 		return run(relation);
+	}
+	
+	private class KNNScore implements Comparable<KNNScore> {
+
+		private NumberVector data;
+		
+		private double distanceToKthNeighbour;
+
+		public KNNScore(SingleObjectBundle bundle, double distanceToKthNeighbour) {
+			this.distanceToKthNeighbour = distanceToKthNeighbour;
+			double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
+			data = new Vector(bValues.length);
+			for(int i=0;i<data.getDimensionality();i++){
+				((Vector)data).set(i, bValues[i]);
+			}
+		}
+	
+
+		public KNNScore(String vString, String distK) {
+			this.distanceToKthNeighbour = Double.parseDouble(distK);
+			String[] splitted = vString.split(",");
+			data = new Vector(splitted.length);
+			for(int i=0;i<data.getDimensionality();i++){
+				((Vector)data).set(i, Double.parseDouble(splitted[i].trim()));
+			}
+		}
+
+		public KNNScore(NumberVector data, double distance) {
+			this.data = data;
+			this.distanceToKthNeighbour = distance;
+		}
+		
+		public double getDistanceToKthNeighbour(){
+			return distanceToKthNeighbour;
+		}
+
+		public NumberVector getVector(){
+			return data;
+		}
+
+		@Override
+		public int compareTo(KNNScore o) {
+			return Double.compare(distanceToKthNeighbour, o.getDistanceToKthNeighbour());
+		}
+
+		@Override
+		public String toString() {
+			return "KNNScore [data=" + data.toString() + ", kndistance=" + distanceToKthNeighbour + "]";
+		}
+
+	}
+
+	public double getDbSize() {
+		if(resList != null)
+			return resList.size();
+		else return 0;
 	}
 	  
 }

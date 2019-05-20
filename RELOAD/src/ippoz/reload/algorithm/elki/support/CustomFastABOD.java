@@ -70,8 +70,6 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	protected int k;
 	
 	private List<ABODResult> resList;
-	
-	private KernelMatrix kernelMatrix;
 
 	/**
 	 * Constructor for Angle-Based Outlier Detection (ABOD).
@@ -91,45 +89,74 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	 * @return Outlier detection result
 	 */
 	@Override
-	public OutlierResult run(Database db, Relation<V> relation) {
-		
-		long start = System.currentTimeMillis();
-		
+	public OutlierResult run(Database db, Relation<V> relation) {	
 		DBIDs ids = relation.getDBIDs();
 		// Build a kernel matrix, to make O(n^3) slightly less bad.
-		SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
-		kernelMatrix = new KernelMatrix(sq, relation, ids);
-
-		WritableDoubleDataStore abodvalues = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_STATIC);
-		DoubleMinMax minmaxabod = new DoubleMinMax();
+		
 
 		resList = new ArrayList<ABODResult>(ids.size());
 		
-		for(DBIDIter pA = ids.iter(); pA.valid(); pA.advance()) {
-			//System.out.println(relation.get(pA));
-			double[] abof = calculateABOF(pA, relation.iterDBIDs(), relation);
-			//System.out.println(abof[0]);
-			resList.add(new ABODResult(db.getBundle(pA), abof[0]));
-			minmaxabod.put(abof[0]);
-			abodvalues.putDouble(pA, abof[0]);
-		}
-		
-		Collections.sort(resList);
+		if(isApplicable(relation, ids)){
+			SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
+			KernelMatrix kernelMatrix = new KernelMatrix(sq, relation, ids);
 
-		// Build result representation.
-		DoubleRelation scoreResult = new MaterializedDoubleRelation("Angle-Based Outlier Degree", "abod-outlier", abodvalues, relation.getDBIDs());
-		OutlierScoreMeta scoreMeta = new InvertedOutlierScoreMeta(minmaxabod.getMin(), minmaxabod.getMax(), 0.0, Double.POSITIVE_INFINITY);
-		
-		System.out.println("TRAIN TIME: " + (System.currentTimeMillis() - start));
-		
-		return new OutlierResult(scoreMeta, scoreResult);
+			WritableDoubleDataStore abodvalues = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_STATIC);
+			DoubleMinMax minmaxabod = new DoubleMinMax();
+			
+			
+			for(DBIDIter pA = ids.iter(); pA.valid(); pA.advance()) {
+				//System.out.println(relation.get(pA));
+				double[] abof = calculateABOF(kernelMatrix, pA, relation.iterDBIDs(), relation, db);
+				//System.out.println(abof[0]);
+				resList.add(new ABODResult(db.getBundle(pA), abof[0]));
+				minmaxabod.put(abof[0]);
+				abodvalues.putDouble(pA, abof[0]);
+			}
+			
+			kernelMatrix = null;
+			
+			Collections.sort(resList);
+
+			// Build result representation.
+			DoubleRelation scoreResult = new MaterializedDoubleRelation("Fast Angle-Based Outlier Degree", "fabod-outlier", abodvalues, relation.getDBIDs());
+			OutlierScoreMeta scoreMeta = new InvertedOutlierScoreMeta(minmaxabod.getMin(), minmaxabod.getMax(), 0.0, Double.POSITIVE_INFINITY);
+			
+			//System.out.println("TRAIN TIME: " + (System.currentTimeMillis() - start) + " _ " + (cycleEnd - cycleStart) + " _ " + (System.currentTimeMillis() - cycleEnd));
+			
+			return new OutlierResult(scoreMeta, scoreResult);
+			
+		} else return null;
 
 	}
 	
-	private double[] calculateABOF(DBIDIter instanceIndex, DBIDIter startIndex, Relation<V> relation) {
+	private boolean isApplicable(Relation<V> relation, DBIDs ids){
+		List<Double> differentValues = new LinkedList<Double>();
+		for(DBIDIter pA = ids.iter(); pA.valid(); pA.advance()) {
+			V newValue = relation.get(pA);
+			double newDouble = 0;
+			if(newValue.getDimensionality() == 1)
+				newDouble = newValue.doubleValue(0);
+			else {
+				newDouble = 0;
+				for(int i=0;i<newValue.getDimensionality();i++){
+					newDouble = newDouble + Math.pow(-1, i)*newValue.doubleValue(i)*i;
+				}
+			}
+			if(!differentValues.contains(newDouble)){
+				differentValues.add(newDouble);
+				if(differentValues.size() > 3)
+					return true;
+			}
+		}
+		return false;
+		
+	}
+	
+	private double[] calculateABOF(KernelMatrix kernelMatrix, DBIDIter instanceIndex, DBIDIter startIndex, Relation<V> relation, Database database) {
 		MeanVariance s = new MeanVariance();
 		KNNHeap nn = DBIDUtil.newHeap(k);
 		Map<String, Integer> nOccurrences = new HashMap<String, Integer>();
+		
 		final double simAA = kernelMatrix.getSimilarity(instanceIndex, instanceIndex);
 		for(DBIDIter nB = startIndex; nB.valid(); nB.advance()) {
 			if(DBIDUtil.equal(nB, instanceIndex)) {
@@ -141,7 +168,6 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			if(!(sqdAB > 0.)) {
 				continue;
 			}
-			//System.out.println("'" + relation.get(nB) + "'");
 			if(!nOccurrences.containsKey(relation.get(nB).toString())){
 				nn.insert(sqdAB, nB);
 				nOccurrences.put(relation.get(nB).toString(), 1);
@@ -155,9 +181,10 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		
 		DoubleDBIDListIter iB = nl.iter(), iC = nl.iter();
 		for(; iB.valid(); iB.advance()) {
-			//System.out.print(relation.get(iB) + " _ ");
+			//System.out.print(getDoubleValue(database.getBundle(iB)) + " _ " + iB.doubleValue() + " _ ");
 			double sqdAB = iB.doubleValue();
 			double simAB = kernelMatrix.getSimilarity(instanceIndex, iB);
+			//System.out.println(simAA + simBB - simAB - simAB);
 			if(!(sqdAB > 0.)) {
 				continue;
 			}

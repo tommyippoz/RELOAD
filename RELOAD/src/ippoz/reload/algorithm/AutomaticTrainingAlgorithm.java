@@ -21,6 +21,6 @@ public interface AutomaticTrainingAlgorithm {
 	 * @param kList the training data
 	 * @return the chosen algorithm configuration
 	 */
-	public void automaticTraining(List<Knowledge> kList, boolean createOutput);
+	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput);
 	
 }

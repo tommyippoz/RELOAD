@@ -47,6 +47,8 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	
 	public static final int DEFAULT_K = 10;
 	
+	private static final double HBOS_DEFAULT_MAX = 10;
+	
 	private Map<String, Histograms> histograms;
 	
 	private List<HBOSScore> scores;
@@ -85,16 +87,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			return new LogThresholdDecision(perc, histograms.size());
 		}
 	}
-	
-	/*private double loadThreshold() {
-		double perc = 0.0;
-		if(conf != null && conf.hasItem(THRESHOLD)){
-			if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
-				perc = Double.parseDouble(conf.getItem(THRESHOLD));
-			else perc = DEFAULT_THRESHOLD;
-		} else perc = DEFAULT_THRESHOLD;
-		return histograms.size()*Math.log(1.0/(perc));
-	}*/
 
 	private Map<String, Histograms> loadFromConfiguration(){
 		Map<String, Histograms> loadedHist = new HashMap<String, Histograms>();
@@ -113,7 +105,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	}
 
 	@Override
-	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
 			generateDynamicHistograms(Knowledge.toSnapList(kList, getDataSeries()));
 		else generateStaticHistograms(Knowledge.toSnapList(kList, getDataSeries()), getK());
@@ -133,6 +125,8 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	    		new File(getDefaultTmpFolder()).mkdirs();
 	    	printFile(new File(getFilename()));
 		}
+		
+		return true;
 	}
 	
 	private String snapToString(Snapshot snap){
@@ -209,6 +203,9 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		AlgorithmResult ar;
 		if(histograms != null){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateHBOS(sysSnapshot));
+			if(ar.getScore() > 10000){
+				System.out.print(ar.getScore());
+			}
 			getDecisionFunction().classifyScore(ar, true);
 			return ar;
 		
@@ -225,12 +222,12 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 				temp = histograms.get(histograms.keySet().iterator().next()).getScore(snapValue);
 				if(temp > 0)
 					hbos = Math.log(1.0/temp);
-				else hbos = Double.MAX_VALUE;
+				else hbos = HBOS_DEFAULT_MAX;
 			} else {
 				temp = histograms.get(getDataSeries().getName()).getScore(snapValue);
 				if(temp > 0)
 					hbos = Math.log(1.0/temp);
-				else hbos = Double.MAX_VALUE;
+				else hbos = HBOS_DEFAULT_MAX;
 			}
 		} else {
 			hbos = 0;
@@ -239,7 +236,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 				temp = histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapValue);
 				if(temp > 0)
 					hbos = hbos + Math.log(1.0/temp);
-				else hbos = Double.MAX_VALUE;
+				else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();
 			}
 		}
 		return hbos;

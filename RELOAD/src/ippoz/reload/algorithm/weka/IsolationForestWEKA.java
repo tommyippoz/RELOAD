@@ -69,7 +69,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	}
 
 	@Override
-	protected void automaticWEKATraining(Instances db, boolean createOutput) {
+	protected boolean automaticWEKATraining(Instances db, boolean createOutput) {
 		int nTrees;
 		int sampleSize;
 		try {
@@ -88,8 +88,10 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		    	storeSerialized();
 		    	iForest.printScores(new File(getFilename() + "scores"));
 		    }
+			return true;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train IsolationForest");
+			return false;
 		}
 	}
 	

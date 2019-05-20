@@ -315,6 +315,7 @@ public class BuildUI {
 					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(dmList.size());
 					DetectorOutput[] newOut;
+					long startTime = System.currentTimeMillis();
 					for(int i=0;i<dmList.size();i++){
 						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
 						newOut = DetectorMain.runMADneSs(dmList.get(i));
@@ -323,6 +324,7 @@ public class BuildUI {
 						pBar.moveNext();
 					}
 					pBar.deleteFrame();
+					AppLogger.logInfo(getClass(), "RELOAD Execution time: " + (System.currentTimeMillis() - startTime) + " ms");
 					if(outList.size() > 0)
 						showDetectorOutputs(outList);
 					else AppLogger.logInfo(getClass(), "No outputs will be shown.");

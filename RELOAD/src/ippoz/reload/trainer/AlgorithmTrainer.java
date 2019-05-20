@@ -103,7 +103,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @return true, if is valid train
 	 */
 	public boolean isValidTrain(){
-		return !sameResultFlag;
+		return !sameResultFlag && (metricScore != null && metricScore.size() > 0) && (trainScore != null && trainScore.size() > 0);
 	}
 
 	/* (non-Javadoc)
@@ -114,20 +114,22 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
-		metricScore = evaluateMetricScore();
-		//reputationScore = evaluateReputationScore();
-		if(getReputationScore() > 0.0)
-			bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
-		else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
-		bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
-		bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainScore.getAvg());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainScore.getStd());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainScore.getMin());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainScore.getQ1());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
-		bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
+		if(metricScore.size() > 0 && trainScore.size() > 0){
+			metricScore = evaluateMetricScore();
+			//reputationScore = evaluateReputationScore();
+			if(getReputationScore() > 0.0)
+				bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
+			else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
+			bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
+			bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainScore.getAvg());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainScore.getStd());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainScore.getMin());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainScore.getQ1());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
+		}
 	}
 	
 	public long getTrainingTime() {

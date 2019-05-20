@@ -45,6 +45,7 @@ import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -406,15 +407,33 @@ public class OutputDetailFrame {
 				}
 			} else countErr = countErr + list.size();
 		}
+		
+		// Removes Infinite Values that will cause the graph to scale too much
+		boolean infiniteFlag = false;
+		for(String expName : dOut.getLabelledScores().keySet()){
+			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
+			if(containsPostiveLabel(list)){
+				for(LabelledResult lr : list){
+					if(Double.isInfinite(lr.getValue().getScore()) || lr.getValue().getScore() > Double.MAX_VALUE - 10){
+						lr.getValue().setScore(maxValue*(1 + 1/(numIntervals-1.0)));
+						infiniteFlag = true;
+					}
+				}
+			}
+		}
+		if(infiniteFlag)
+			maxValue = maxValue + maxValue/(numIntervals-1.0);
 
 		if(numIntervals <= 0 || numIntervals > 100000){
 			numIntervals = NUM_INTERVALS;
 		}
 		
+		boolean normalizeFlag = (maxValue - minValue) > 1000;
+		
 		IntervalXYDataset dataset;
 		if(dFunction != null && decisionFunctionFlag)
 			dataset = (IntervalXYDataset)createConfusionMatrixSeries(minValue, maxValue);
-		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue);
+		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, normalizeFlag);
 
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
@@ -429,6 +448,18 @@ public class OutputDetailFrame {
 			((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(3, Color.YELLOW);
 		}
 		
+		// Setting x axis range
+		NumberAxis domain = (NumberAxis) ((XYPlot) chart.getPlot()).getDomainAxis();
+	    if(!normalizeFlag)
+	    	domain.setRange(minValue - 5.0/numIntervals, maxValue);
+		
+		// Set bar size
+		double scaling = 1.0 - (maxValue - minValue) / numIntervals;
+		XYPlot categoryPlot = (XYPlot) chart.getPlot();
+		XYBarRenderer br = (XYBarRenderer) categoryPlot.getRenderer();
+		if(scaling > 0)
+			br.setMargin(scaling);
+		
 		LogAxis yAxis = new LogAxis("Y");
 		yAxis.setBase(2);
 		yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
@@ -439,7 +470,7 @@ public class OutputDetailFrame {
 		return new ChartPanel(chart);
 	}
 	
-	private XYSeriesCollection createSeries(double minValue, double maxValue){
+	private XYSeriesCollection createSeries(double minValue, double maxValue, boolean normalizeFlag){
 		double[] normalCount = new double[numIntervals];
 		double[] anomalyCount = new double[numIntervals];
 		
@@ -447,9 +478,6 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
-					if(Double.isInfinite(lr.getValue().getScore())){
-						lr.getValue().setScore(maxValue);
-					}
 					if(Double.isFinite(lr.getValue().getScore())){
 						double normalizedScore = (lr.getValue().getScore() - minValue) / (maxValue - minValue);
 						int dataIndex = (int) (normalizedScore*numIntervals);
@@ -465,14 +493,16 @@ public class OutputDetailFrame {
 			}
 		}
 		
-		XYSeries trueSeries = new XYSeries("Anomaly Series");
-		XYSeries falseSeries = new XYSeries("Normal Series");
+		XYSeries trueSeries = new XYSeries(normalizeFlag ? "Anomaly Series (Normalized)" : "Anomaly Series");
+		XYSeries falseSeries = new XYSeries(normalizeFlag ? "Normal Series (Normalized)" : "Normal Series");
+		
+		double intervalSize = (maxValue - minValue) / numIntervals;
 		
 		for(int i=0;i<numIntervals;i++){
 			if(normalCount[i] > 0)
-				falseSeries.add(i, normalCount[i] + anomalyCount[i]);
+				falseSeries.add(normalizeFlag ? i : minValue + i*intervalSize, normalCount[i] + anomalyCount[i]);
 			if(anomalyCount[i] > 0)
-				trueSeries.add(i, anomalyCount[i]);
+				trueSeries.add(normalizeFlag ? i : minValue + i*intervalSize, anomalyCount[i]);
 		}
 		
 		// Add the series to your data set
@@ -514,20 +544,24 @@ public class OutputDetailFrame {
 			}
 		}
 		
-		XYSeries tpSeries = new XYSeries("TP Series");
-		XYSeries fpSeries = new XYSeries("FP Series");
-		XYSeries tnSeries = new XYSeries("TN Series");
-		XYSeries fnSeries = new XYSeries("FN Series");
+		boolean normalizeFlag = (maxValue - minValue) > 1000;
+		
+		XYSeries tpSeries = new XYSeries(normalizeFlag ? "TP Series (Normalized)" : "TP Series");
+		XYSeries fpSeries = new XYSeries(normalizeFlag ? "FP Series (Normalized)" : "FP Series");
+		XYSeries tnSeries = new XYSeries(normalizeFlag ? "TN Series (Normalized)" : "TN Series");
+		XYSeries fnSeries = new XYSeries(normalizeFlag ? "FN Series (Normalized)" : "FN Series");
+		
+		double intervalSize = (maxValue - minValue) / numIntervals;
 		
 		for(int i=0;i<numIntervals;i++){
 			if(tpCount[i] > 0)
-				tpSeries.add(i, tpCount[i]);
+				tpSeries.add(normalizeFlag ? i : minValue + i*intervalSize, tpCount[i]);
 			if(tpCount[i] + fnCount[i] > 0)
-				fnSeries.add(i, tpCount[i] + fnCount[i]);
+				fnSeries.add(normalizeFlag ? i : minValue + i*intervalSize, tpCount[i] + fnCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] > 0)
-				fpSeries.add(i, tpCount[i] + fnCount[i] + fpCount[i]);
+				fpSeries.add(normalizeFlag ? i : minValue + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i] > 0)
-				tnSeries.add(i, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
+				tnSeries.add(normalizeFlag ? i : minValue + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
 		}
 		
 		// Add the series to your data set

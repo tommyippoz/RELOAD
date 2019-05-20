@@ -57,32 +57,37 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract ELKIAlgorithm<?> generateELKIAlgorithm();
 
 	@Override
-	public void automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		Database db = translateKnowledge(kList, outliersInTraining);
 		if(db != null)
-			automaticElkiTraining(db, createOutput);
-		else AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
+			return automaticElkiTraining(db, createOutput);
+		else {
+			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
+			return false;
+		}
 	}
 	
-	protected void automaticElkiTraining(Database db, boolean createOutput){
-		customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-		
-		clearLoggedScores();
-		logScores(customELKI.getScoresList());
-		
-		conf.addItem(TMP_FILE, getFilename());
-	    
-	    if(createOutput){
-	    	if(!new File(getDefaultTmpFolder()).exists())
-	    		new File(getDefaultTmpFolder()).mkdirs();
-	    	customELKI.printFile(new File(getFilename()));
-	    }
-	    
-	    storeAdditionalPreferences();
+	protected boolean automaticElkiTraining(Database db, boolean createOutput){
+		Object trainOut = customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
+		if(trainOut != null){
+			clearLoggedScores();
+			logScores(customELKI.getScoresList());
+			
+			conf.addItem(TMP_FILE, getFilename());
+		    
+		    if(createOutput){
+		    	if(!new File(getDefaultTmpFolder()).exists())
+		    		new File(getDefaultTmpFolder()).mkdirs();
+		    	customELKI.printFile(new File(getFilename()));
+		    }
+		    
+		    storeAdditionalPreferences();
+		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
+		return trainOut != null;
 	}
 	
 	private String getDefaultTmpFolder(){
-		return "/tmp/" + customELKI.getAlgorithmName() + "_tmp_RELOAD";
+		return "." + File.separatorChar + "tmp" + File.separatorChar + customELKI.getAlgorithmName() + "_tmp_RELOAD";
 	}
 	
 	private String getFilename(){

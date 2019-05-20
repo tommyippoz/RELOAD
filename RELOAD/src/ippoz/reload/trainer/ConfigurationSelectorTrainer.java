@@ -71,6 +71,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
 		AlgorithmConfiguration currentConf = null;
+		boolean trainingResult = true;
 		try {
 			metricScore = null;
 			for(AlgorithmConfiguration conf : configurations){
@@ -80,12 +81,14 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					currentConf = (AlgorithmConfiguration)conf.clone();
 					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
 					if(algorithm instanceof AutomaticTrainingAlgorithm) {
-						((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
+						trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
 					}
-					for(Knowledge knowledge : knMap.get("TEST")){
-						metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
-					}
-					currentMetricValue.addValue(AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()])));
+					if(trainingResult){
+						for(Knowledge knowledge : knMap.get("TEST")){
+							metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
+						}
+						currentMetricValue.addValue(AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()])));
+					}	
 				}
 				if(metricScore == null || getMetric().compareResults(currentMetricValue, metricScore) == 1){	
 					metricScore = currentMetricValue;

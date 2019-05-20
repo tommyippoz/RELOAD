@@ -78,7 +78,7 @@ public class FeatureSelectorManager {
 		combinedFeatures = new LinkedList<DataSeries>();
 		if(dsDomain.equals("ALL")){
 			allCombinations();
-		} else if(dsDomain.equals("UNION")){
+		} else if(dsDomain.equals("UNION") || dsDomain.equals("SIMPLE")){
 			unionCombinations();
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
 			double pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
@@ -96,6 +96,11 @@ public class FeatureSelectorManager {
 		} else if(dsDomain.equals("UNION")){
 			finalizedFeatures.addAll(combinedFeatures);
 		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			finalizedFeatures.addAll(selectedFeatures);
+			finalizedFeatures.addAll(combinedFeatures);
+		} else if(dsDomain.contains("NONE")){
+			finalizedFeatures.addAll(selectedFeatures);
+		} else if(dsDomain.contains("SIMPLE")){
 			finalizedFeatures.addAll(selectedFeatures);
 			finalizedFeatures.addAll(combinedFeatures);
 		}

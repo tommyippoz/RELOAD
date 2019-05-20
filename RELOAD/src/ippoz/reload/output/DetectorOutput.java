@@ -7,7 +7,9 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.metric.Metric;
@@ -109,15 +111,14 @@ public class DetectorOutput {
 				
 				map = detailedExperimentsScores.get(tag).get(0);
 				for(AlgorithmVoter av : map.keySet()){
-					header1 = header1 + "," + av.getAlgorithmType() + ",,," + av.getDataSeries().toString() + ",";
+					header1 = header1 + "," + av.getAlgorithmType() + ",,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
 					header2 = header2 + ",score,decision_function,eval,";
 					if(av.getDataSeries().size() == 1){
-						header1 = header1 + ",";
-						header2 = header2 + av.getDataSeries().getName() + ",";
+						header2 = header2 + av.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
 					} else {
 						for(int i=0;i<av.getDataSeries().size();i++){
 							header1 = header1 + ",";
-							header2 = header2 + ((MultipleDataSeries)av.getDataSeries()).getSeries(i).getName() + ",";
+							header2 = header2 + ((MultipleDataSeries)av.getDataSeries()).getSeries(i).getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
 						}
 					}
 					header2 = header2 + ",";					
@@ -131,6 +132,7 @@ public class DetectorOutput {
 				for(String expName : detailedKnowledgeScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
+						Knowledge knowledge = findKnowledge(expName);
 						for(int i=0;i<detailedKnowledgeScores.get(expName).size();i++){
 							writer.write(expName + "," + 
 									detailedKnowledgeScores.get(expName).get(i).getDateOffset(timedRef) + "," + 
@@ -143,6 +145,16 @@ public class DetectorOutput {
 									writer.write("," + map.get(av).getScore() + "," + 
 											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
 											map.get(av).getScoreEvaluation() + ",");
+									if(knowledge != null){
+										Snapshot snap = knowledge.buildSnapshotFor(i, av.getDataSeries());
+										if(av.getDataSeries().size() == 1){
+											writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
+										} else {
+											for(int j=0;j<av.getDataSeries().size();j++){
+												writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)av.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
+											}
+										}
+									}
 								}
 							}
 							writer.write("\n");
@@ -154,6 +166,14 @@ public class DetectorOutput {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
+	}
+
+	private Knowledge findKnowledge(String expName) {
+		for(Knowledge know : knowledgeList){
+			if(know.getTag().equals(expName))
+				return know;
+		}
+		return null;
 	}
 
 	public String buildPath(String basePath){

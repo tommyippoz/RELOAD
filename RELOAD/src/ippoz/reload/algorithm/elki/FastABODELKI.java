@@ -38,7 +38,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
 		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
+		if(getDecisionFunction() != null && v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v));
 			getDecisionFunction().classifyScore(ar, true);
 			return ar;

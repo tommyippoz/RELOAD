@@ -7,6 +7,7 @@ import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
@@ -37,6 +38,7 @@ import ippoz.reload.reputation.BetaReputation;
 import ippoz.reload.reputation.ConstantReputation;
 import ippoz.reload.reputation.MetricReputation;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.AlgorithmVoter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -987,12 +989,16 @@ public class InputManager {
 					if(readed != null){
 						readed = readed.trim();
 						fileLines.add(readed);
-						if(readed.length() > 0 && readed.trim().startsWith("*")){
-							readed = readed.substring(1).trim();
-							if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
-								readed = fileLines.remove(fileLines.size()-1);
+						if(readed.length() > 0){
+							if(readed.trim().startsWith("*")){
 								readed = readed.substring(1).trim();
-								fileLines.add(readed);
+								if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
+									readed = fileLines.remove(fileLines.size()-1);
+									readed = readed.substring(1).trim();
+									fileLines.add(readed);
+									found = true;
+								}
+							} else if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
 								found = true;
 							}
 						}
@@ -1156,7 +1162,7 @@ public class InputManager {
 	}
 	
 	public static String[] getIndicatorSelectionPolicies(){
-		return new String[]{"ALL", "UNION", "PEARSON", "SIMPLE"};
+		return new String[]{"NONE", "ALL", "UNION", "PEARSON", "SIMPLE"};
 	}
 
 	public List<FeatureSelector> getFeatureSelectors() {
@@ -1216,6 +1222,60 @@ public class InputManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
 		}
+	}
+	
+	/**
+	 * Loads train scores.
+	 * This is the outcome of some previous training phases.
+	 *
+	 * @return the list of AlgorithmVoters resulting from the read scores
+	 */
+	public int countAvailableVoters(String scoresFileString) {
+		String scoresFile = getScoresFile(scoresFileString);
+		File asFile = new File(scoresFile);
+		BufferedReader reader;
+		AlgorithmConfiguration conf;
+		String[] splitted;
+		LinkedList<AlgorithmVoter> voterList = new LinkedList<AlgorithmVoter>();
+		String readed;
+		String seriesString;
+		try {
+			if(asFile.exists()){
+				reader = new BufferedReader(new FileReader(asFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.indexOf("§") != -1){
+							splitted = readed.split("§");
+							if(splitted.length > 3){
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 5 ? splitted[5] : null));
+								switch(AlgorithmType.valueOf(splitted[1])){
+									case RCC:
+									case PEA:
+										seriesString = null;
+										break;
+									default:
+										seriesString = splitted[0];
+										break;
+								}
+								if(conf != null){
+									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
+									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+								}
+								voterList.add(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
+							}
+						}
+					}
+				}
+				reader.close();
+			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + scoresFile + "'");
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read scores");
+		}
+		return voterList.size();
 	}
 
 	
