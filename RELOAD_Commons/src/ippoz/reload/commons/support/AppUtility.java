@@ -25,6 +25,24 @@ import java.util.TreeMap;
  */
 public class AppUtility {
 	
+	/**
+	 * Filters inner commas.
+	 *
+	 * @param readLine the read line
+	 * @return the string
+	 */
+	public static String filterInnerCommas(String readLine) {
+		int tDelCount = 0;
+		for(int i=0;i<readLine.length();i++){
+			if(readLine.charAt(i) == '"' && (i == 0 || readLine.charAt(i-1) != '\\')){
+				tDelCount++;
+			} else if(readLine.charAt(i) == ',' && tDelCount%2 == 1){
+				readLine = readLine.substring(0, i) + ';' + readLine.substring(i+1);
+			}
+		}
+		return readLine;
+	}
+	
 	public static HashMap<String, String> loadPreferences(File prefFile, String[] tags) throws IOException {
 		String readed, tag, value; 
 		BufferedReader reader;

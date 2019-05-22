@@ -17,8 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * The Class LoaderManager.
- * The manager responsible of the loading of experimental data. Uses implemented DataFetchers
+ * The Class MySQLLoader.
+ * The manager responsible of loading MYSQL data.
  *
  * @author Tommy
  */
@@ -54,16 +54,17 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	/** The data read by the loader. */
 	private List<MonitoredData> readData;
 	
+	/** The selected layers. */
 	private List<LayerType> selectedLayers;
 	
 	/**
 	 * Instantiates a new loader manager.
 	 *
 	 * @param list the experiments IDs
+	 * @param preferencesManager the preferences manager
 	 * @param tag the loader tag
+	 * @param layersString the layers string
 	 * @param pManager the timings manager
-	 * @param dbUsername the database username
-	 * @param dbPassword the database password
 	 */
 	public MySQLLoader(List<Integer> list, PreferencesManager preferencesManager, String tag, String layersString, TimingsManager pManager) {
 		super();
@@ -77,6 +78,11 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		loadLayers(layersString);
 	}
 	
+	/**
+	 * Loads the layers of indicators/features.
+	 *
+	 * @param layersString the layers string
+	 */
 	private void loadLayers(String layersString) {
 		selectedLayers = new LinkedList<LayerType>();
 		if(layersString != null && layersString.length() > 0){
@@ -156,6 +162,9 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		((DataFetcher)t).flush();
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.loader.Loader#getRuns()
+	 */
 	@Override
 	public String getRuns() {
 		return expIDs.get(0) + " - " + expIDs.get(expIDs.size() - 1);
