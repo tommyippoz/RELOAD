@@ -71,7 +71,7 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 		return extractLabels(includeFaulty, Knowledge.toSnapList(kList, getDataSeries()));
 	}
 	
-	protected String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
+	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
 		int insertIndex = 0;
 		String[] anomalyLabels;
 		if(includeFaulty)

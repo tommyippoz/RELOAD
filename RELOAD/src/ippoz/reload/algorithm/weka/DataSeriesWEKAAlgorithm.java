@@ -14,9 +14,9 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.extarnalutils.WEKAUtils;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
@@ -24,18 +24,31 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * @author Tommy
+ * The Class DataSeriesWEKAAlgorithm. Embeds a non-sliding WEKA algorithm. 
  *
+ * @author Tommy
  */
 public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
 
+	/** Flag to specify if faulty items should be used for training. */
 	private boolean outliersInTraining;
 	
+	/**
+	 * Instantiates a new data series WEKA algorithm.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 * @param outliersInTraining the flag for faulty items in training
+	 * @param needNormalization the flag that defines need for normalization
+	 */
 	public DataSeriesWEKAAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 		this.outliersInTraining = outliersInTraining;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
+	 */
 	@Override
 	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		Instances db = translateKnowledge(kList);
@@ -47,52 +60,26 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 		}
 	}
 	
+	/**
+	 * Translates the knowledge list to a WEKA Instances object.
+	 *
+	 * @param kList the knowledge list
+	 * @return the Instances WEKA object
+	 */
 	private Instances translateKnowledge(List<Knowledge> kList) {
 		double[][] dataMatrix = convertKnowledgeIntoMatrix(kList, outliersInTraining);
 		String[] label = extractLabels(kList, outliersInTraining);
 		if(dataMatrix.length > 0)
-			return createWEKADatabase(dataMatrix, label);
+			return WEKAUtils.createWEKADatabase(dataMatrix, label, getDataSeries());
 		else return null;
 	}
-
-	private Instances createWEKADatabase(double[][] data, String[] label){ 
-		Instances wInst;
-		try {
-			wInst = new Instances(getTrainARFFReader(data, label));
-			wInst.setClassIndex(getDataSeries().size());
-			return wInst;
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to create WEKA instances");
-			return null;
-		}
-	}
 	
-	private Reader getTrainARFFReader(double[][] data, String[] label) {
-		String arff = getStreamHeader(true);
-		for(int i=0;i<label.length;i++){
-			for(int j=0;j<data[i].length;j++){
-				arff = arff + data[i][j] + ",";
-			}
-			arff = arff + label[i] + "\n";
-		}
-		return new StringReader(arff);
-	}
-	
-	protected String getStreamHeader(boolean training){
-		String header = "@relation " + getDataSeries().getCompactString() + "\n\n";
-		if(getDataSeries().size() == 1){
-			header = header + "@attribute " + getDataSeries().getName() + " numeric\n";
-		} else {
-			for(DataSeries ds : ((MultipleDataSeries)getDataSeries()).getSeriesList()){
-				header = header + "@attribute " + ds.getName() + " numeric\n";
-			}
-		}
-		if(training)
-			header = header + "@attribute class {no, yes}\n";
-		header = header + "\n@data\n";
-		return header;
-	}
-	
+	/**
+	 * Converts a Snapshot to a WEKA Instance.
+	 *
+	 * @param snap the snapshot
+	 * @return the instance
+	 */
 	protected Instance snapshotToInstance(Snapshot snap){
 		String st = "";
 		Instances iList;
@@ -108,7 +95,7 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 					else st = st + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",";						
 				}
 			}
-			st = getStreamHeader(true) + st + "no";
+			st = WEKAUtils.getStreamHeader(getDataSeries(), true) + st + "no";
 			iList = new Instances(new StringReader(st));
 			iList.setClassIndex(getDataSeries().size());
 			if(iList != null && iList.size() > 0)
@@ -120,13 +107,29 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 		}
 	}
 
+	/**
+	 * ABstract method for Automatic WEKA training.
+	 *
+	 * @param db the instances object resembling the DataBase
+	 * @param createOutput the create output flag
+	 * @return true, if training is successful
+	 */
 	protected abstract boolean automaticWEKATraining(Instances db, boolean createOutput);
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)
+	 */
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		return evaluateWEKASnapshot(sysSnapshot);
 	}
 	
+	/**
+	 * Evaluates a WEKA snapshot.
+	 *
+	 * @param sysSnapshot the sys snapshot
+	 * @return the algorithm result
+	 */
 	protected abstract AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot);
 
 }

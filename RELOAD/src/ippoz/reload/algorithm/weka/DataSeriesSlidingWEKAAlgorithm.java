@@ -13,9 +13,9 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.extarnalutils.WEKAUtils;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
@@ -23,61 +23,29 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * @author Tommy
+ * The Class DataSeriesSlidingWEKAAlgorithm. Wrapper to DataSeriesAlgorithm to embed WEKA algorithms.
  *
+ * @author Tommy
  */
 public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalSlidingAlgorithm {
 	
+	/**
+	 * Instantiates a new data series sliding weka algorithm.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 * @param needNormalization the need for normalization of data
+	 */
 	public DataSeriesSlidingWEKAAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 	}
 	
-	private Instances translateSnapList(List<Snapshot> snapList, boolean includeFaulty) {
-		double[][] dataMatrix = convertSnapshotListIntoMatrix(snapList, includeFaulty);
-		String[] label = extractLabels(includeFaulty, snapList);
-		if(dataMatrix.length > 0)
-			return createWEKADatabase(dataMatrix, label);
-		else return null;
-	}
-
-	private Instances createWEKADatabase(double[][] data, String[] label){ 
-		Instances wInst;
-		try {
-			wInst = new Instances(getTrainARFFReader(data, label));
-			wInst.setClassIndex(getDataSeries().size());
-			return wInst;
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to create WEKA instances");
-			return null;
-		}
-	}
-	
-	private Reader getTrainARFFReader(double[][] data, String[] label) {
-		String arff = getStreamHeader(true);
-		for(int i=0;i<label.length;i++){
-			for(int j=0;j<data[i].length;j++){
-				arff = arff + data[i][j] + ",";
-			}
-			arff = arff + label[i] + "\n";
-		}
-		return new StringReader(arff);
-	}
-	
-	protected String getStreamHeader(boolean training){
-		String header = "@relation " + getDataSeries().getCompactString() + "\n\n";
-		if(getDataSeries().size() == 1){
-			header = header + "@attribute " + getDataSeries().getName() + " numeric\n";
-		} else {
-			for(DataSeries ds : ((MultipleDataSeries)getDataSeries()).getSeriesList()){
-				header = header + "@attribute " + ds.getName() + " numeric\n";
-			}
-		}
-		if(training)
-			header = header + "@attribute class {no, yes}\n";
-		header = header + "\n@data\n";
-		return header;
-	}
-	
+	/**
+	 * Converts a Snapshot to a WEKA Instance object.
+	 *
+	 * @param snap the snapshot
+	 * @return the WEKA instance
+	 */
 	protected Instance snapshotToInstance(Snapshot snap){
 		String st = "";
 		Instances iList;
@@ -93,7 +61,7 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 					else st = st + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",";						
 				}
 			}
-			st = getStreamHeader(true) + st + "no";
+			st = WEKAUtils.getStreamHeader(getDataSeries(), true) + st + "no";
 			iList = new Instances(new StringReader(st));
 			iList.setClassIndex(getDataSeries().size());
 			if(iList != null && iList.size() > 0)
@@ -105,11 +73,38 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@Override
 	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true), snapshotToInstance(dsSnapshot), dsSnapshot); 
+		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true, getDataSeries()), snapshotToInstance(dsSnapshot), dsSnapshot); 
+	}
+	
+	/**
+	 * Translates snapshot list to Instances object.
+	 *
+	 * @param snapList the snapshot list
+	 * @param includeFaulty the flag to include&exclude faulty data points in the training set.
+	 * @return the instances
+	 */
+	protected Instances translateSnapList(List<Snapshot> snapList, boolean includeFaulty, DataSeries ds) {
+		double[][] dataMatrix = convertSnapshotListIntoMatrix(snapList, includeFaulty);
+		String[] label = extractLabels(includeFaulty, snapList);
+		if(dataMatrix.length > 0)
+			return WEKAUtils.createWEKADatabase(dataMatrix, label, ds);
+		else return null;
 	}
 
+	/**
+	 * Evaluates a sliding snapshot using a WEKA algorithm.
+	 *
+	 * @param sKnowledge the s knowledge
+	 * @param windowInstances the window instances
+	 * @param newInstance the new instance
+	 * @param dsSnapshot the ds snapshot
+	 * @return the algorithm result
+	 */
 	protected abstract AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
 
 }

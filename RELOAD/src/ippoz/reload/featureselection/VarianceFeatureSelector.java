@@ -13,17 +13,28 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Tommy
+ * The Class VarianceFeatureSelector. It selects features that have values with enough variability.
+ * More in detail, it calculates variance, that has to be greater than selectorThreshold*avg 
  *
+ * @author Tommy
  */
 public class VarianceFeatureSelector extends FeatureSelector {
 	
+	/** The map of averages of data series. */
 	private Map<DataSeries, Double> avgMap;
 
+	/**
+	 * Instantiates a new variance feature selector.
+	 *
+	 * @param selectorThreshold the selector threshold
+	 */
 	public VarianceFeatureSelector(double selectorThreshold) {
 		super(FeatureSelectorType.VARIANCE, selectorThreshold);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#executeSelector(java.util.List, java.util.List)
+	 */
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
 		double var = 0, avg = 0, val;
@@ -57,6 +68,9 @@ public class VarianceFeatureSelector extends FeatureSelector {
 		return outMap;
 	}	
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#checkSelection(ippoz.reload.commons.dataseries.DataSeries, java.lang.Double, double)
+	 */
 	@Override
 	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
 		if(!Double.isFinite(toCheck))
@@ -66,6 +80,9 @@ public class VarianceFeatureSelector extends FeatureSelector {
 		else return toCheck > 0;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#getSelectorName()
+	 */
 	@Override
 	public String getSelectorName() {
 		return "VarianceSelector";

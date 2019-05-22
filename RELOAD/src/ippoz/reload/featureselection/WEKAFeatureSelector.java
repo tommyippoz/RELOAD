@@ -6,6 +6,7 @@ package ippoz.reload.featureselection;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.extarnalutils.WEKAUtils;
 import ippoz.utils.logging.AppLogger;
 
 import java.io.IOException;
@@ -20,69 +21,40 @@ import weka.attributeSelection.AttributeEvaluator;
 import weka.core.Instances;
 
 /**
- * @author Tommy
+ * The Class WEKAFeatureSelector. Wrapper for possible feature selection strategies 
+ * taken by WEKA framework.
  *
+ * @author Tommy
  */
 public abstract class WEKAFeatureSelector extends FeatureSelector {
 
+	/**
+	 * Instantiates a new WEKA feature selector.
+	 *
+	 * @param fsType the feature selector type
+	 * @param selectorThreshold the selector threshold
+	 */
 	public WEKAFeatureSelector(FeatureSelectorType fsType, double selectorThreshold) {
 		super(fsType, selectorThreshold);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#executeSelector(java.util.List, java.util.List)
+	 */
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
 		if(seriesList != null && seriesList.size() > 0){
-			return executeWEKASelector(seriesList, translateKnowledge(kList, seriesList));
+			return executeWEKASelector(seriesList, WEKAUtils.translateKnowledge(kList, seriesList));
 		} else return null;
 	}
 	
-	private Instances translateKnowledge(List<Knowledge> kList, List<DataSeries> seriesList) {
-		DataSeries targetSeries = new MultipleDataSeries(seriesList);
-		double[][] dataMatrix = Knowledge.convertKnowledgeIntoMatrix(kList, targetSeries, true, false);
-		String[] label = Knowledge.extractLabels(kList, targetSeries, true);
-		if(dataMatrix.length > 0)
-			return createWEKADatabase(dataMatrix, label, targetSeries);
-		else return null;
-	}
-
-	private Instances createWEKADatabase(double[][] data, String[] label, DataSeries ds){ 
-		Instances wInst;
-		try {
-			wInst = new Instances(getTrainARFFReader(data, label, ds));
-			wInst.setClassIndex(ds.size());
-			return wInst;
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to create WEKA instances");
-			return null;
-		}
-	}
-	
-	private Reader getTrainARFFReader(double[][] data, String[] label, DataSeries ds) {
-		String arff = getStreamHeader(ds, true);
-		for(int i=0;i<label.length;i++){
-			for(int j=0;j<data[i].length;j++){
-				arff = arff + data[i][j] + ",";
-			}
-			arff = arff + label[i] + "\n";
-		}
-		return new StringReader(arff);
-	}
-	
-	protected String getStreamHeader(DataSeries ds, boolean training){
-		String header = "@relation " + ds.getCompactString() + "\n\n";
-		if(ds.size() == 1){
-			header = header + "@attribute " + ds.getName() + " numeric\n";
-		} else {
-			for(DataSeries sds : ((MultipleDataSeries)ds).getSeriesList()){
-				header = header + "@attribute " + sds.toString() + " numeric\n";
-			}
-		}
-		if(training)
-			header = header + "@attribute class {no, yes}\n";
-		header = header + "\n@data\n";
-		return header;
-	}
-	
+	/**
+	 * Execute weka selector.
+	 *
+	 * @param seriesList the series list
+	 * @param data the data
+	 * @return the map
+	 */
 	private Map<DataSeries, Double> executeWEKASelector(List<DataSeries> seriesList, Instances data){
 		ASEvaluation attEval;
 		Map<DataSeries, Double> scores = new HashMap<DataSeries, Double>();
@@ -100,6 +72,11 @@ public abstract class WEKAFeatureSelector extends FeatureSelector {
 		return scores;
 	}	
 	
+	/**
+	 * Instantiate WEKA selector, and gets the AS (Attribute Selection) evaluation.
+	 *
+	 * @return the attribute selection evaluation
+	 */
 	protected abstract ASEvaluation instantiateWEKASelector();
 
 }

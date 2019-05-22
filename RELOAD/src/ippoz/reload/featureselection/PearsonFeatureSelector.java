@@ -16,15 +16,25 @@ import java.util.Map;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 /**
- * @author Tommy
+ * The Class PearsonFeatureSelector. A data series is selected if the absolute value of
+ * Pearson correlation between a data series and the true labels exceeds a given threshold.
  *
+ * @author Tommy
  */
 public class PearsonFeatureSelector extends FeatureSelector {
 
+	/**
+	 * Instantiates a new pearson feature selector.
+	 *
+	 * @param selectorThreshold the selector threshold
+	 */
 	public PearsonFeatureSelector(double selectorThreshold) {
 		super(FeatureSelectorType.PEARSON_CORRELATION, selectorThreshold);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#executeSelector(java.util.List, java.util.List)
+	 */
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
 		double corr = 0;
@@ -59,6 +69,9 @@ public class PearsonFeatureSelector extends FeatureSelector {
 		return outMap;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#checkSelection(ippoz.reload.commons.dataseries.DataSeries, java.lang.Double, double)
+	 */
 	@Override
 	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
 		if(!Double.isFinite(toCheck))
@@ -66,6 +79,9 @@ public class PearsonFeatureSelector extends FeatureSelector {
 		else return Math.abs(toCheck) > threshold;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.featureselection.FeatureSelector#getSelectorName()
+	 */
 	@Override
 	public String getSelectorName() {
 		return "PearsonSelector";

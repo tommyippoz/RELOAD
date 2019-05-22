@@ -23,21 +23,33 @@ import java.io.ObjectOutputStream;
 import weka.core.Instances;
 
 /**
- * @author Tommy
+ * The Class IsolationForestWEKA. Imports Isolation Forest algorithm from WEKA.
  *
+ * @author Tommy
  */
 public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	
+	/** The Constant N_TREES. */
 	private static final String N_TREES = "n_trees";
 	
+	/** The Constant SAMPLE_SIZE. */
 	private static final String SAMPLE_SIZE = "sample_size";
 	
+	/** The Constant TMP_FILE. */
 	private static final String TMP_FILE = "tmp_file";
 	
+	/** The Constant DEFAULT_TMP_FOLDER. */
 	public static final String DEFAULT_TMP_FOLDER = "iforest_tmp_RELOAD";
 	
+	/** The isolation forest object. */
 	private CustomIsolationForest iForest;
 
+	/**
+	 * Instantiates a new isolation forest from WEKA.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public IsolationForestWEKA(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, true, false);
 		if(conf.hasItem(TMP_FILE)){
@@ -48,26 +60,35 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
-	private CustomIsolationForest loadSerialized(String item) {
+	/**
+	 * Loads an isolation forest object that was previously serialized in a file.
+	 *
+	 * @param filename the name of the file in which isolation forest was serialized.
+	 * @return the isolation forest read
+	 */
+	private CustomIsolationForest loadSerialized(String filename) {
 		FileInputStream file;
 		ObjectInputStream in;
 		CustomIsolationForest isf = null;
 		try {
-			if(new File(item).exists()){
-				file = new FileInputStream(item);
+			if(new File(filename).exists()){
+				file = new FileInputStream(filename);
 	            in = new ObjectInputStream(file);
 	            synchronized(CustomIsolationForest.class){
 	            	isf = (CustomIsolationForest)in.readObject();
 	            }
 				in.close();
 	            file.close();
-			} else AppLogger.logError(getClass(), "SerializeError", "Unable to Deserialize: missing '" + item + "' file");
+			} else AppLogger.logError(getClass(), "SerializeError", "Unable to Deserialize: missing '" + filename + "' file");
 		} catch (IOException | ClassNotFoundException ex) {
 			AppLogger.logException(getClass(), ex, "Error while deserializing Isolation Forest");
 		}
 		return isf;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#automaticWEKATraining(weka.core.Instances, boolean)
+	 */
 	@Override
 	protected boolean automaticWEKATraining(Instances db, boolean createOutput) {
 		int nTrees;
@@ -95,18 +116,31 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 	
+	/**
+	 * Loads the size of the sample to be used in each isolation tree.
+	 *
+	 * @return the int
+	 */
 	private int loadSampleSize() {
 		if(conf.hasItem(SAMPLE_SIZE) && AppUtility.isInteger(conf.getItem(SAMPLE_SIZE)))
 			return Integer.parseInt(conf.getItem(SAMPLE_SIZE));
 		else return -1;
 	}
 
+	/**
+	 * Loads the number of isolation trees composing the forest.
+	 *
+	 * @return the number of trees
+	 */
 	private int loadNTrees() {
 		if(conf.hasItem(N_TREES) && AppUtility.isInteger(conf.getItem(N_TREES)))
 			return Integer.parseInt(conf.getItem(N_TREES));
 		else return -1;
 	}
 
+	/**
+	 * Stores the isolation forest object in a file, serializing it.
+	 */
 	private void storeSerialized() {
 		FileOutputStream file;
 		ObjectOutputStream out;
@@ -123,10 +157,18 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
+	/**
+	 * Gets the filename to be used for storing and loading files.
+	 *
+	 * @return the filename
+	 */
 	private String getFilename(){
 		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".iforest";
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#evaluateWEKASnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@Override
 	protected AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
 		AlgorithmResult ar;
@@ -142,6 +184,9 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
+	 */
 	@Override
 	protected DecisionFunction buildClassifier() {
 		return new StaticThresholdGreaterThanDecision(0.5);

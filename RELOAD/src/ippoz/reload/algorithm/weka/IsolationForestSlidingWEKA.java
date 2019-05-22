@@ -16,26 +16,41 @@ import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 import weka.core.Instance;
 import weka.core.Instances;
 
+// TODO: Auto-generated Javadoc
 /**
- * @author Tommy
+ * The Class IsolationForestSlidingWEKA.
  *
+ * @author Tommy
  */
 public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 
+	/** The Constant N_TREES. */
 	private static final String N_TREES = "n_trees";
 	
+	/** The Constant SAMPLE_SIZE. */
 	private static final String SAMPLE_SIZE = "sample_size";
 	
+	/** The number of trees. */
 	private int nTrees;
 	
+	/** The sample size. */
 	private int sampleSize;
 	
+	/**
+	 * Instantiates a new WEKA isolation forest declined in a sliding fashion.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public IsolationForestSlidingWEKA(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false);
 		nTrees = loadNTrees();
 		sampleSize = loadSampleSize();
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.weka.DataSeriesSlidingWEKAAlgorithm#evaluateSlidingWEKASnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, weka.core.Instances, weka.core.Instance, ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@Override
 	protected AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
 		CustomIsolationForest iForest;
@@ -55,17 +70,30 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 		return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
+	 */
 	@Override
 	protected DecisionFunction buildClassifier() {
 		return new StaticThresholdGreaterThanDecision(0.5);
 	}
 	
+	/**
+	 * Load the number of samples to be used by each tree in the forest.
+	 *
+	 * @return the int
+	 */
 	private int loadSampleSize() {
 		if(conf.hasItem(SAMPLE_SIZE) && AppUtility.isInteger(conf.getItem(SAMPLE_SIZE)))
 			return Integer.parseInt(conf.getItem(SAMPLE_SIZE));
 		else return -1;
 	}
 
+	/**
+	 * Loads the number of trees in the forest.
+	 *
+	 * @return the int
+	 */
 	private int loadNTrees() {
 		if(conf.hasItem(N_TREES) && AppUtility.isInteger(conf.getItem(N_TREES)))
 			return Integer.parseInt(conf.getItem(N_TREES));
