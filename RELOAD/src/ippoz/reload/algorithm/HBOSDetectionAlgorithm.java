@@ -28,31 +28,48 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Tommy
+ * The Class HBOSDetectionAlgorithm. Implements the Histogram-Based Outlier Score algorithm.
  *
+ * @author Tommy
  */
 public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
 
+	/** The Constant HISTOGRAMS. */
 	public static final String HISTOGRAMS = "histograms";
 	
+	/** The Constant HISTOGRAM_FACTORY. */
 	public static final String HISTOGRAM_FACTORY = "hist_type";
 
+	/** The Constant K. */
 	public static final String K = "k";
 	
+	/** The Constant THRESHOLD. */
 	public static final String THRESHOLD = "threshold";
 	
+	/** The Constant DEFAULT_THRESHOLD. */
 	public static final double DEFAULT_THRESHOLD = 0.8;
 	
+	/** The Constant TMP_FILE. */
 	private static final String TMP_FILE = "tmp_file";
 	
+	/** The Constant DEFAULT_K. */
 	public static final int DEFAULT_K = 10;
 	
+	/** The Constant HBOS_DEFAULT_MAX. */
 	private static final double HBOS_DEFAULT_MAX = 10;
 	
+	/** The map containing the histograms. */
 	private Map<String, Histograms> histograms;
 	
+	/** The HBOS scores used to build histograms. */
 	private List<HBOSScore> scores;
 	
+	/**
+	 * Instantiates a new HBOS detection algorithm.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public HBOSDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(HISTOGRAMS)){
@@ -63,14 +80,27 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		}
 	}
 	
+	/**
+	 * Gets the filename used to store data about scores and histograms.
+	 *
+	 * @return the filename
+	 */
 	private String getFilename(){
 		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + ".hbos";
 	}
 	
+	/**
+	 * Gets the default folder used to store temporary data.
+	 *
+	 * @return the default temporary folder
+	 */
 	private String getDefaultTmpFolder(){
 		return "HBOS_tmp_RELOAD";
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
+	 */
 	@Override
 	protected DecisionFunction buildClassifier() {
 		double perc = 0.0;
@@ -88,6 +118,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		}
 	}
 
+	/**
+	 * Loads histograms from configuration.
+	 *
+	 * @return the map of histograms
+	 */
 	private Map<String, Histograms> loadFromConfiguration(){
 		Map<String, Histograms> loadedHist = new HashMap<String, Histograms>();
 		for(String histString : conf.getItem(HISTOGRAMS).trim().split("ç")){
@@ -96,6 +131,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		return loadedHist;
 	}
 	
+	/**
+	 * Stores Histograms to configuration through string.
+	 *
+	 * @return the string
+	 */
 	private String histogramsToConfiguration(){
 		String toReturn = "";
 		for(String dsName : histograms.keySet()){
@@ -104,6 +144,9 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		return toReturn.substring(0, toReturn.length()-1);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
+	 */
 	@Override
 	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
@@ -112,7 +155,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		
 		scores = new LinkedList<HBOSScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new HBOSScore(snapToString(snap), calculateHBOS(snap)));
+			scores.add(new HBOSScore(Snapshot.snapToString(snap, getDataSeries()), calculateHBOS(snap)));
 		}
 		clearLoggedScores();
 		logScores(filterScores());
@@ -128,20 +171,12 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		
 		return true;
 	}
-	
-	private String snapToString(Snapshot snap){
-		String snapValue = "{";
-		if(getDataSeries().size() == 1){
-			snapValue = snapValue + ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-		} else if(getDataSeries().size() > 1){
-			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = snapValue + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ", ";
-			}
-			snapValue = snapValue.substring(0,  snapValue.length()-2);
-		}
-		return snapValue + "}";
-	}
 
+	/**
+	 * Filter scores.
+	 *
+	 * @return the list
+	 */
 	private List<Double> filterScores() {
 		List<Double> list = new LinkedList<Double>();
 		for(HBOSScore score : scores){
@@ -150,10 +185,21 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		return list;	
 	}
 
+	/**
+	 * Gets the k.
+	 *
+	 * @return the k
+	 */
 	private int getK() {
 		return conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K;
 	}
 
+	/**
+	 * Generate static histograms.
+	 *
+	 * @param snapList the snap list
+	 * @param k the k
+	 */
 	private void generateStaticHistograms(List<Snapshot> snapList, int k) {
 		double min, max;
 		double snapValue;
@@ -193,11 +239,19 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		}
 	}
 
+	/**
+	 * Generate dynamic histograms.
+	 *
+	 * @param snapList the snap list
+	 */
 	private void generateDynamicHistograms(List<Snapshot> snapList) {
 		// TODO Auto-generated method stub
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)
+	 */
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
@@ -212,6 +266,12 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 	
+	/**
+	 * Calculate hbos.
+	 *
+	 * @param snap the snap
+	 * @return the double
+	 */
 	private double calculateHBOS(Snapshot snap){
 		double snapValue;
 		double hbos;
@@ -242,23 +302,39 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		return hbos;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DetectionAlgorithm#printImageResults(java.lang.String, java.lang.String)
+	 */
 	@Override
 	protected void printImageResults(String outFolderName, String expTag) {
 		// TODO Auto-generated method stub
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DetectionAlgorithm#printTextResults(java.lang.String, java.lang.String)
+	 */
 	@Override
 	protected void printTextResults(String outFolderName, String expTag) {
 		// TODO Auto-generated method stub
 		
 	}
 	
+	/**
+	 * Load file.
+	 *
+	 * @param filename the filename
+	 */
 	public void loadFile(String filename) {
 		loadHistogramsFile(new File(filename));
 		loadScoresFile(new File(filename + "scores"));		
 	}
 	
+	/**
+	 * Load scores file.
+	 *
+	 * @param file the file
+	 */
 	private void loadScoresFile(File file) {
 		BufferedReader reader;
 		String readed;
@@ -282,6 +358,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		} 
 	}
 	
+	/**
+	 * Load histograms file.
+	 *
+	 * @param file the file
+	 */
 	private void loadHistogramsFile(File file){
 		BufferedReader reader;
 		String readed;
@@ -304,11 +385,21 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		} 
 	}
 	
+	/**
+	 * Prints the file.
+	 *
+	 * @param file the file
+	 */
 	private void printFile(File file) {
 		printHistograms(file);
 		printScores(new File(file.getPath() + "scores"));
 	}
 	
+	/**
+	 * Prints the histograms.
+	 *
+	 * @param file the file
+	 */
 	private void printHistograms(File file){
 		BufferedWriter writer;
 		try {
@@ -327,6 +418,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		} 
 	}
 	
+	/**
+	 * Prints the scores.
+	 *
+	 * @param file the file
+	 */
 	private void printScores(File file){
 		BufferedWriter writer;
 		try {
@@ -345,12 +441,24 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		} 
 	}
 	
+	/**
+	 * The Class Histograms.
+	 */
 	private class Histograms {
 		
+		/** The max items. */
 		private int maxItems;
 		
+		/** The hist list. */
 		private List<Histogram> histList;
 		
+		/**
+		 * Instantiates a new histograms.
+		 *
+		 * @param min the min
+		 * @param max the max
+		 * @param k the k
+		 */
 		public Histograms(double min, double max, int k) {
 			double step = (max-min)/k;
 			maxItems = 0;
@@ -360,6 +468,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			}
 		}
 
+		/**
+		 * Instantiates a new histograms.
+		 *
+		 * @param confString the conf string
+		 */
 		public Histograms(String confString) {
 			maxItems = 0;
 			histList = new LinkedList<Histogram>();
@@ -372,6 +485,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			}
 		}
 		
+		/**
+		 * To conf string.
+		 *
+		 * @return the string
+		 */
 		public String toConfString() {
 			String toReturn = "";
 			for(Histogram hist : histList){
@@ -380,6 +498,11 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			return toReturn.substring(0, toReturn.length()-1);
 		}
 
+		/**
+		 * Adds the.
+		 *
+		 * @param value the value
+		 */
 		public void add(double value){
 			int newHeight = -1;
 			for(Histogram hist : histList){
@@ -392,10 +515,21 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			}
 		}
 
+		/**
+		 * Gets the maximum score.
+		 *
+		 * @return the maximum score
+		 */
 		public double getMaximumScore() {
 			return maxItems;
 		}
 
+		/**
+		 * Gets the score.
+		 *
+		 * @param value the value
+		 * @return the score
+		 */
 		public double getScore(double value) {
 			for(Histogram hist : histList){
 				if(hist.containsValue(value)){
@@ -405,6 +539,9 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			return 0.0;
 		}
 
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
 		@Override
 		public String toString() {
 			return "Histograms [maxItems=" + maxItems + ", histList="
@@ -413,24 +550,46 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		
 	}
 	
+	/**
+	 * The Class Histogram.
+	 */
 	private class Histogram {
 		
+		/** The from. */
 		private double from;
 		
+		/** The to. */
 		private double to;
 		
+		/** The items. */
 		private int items;
 
+		/**
+		 * Instantiates a new histogram.
+		 *
+		 * @param from the from
+		 * @param to the to
+		 */
 		public Histogram(double from, double to) {
 			this.from = from;
 			this.to = to;
 			items = 0;
 		}
 		
+		/**
+		 * Gets the items.
+		 *
+		 * @return the items
+		 */
 		public int getItems() {
 			return items;
 		}
 
+		/**
+		 * Instantiates a new histogram.
+		 *
+		 * @param confString the conf string
+		 */
 		public Histogram(String confString) {
 			if(confString.trim().length() > 0){
 				from = Double.valueOf(confString.split(",")[0]);
@@ -439,23 +598,48 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			}
 		}
 
+		/**
+		 * To conf string.
+		 *
+		 * @return the string
+		 */
 		public String toConfString() {
 			return from + "," + to + "," + items;
 		}
 
+		/**
+		 * Adds the value.
+		 *
+		 * @param value the value
+		 * @return the int
+		 */
 		public int addValue(double value) {
 			items++;
 			return items;
 		}
 
+		/**
+		 * Gets the score.
+		 *
+		 * @return the score
+		 */
 		public double getScore() {
 			return items;
 		}
 
+		/**
+		 * Contains value.
+		 *
+		 * @param value the value
+		 * @return true, if successful
+		 */
 		public boolean containsValue(double value) {
 			return from <= value && value <= to;
 		}
 
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
 		@Override
 		public String toString() {
 			return "Histogram [from=" + from + ", to=" + to + ", items="
@@ -464,21 +648,42 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		
 	}
 	
+	/**
+	 * The Class HBOSScore.
+	 */
 	private class HBOSScore {
 		
+		/** The hbos. */
 		private double hbos;
 		
+		/** The snap value. */
 		private String snapValue;
 
+		/**
+		 * Instantiates a new HBOS score.
+		 *
+		 * @param snapValue the snap value
+		 * @param hbos the hbos
+		 */
 		public HBOSScore(String snapValue, double hbos) {
 			this.hbos = hbos;
 			this.snapValue = snapValue;
 		}
 
+		/**
+		 * Gets the hbos.
+		 *
+		 * @return the hbos
+		 */
 		public double getHbos() {
 			return hbos;
 		}
 
+		/**
+		 * Gets the snap value.
+		 *
+		 * @return the snap value
+		 */
 		public String getSnapValue() {
 			return snapValue;
 		}

@@ -30,7 +30,7 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	private static final String K = "k";
 	
 	/**
-	 * Instantiates a new KNN sliding elki.
+	 * Instantiates a new ELKI KNN sliding algorithm.
 	 *
 	 * @param dataSeries the data series
 	 * @param conf the configuration
@@ -39,6 +39,9 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		super(dataSeries, conf, false);
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomKNN(HellingerDistanceFunction.STATIC, getK());

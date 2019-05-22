@@ -13,19 +13,31 @@ import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDist
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
- * @author Tommy
+ * The Class FastABODELKI. Wrapper for the Fast Angle-Based Outlier Detection algorithm from ELKI.
  *
+ * @author Tommy
  */
 public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	
+	/** The Constant K. */
 	private static final String K = "k";
 	
+	/** The Constant DEFAULT_K. */
 	private static final Integer DEFAULT_K = 5;
 	
+	/**
+	 * Instantiates a new fast abodelki.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public FastABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomFastABOD<NumberVector>(
@@ -33,6 +45,9 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
@@ -45,6 +60,9 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#storeAdditionalPreferences()
+	 */
 	@Override
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub

@@ -14,7 +14,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.extarnalutils.WEKAUtils;
+import ippoz.reload.externalutils.WEKAUtils;
 
 import java.io.IOException;
 import java.io.StringReader;

@@ -35,7 +35,7 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	private static final Integer DEFAULT_K = 3;
 
 	/**
-	 * Instantiates a new k means sliding elki.
+	 * Instantiates a new ELKI K-Means sliding algorithm.
 	 *
 	 * @param dataSeries the data series
 	 * @param conf the configuration
@@ -70,6 +70,9 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomKMeans<>(SquaredEuclideanDistanceFunction.STATIC, 

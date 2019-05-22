@@ -4,14 +4,10 @@
 package ippoz.reload.featureselection;
 
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.extarnalutils.WEKAUtils;
+import ippoz.reload.externalutils.WEKAUtils;
 import ippoz.utils.logging.AppLogger;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

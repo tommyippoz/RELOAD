@@ -13,20 +13,33 @@ import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDist
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
- * @author Tommy
+ * The Class ABODELKI. Wrapper for the Angle-Based Outlier Detection algorithm from ELKI.
  *
+ * @author Tommy
  */
 public class ABODELKI extends DataSeriesELKIAlgorithm {
 	
+	/**
+	 * Instantiates a new abodelki.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public ABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomABOD<NumberVector>(HellingerDistanceFunction.STATIC);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
@@ -39,6 +52,9 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#storeAdditionalPreferences()
+	 */
 	@Override
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub

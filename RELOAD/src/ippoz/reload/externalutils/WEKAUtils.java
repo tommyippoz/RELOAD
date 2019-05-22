@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.extarnalutils;
+package ippoz.reload.externalutils;
 
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;

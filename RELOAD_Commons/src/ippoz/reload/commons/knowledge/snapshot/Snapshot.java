@@ -3,6 +3,8 @@
  */
 package ippoz.reload.commons.knowledge.snapshot;
 
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.service.ServiceCall;
 
@@ -88,5 +90,24 @@ public abstract class Snapshot {
 	}
 	
 	public abstract List<SnapshotValue> listValues();
+	
+	/**
+	 * Converts a snapshot to string.
+	 *
+	 * @param snap the snapshot
+	 * @return the string
+	 */
+	public static String snapToString(Snapshot snap, DataSeries ds){
+		String snapValue = "{";
+		if(ds.size() == 1){
+			snapValue = snapValue + ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
+		} else if(ds.size() > 1){
+			for(int j=0;j<ds.size();j++){
+				snapValue = snapValue + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue().getFirst() + ", ";
+			}
+			snapValue = snapValue.substring(0,  snapValue.length()-2);
+		}
+		return snapValue + "}";
+	}
 	
 }

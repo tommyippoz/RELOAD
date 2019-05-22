@@ -17,14 +17,14 @@ import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDist
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
- * The Class ABODSlidingELKI.
+ * The Class ABODSlidingELKI. Sliding version of the classic angle-based ABOD.
  *
  * @author Tommy
  */
 public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	
 	/**
-	 * Instantiates a new ABOD sliding elki.
+	 * Instantiates a new ABOD sliding ELKI.
 	 *
 	 * @param dataSeries the data series
 	 * @param conf the configuration
@@ -47,6 +47,9 @@ public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomABOD<NumberVector>(HellingerDistanceFunction.STATIC);

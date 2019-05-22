@@ -16,6 +16,7 @@ import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class COFSlidingELKI. Sliding version of the classic density-based COF.
  *
@@ -63,6 +64,9 @@ public class COFSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomCOF(getK(), SquaredEuclideanDistanceFunction.STATIC);

@@ -13,19 +13,31 @@ import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanD
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
- * @author Tommy
+ * The Class LOFELKI. Wrapper for the Local Outlier Factor algorithm from ELKI.
  *
+ * @author Tommy
  */
 public class LOFELKI extends DataSeriesELKIAlgorithm {
 	
+	/** The Constant K. */
 	private static final String K = "k";
 	
+	/** The Constant DEFAULT_K. */
 	private static final Integer DEFAULT_K = 5;	
 	
+	/**
+	 * Instantiates a new lofelki.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 */
 	public LOFELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#generateELKIAlgorithm()
+	 */
 	@Override
 	protected ELKIAlgorithm<NumberVector> generateELKIAlgorithm() {
 		return new CustomLOF( 
@@ -33,6 +45,9 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	    		SquaredEuclideanDistanceFunction.STATIC);
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
 	@Override
 	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
 		AlgorithmResult ar;
@@ -44,6 +59,9 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#storeAdditionalPreferences()
+	 */
 	@Override
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
