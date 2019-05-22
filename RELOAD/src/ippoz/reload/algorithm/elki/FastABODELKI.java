@@ -40,7 +40,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(getDecisionFunction() != null && v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v));
-			getDecisionFunction().classifyScore(ar, true);
+			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}

@@ -309,7 +309,7 @@ public class AlgorithmSetupFrame {
 		                    asFrame, "Set parameters for decision function '" + aValue.toString() + "'.\n" +
 		                    		"Details: " + DecisionFunction.getParameterDetails(aValue.toString()),
 		                    "Params for " + aValue.toString(), JOptionPane.PLAIN_MESSAGE, null, null, "");
-					if ((s != null) && (s.length() > 0) && DecisionFunction.checkClassifier(s)) {
+					if ((s != null) && (s.length() > 0) && DecisionFunction.checkDecisionFunction(s)) {
 						confList.get(row).addItem(algParams[col], s);
 					} else {
 						String suggestedValue = "";
@@ -320,7 +320,8 @@ public class AlgorithmSetupFrame {
 							case CONFIDENCE_INTERVAL:
 								suggestedValue = "(1)";
 								break;
-							case DOUBLE_THRESHOLD:
+							case DOUBLE_THRESHOLD_EXTERN:
+							case DOUBLE_THRESHOLD_INTERN:
 								suggestedValue = "(1,1)";
 								break;
 							case IQR:

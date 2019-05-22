@@ -9,18 +9,29 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
 /**
- * @author Tommy
+ * The Class KMeansDecision. Defines data point as anomalous if its distance is bigger than either 
+ * std or var of the data points of the nearest cluster.
  *
+ * @author Tommy
  */
 public class KMeansDecision extends DecisionFunction {
 	
+	/** The function text. */
 	private String functionText;
 
+	/**
+	 * Instantiates a new k means decision.
+	 *
+	 * @param functionText the function text
+	 */
 	public KMeansDecision(String functionText) {
 		super("cluster", DecisionFunctionType.CLUSTER);
 		this.functionText = functionText;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
+	 */
 	@Override
 	protected AnomalyResult classify(AlgorithmResult aResult) {
 		String partialText;
@@ -53,14 +64,29 @@ public class KMeansDecision extends DecisionFunction {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#toCompactString()
+	 */
 	@Override
 	public String toCompactString() {
 		return "CLUSTER(" + functionText + ")";
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getClassifierTag()
+	 */
 	@Override
 	public String getClassifierTag() {
 		return "CLUSTER(" + functionText + ")";
+	}
+
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getThresholds()
+	 */
+	@Override
+	public double[] getThresholds() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

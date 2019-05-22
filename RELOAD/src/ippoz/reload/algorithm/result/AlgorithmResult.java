@@ -80,7 +80,7 @@ public class AlgorithmResult {
 				injection.getDescription() + sep +
 				score + sep + 
 				scoreEvaluation.toString() + sep +
-				dFunction.getClassifierType();
+				dFunction.getDecisionFunctionType();
 	}
 
 	public void setScore(double value) {

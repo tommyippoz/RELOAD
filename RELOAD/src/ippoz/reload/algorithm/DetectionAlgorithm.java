@@ -61,7 +61,7 @@ public abstract class DetectionAlgorithm {
 	
 	protected DecisionFunction buildClassifier() {
 		if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD))
-			return DecisionFunction.getClassifier(loggedScores, conf.getItem(AlgorithmConfiguration.THRESHOLD));
+			return DecisionFunction.buildDecisionFunction(loggedScores, conf.getItem(AlgorithmConfiguration.THRESHOLD));
 		else return null;
 	}
 	

@@ -17,13 +17,13 @@ GOLDEN_RUN_IDS = 1 - 15
 TRAIN_CSV_FILE = ISCX2012/ISCX2012_BruteForce_Reduced_OK.csv
 
 * Training Runs.
-TRAIN_RUN_IDS = 101-114
+TRAIN_RUN_IDS = 40-50
 
 * File Used for Evaulating
 VALIDATION_CSV_FILE = ISCX2012/ISCX2012_BruteForce_Reduced_OK.csv
 
 * Evaluation Runs.
-VALIDATION_RUN_IDS = 30-70
+VALIDATION_RUN_IDS = 51-100
 
 
 * Parsing Dataset

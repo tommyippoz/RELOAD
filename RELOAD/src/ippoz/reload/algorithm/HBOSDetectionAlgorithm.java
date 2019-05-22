@@ -74,7 +74,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	@Override
 	protected DecisionFunction buildClassifier() {
 		double perc = 0.0;
-		if(DecisionFunction.checkClassifier(conf.getItem(THRESHOLD))){
+		if(DecisionFunction.checkDecisionFunction(conf.getItem(THRESHOLD))){
 			return super.buildClassifier();
 		} else {
 			if(conf != null && conf.hasItem(THRESHOLD)){
@@ -206,7 +206,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 			if(ar.getScore() > 10000){
 				System.out.print(ar.getScore());
 			}
-			getDecisionFunction().classifyScore(ar, true);
+			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

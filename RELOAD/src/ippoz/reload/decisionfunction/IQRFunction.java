@@ -8,17 +8,29 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import java.text.DecimalFormat;
 
 /**
- * @author Tommy
+ * The Class IQRFunction. Sets the IQR as q3-q1, evaluating data point as anomalous if
+ * value < q1-ratio*iqr or value > q3+ratio*iqr
  *
+ * @author Tommy
  */
 public class IQRFunction extends DecisionFunction {
 	
+	/** The q1. */
 	protected double q1;
 	
+	/** The q3. */
 	protected double q3;
 	
+	/** The ratio. */
 	protected double ratio;
 
+	/**
+	 * Instantiates a new IQR function.
+	 *
+	 * @param ratio the ratio
+	 * @param q1 the q1
+	 * @param q3 the q3
+	 */
 	protected IQRFunction(double ratio, double q1, double q3) {
 		super("IQR", DecisionFunctionType.IQR);
 		this.ratio = ratio;
@@ -31,6 +43,9 @@ public class IQRFunction extends DecisionFunction {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
+	 */
 	@Override
 	protected AnomalyResult classify(AlgorithmResult value) {
 		double iqr = q3 - q1;
@@ -41,6 +56,9 @@ public class IQRFunction extends DecisionFunction {
 		else return AnomalyResult.NORMAL;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#toCompactString()
+	 */
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
@@ -48,9 +66,21 @@ public class IQRFunction extends DecisionFunction {
 		return "IQR(Q1:" + df.format(q1) + " Q3:" + df.format(q3) + " ratio:" + ratio + ") - {ANOMALY: value < " + df.format(q1 - ratio*iqr) + " or value > " + df.format(q3 + ratio*iqr) + "}";
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getClassifierTag()
+	 */
 	@Override
 	public String getClassifierTag() {
 		return "IQR(" + ratio + ")";
+	}
+	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getThresholds()
+	 */
+	@Override
+	public double[] getThresholds() {
+		double iqr = q3 - q1;
+		return new double[]{q1 - ratio*iqr, q3 + ratio*iqr};
 	}
 
 }

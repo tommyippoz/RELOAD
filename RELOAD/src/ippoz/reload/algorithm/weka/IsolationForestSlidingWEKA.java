@@ -47,7 +47,7 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 			iForest.buildClassifier(windowInstances);
 			ar = new AlgorithmResult(
 					dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), iForest.classifyInstance(newInstance));
-			getDecisionFunction().classifyScore(ar, true);
+			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");

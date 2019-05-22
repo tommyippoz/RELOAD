@@ -8,17 +8,29 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import java.text.DecimalFormat;
 
 /**
- * @author Tommy
+ * The Class LeftConfidenceIntervalFunction. Defines anomalies if
+ * value < avg - ratio*std
  *
+ * @author Tommy
  */
 public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	
+	/** The avg. */
 	private double avg;
 	
+	/** The std. */
 	private double std;
 	
+	/** The ratio. */
 	private double ratio;
 
+	/**
+	 * Instantiates a new left confidence interval function.
+	 *
+	 * @param ratio the ratio
+	 * @param avg the avg
+	 * @param std the std
+	 */
 	public LeftConfidenceIntervalFunction(double ratio, double avg, double std) {
 		super("left_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL);
 		this.avg = avg;
@@ -26,6 +38,9 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 		this.ratio = ratio;
 	}
 
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
+	 */
 	@Override
 	protected AnomalyResult classify(AlgorithmResult aResult) {
 		if(!Double.isFinite(aResult.getScore()))
@@ -35,15 +50,29 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 		else return AnomalyResult.NORMAL;
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#toCompactString()
+	 */
 	@Override
 	public String toCompactString() {
 		DecimalFormat df = new DecimalFormat("#.000"); 
 		return "LCONF(avg:" + df.format(avg) + " ratio:" + ratio + " std:" + df.format(std) + ")  - {ANOMALY: value < " + df.format(avg - ratio*std) + "}";
 	}
 	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getClassifierTag()
+	 */
 	@Override
 	public String getClassifierTag() {
 		return "LEFT_CONFIDENCE_INTERVAL(" + ratio + ")";
+	}
+	
+	/* (non-Javadoc)
+	 * @see ippoz.reload.decisionfunction.DecisionFunction#getThresholds()
+	 */
+	@Override
+	public double[] getThresholds() {
+		return new double[]{avg - ratio*std};
 	}
 
 }

@@ -65,7 +65,7 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
 			ar = new ClusteringResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), of);
-			getDecisionFunction().classifyScore(ar, true);
+			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
