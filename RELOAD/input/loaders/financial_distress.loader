@@ -1,0 +1,37 @@
+* Default loader file for 'financial_distress.loader'. Comments with '*'.
+
+
+* Loader type (MYSQL, CSVALL).
+LOADER_TYPE = CSVALL
+
+* * Investigated Data Layers (if any, NO_LAYER otherwise).
+CONSIDERED_LAYERS = NO_LAYER
+
+* Data Partitioning.
+
+* File Used for Training
+TRAIN_CSV_FILE = FINANCIAL_DISTRESS.csv
+
+* Train Runs.
+TRAIN_RUN_IDS = 0 - 10
+
+* File Used for Validation
+VALIDATION_CSV_FILE = FINANCIAL_DISTRESS.csv
+
+* Validation Runs.
+VALIDATION_RUN_IDS = 11-30
+
+* Parsing Dataset.
+
+
+* Features to Skip
+SKIP_COLUMNS = 0, 1, 2, 3
+
+* Column Containing the 'Label' Feature
+LABEL_COLUMN = 3
+
+* Size of Each Experiment.
+EXPERIMENT_ROWS = 300
+
+* Tags Identifying an Attack in This Dataset.
+FAULTY_TAGS = 1, "1"

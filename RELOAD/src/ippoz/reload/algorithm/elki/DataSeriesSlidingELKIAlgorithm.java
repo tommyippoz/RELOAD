@@ -1,0 +1,123 @@
+/**
+ * 
+ */
+package ippoz.reload.algorithm.elki;
+
+import ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.externalutils.ELKIUtils;
+
+import java.util.List;
+
+import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
+import de.lmu.ifi.dbs.elki.database.Database;
+import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
+
+// TODO: Auto-generated Javadoc
+/**
+ * The Class DataSeriesSlidingELKIAlgorithm.
+ *
+ * @author Tommy
+ */
+public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalSlidingAlgorithm {
+	
+	/** The ELKI algorithm that is executed by this class. */
+	private ELKIAlgorithm<?> customELKI;
+	
+	/**
+	 * Instantiates a new sliding window algorithm taken by ELKI.
+	 *
+	 * @param dataSeries the data series
+	 * @param conf the configuration
+	 * @param needNormalization the flag that indicates the need of data normalization
+	 */
+	public DataSeriesSlidingELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
+		super(dataSeries, conf, needNormalization);
+	}
+	
+	/**
+	 * Gets the ELKI algorithm.
+	 *
+	 * @return the algorithm
+	 */
+	protected ELKIAlgorithm<?> getAlgorithm(){
+		return customELKI;
+	}
+
+	/**
+	 * Generates the ELKI algorithm.
+	 *
+	 * @return the ELKI algorithm
+	 */
+	protected abstract ELKIAlgorithm<?> generateELKIAlgorithm();
+
+	/* (non-Javadoc)
+	 * @see ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.reload.commons.knowledge.snapshot.Snapshot)
+	 */
+	@Override
+	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		Database windowDb = translateSnapList(snapList, true);
+		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
+			customELKI = generateELKIAlgorithm();
+			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
+			logScores(customELKI.getScoresList());
+			setDecisionFunction();
+			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot); 
+		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+	}
+
+	/**
+	 * Evaluates a snapshot using the ELKI sliding algorithm.
+	 *
+	 * @param sKnowledge the sliding knowledge
+	 * @param windowDb the sliding window database
+	 * @param newInstance the new instance to be evaluated using the sliding window
+	 * @param dsSnapshot the snapshot to be evaluated
+	 * @return the algorithm result
+	 */
+	protected abstract AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
+
+	/**
+	 * Translates a snapshot list into an ELKI Database object.
+	 *
+	 * @param kList the knowledge list
+	 * @param includeFaulty the flag to include faulty data into training
+	 * @return the database object
+	 */
+	private Database translateSnapList(List<Snapshot> kList, boolean includeFaulty){
+		double[][] dataMatrix = convertSnapshotListIntoMatrix(kList, includeFaulty);
+		if(dataMatrix.length > 0)
+			return ELKIUtils.createElkiDatabase(dataMatrix);
+		else return null;
+	}
+
+	/**
+	 * Converts a snapshot to and ELKI Vector (that extends NumberVector).
+	 *
+	 * @param sysSnapshot the system snapshot
+	 * @return the vector
+	 */
+	protected Vector convertSnapToVector(Snapshot sysSnapshot) {
+		Vector vec = new Vector(getDataSeries().size());
+		if(getDataSeries().size() == 1){
+			if(needNormalization)
+				vec.set(0, (((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst() - minmax[0][0])/(minmax[0][1] - minmax[0][0]));
+			else vec.set(0, ((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst());
+		} else {
+			for(int j=0;j<getDataSeries().size();j++){
+				if(needNormalization)
+					vec.set(j, (((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]));
+				else vec.set(j, ((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());						
+			}
+		}
+		return vec;
+	}
+
+}

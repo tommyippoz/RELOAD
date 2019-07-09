@@ -1,0 +1,83 @@
+* Default loader preferences file for 'MADneSs'. Comments with '*'.
+* Uncomment the loaders corresponding to the datasets you want to use.
+
+* youtube.loader
+
+* KDD CUP
+
+* kddcup/kddcup_dos.loader
+
+* kddcup/kddcup_probe.loader
+
+* kddcup/kddcup_probe_test.loader
+
+* kddcup/kddcup_r2l.loader
+
+* kddcup/kddcup_u2r.loader
+
+* NSL-KDD
+
+* nslkdd/nslkdd_probe.loader
+
+* nslkdd/nslkdd_dos.loader
+
+* nslkdd/nslkdd_r2l.loader
+
+* nslkdd/nslkdd_u2r.loader
+
+* ISCX 2012
+
+* iscx/iscx_bruteforce.loader
+
+* iscx/iscx_DoS.loader
+
+* iscx/iscx_DDoS.loader
+
+* iscx/iscx_infiltrator.loader
+
+* UNSW-NB15
+
+unsw/unsw_analysis.loader
+
+* unsw/unsw_backdoor.loader
+
+* unsw/unsw_fuzzers.loader
+
+* unsw/unsw_DoS.loader
+
+* unsw/unsw_exploits.loader
+
+* unsw/unsw_generic.loader
+
+* unsw/unsw_reconnaissance.loader
+
+* unsw/unsw_worms.loader
+
+* unsw/unsw_shellcode.loader
+
+* sint\iscx_synthetic_contextual.loader
+
+* sint\iscx_synthetic_point.loader
+* sint\iscx_synthetic_collective.loader
+* kddcup\kddcup_r2l_500.loader
+* iscx\iscx_infiltrator_500.loader
+* nslkdd\nslkdd_probe_500.loader
+* financial_distress.loader
+* id_kaggle.loader
+* nslkdd\nslkdd_probe_to_unknown.loader
+
+* sint\unsw_sint_collective.loader
+* sint\unsw_sint_contextual.loader
+* sint\unsw_sint_point.loader
+* sint\kdd_sint_collective.loader
+* sint\kdd_sint_contextual.loader
+* sint\kdd_sint_point.loader
+* biometricsLoader.loader
+* biometricsLoaderExt.loader
+* unsw\unsw_reconnaissance_worms.loader
+* unsw\unsw_shellcode_worms.loader
+* nslkdd\nslkdd_dos_u2r.loader
+* nslkdd\nslkdd_probe_u2r.loader
+* nslkdd\nslkdd_r2l_u2r.loader
+* iscx\iscx_infiltrator_bruteforce.loader
+* iscx\iscx_dos_bruteforce.loader

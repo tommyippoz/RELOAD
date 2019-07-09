@@ -1,0 +1,47 @@
+* Loader type (MYSQL, CSVALL).
+LOADER_TYPE = CSVALL
+
+* Investigated Data Layers (if any, NO_LAYER otherwise).
+CONSIDERED_LAYERS = NO_LAYER
+
+
+* Data Partitioning.
+
+* File Used for Filtering
+FILTERING_CSV_FILE = NSLKDD/KDDTrain+.csv
+
+* Golden Runs.
+GOLDEN_RUN_IDS = 0-5
+
+* File Used for Training
+TRAIN_CSV_FILE = NSLKDD/KDDTrain+.csv
+
+* Training Runs.
+TRAIN_RUN_IDS = 0-50
+
+* File Used for Evaulating
+VALIDATION_CSV_FILE = NSLKDD/KDDTest+.csv
+
+* Evaluation Runs.
+VALIDATION_RUN_IDS = 51-120
+
+
+* Parsing Dataset
+
+* Features to Skip
+SKIP_COLUMNS = 1, 2, 3, 41, 42
+
+* Column Containing the 'Label' Feature
+LABEL_COLUMN = 41
+
+* Size of Each Experiment
+EXPERIMENT_ROWS = 100
+
+VALIDATION_SKIP_ROWS = ipsweep, nmap, portsweep, satan, aaasasa
+
+TRAIN_SKIP_ROWS = back, land, neptune, pod, smurf, teardrop, ftp_write, imap, guess_passwd, multihop, phf, spy, warezclient, warezmaster, buffer_overflow, loadmodule, perl, rootkit
+
+* Tags Identifying an Attack in This Dataset
+TRAIN_FAULTY_TAGS = ipsweep, nmap, portsweep, satan, aaasasa
+
+VALIDATION_FAULTY_TAGS = back, land, neptune, pod, smurf, teardrop, ftp_write, imap, guess_passwd, multihop, phf, spy, warezclient, warezmaster, buffer_overflow, loadmodule, perl, rootkit
