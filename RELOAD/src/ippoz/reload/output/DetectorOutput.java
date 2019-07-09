@@ -377,7 +377,7 @@ public class DetectorOutput {
 	
 	public List<AlgorithmVoter> getVoters(){
 		return voterList;
-	}
+	}  
 
 	public int getKFold() {
 		return iManager.getKFoldCounter();
