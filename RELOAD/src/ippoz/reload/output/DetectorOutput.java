@@ -373,7 +373,7 @@ public class DetectorOutput {
 
 	public String getFeatureAggregationPolicy() {
 		return iManager.getDataSeriesDomain();
-	}
+	}    
 	
 	public List<AlgorithmVoter> getVoters(){
 		return voterList;
