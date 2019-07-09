@@ -44,8 +44,7 @@ public abstract class Metric implements Comparable<Metric> {
 		double snapValue;
 		int undetectable = 0;
 		Knowledge knowledge = know.cloneKnowledge();
-		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(
-				knowledge.size());
+		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
 			snapValue = DetectionAlgorithm.convertResultIntoDouble(alg
 					.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());

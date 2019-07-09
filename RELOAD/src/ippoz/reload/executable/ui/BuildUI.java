@@ -164,6 +164,7 @@ public class BuildUI {
 		frame.getContentPane().removeAll();
 		setupMap = new HashMap<String, JPanel>();
 		pathMap = new HashMap<String, JPanel>();
+		iManager.reload();
 		frame = buildJFrame();
 		frame.setVisible(true);
 		isUpdating = false;
@@ -458,15 +459,23 @@ public class BuildUI {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				JFileChooser jfc = new JFileChooser(new File(iManager.getLoaderFolder()).getAbsolutePath());
+				jfc.setMultiSelectionEnabled(true);
 				int returnValue = jfc.showOpenDialog(null);
 				if (returnValue == JFileChooser.APPROVE_OPTION) {
-					File selectedFile = jfc.getSelectedFile();
-					Path pathAbsolute = Paths.get(selectedFile.getAbsolutePath());
-			        Path pathBase = Paths.get(new File(iManager.getLoaderFolder()).getAbsolutePath());
-					if(!selectedFile.isDirectory() && selectedFile.getName().endsWith(".loader")){
-						iManager.addDataset(pathBase.relativize(pathAbsolute).toString());
-						reload();
-					} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a '.loader' file");
+					File[] selectedFiles = jfc.getSelectedFiles();
+					if(selectedFiles != null){
+						boolean updateFlag = false;
+						for(File selectedFile : selectedFiles){
+							Path pathAbsolute = Paths.get(selectedFile.getAbsolutePath());
+					        Path pathBase = Paths.get(new File(iManager.getLoaderFolder()).getAbsolutePath());
+							if(!selectedFile.isDirectory() && selectedFile.getName().endsWith(".loader")){
+								iManager.addDataset(pathBase.relativize(pathAbsolute).toString());
+								updateFlag = true;
+							} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a '.loader' file");
+						}
+						if(updateFlag)
+							reload();
+					}
 				}
 			} } );
 		

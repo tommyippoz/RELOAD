@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -150,7 +151,7 @@ public class OutputFrame {
 	}
 	
 	private JPanel buildOutputSummaryPanel(DetectorOutput dOut, JPanel root, int i, int tabY){
-		int elements = 7;
+		int elements = 6;
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setBounds((int) (root.getWidth()*0.02), tabY + labelSpacing*(i), (int) (root.getWidth()*0.96), labelSpacing);
@@ -168,7 +169,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()/elements, 0, 2*panel.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -176,15 +177,15 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*3/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*2/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
-		lbl = new JLabel(dOut != null ? dOut.getBestRuns() : "Best Runs");
+		lbl = new JLabel(dOut != null ? String.valueOf(dOut.getUsedFeatures().size()) : "Selected Features");
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*3/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -192,7 +193,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -200,7 +201,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*6/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbl);
 		
@@ -304,14 +305,14 @@ public class OutputFrame {
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Additional Files ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(outFrame.getWidth()/4, yDist, outFrame.getWidth()/2, 2*bigLabelSpacing);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Detailed Outputs ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
+		fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(null);
+		fPanel.setLayout(new GridLayout(1, 4));
+		((GridLayout)fPanel.getLayout()).setHgap(20);
 		
-		JButton button = new JButton("Open Output Folder");
+		JButton button = new JButton("Output Folder");
 		button.setVisible(true);
-		button.setBounds(miscPanel.getWidth()/7, labelSpacing, miscPanel.getWidth()*2/7, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				Desktop desktop = Desktop.getDesktop();
@@ -324,9 +325,32 @@ public class OutputFrame {
 			} } );	
 		fPanel.add(button);
 		
+		button = new JButton("Selected Features");
+		button.setVisible(true);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				FeaturesFrame odf;
+				if(dOut != null)
+					odf = new FeaturesFrame(dOut);
+				else odf = new FeaturesFrame(oOut);
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
+		button = new JButton("Training Detail");
+		button.setVisible(true);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				TrainingDetailFrame odf;
+				if(dOut != null)
+					odf = new TrainingDetailFrame(dOut);
+				else odf = new TrainingDetailFrame(oOut);
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
 		button = new JButton("Plot Results");
 		button.setVisible(true);
-		button.setBounds(miscPanel.getWidth()*4/7, labelSpacing, miscPanel.getWidth()*2/7, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				OutputDetailFrame odf;

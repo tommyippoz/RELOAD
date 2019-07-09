@@ -28,7 +28,7 @@ public abstract class CSVLoader extends SimpleLoader {
 	/** The label column. */
 	protected int labelCol;
 	
-	/** The experiment rows. */
+	/** The experiment rows. If <= 0, it indicates the column that indicates experiment rows to change */
 	protected int experimentRows;
 	
 	/** The header. */
@@ -67,7 +67,7 @@ public abstract class CSVLoader extends SimpleLoader {
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
-						if(readLine.length() == 0 || readLine.startsWith("*"))
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
 							readLine = null;
 					}
 				}
@@ -88,9 +88,8 @@ public abstract class CSVLoader extends SimpleLoader {
 	/* (non-Javadoc)
 	 * @see ippoz.reload.loader.SimpleLoader#canRead(int)
 	 */
-	@Override
-	public boolean canRead(int index) {
-		return super.canRead(getRun(index));
+	public boolean canReadCSV(int index, int pastChanges) {
+		return canRead(getRun(index, pastChanges));
 	}
 
 	/**
@@ -99,8 +98,10 @@ public abstract class CSVLoader extends SimpleLoader {
 	 * @param rowIndex the row index
 	 * @return the run
 	 */
-	protected int getRun(int rowIndex){
-		return rowIndex / experimentRows;
+	protected int getRun(int rowIndex, int pastChanges){
+		if(experimentRows > 0)
+			return rowIndex / experimentRows;
+		else return pastChanges;
 	}
 	
 	/**

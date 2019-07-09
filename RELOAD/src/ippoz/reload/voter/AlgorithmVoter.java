@@ -17,7 +17,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
  *
  * @author Tommy
  */
-public class AlgorithmVoter implements Cloneable {
+public class AlgorithmVoter implements Cloneable, Comparable<AlgorithmVoter> {
 	
 	/** The algorithm. */
 	private DetectionAlgorithm alg;
@@ -132,6 +132,13 @@ public class AlgorithmVoter implements Cloneable {
 		if(alg.getConfiguration() != null && alg.getConfiguration().hasItem(AlgorithmConfiguration.AUC_SCORE))
 			return Double.valueOf(alg.getConfiguration().getItem(AlgorithmConfiguration.AUC_SCORE));
 		else return -1.0;
+	}
+
+	@Override
+	public int compareTo(AlgorithmVoter other) {
+		if(getAlgorithmType().equals(other.getAlgorithmType()) && getDataSeries().equals(other.getDataSeries()))
+			return 0;
+		else return -1;
 	}
 
 }

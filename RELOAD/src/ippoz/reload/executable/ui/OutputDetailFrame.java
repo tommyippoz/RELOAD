@@ -3,6 +3,7 @@
  */
 package ippoz.reload.executable.ui;
 
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
@@ -22,11 +23,21 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -49,6 +60,7 @@ import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.xy.IntervalXYDataset;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleAnchor;
@@ -145,7 +157,8 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
 				if(list.get(0) != null){
-					return DecisionFunction.buildDecisionFunction(algorithmScores, list.get(0).getValue().getDecisionFunction().getClassifierTag());
+					return list.get(0).getValue().getDecisionFunction();
+					//return DecisionFunction.buildDecisionFunction(algorithmScores, list.get(0).getValue().getDecisionFunction().getClassifierTag());
 				}
 			}
 		}
@@ -221,7 +234,7 @@ public class OutputDetailFrame {
 		
 		JPanel firstHeaderPanel = new JPanel();
 		firstHeaderPanel.setBackground(Color.WHITE);
-		firstHeaderPanel.setLayout(new GridLayout(1, 6));
+		firstHeaderPanel.setLayout(new GridLayout(1, 7));
 		
 		JLabel lbl = new JLabel("Number of Rectangles");
 		lbl.setFont(labelFont);
@@ -285,63 +298,66 @@ public class OutputDetailFrame {
 		});
 		firstHeaderPanel.add(normCB);
 		
-		lbl = new JLabel("Scores Interval");
+		JPanel intervalPanel = new JPanel();
+		intervalPanel.setBackground(Color.WHITE);
+		intervalPanel.setLayout(new GridLayout(1, 2));
+		
+		DecimalFormat dfMin = new DecimalFormat(Double.isFinite(minValue) ? (Math.abs(minValue) > 1000000 || (minValue != 0 && Math.abs(minValue) < 0.001) ? "0.00E00" : "0.000") : "0.000"); 
+		DecimalFormat dfMax = new DecimalFormat(Double.isFinite(maxValue) ? (Math.abs(maxValue) > 1000000 || (maxValue != 0 && Math.abs(maxValue) < 0.001) ? "0.00E00" : "0.000") : "0.000");
+		
+		lbl = new JLabel("Left Bound: " + dfMin.format(minValue));
 		lbl.setFont(labelFont);
 		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	String s = (String)JOptionPane.showInputDialog(
+	                    detFrame, "Set left threshold for algorithm scores to be shown (" + minRefValue + "<threshold<=" + dfMax.format(maxValue) + ") ", "Scores Threshold",
+	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+				if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+					double newThreshold = Double.valueOf(s.trim());
+					if(newThreshold >= minRefValue && newThreshold <= maxValue){
+						minValue = newThreshold;
+						reload();
+					} else JOptionPane.showMessageDialog(
+	        				detFrame, "Value is not in the [" + minRefValue + ", " + dfMax.format(maxValue) + "] range", "Input Error",
+		                    JOptionPane.ERROR_MESSAGE);
+				} else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        });		
 		firstHeaderPanel.add(lbl);
 		
-		DecimalFormat dfMin = new DecimalFormat(Double.isFinite(minValue) ? (Math.abs(minValue) > 1000000 || (minValue != 0 && Math.abs(minValue) < 0.0000001) ? "0.000E00" : "0.000") : "0.000"); 
-		DecimalFormat dfMax = new DecimalFormat(Double.isFinite(maxValue) ? (Math.abs(maxValue) > 1000000 || (maxValue != 0 && Math.abs(maxValue) < 0.0000001) ? "0.000E00" : "0.000") : "0.000");
-		JTextField valRangeTextField = new JTextField(dfMin.format(minValue) + " # " + dfMax.format(maxValue));
-		valRangeTextField.setFont(labelFont);
-		firstHeaderPanel.add(valRangeTextField);
-		valRangeTextField.setColumns(5);
-		valRangeTextField.getDocument().addDocumentListener(new DocumentListener() {
-			  
-			public void changedUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void removeUpdate(DocumentEvent e) {
-				//workOnUpdate();
-			}
-			  
-			public void insertUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
+		lbl = new JLabel("Right Bound: " + dfMax.format(maxValue));
+		lbl.setFont(labelFont);
+		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	String s = (String)JOptionPane.showInputDialog(
+	                    detFrame, "Set right threshold for algorithm scores to be shown (" + dfMin.format(minValue) + "<threshold<=" + maxRefValue + ") ", "Scores Threshold",
+	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+				if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+					double newThreshold = Double.valueOf(s.trim());
+					if(newThreshold >= minValue && newThreshold <= maxRefValue){
+						maxValue = newThreshold;
+						reload();
+					} else JOptionPane.showMessageDialog(
+	        				detFrame, "Value is not in the [" + dfMin.format(minValue) + ", " + maxRefValue + "] range", "Input Error",
+		                    JOptionPane.ERROR_MESSAGE);
+				} else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
 
-			public void workOnUpdate() {
-				String[] splitted;
-				if (valRangeTextField.getText() != null && valRangeTextField.getText().length() > 0){
-	        		if(valRangeTextField.getText().contains("#")){
-						splitted = valRangeTextField.getText().trim().split("#");
-		        		if(splitted.length == 2 && splitted[0].length() > 0 && splitted[1].length() > 0){
-							if(AppUtility.isNumber(splitted[0].trim()) && AppUtility.isNumber(splitted[1].trim())) {
-								if(Double.valueOf(splitted[0].trim()) < Double.valueOf(splitted[1].trim())){
-									if(Double.valueOf(splitted[0].trim()) >= minRefValue)
-										minValue = Double.valueOf(splitted[0].trim());
-									else minValue = minRefValue;
-									if(Double.valueOf(splitted[1].trim()) <= maxRefValue)
-										maxValue = Double.valueOf(splitted[1].trim());
-									else maxValue = maxRefValue;
-					        		reload();
-								}
-			        		} 
-		        		}
-		        	} else JOptionPane.showMessageDialog(
-		        				detFrame, "Error while processing min and max values. Please use the <min> # <max> format", "Parsing Error",
-			                    JOptionPane.ERROR_MESSAGE);					
-	        	}
-			}
-		});
+        });	
+		intervalPanel.add(lbl);
+		
+		firstHeaderPanel.add(lbl);
 		
 		JPanel secondHeaderPanel = new JPanel();
 		secondHeaderPanel.setBackground(Color.WHITE);
-		secondHeaderPanel.setLayout(new GridLayout(1, 5));
-		
-		lbl = new JLabel("");
-		secondHeaderPanel.add(lbl);
+		secondHeaderPanel.setLayout(new GridLayout(1, 4));
 		
 		String suggDecision = null;
 		for(String expName : dOut.getLabelledScores().keySet()){
@@ -441,8 +457,75 @@ public class OutputDetailFrame {
 		
 		secondHeaderPanel.add(decisionFunctionCB);
 		
-		lbl = new JLabel("");
-		secondHeaderPanel.add(lbl);
+		JButton butSave = new JButton("Save Data");
+		butSave.setVisible(true);
+		butSave.setFont(labelBoldFont);
+		butSave.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				ChartPanel cp;
+				try {
+					JFileChooser jfc = new JFileChooser(new File(System.getProperty("user.dir")));
+					int returnValue = jfc.showSaveDialog(null);
+					if (returnValue == JFileChooser.APPROVE_OPTION) {
+						File selectedFile = jfc.getSelectedFile();
+						String basicPath = selectedFile.getAbsolutePath();
+						if(basicPath.contains("."))
+							basicPath = basicPath.split(".")[basicPath.split(".").length - 2];
+						basicPath = basicPath + "_" + dOut.getAlgorithm() + "_" + dOut.getDataset();
+						if(decisionFunctionFlag && dFunction != null)
+							basicPath = basicPath + "_" + dFunction.getClassifierTag();
+						cp = buildChartPanel();
+						printDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + ".csv");
+						//ChartUtilities.saveChartAsPNG(new File(basicPath + ".png"), cp.getChart(), cp.getWidth(), cp.getHeight());
+					}
+				} catch (Exception ex){
+					AppLogger.logException(getClass(), ex, "Unable to save graph to file");
+				}
+			}
+			
+			private void printDataset(XYDataset dataset, String filename){
+				BufferedWriter writer;
+				List<Double> xValues = new LinkedList<Double>();
+				Map<Integer, Map<Double, Double>> map = new HashMap<>();
+				try {
+					for(int i=0;i<dataset.getSeriesCount();i++){
+						map.put(i, new HashMap<>());
+						for(int j=0;j<dataset.getItemCount(i);j++){
+							map.get(i).put(dataset.getXValue(i, j), dataset.getYValue(i, j));
+							if(!xValues.contains(dataset.getXValue(i, j)))
+								xValues.add(dataset.getXValue(i, j));
+						}
+					}
+					Collections.sort(xValues);
+					writer = new BufferedWriter(new FileWriter(new File(filename)));
+					writer.write("interval,");
+					for(int i=0;i<dataset.getSeriesCount();i++){
+						writer.write(dataset.getSeriesKey(i) + ",");
+					}
+					writer.write("\n");
+					for(Double xValue : xValues){
+						writer.write(xValue + ",");
+						double diff = 0;
+						for(int i=0;i<dataset.getSeriesCount();i++){
+							if(map.get(i).containsKey(xValue)){
+								writer.write((map.get(i).get(xValue) - diff) + ",");
+								diff = map.get(i).get(xValue);
+							} else {
+								writer.write("0,");
+								diff = 0;
+							}
+						}
+						writer.write("\n");
+					}
+					
+					writer.close();
+				} catch(IOException ex){
+					AppLogger.logException(getClass(), ex, "Unable to write summary files");
+				}
+			}
+			
+		} );	
+		secondHeaderPanel.add(butSave);
 		
 		headerPanel.add(firstHeaderPanel);
 		headerPanel.add(secondHeaderPanel);
@@ -561,7 +644,7 @@ public class OutputDetailFrame {
 		if(dFunction != null && decisionFunctionFlag)
 			dataset = (IntervalXYDataset)createConfusionMatrixSeries(minValue, maxValue, infiniteFlag);
 		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, infiniteFlag);
-
+		//dataset.get
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
 				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + countN + " normal and " + countA + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite)", 

@@ -193,7 +193,9 @@ public class CSVPreLoader extends CSVLoader {
 		LinkedList<Observation> obList = null;
 		LinkedList<InjectedElement> injList = null ;
 		Observation current = null;
+		String[] expRowsColumns = new String[]{null, null};
 		int rowIndex = 0, i;
+		int changes = 0;
 		try {
 			dataList = new LinkedList<MonitoredData>();
 			AppLogger.logInfo(getClass(), "Loading " + csvFile.getPath());
@@ -203,7 +205,7 @@ public class CSVPreLoader extends CSVLoader {
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
-						if(readLine.length() == 0 || readLine.startsWith("*"))
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
 							readLine = null;
 					}
 				}
@@ -212,22 +214,30 @@ public class CSVPreLoader extends CSVLoader {
 					if(readLine != null){
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
-							if(rowIndex % experimentRows == 0){ 
+							if((experimentRows > 0 && rowIndex % experimentRows == 0) || (experimentRows <= 0 && ((!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null) || (String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] == null)))){ 
 								if(obList != null && obList.size() > 0){
-									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1), obList, injList));
+									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1, dataList.size()), obList, injList));
 								}
 								injList = new LinkedList<InjectedElement>();
 								obList = new LinkedList<Observation>();
 							}
-							if(canRead(rowIndex)){
+							readLine = AppUtility.filterInnerCommas(readLine);
+							if(canReadCSV(rowIndex, changes)){
 								i = 0;
 								current = new Observation(obList.size() > 0 ? obList.getLast().getTimestamp().getTime() + 1000 : System.currentTimeMillis());
-								readLine = AppUtility.filterInnerCommas(readLine);
 								for(String splitted : readLine.split(",")){
 									if(i < header.size() && header.get(i) != null){
 										HashMap<DataCategory, String> iD = new HashMap<DataCategory, String>();
-										iD.put(DataCategory.PLAIN, splitted.replace("\"", ""));
-										iD.put(DataCategory.DIFFERENCE, obList.size()>0 ? String.valueOf(Double.parseDouble(splitted.replace("\"", "")) - Double.parseDouble(obList.getLast().getValue(header.get(i), DataCategory.PLAIN))) : "0.0");
+										if(splitted != null && splitted.length() > 0){
+											splitted = splitted.replace("\"", "");
+											if(AppUtility.isNumber(splitted)){
+												iD.put(DataCategory.PLAIN, splitted);
+												iD.put(DataCategory.DIFFERENCE, obList.size()>0 ? String.valueOf(Double.parseDouble(splitted) - Double.parseDouble(obList.getLast().getValue(header.get(i), DataCategory.PLAIN))) : "0.0");
+											} else {
+												iD.put(DataCategory.PLAIN, "0");
+												iD.put(DataCategory.DIFFERENCE, "0");
+											}
+										}
 										current.addIndicator(header.get(i), new IndicatorData(iD));
 									} 
 									i++;
@@ -238,7 +248,13 @@ public class CSVPreLoader extends CSVLoader {
 										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
 											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
 									}
-								}
+								}	
+							}
+							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+								expRowsColumns[0] = expRowsColumns[1];
+								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
+									changes++;
 							}
 							rowIndex++;
 						}

@@ -17,6 +17,9 @@ public enum FeatureSelectorType {
 	PEARSON_CORRELATION,
 	
 	/** The information gain. */
-	INFORMATION_GAIN
+	INFORMATION_GAIN, 
+	
+	/** Relief. */
+	RELIEF
 
 }

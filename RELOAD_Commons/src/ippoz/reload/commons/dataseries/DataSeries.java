@@ -269,5 +269,9 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		}
 		return outList;
 	}
+
+	public String getSanitizedName() {
+		return toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "").replace("COMPOSITION", "");
+	}
 		
 }

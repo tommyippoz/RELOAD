@@ -65,12 +65,12 @@ public abstract class DetectionAlgorithm {
 		else return null;
 	}
 	
-	protected void setDecisionFunction(){
-		decisionFunction = buildClassifier();
+	public DecisionFunction getDecisionFunction(){
+		return decisionFunction;
 	}
 	
-	protected DecisionFunction getDecisionFunction(){
-		return decisionFunction;
+	protected void setDecisionFunction(){
+		decisionFunction = buildClassifier();
 	}
 	
 	protected void logScore(double score){

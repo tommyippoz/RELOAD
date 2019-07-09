@@ -217,6 +217,8 @@ public abstract class FeatureSelector {
 				+ "<br>   Threshold represents the ratio that is used to check if the variance is big enough (var > threshold*avg) <br>" +
 				FeatureSelectorType.PEARSON_CORRELATION + ": used to cut out features that are not correlated to the label. "
 				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the correlation is strong enough <br>" +
+				FeatureSelectorType.RELIEF + ": used to cut out features that are ranked low by ReliefF Algorithm. "
+				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the ReliefF score is high enough <br>" +
 				FeatureSelectorType.INFORMATION_GAIN + ": used to cut out features that embed too much entropy. "
 				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the information gain is big enough <br>";
 	}
@@ -233,6 +235,8 @@ public abstract class FeatureSelector {
 			return null;
 		else {
 			switch(fst){
+				case RELIEF:
+					return new ReliefFeatureSelector(threshold);
 				case INFORMATION_GAIN:
 					return new InformationGainSelector(threshold);
 				case PEARSON_CORRELATION:

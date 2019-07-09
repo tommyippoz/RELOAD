@@ -26,6 +26,7 @@ import de.lmu.ifi.dbs.elki.data.type.TypeInformation;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.database.ids.DBIDIter;
+import de.lmu.ifi.dbs.elki.database.ids.DBIDs;
 import de.lmu.ifi.dbs.elki.database.query.distance.DistanceQuery;
 import de.lmu.ifi.dbs.elki.database.query.knn.KNNQuery;
 import de.lmu.ifi.dbs.elki.database.relation.Relation;
@@ -74,18 +75,46 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @param relation Data relation
 	   */
 	  public Object run(Relation<NumberVector> relation) {
-	    final DistanceQuery<NumberVector> distanceQuery = relation.getDistanceQuery(getDistanceFunction());
-	    final KNNQuery<NumberVector> knnQuery = relation.getKNNQuery(distanceQuery, k);
-	    resList = new LinkedList<KNNScore>();
-	    for(DBIDIter it = relation.iterDBIDs(); it.valid(); it.advance()) {
-	      // distance to the kth nearest neighbor
-	      // (assuming the query point is always included, with distance 0)
-	      final double dkn = knnQuery.getKNNForDBID(it, k).getKNNDistance();
-	      resList.add(new KNNScore(relation.get(it), dkn));
-	    }
-	    Collections.sort(resList);
-	    return null;
+		  if(isApplicable(relation, relation.getDBIDs())){
+		    final DistanceQuery<NumberVector> distanceQuery = relation.getDistanceQuery(getDistanceFunction());
+		    final KNNQuery<NumberVector> knnQuery = relation.getKNNQuery(distanceQuery, k);
+		    resList = new LinkedList<KNNScore>();
+		    for(DBIDIter it = relation.iterDBIDs(); it.valid(); it.advance()) {
+		      // distance to the kth nearest neighbor
+		      // (assuming the query point is always included, with distance 0)
+		      final double dkn = knnQuery.getKNNForDBID(it, k).getKNNDistance();
+		      resList.add(new KNNScore(relation.get(it), dkn));
+		    }
+		    Collections.sort(resList);
+		    return resList;
+		  } else return null;
 	  }
+	  
+	  private boolean isApplicable(Relation<NumberVector> relation, DBIDs ids){
+			List<Double> differentValues = new LinkedList<Double>();
+			for(DBIDIter pA = ids.iter(); pA.valid(); pA.advance()) {
+				NumberVector newValue = relation.get(pA);
+				double newDouble = 0;
+				if(newValue.getDimensionality() == 1)
+					newDouble = newValue.doubleValue(0);
+				else {
+					newDouble = 0;
+					for(int i=0;i<newValue.getDimensionality();i++){
+						newDouble = newDouble + Math.pow(-1, i)*newValue.doubleValue(i)*i;
+					}
+				}
+				if(!Double.isFinite(newDouble))
+					return false;
+				if(Double.isFinite(newDouble) && !differentValues.contains(newDouble)){
+					differentValues.add(newDouble);
+					if(differentValues.size() > k+1){
+						return true;
+					}
+				}
+			}
+			return false;
+			
+		}
 	  
 	  public double calculateSingleKNN(Vector newInstance) {
 		  double partialResult;

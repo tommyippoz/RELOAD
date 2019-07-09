@@ -33,7 +33,7 @@ public class KNNELKI extends DataSeriesELKIAlgorithm {
 	 * @param conf the configuration
 	 */
 	public KNNELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
-		super(dataSeries, conf, false, false);
+		super(dataSeries, conf, false, true);
 	}
 	
 	/* (non-Javadoc)

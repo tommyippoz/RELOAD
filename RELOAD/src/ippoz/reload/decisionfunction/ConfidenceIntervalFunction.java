@@ -4,8 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.text.DecimalFormat;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class ConfidenceIntervalFunction. Describes the decision using 
@@ -57,8 +56,7 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		DecimalFormat df = new DecimalFormat("#.000"); 
-		return "CONF(avg:" + df.format(avg) + " ratio:" + ratio + " std:" + df.format(std) + ") - {ANOMALY: value < " + df.format(avg -ratio*std) + " or value > " + df.format(avg +ratio*std) + "}";
+		return "CONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ") - {ANOMALY: value < " + AppUtility.formatDouble(avg -ratio*std) + " or value > " + AppUtility.formatDouble(avg +ratio*std) + "}";
 	}
 
 	/* (non-Javadoc)

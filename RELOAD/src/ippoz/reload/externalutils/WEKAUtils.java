@@ -29,7 +29,10 @@ public class WEKAUtils {
 	 * @return the instances
 	 */
 	public static Instances translateKnowledge(List<Knowledge> kList, List<DataSeries> seriesList) {
-		DataSeries targetSeries = new MultipleDataSeries(seriesList);
+		DataSeries targetSeries;
+		if(seriesList.size() == 1)
+			targetSeries = seriesList.get(0);
+		else targetSeries = new MultipleDataSeries(seriesList);
 		double[][] dataMatrix = Knowledge.convertKnowledgeIntoMatrix(kList, targetSeries, true, false);
 		String[] label = Knowledge.extractLabels(kList, targetSeries, true);
 		if(dataMatrix.length > 0)

@@ -4,8 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.text.DecimalFormat;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class LeftPositiveIQRFunction. Sets the IQR as q3-q1, evaluating data point as anomalous if
@@ -48,8 +47,10 @@ public class LeftPositiveIQRFunction extends DecisionFunction {
 	 */
 	private static double tuneRatio(double toTune, double q1, double q3){
 		double iqr = q3 - q1;
-		while(q1 - toTune*iqr <= 0){
+		int maxIt = 100;
+		while(maxIt > 0 && toTune > 0 && q1 - toTune*iqr <= 0){
 			toTune = toTune*0.75;
+			maxIt--;
 		}
 		return toTune;
 		
@@ -73,8 +74,7 @@ public class LeftPositiveIQRFunction extends DecisionFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		DecimalFormat df = new DecimalFormat("#.000");
-		return "LPIQR(Q1:" + df.format(q1) + " Q3:" + df.format(q3) + " ratio:" + ratio + ") - {ANOMALY: 0 <= value < " + df.format(q1 - ratio*iqr) + "}";
+		return "LPIQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " ratio:" + ratio + ") - {ANOMALY: 0 <= value < " + AppUtility.formatDouble(q1 - ratio*iqr) + "}";
 	}
 
 	/* (non-Javadoc)

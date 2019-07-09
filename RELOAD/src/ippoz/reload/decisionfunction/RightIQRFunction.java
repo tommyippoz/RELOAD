@@ -4,8 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.text.DecimalFormat;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class RightIQRFunction. Sets the IQR as q3-q1, evaluating data point as anomalous if
@@ -56,8 +55,7 @@ public class RightIQRFunction extends DecisionFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		DecimalFormat df = new DecimalFormat("#.000");
-		return "RIGHT_IQR(Q1:" + df.format(q1) + " Q3:" + df.format(q3) + " ratio:" + ratio + ") - {ANOMALY: value > " + df.format(q3 + ratio*iqr) + "}";
+		return "RIGHT_IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " IQR: " + AppUtility.formatDouble(iqr) + " ratio:" + ratio + ") - {ANOMALY: value > " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
 	}
 
 	/* (non-Javadoc)

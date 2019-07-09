@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.Socket;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -24,6 +25,29 @@ import java.util.TreeMap;
  *
  */
 public class AppUtility {
+	
+	public static String formatDouble(double value, int digits){
+		DecimalFormat formatter;
+		String format = "#.";
+		if(Math.abs(value) > 100000 || (Math.abs(value) < 0.00001 && value != 0)){
+			formatter = new DecimalFormat("#.###E0");
+		} else {
+			for(int i=0;i<digits;i++){
+				format = format + "#";
+			}
+			formatter = new DecimalFormat(format);
+			while(Double.valueOf(formatter.format(value)) == 0 && value != 0){
+				format = format + "#";
+				formatter = new DecimalFormat(format);
+			}
+		}
+		
+		return formatter.format(value); 
+	}
+	
+	public static String formatDouble(double value){
+		return formatDouble(value, 2);
+	}
 	
 	/**
 	 * Filters inner commas.

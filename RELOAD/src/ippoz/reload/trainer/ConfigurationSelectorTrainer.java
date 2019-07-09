@@ -84,7 +84,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
 					}
 					if(trainingResult){
-						for(Knowledge knowledge : knMap.get("TEST")){
+ 						for(Knowledge knowledge : knMap.get("TEST")){
 							metricResults.add(getMetric().evaluateMetric(algorithm, knowledge)[0]);
 						}
 						currentMetricValue.addValue(AppUtility.calcAvg(metricResults.toArray(new Double[metricResults.size()])));

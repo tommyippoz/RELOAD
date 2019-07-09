@@ -4,8 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.text.DecimalFormat;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class LeftPositiveConfidenceIntervalFunction. Defines anomalies if
@@ -71,8 +70,7 @@ public class LeftPositiveConfidenceIntervalFunction extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		DecimalFormat df = new DecimalFormat("#.000"); 
-		return "LPCONF(avg:" + df.format(avg) + " ratio:" + ratio + " std:" + df.format(std) + ")  - {ANOMALY: 0 <= value < " + df.format(avg - ratio*std) + "}";
+		return "LPCONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ")  - {ANOMALY: 0 <= value < " + AppUtility.formatDouble(avg - ratio*std) + "}";
 		
 	}
 	

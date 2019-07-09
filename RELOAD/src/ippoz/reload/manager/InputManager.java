@@ -169,6 +169,20 @@ public class InputManager {
 		}
 	}
 	
+	public void reload() {
+		try {
+			if(prefManager == null || !prefManager.isValidFile())
+				this.prefManager = generateDefaultMADneSsPreferences();
+			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
+				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
+			else {
+				detectionManager = generateDefaultScoringPreferences();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Error while reading preferences");
+		}
+	}
+	
 	public boolean updatePreference(String tag, String newValue, boolean updateFile){
 		if(tag != null && prefManager.hasPreference(tag)){
 			prefManager.updatePreference(tag, newValue, updateFile);
@@ -402,7 +416,7 @@ public class InputManager {
 	 *
 	 * @return the metric
 	 */
-	public Metric getMetricName() {
+	public Metric getTargetMetric() {
 		return getMetric(prefManager.getPreference(METRIC));
 	}
 
@@ -1231,6 +1245,19 @@ public class InputManager {
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
 	public int countAvailableVoters(String scoresFileString) {
+		List<AlgorithmVoter> vList = loadVoters(scoresFileString);
+		if(vList != null)
+			return vList.size();
+		else return 0;
+	}
+	
+	/**
+	 * Loads train scores.
+	 * This is the outcome of some previous training phases.
+	 *
+	 * @return the list of AlgorithmVoters resulting from the read scores
+	 */
+	public List<AlgorithmVoter> loadVoters(String scoresFileString) {
 		String scoresFile = getScoresFile(scoresFileString);
 		File asFile = new File(scoresFile);
 		BufferedReader reader;
@@ -1275,9 +1302,81 @@ public class InputManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}
-		return voterList.size();
+		return voterList;
 	}
 
+	public String[] loadSelectedDataSeriesString(String filePrequel) {
+		LinkedList<String> sSeries = new LinkedList<String>();
+		String readed;
+		BufferedReader reader = null;
+		File dsF = new File(getScoresFolder() + filePrequel + File.separatorChar + filePrequel + "_filtered.csv");
+		try {
+			reader = new BufferedReader(new FileReader(dsF));
+			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
+			while(reader.ready()){
+				readed = reader.readLine();
+				if(readed != null){
+					readed = readed.trim();
+					if(readed.length() > 0 && !readed.trim().startsWith("*")){
+						if(readed.contains(","))
+							sSeries.add(readed.trim().split(",")[0].trim());
+						else sSeries.add(readed.trim());
+					}
+				}
+			}
+			reader.close();
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read Selected data Series");
+		} 
+		return sSeries.toArray(new String[sSeries.size()]);
+	}
 	
+	public List<DataSeries> getSelectedSeries(String filePrequel) {
+		String[] strings = loadSelectedDataSeriesString(filePrequel);
+		if(strings != null && strings.length > 0){
+			return DataSeries.fromString(strings, false);
+		} else return new LinkedList<DataSeries>();
+	}
+	
+	public Map<DataSeries, Map<FeatureSelectorType, Double>> extractSelectedFeatures(String filePrequel, String datasetName) {
+		BufferedReader reader;
+		String readed;
+		String[] header = null;
+		Map<DataSeries, Map<FeatureSelectorType, Double>> featureMap = new HashMap<>();
+		List<DataSeries> sList = getSelectedSeries(filePrequel);
+		try {
+			reader = new BufferedReader(new FileReader(new File(getScoresFolder() + filePrequel + File.separatorChar + "featureScores_[" + datasetName + "].csv")));
+			while(reader.ready()){
+				readed = reader.readLine();
+				if(readed != null){
+					readed = readed.trim();
+					if(readed.length() > 0 && !readed.trim().startsWith("*")){
+						if(header == null){
+							header = readed.split(",");
+							for(DataSeries ds : sList){
+								featureMap.put(ds, new HashMap<>());
+							}
+						} else {
+							String[] splitted = readed.split(",");
+							if(splitted[0] != null && splitted[0].length() > 0){
+								for(int i=2;i<splitted.length;i++){
+									for(DataSeries ds : sList){
+										if(ds.toString().equals(header[i].trim())){
+											featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), Double.valueOf(splitted[i]));
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			reader.close();
+		} catch(IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
+		}
+		return featureMap;
+	}
 	
 }

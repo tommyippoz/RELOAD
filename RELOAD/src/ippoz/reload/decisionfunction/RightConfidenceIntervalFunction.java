@@ -4,8 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.text.DecimalFormat;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class RightConfidenceIntervalFunction. Defines anomalies if
@@ -55,8 +54,7 @@ public class RightConfidenceIntervalFunction extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		DecimalFormat df = new DecimalFormat("#.000");
-		return "RCONF(avg:" + df.format(avg) + " ratio:" + ratio + " std:" + df.format(std) + ")  - {ANOMALY: value > " + df.format(avg +ratio*std) + "}";
+		return "RCONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ")  - {ANOMALY: value > " + AppUtility.formatDouble(avg +ratio*std) + "}";
 	}
 	
 	/* (non-Javadoc)

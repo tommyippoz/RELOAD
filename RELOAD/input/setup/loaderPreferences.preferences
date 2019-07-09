@@ -27,7 +27,7 @@
 
 * ISCX 2012
 
-iscx/iscx_bruteforce.loader
+* iscx/iscx_bruteforce.loader
 
 * iscx/iscx_DoS.loader
 
@@ -37,7 +37,7 @@ iscx/iscx_bruteforce.loader
 
 * UNSW-NB15
 
-* unsw/unsw_analysis.loader
+unsw/unsw_analysis.loader
 
 * unsw/unsw_backdoor.loader
 
@@ -72,3 +72,12 @@ iscx/iscx_bruteforce.loader
 * sint\kdd_sint_collective.loader
 * sint\kdd_sint_contextual.loader
 * sint\kdd_sint_point.loader
+* biometricsLoader.loader
+* biometricsLoaderExt.loader
+* unsw\unsw_reconnaissance_worms.loader
+* unsw\unsw_shellcode_worms.loader
+* nslkdd\nslkdd_dos_u2r.loader
+* nslkdd\nslkdd_probe_u2r.loader
+* nslkdd\nslkdd_r2l_u2r.loader
+* iscx\iscx_infiltrator_bruteforce.loader
+* iscx\iscx_dos_bruteforce.loader
