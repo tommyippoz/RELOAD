@@ -1,0 +1,47 @@
+* Default loader file for 'secure.loader'. Comments with '*'.
+
+
+* Loader type (MYSQL, CSVALL).
+LOADER_TYPE = CSVALL
+
+* * Investigated Data Layers (if any, NO_LAYER otherwise).
+CONSIDERED_LAYERS = NO_LAYER
+
+* Data Partitioning.
+
+
+* File Used for Training
+TRAIN_CSV_FILE = ErrorDetection\MYSQL_Secure_Filtered.csv
+
+* Train Runs.
+TRAIN_RUN_IDS = 1 - 100
+
+* Train Faulty Tags.
+TRAIN_FAULTY_TAGS = MEMORY, NETWORK
+
+* Train Runs.
+TRAIN_SKIP_ROWS =
+
+* File Used for Validation
+VALIDATION_CSV_FILE = ErrorDetection\MYSQL_Secure_Filtered.csv
+
+* Validation Runs.
+VALIDATION_RUN_IDS = 1 - 100
+
+* Train Faulty Tags.
+VALIDATION_FAULTY_TAGS = MEMORY, NETWORK
+
+* Train Runs.
+VALIDATION_SKIP_ROWS =
+
+* Parsing Dataset.
+
+
+* Features to Skip
+SKIP_COLUMNS = 1, 2
+
+* Column Containing the 'Label' Feature
+LABEL_COLUMN = 3
+
+* Size of Each Experiment.
+EXPERIMENT_SPLIT_ROWS = 0

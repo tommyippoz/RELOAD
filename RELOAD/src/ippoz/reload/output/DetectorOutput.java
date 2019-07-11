@@ -381,7 +381,7 @@ public class DetectorOutput {
 
 	public int getKFold() {
 		return iManager.getKFoldCounter();
-	}
+	} 
 	
 	public String getTrainRuns(){
 		return loader.getRuns();

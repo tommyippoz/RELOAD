@@ -10,16 +10,21 @@ import ippoz.reload.loader.Loader;
 import ippoz.reload.manager.InputManager;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -161,21 +166,25 @@ public class LoaderFrame {
 		
 		JPanel dataPanel = new JPanel();
 		dataPanel.setBackground(Color.WHITE);
-		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
+		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 5*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Data Setup ", 
 				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(null);
 		
-		showPreferenceLabels(dataPanel, bigLabelSpacing, CSVPreLoader.EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS), 
+		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVPreLoader.EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_ROWS), 
 				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
 		
-		showPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVPreLoader.LABEL_COLUMN, 
+		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVPreLoader.EXPERIMENT_SPLIT_ROWS, 
+				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS), 
+				"Specify the index (starting from 0) of the column that changes when experiments change");
+		
+		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.LABEL_COLUMN, 
 				loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.");
 		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
+		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
 				loaderPref.getPreference(CSVPreLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.");
 		
@@ -185,13 +194,13 @@ public class LoaderFrame {
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
-		fPanel.setBounds(containerPanel.getWidth()/8, generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()/4*3, labelSpacing + 40);
+		fPanel.setBounds(10, generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()-20, labelSpacing + 40);
 		fPanel.setLayout(null);
 		
 		JButton button = new JButton("Save Changes");
 		button.setVisible(true);
 		button.setFont(new Font(button.getFont().getName(), Font.BOLD, 16));
-		button.setBounds(20, 25, fPanel.getWidth()/2 - 40, labelSpacing+10);
+		button.setBounds(20, 25, fPanel.getWidth()/3 - 40, labelSpacing+10);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				String checkParameters = checkParameters();
@@ -203,10 +212,26 @@ public class LoaderFrame {
 			} } );	
 		fPanel.add(button);
 		
+		button = new JButton("Open File");
+		button.setVisible(true);
+		button.setFont(new Font(button.getFont().getName(), Font.BOLD, 16));
+		button.setBounds(fPanel.getWidth()/3 + 20, 25, fPanel.getWidth()/3 - 40, labelSpacing + 10);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				try {
+					Desktop.getDesktop().open(loaderPref.getFile());
+					loaderPref.refresh();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			} } );	
+		fPanel.add(button);
+		
 		button = new JButton("Discard Changes");
 		button.setVisible(true);
 		button.setFont(new Font(button.getFont().getName(), Font.BOLD, 16));
-		button.setBounds(fPanel.getWidth()/2 + 20, 25, fPanel.getWidth()/2 - 40, labelSpacing + 10);
+		button.setBounds(fPanel.getWidth()/3*2 + 20, 25, fPanel.getWidth()/3 - 40, labelSpacing + 10);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				lFrame.setVisible(false);
@@ -251,9 +276,15 @@ public class LoaderFrame {
 				loaderPref.getPreference(CSVPreLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_ROWS) ||
-				!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS))){
+		if(loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_ROWS) &&
+				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS))){
 			output = output + "Wrong EXPERIMENT_ROWS value: insert a positive integer number.\n";
+		}
+		if(loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS) &&
+				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS))){
+			output = output + "Wrong EXPERIMENT_SPLIT_COLUMN value: insert a positive integer number.\n";
 		}
 		if(!loaderPref.hasPreference(CSVPreLoader.LABEL_COLUMN) ||
 				!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN))){
@@ -299,6 +330,69 @@ public class LoaderFrame {
 	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
 	        	}
 			}
+		});
+		
+		root.add(textField);
+		
+	}
+	
+	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description){
+		
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridBagLayout());
+		panel.setBackground(Color.WHITE);
+		panel.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);
+		
+		JCheckBox cb = new JCheckBox();
+		cb.setSelected(activated);
+		
+		panel.add(cb);
+		
+		JLabel lbl = new JLabel(prefName);
+		lbl.setFont(bigFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		
+		panel.add(lbl);
+		
+		root.add(panel);
+		
+		JTextField textField = new JTextField();
+		textField.setText(textFieldText);
+		textField.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, bigLabelSpacing);
+		textField.setFont(labelFont);
+		textField.setEnabled(activated);
+		textField.setColumns(10);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		textField.getDocument().addDocumentListener(new DocumentListener() {
+			  
+			public void changedUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+			  
+			public void removeUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+			  
+			public void insertUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+
+			public void workOnUpdate() {
+				if (textField.getText() != null && textField.getText().length() > 0){
+	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
+	        	}
+			}
+		});
+		
+		cb.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		        JCheckBox cb = (JCheckBox) event.getSource();
+		        textField.setEnabled(cb.isSelected());		        	
+		    }
 		});
 		
 		root.add(textField);

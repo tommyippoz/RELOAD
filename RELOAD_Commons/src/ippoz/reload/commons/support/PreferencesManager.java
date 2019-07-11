@@ -59,6 +59,10 @@ public class PreferencesManager {
 	public String getPreference(String tag){
 		return preferences.get(tag);
 	}
+	
+	public void refresh() throws IOException{
+		preferences = AppUtility.loadPreferences(file, null);
+	}
 
 	public boolean hasPreference(String loaderPrefFile) {
 		return preferences != null && preferences.containsKey(loaderPrefFile);
@@ -70,6 +74,10 @@ public class PreferencesManager {
 
 	public String getFilename() {
 		return file.getName();
+	}
+	
+	public File getFile() {
+		return file;
 	}
 
 	public void updatePreference(String tag, String newValue, boolean updateFile) {

@@ -1166,6 +1166,8 @@ public class InputManager {
 						"LABEL_COLUMN = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
 						"EXPERIMENT_ROWS = 100\n");	
+				writer.write("\n* Label Defining Experiments.\n" + 
+						"EXPERIMENT_SPLIT_ROWS = 0\n");	
 				
 				writer.close();
 			}

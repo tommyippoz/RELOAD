@@ -53,6 +53,8 @@ public class CSVPreLoader extends CSVLoader {
 
 	/** The Constant EXPERIMENT_ROWS. */
 	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
+
+	public static final String EXPERIMENT_SPLIT_ROWS = "EXPERIMENT_SPLIT_ROWS";
 	
 	/** The list of MonitoredData. */
 	private List<MonitoredData> dataList;
@@ -96,7 +98,15 @@ public class CSVPreLoader extends CSVLoader {
 	 * @param datasetsFolder the datasets folder
 	 */
 	public CSVPreLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
-		this(list, extractFile(prefManager, datasetsFolder, tag), parseColumns(prefManager.getPreference(SKIP_COLUMNS)), Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)), extractFaultyTags(prefManager, tag), extractAvoidTags(prefManager, tag), anomalyWindow);
+		this(list, 
+				extractFile(prefManager, datasetsFolder, tag), 
+				parseColumns(prefManager.getPreference(SKIP_COLUMNS)), 
+				Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), 
+				prefManager.hasPreference(EXPERIMENT_ROWS) && Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)) > 0  
+					? Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(EXPERIMENT_SPLIT_ROWS)), 
+				extractFaultyTags(prefManager, tag), 
+				extractAvoidTags(prefManager, tag), 
+				anomalyWindow);
 	}
 		/**
 	 * Extracts faulty tags from preferences.
