@@ -170,4 +170,26 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		return expIDs.get(0) + " - " + expIDs.get(expIDs.size() - 1);
 	}
 
+	@Override
+	public LoaderType getLoaderType() {
+		return LoaderType.MYSQL;
+	}
+
+	@Override
+	public String getLoaderName() {
+		return "MYSQL";
+	}
+
+	@Override
+	public String[] getFeatureNames() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object[] getSampleValuesFor(String featureName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

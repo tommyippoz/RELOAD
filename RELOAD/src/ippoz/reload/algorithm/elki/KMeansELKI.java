@@ -6,7 +6,7 @@ package ippoz.reload.algorithm.elki;
 import ippoz.reload.algorithm.elki.support.CustomKMeans;
 import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.result.ClusteringResult;
+import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -69,7 +69,7 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-			ar = new ClusteringResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
+			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

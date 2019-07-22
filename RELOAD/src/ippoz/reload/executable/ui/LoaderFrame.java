@@ -5,8 +5,9 @@ package ippoz.reload.executable.ui;
 
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.loader.CSVPreLoader;
+import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
+import ippoz.reload.loader.LoaderType;
 import ippoz.reload.manager.InputManager;
 
 import java.awt.Color;
@@ -14,7 +15,6 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -109,12 +110,11 @@ public class LoaderFrame {
 		generalPanel.setLayout(null);
 		
 		showPreference2Labels(generalPanel, bigLabelSpacing, "Loader Path", 
-				loaderPref.getFilename(), 
-				"");
+				loaderPref.getFilename(), "");
 		
-		showPreferenceLabels(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
-				loaderPref.getPreference(Loader.LOADER_TYPE), 
-				"Specify loader type, either CSVALL or MYSQL");
+		showPreferenceCB(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
+				loaderPref.getPreference(Loader.LOADER_TYPE), LoaderType.values(), 
+				"Specify loader type, either CSV, MYSQL or ARFF");
 		
 		showPreferenceLabels(generalPanel, 3*bigLabelSpacing, Loader.CONSIDERED_LAYERS, 
 				loaderPref.getPreference(Loader.CONSIDERED_LAYERS), 
@@ -130,36 +130,36 @@ public class LoaderFrame {
 		runsPanel.setBorder(tb);
 		runsPanel.setLayout(null);
 		
-		showPreferenceButton(runsPanel, 1*bigLabelSpacing, CSVPreLoader.TRAIN_CSV_FILE, 
-				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE), 
+		showPreferenceButton(runsPanel, 1*bigLabelSpacing, CSVCompleteLoader.TRAIN_CSV_FILE, 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
 		showPreferenceLabels(runsPanel, 2*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
 				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVPreLoader.TRAIN_FAULTY_TAGS, 
-				loaderPref.hasPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
+		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVCompleteLoader.TRAIN_FAULTY_TAGS, 
+				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training");
 		
-		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVPreLoader.TRAIN_SKIP_ROWS, 
-				loaderPref.hasPreference(CSVPreLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVPreLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVCompleteLoader.TRAIN_SKIP_ROWS, 
+				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
 		
-		showPreferenceButton(runsPanel, 5*bigLabelSpacing, CSVPreLoader.VALIDATION_CSV_FILE, 
-				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE), 
+		showPreferenceButton(runsPanel, 5*bigLabelSpacing, CSVCompleteLoader.VALIDATION_CSV_FILE, 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
 		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 7*bigLabelSpacing, CSVPreLoader.VALIDATION_FAULTY_TAGS, 
-				loaderPref.hasPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVPreLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
+		showPreferenceLabels(runsPanel, 7*bigLabelSpacing, CSVCompleteLoader.VALIDATION_FAULTY_TAGS, 
+				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation");
 		
-		showPreferenceLabels(runsPanel, 8*bigLabelSpacing, CSVPreLoader.VALIDATION_SKIP_ROWS, 
-				loaderPref.hasPreference(CSVPreLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVPreLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+		showPreferenceLabels(runsPanel, 8*bigLabelSpacing, CSVCompleteLoader.VALIDATION_SKIP_ROWS, 
+				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
 		
 		containerPanel.add(runsPanel);
@@ -172,20 +172,20 @@ public class LoaderFrame {
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(null);
 		
-		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVPreLoader.EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_ROWS), 
+		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
 				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
 		
-		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVPreLoader.EXPERIMENT_SPLIT_ROWS, 
-				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS), 
+		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS), 
 				"Specify the index (starting from 0) of the column that changes when experiments change");
 		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVPreLoader.LABEL_COLUMN, 
-				loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN), 
+		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVCompleteLoader.LABEL_COLUMN, 
+				loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.");
 		
-		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVPreLoader.SKIP_COLUMNS, 
-				loaderPref.getPreference(CSVPreLoader.SKIP_COLUMNS), 
+		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVCompleteLoader.SKIP_COLUMNS, 
+				loaderPref.getPreference(CSVCompleteLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.");
 		
 		containerPanel.add(dataPanel);
@@ -256,41 +256,75 @@ public class LoaderFrame {
 				!loaderPref.getPreference(Loader.CONSIDERED_LAYERS).equals("NO_LAYER")){
 			output = output + "Wrong CONSIDERED_LAYERS value: consider trying with 'NO_LAYER'.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.TRAIN_CSV_FILE) || 
-				loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_CSV_FILE) || 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE).trim().length() == 0){
 			output = output + "Wrong TRAIN_CSV_FILE value: remember to specify file for training.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE)).exists()){
-			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE)) +  ") does not exist.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE)).exists()){
+			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.VALIDATION_CSV_FILE) || 
-				loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_CSV_FILE) || 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_CSV_FILE value: remember to specify file for validation.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE)).exists()){
-			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVPreLoader.VALIDATION_CSV_FILE)) +  ") does not exist.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE)).exists()){
+			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE) || 
-				loaderPref.getPreference(CSVPreLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE) || 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong TRAIN_RUN_PREFERENCE value: remember to specify runs for training.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.VALIDATION_RUN_PREFERENCE) || 
-				loaderPref.getPreference(CSVPreLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE) || 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		}
-		if(loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_ROWS) &&
-				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.EXPERIMENT_ROWS))){
+		if(loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS) &&
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS))){
 			output = output + "Wrong EXPERIMENT_ROWS value: insert a positive integer number.\n";
 		}
-		if(loaderPref.hasPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS) &&
-				loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.EXPERIMENT_SPLIT_ROWS))){
+		if(loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS) &&
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS))){
 			output = output + "Wrong EXPERIMENT_SPLIT_COLUMN value: insert a positive integer number.\n";
 		}
-		if(!loaderPref.hasPreference(CSVPreLoader.LABEL_COLUMN) ||
-				!AppUtility.isInteger(loaderPref.getPreference(CSVPreLoader.LABEL_COLUMN))){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.LABEL_COLUMN) ||
+				!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN))){
 			output = output + "Wrong LABEL_COLUMN value: insert a positive integer number.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
+	}
+	
+	private void showPreferenceCB(JPanel root, int panelY, String prefName, String textFieldText, Object[] itemList, String description){
+		
+		JLabel lbl = new JLabel(prefName);
+		lbl.setBounds(10, panelY, (root.getWidth()-20)/2, labelSpacing);
+		lbl.setFont(bigFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		
+		root.add(lbl);
+		
+		JComboBox<Object> comboBox = new JComboBox<Object>();
+		comboBox.setFont(labelFont);
+		comboBox.setBounds(root.getWidth()/2, panelY, (root.getWidth()-20)/2, bigLabelSpacing);
+		
+		if(itemList != null){
+			for(Object ob : itemList){
+				comboBox.addItem(ob);
+			}
+			comboBox.addActionListener (new ActionListener () {
+			    public void actionPerformed(ActionEvent e) {
+			        String newValue = comboBox.getSelectedItem().toString();
+			        loaderPref.updatePreference(Loader.LOADER_TYPE, newValue, false);	
+			    }
+			});
+		}
+		
+		if(textFieldText != null)
+			comboBox.setSelectedItem(textFieldText);
+		
+		root.add(comboBox);
+		
 	}
 
 	private void showPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, String description){

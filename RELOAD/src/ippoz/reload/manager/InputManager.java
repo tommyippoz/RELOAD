@@ -16,7 +16,8 @@ import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.featureselection.VarianceFeatureSelector;
-import ippoz.reload.loader.CSVPreLoader;
+import ippoz.reload.loader.ARFFLoader;
+import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.AUC_Metric;
@@ -580,7 +581,8 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read configurations");
 		} finally {
 			try {
-				reader.close();
+				if(reader != null)
+					reader.close();
 			} catch (IOException ex) {
 				AppLogger.logException(getClass(), ex, "Unable to read configurations");
 			}
@@ -744,7 +746,7 @@ public class InputManager {
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default preferences file for 'MADneSs'. Comments with '*'.\n");
 				writer.write("\n\n* Data Source - Loaders.\n");
-				writer.write("\n* Loader type (MYSQL, CSVALL).\n" + 
+				writer.write("\n* Loader type (MYSQL, CSV, ARFF).\n" + 
 						"LOADER_FOLDER = loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
 						"LOADERS = iscx\n");
@@ -1078,10 +1080,12 @@ public class InputManager {
 	
 	public Loader buildSingleLoader(PreferencesManager lPref, List<Integer> list, String loaderTag, int anomalyWindow){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
-		if(loaderType != null && loaderType.equalsIgnoreCase("MYSQL"))
+		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
 			return new MySQLLoader(list, lPref, loaderTag, getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.equalsIgnoreCase("CSVALL"))
-			return new CSVPreLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+			return new CSVCompleteLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
+			return new ARFFLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;

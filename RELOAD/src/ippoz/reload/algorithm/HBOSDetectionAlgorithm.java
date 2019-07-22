@@ -257,12 +257,8 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		AlgorithmResult ar;
 		if(histograms != null){
 			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateHBOS(sysSnapshot));
-			if(ar.getScore() > 10000){
-				System.out.print(ar.getScore());
-			}
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
-		
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 	

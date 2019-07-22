@@ -121,7 +121,7 @@ public class DetectionManager {
 		Loader newLoader;
 		List<Integer> runs;
 		int nRuns;
-		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : (loaderTag.equals("filter") ? Loader.FILTERING_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE));
+		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE);
 		if(runsString != null && runsString.length() > 0){
 			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
 				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));

@@ -14,7 +14,7 @@ CONSIDERED_LAYERS = NO_LAYER
 TRAIN_CSV_FILE = ErrorDetection\MYSQL_Secure_Filtered.csv
 
 * Train Runs.
-TRAIN_RUN_IDS = 1 - 100
+TRAIN_RUN_IDS = 1 - 10
 
 * Train Faulty Tags.
 TRAIN_FAULTY_TAGS = MEMORY, NETWORK

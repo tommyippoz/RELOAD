@@ -12,7 +12,7 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.executable.DetectorMain;
-import ippoz.reload.loader.CSVPreLoader;
+import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.DetectionManager;
@@ -567,7 +567,7 @@ public class BuildUI {
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
 				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
 			else {
-				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + lPref.getPreference(CSVPreLoader.TRAIN_CSV_FILE) + ")";
+				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + lPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE) + ")";
 			}
 		}
 		return dsStrings;

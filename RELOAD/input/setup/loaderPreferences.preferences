@@ -7,7 +7,7 @@
 
 * kddcup/kddcup_dos.loader
 
-* kddcup/kddcup_probe.loader
+kddcup/kddcup_probe.loader
 
 * kddcup/kddcup_probe_test.loader
 
@@ -81,4 +81,4 @@
 * nslkdd\nslkdd_r2l_u2r.loader
 * iscx\iscx_infiltrator_bruteforce.loader
 * iscx\iscx_dos_bruteforce.loader
-secure.loader
+* secure.loader
