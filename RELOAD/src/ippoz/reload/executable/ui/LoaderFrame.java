@@ -67,11 +67,11 @@ public class LoaderFrame {
 		
 		double rate = 18*Toolkit.getDefaultToolkit().getScreenSize().getHeight()/1080;
 		
-		bigFont = new Font("Times", Font.PLAIN, (int)((18 + rate)/2));
-		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
+		bigFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
+		labelFont = new Font("Times", Font.PLAIN, (int)((14 + rate)/2));
 		
-		labelSpacing = (int)(lFrame.getHeight()/25);
-		bigLabelSpacing = (int)(lFrame.getHeight()/18);
+		labelSpacing = (int)(lFrame.getHeight()/26);
+		bigLabelSpacing = (int)(lFrame.getHeight()/20);
 		
 		loaderPanel = buildMainPanel();
 	}
@@ -122,69 +122,87 @@ public class LoaderFrame {
 		
 		containerPanel.add(generalPanel);
 		
-		JPanel runsPanel = new JPanel();
-		runsPanel.setBackground(Color.WHITE);
-		runsPanel.setBounds(5, generalPanel.getHeight() + 10, containerPanel.getWidth()-10, 9*bigLabelSpacing + 10);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Runs Setup ", 
+		JPanel trainPanel = new JPanel();
+		trainPanel.setBackground(Color.WHITE);
+		trainPanel.setBounds(5, generalPanel.getHeight() + 10, containerPanel.getWidth()-10, 7*bigLabelSpacing + 10);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Train Setup ", 
 				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
-		runsPanel.setBorder(tb);
-		runsPanel.setLayout(null);
+		trainPanel.setBorder(tb);
+		trainPanel.setLayout(null);
 		
-		showPreferenceButton(runsPanel, 1*bigLabelSpacing, CSVCompleteLoader.TRAIN_CSV_FILE, 
+		showPreferenceButton(trainPanel, 1*bigLabelSpacing, CSVCompleteLoader.TRAIN_CSV_FILE, 
 				loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 2*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
+		showPreferenceLabels(trainPanel, 2*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
 				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 3*bigLabelSpacing, CSVCompleteLoader.TRAIN_FAULTY_TAGS, 
+		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, CSVCompleteLoader.TRAIN_FAULTY_TAGS, 
 				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training");
 		
-		showPreferenceLabels(runsPanel, 4*bigLabelSpacing, CSVCompleteLoader.TRAIN_SKIP_ROWS, 
+		showPreferenceLabels(trainPanel, 4*bigLabelSpacing, CSVCompleteLoader.TRAIN_SKIP_ROWS, 
 				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
 		
-		showPreferenceButton(runsPanel, 5*bigLabelSpacing, CSVCompleteLoader.VALIDATION_CSV_FILE, 
+		showCheckPreferenceLabels(trainPanel, 5*bigLabelSpacing, CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS), 
+				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
+		
+		showCheckPreferenceLabels(trainPanel, 6*bigLabelSpacing, CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), 
+				"Specify the index (starting from 0) of the column that changes when experiments change");
+		
+		containerPanel.add(trainPanel);
+		
+		JPanel validationPanel = new JPanel();
+		validationPanel.setBackground(Color.WHITE);
+		validationPanel.setBounds(5, generalPanel.getHeight() + 10 + trainPanel.getHeight(), containerPanel.getWidth()-10, 7*bigLabelSpacing + 10);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Validation Setup ", 
+				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+		validationPanel.setBorder(tb);
+		validationPanel.setLayout(null);
+		
+		showPreferenceButton(validationPanel, bigLabelSpacing, CSVCompleteLoader.VALIDATION_CSV_FILE, 
 				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'");
 		
-		showPreferenceLabels(runsPanel, 6*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
+		showPreferenceLabels(validationPanel, 2*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
 		
-		showPreferenceLabels(runsPanel, 7*bigLabelSpacing, CSVCompleteLoader.VALIDATION_FAULTY_TAGS, 
+		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, CSVCompleteLoader.VALIDATION_FAULTY_TAGS, 
 				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation");
 		
-		showPreferenceLabels(runsPanel, 8*bigLabelSpacing, CSVCompleteLoader.VALIDATION_SKIP_ROWS, 
+		showPreferenceLabels(validationPanel, 4*bigLabelSpacing, CSVCompleteLoader.VALIDATION_SKIP_ROWS, 
 				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
 		
-		containerPanel.add(runsPanel);
+		showCheckPreferenceLabels(validationPanel, 5*bigLabelSpacing, CSVCompleteLoader.VALIDATION_EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_EXPERIMENT_ROWS), 
+				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
+		
+		showCheckPreferenceLabels(validationPanel, 6*bigLabelSpacing, CSVCompleteLoader.VALIDATION_EXPERIMENT_SPLIT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_EXPERIMENT_SPLIT_ROWS), 
+				"Specify the index (starting from 0) of the column that changes when experiments change");
+		
+		containerPanel.add(validationPanel);
 		
 		JPanel dataPanel = new JPanel();
 		dataPanel.setBackground(Color.WHITE);
-		dataPanel.setBounds(5, generalPanel.getHeight() + runsPanel.getHeight() + 20, containerPanel.getWidth()-10, 5*bigLabelSpacing + 10);
+		dataPanel.setBounds(5, generalPanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + 20, containerPanel.getWidth()-10, 3*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Data Setup ", 
 				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(null);
 		
-		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
-				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.");
-		
-		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS), 
-				"Specify the index (starting from 0) of the column that changes when experiments change");
-		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVCompleteLoader.LABEL_COLUMN, 
+		showPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.LABEL_COLUMN, 
 				loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.");
 		
-		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVCompleteLoader.SKIP_COLUMNS, 
+		showPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVCompleteLoader.SKIP_COLUMNS, 
 				loaderPref.getPreference(CSVCompleteLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.");
 		
@@ -194,7 +212,7 @@ public class LoaderFrame {
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
-		fPanel.setBounds(10, generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()-20, labelSpacing + 40);
+		fPanel.setBounds(10, generalPanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + 20, containerPanel.getWidth()-20, labelSpacing + 40);
 		fPanel.setLayout(null);
 		
 		JButton button = new JButton("Save Changes");
@@ -240,8 +258,8 @@ public class LoaderFrame {
 		
 		containerPanel.add(fPanel);
 		
-		if(lFrame.getHeight() < generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70)
-			lFrame.setBounds(lFrame.getX(), lFrame.getY(), lFrame.getWidth(), generalPanel.getHeight() + runsPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70);
+		if(lFrame.getHeight() < generalPanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70)
+			lFrame.setBounds(lFrame.getX(), lFrame.getY(), lFrame.getWidth(), generalPanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70);
         
 		return containerPanel;
 	}
@@ -276,14 +294,14 @@ public class LoaderFrame {
 				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		}
-		if(loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS) &&
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS))){
+		if(loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS) &&
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS))){
 			output = output + "Wrong EXPERIMENT_ROWS value: insert a positive integer number.\n";
 		}
-		if(loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS) &&
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_SPLIT_ROWS))){
+		if(loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS) &&
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS).length() > 0 && 
+					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS))){
 			output = output + "Wrong EXPERIMENT_SPLIT_COLUMN value: insert a positive integer number.\n";
 		}
 		if(!loaderPref.hasPreference(CSVCompleteLoader.LABEL_COLUMN) ||

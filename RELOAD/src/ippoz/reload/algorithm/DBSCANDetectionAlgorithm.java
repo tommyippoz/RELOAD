@@ -369,7 +369,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	 * @return the default temporary folder
 	 */
 	private String getDefaultTmpFolder(){
-		return "DBSCAN_tmp_RELOAD";
+		return File.separatorChar + "tmp" + File.separatorChar + "dbscan_tmp_RELOAD";
 	}
 	
 	private class ClusterableSnapshot implements Clusterable {

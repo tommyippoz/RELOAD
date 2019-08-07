@@ -4,11 +4,14 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.decisionfunction.AnomalyResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,10 +49,9 @@ public abstract class Metric implements Comparable<Metric> {
 		Knowledge knowledge = know.cloneKnowledge();
 		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
-			snapValue = DetectionAlgorithm.convertResultIntoDouble(alg
-					.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
-			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i),
-					snapValue));
+			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
+			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
+			anomalyEvaluations.add(new TimedResult(knowledge.getTimestamp(i), snapValue, ar.getScore(), knowledge.getInjection(i)));
 			if (snapValue >= 0.0) {
 				average = average + anomalyEvaluations.get(i).getValue();
 				std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
@@ -102,13 +104,10 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly threshold
 	 * @return the global anomaly evaluation
 	 */
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> voting, double anomalyTreshold) {
-		List<TimedValue> votingWithTreshold = new ArrayList<TimedValue>(
-				voting.size());
-		for (TimedValue vResult : voting) {
-			votingWithTreshold.add(new TimedValue(vResult.getDate(), vResult
-					.getValue() / anomalyTreshold * 1.0));
+	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedResult> voting, double anomalyTreshold) {
+		List<TimedValue> votingWithTreshold = new ArrayList<TimedValue>(voting.size());
+		for (TimedResult vResult : voting) {
+			votingWithTreshold.add(new TimedResult(vResult.getDate(), vResult.getValue() / anomalyTreshold * 1.0, vResult.getAlgorithmScore(), vResult.getInjectedElement()));
 		}
 		return evaluateAnomalyResults(knowledge, votingWithTreshold);
 	}

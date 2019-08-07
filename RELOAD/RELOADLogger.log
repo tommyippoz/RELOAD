@@ -1,0 +1,570 @@
+Aug 07, 2019 1:22:15 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176935122][Info][ippoz.reload.executable.ui.BuildUI] Screen dimension is java.awt.Dimension[width=1920,height=1080]
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937067][Info][ippoz.reload.executable.DetectorMain] 2 RELOAD instances found.
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937070][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/2]: 'kddcup_probe 220-253 [HBOS]'
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937071][Info][ippoz.reload.executable.DetectorMain] Starting Optimization Process
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937088][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\KDDCup99\KDDCup99_Probe.csv
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937548][Info][ippoz.reload.loader.CSVCompleteLoader] Read 62970 rows.
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937594][Info][ippoz.reload.manager.DetectionManager] 27 runs loaded (K-Fold:5)
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937608][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_7' has 7.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937609][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_8' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937610][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_9' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937611][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_10' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937611][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_11' has 8.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937612][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_12' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937612][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_32' has 6.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937613][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_33' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937613][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_34' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937614][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_35' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937615][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_36' has 21.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937615][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_37' has 11.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937616][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_205' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937616][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_206' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937617][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_207' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937617][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_208' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937617][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_209' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937618][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_210' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937619][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_211' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937619][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_212' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937620][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_213' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937621][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_214' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937622][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_215' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937622][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_216' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937623][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_217' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937623][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_218' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937624][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_219' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937624][Info][ippoz.reload.manager.EvaluatorManager] Instances Loaded with 7.814814814814815% of Faults/Attacks
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937681][Info][ippoz.reload.manager.EvaluatorManager] Evaluating 27 experiments with [BEST 1 | 1]
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937927][Info][ippoz.reload.manager.EvaluatorManager] Detection executed in 245 ms
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937949][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_7' has 7.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937949][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_8' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937950][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_9' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937950][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_10' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937951][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_11' has 8.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937951][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_12' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937952][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_32' has 6.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937952][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_33' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937952][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_34' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937953][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_35' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937953][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_36' has 21.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937954][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_37' has 11.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937954][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_205' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937955][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_206' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937955][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_207' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937955][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_208' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937956][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_209' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937956][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_210' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937957][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_211' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937957][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_212' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937957][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_213' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937958][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_214' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937958][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_215' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937959][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_216' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937959][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_217' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937959][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_218' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937960][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_219' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937966][Info][ippoz.reload.output.DetectorOutput] Best score obtained is '0.22037037037037027'
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937967][Info][ippoz.reload.manager.DetectionManager] Final Optimized score is 0.22, runs ([7-219])
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937968][Info][ippoz.reload.executable.DetectorMain] Starting Evaluation Process
+Aug 07, 2019 1:22:17 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176937976][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\KDDCup99\KDDCup99_Probe.csv
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938819][Info][ippoz.reload.loader.CSVCompleteLoader] Read 62970 rows.
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938820][Info][ippoz.reload.manager.DetectionManager] 34 runs loaded (K-Fold:5)
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938821][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_220' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938822][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_221' has 5.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938822][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_222' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938825][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_223' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938825][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_224' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938826][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_225' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938826][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_226' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938826][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_227' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938826][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_228' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938827][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_229' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938827][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_230' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938827][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_231' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938828][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_232' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938828][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_233' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938828][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_234' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938829][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_235' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938829][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_236' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938829][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_237' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938830][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_238' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938830][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_239' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938830][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_240' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938831][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_241' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938831][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_242' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938831][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_243' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938832][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_244' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938832][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_245' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938832][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_246' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938832][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_247' has 36.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938833][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_248' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938833][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_249' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938833][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_250' has 16.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938834][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_251' has 9.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938834][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_252' has 43.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938834][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_253' has 25.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938835][Info][ippoz.reload.manager.EvaluatorManager] Instances Loaded with 6.617647058823529% of Faults/Attacks
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938838][Info][ippoz.reload.manager.EvaluatorManager] Evaluating 34 experiments with [BEST 1 | 1]
+Aug 07, 2019 1:22:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176938987][Info][ippoz.reload.manager.EvaluatorManager] Detection executed in 149 ms
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939025][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_220' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939026][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_221' has 5.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939026][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_222' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939026][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_223' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939026][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_224' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939026][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_225' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939027][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_226' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939027][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_227' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939027][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_228' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939027][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_229' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939027][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_230' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939028][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_231' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939028][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_232' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939028][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_233' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939028][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_234' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939029][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_235' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939029][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_236' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939029][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_237' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939029][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_238' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939030][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_239' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939030][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_240' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939031][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_241' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939031][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_242' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939031][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_243' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939033][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_244' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939033][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_245' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939033][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_246' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939034][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_247' has 36.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939034][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_248' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939034][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_249' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939035][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_250' has 16.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939035][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_251' has 9.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939036][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_252' has 43.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939037][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_253' has 25.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939226][Info][ippoz.reload.manager.DetectionManager] Final Evaluated score is 0.21, runs ([220-253])
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939227][Info][ippoz.reload.executable.DetectorMain] Done.
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939228][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [2/2]: 'kddcup_probe 220-253 [DBSCAN]'
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939228][Info][ippoz.reload.executable.DetectorMain] Starting Optimization Process
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939232][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\KDDCup99\KDDCup99_Probe.csv
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939450][Info][ippoz.reload.loader.CSVCompleteLoader] Read 62970 rows.
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939462][Info][ippoz.reload.manager.DetectionManager] 27 runs loaded (K-Fold:5)
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939469][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_7' has 7.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939470][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_8' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939470][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_9' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939471][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_10' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939471][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_11' has 8.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939471][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_12' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939472][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_32' has 6.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939472][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_33' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939473][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_34' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939473][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_35' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939473][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_36' has 21.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939474][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_37' has 11.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939474][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_205' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939474][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_206' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939475][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_207' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939475][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_208' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939475][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_209' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939477][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_210' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939477][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_211' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939478][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_212' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939478][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_213' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939479][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_214' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939479][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_215' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939479][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_216' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939480][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_217' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939480][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_218' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939480][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_219' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939481][Info][ippoz.reload.manager.EvaluatorManager] Instances Loaded with 7.814814814814815% of Faults/Attacks
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939488][Info][ippoz.reload.manager.EvaluatorManager] Evaluating 27 experiments with [BEST 1 | 1]
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939707][Info][ippoz.reload.manager.EvaluatorManager] Detection executed in 219 ms
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939719][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_7' has 7.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939719][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_8' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939719][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_9' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939719][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_10' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939719][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_11' has 8.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939720][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_12' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939720][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_32' has 6.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939720][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_33' has 22.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939721][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_34' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939721][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_35' has 23.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939721][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_36' has 21.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939721][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_37' has 11.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939721][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_205' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939722][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_206' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939722][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_207' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939722][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_208' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939722][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_209' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939722][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_210' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_211' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_212' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_213' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_214' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_215' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_216' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939723][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_217' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939724][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_218' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939724][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_219' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939729][Info][ippoz.reload.output.DetectorOutput] Best score obtained is '0.0788888888888889'
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939730][Info][ippoz.reload.manager.DetectionManager] Final Optimized score is 0.08, runs ([7-219])
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939730][Info][ippoz.reload.executable.DetectorMain] Starting Evaluation Process
+Aug 07, 2019 1:22:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176939734][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\KDDCup99\KDDCup99_Probe.csv
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941010][Info][ippoz.reload.loader.CSVCompleteLoader] Read 62970 rows.
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941011][Info][ippoz.reload.manager.DetectionManager] 34 runs loaded (K-Fold:5)
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941011][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_220' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_221' has 5.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_222' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_223' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_224' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_225' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941012][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_226' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_227' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_228' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_229' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_230' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_231' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_232' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941013][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_233' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_234' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_235' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_236' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_237' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_238' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_239' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941014][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_240' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_241' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_242' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_243' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_244' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_245' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_246' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_247' has 36.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941015][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_248' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941016][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_249' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941016][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_250' has 16.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941016][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_251' has 9.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941016][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_252' has 43.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941017][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_253' has 25.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941017][Info][ippoz.reload.manager.EvaluatorManager] Instances Loaded with 6.617647058823529% of Faults/Attacks
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941019][Info][ippoz.reload.manager.EvaluatorManager] Evaluating 34 experiments with [BEST 1 | 1]
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941142][Info][ippoz.reload.manager.EvaluatorManager] Detection executed in 123 ms
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941155][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_220' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941155][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_221' has 5.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941155][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_222' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941156][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_223' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941157][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_224' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941157][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_225' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941157][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_226' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941157][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_227' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941157][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_228' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_229' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_230' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_231' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_232' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_233' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941158][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_234' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_235' has 0.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_236' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_237' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_238' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_239' has 2.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_240' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941159][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_241' has 1.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_242' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_243' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_244' has 3.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_245' has 10.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_246' has 19.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_247' has 36.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941160][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_248' has 14.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941161][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_249' has 4.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941161][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_250' has 16.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941161][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_251' has 9.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941161][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_252' has 43.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941161][Info][ippoz.reload.manager.EvaluatorManager] 'expRun_253' has 25.0% of Faults/Attack Ratio
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941217][Info][ippoz.reload.manager.DetectionManager] Final Evaluated score is 0.09, runs ([220-253])
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941217][Info][ippoz.reload.executable.DetectorMain] Done.
+Aug 07, 2019 1:22:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1565176941225][Info][ippoz.reload.executable.ui.BuildUI$5] RELOAD Execution time: 4155 ms

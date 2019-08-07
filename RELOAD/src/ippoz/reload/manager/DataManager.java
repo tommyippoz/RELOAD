@@ -6,8 +6,8 @@ package ippoz.reload.manager;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ThreadScheduler;
-import ippoz.utils.logging.AppLogger;
 
 import java.util.List;
 import java.util.Map;

@@ -16,7 +16,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
-import ippoz.utils.logging.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.util.ArrayList;
 import java.util.Date;

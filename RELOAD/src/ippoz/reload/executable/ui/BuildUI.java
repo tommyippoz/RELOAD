@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -316,10 +317,20 @@ public class BuildUI {
 					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(dmList.size());
 					DetectorOutput[] newOut;
-					long startTime = System.currentTimeMillis();
+					long partialTime, startTime = System.currentTimeMillis();
 					for(int i=0;i<dmList.size();i++){
 						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
+						partialTime = System.currentTimeMillis();
 						newOut = DetectorMain.runMADneSs(dmList.get(i));
+						final String loggedErrors = AppLogger.getErrorsSince(partialTime);
+						if(loggedErrors != null){
+							Thread t = new Thread(new Runnable(){
+						        public void run(){
+						        	JOptionPane.showMessageDialog(frame, loggedErrors, "Errors while running RELOAD", JOptionPane.ERROR_MESSAGE);
+						        }
+						    });
+							t.start();
+						}	
 						if(newOut != null)
 							outList.add(newOut);
 						pBar.moveNext();
@@ -597,14 +608,14 @@ public class BuildUI {
 		pathPanel.setBorder(tb);
 		pathPanel.setLayout(null);
 		
-		addToPanel(pathPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, pathPanel, bigLabelSpacing, DetectorMain.DEFAULT_PREF_FILE), setupMap);
-		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getInputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getOutputFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getConfigurationFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_DATASETS_FOLDER, createFCHPanel(PATH_LABEL_DATASETS_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getDatasetsFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 6*bigLabelSpacing, iManager.getSetupFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 7*bigLabelSpacing, iManager.getScoresFolder(), true), pathMap);
-		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 8*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false), pathMap);
+		addToPanel(pathPanel, SETUP_LABEL_PREFFILE, createLPanel(SETUP_LABEL_PREFFILE, pathPanel, bigLabelSpacing, DetectorMain.DEFAULT_PREF_FILE, "Name of the main file for RELOAD preferences. Relative path from the JAR location."), setupMap);
+		addToPanel(pathPanel, PATH_LABEL_INPUT_FOLDER, createFCHPanel(PATH_LABEL_INPUT_FOLDER, pathPanel, 2*bigLabelSpacing, iManager.getInputFolder(), true, "Name of the 'input folder' for RELOAD preferences. Relative path from the JAR location."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_OUTPUT_FOLDER, createFCHPanel(PATH_LABEL_OUTPUT_FOLDER, pathPanel, 3*bigLabelSpacing, iManager.getOutputFolder(), true, "Name of the 'output folder' for RELOAD preferences, where output files will be placed. Relative path from the JAR location."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_CONF_FOLDER, createFCHPanel(PATH_LABEL_CONF_FOLDER, pathPanel, 4*bigLabelSpacing, iManager.getConfigurationFolder(), true, "Name of the 'configuration folder' for RELOAD preferences. Relative path from the JAR location."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DATASETS_FOLDER, createFCHPanel(PATH_LABEL_DATASETS_FOLDER, pathPanel, 5*bigLabelSpacing, iManager.getDatasetsFolder(), true, "Name of the folder containing datasets. Relative path from 'input folder'."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SETUP_FOLDER, createFCHPanel(PATH_LABEL_SETUP_FOLDER, pathPanel, 6*bigLabelSpacing, iManager.getSetupFolder(), true, "Name of the ''setup folder' for RELOAD preferences. Relative path from the JAR location."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_SCORES_FOLDER, createFCHPanel(PATH_LABEL_SCORES_FOLDER, pathPanel, 7*bigLabelSpacing, iManager.getScoresFolder(), true, "Name of the folder containing partial scores. Relative path from the JAR location."), pathMap);
+		addToPanel(pathPanel, PATH_LABEL_DETECTION_PREFERENCES, createFCHPanel(PATH_LABEL_DETECTION_PREFERENCES, pathPanel, 8*bigLabelSpacing, iManager.getDetectionPreferencesFile(), false, "Name of the file for scoring preferences, to aggregate different checkers. Relative path from 'input folder'."), pathMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -638,8 +649,8 @@ public class BuildUI {
 		setupPanel.setBorder(tb);
 		setupPanel.setLayout(null);
 		
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 2*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 2*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "<html><p>Format of output: <br> 'null' is the more compact option, <br> 'TEXT' prints all the intermediate scores through CSV files, while <br> 'IMAGE' prints plots for each run in the evaluation set. <br> Default (and suggested) is 'null'</p></html>"), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -662,21 +673,21 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		setupPanel.add(seePrefPanel);
 		
-		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION);
+		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
 		comp.setVisible(iManager.getFilteringFlag());
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel, comp}, InputManager.FILTERING_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel, comp}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed."), setupMap);
 		addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager);
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>");
 		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed."), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager);
+		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>");
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager);
+		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the size of the sliding window.</p></html>");
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
@@ -700,17 +711,17 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		setupPanel.add(seePrefPanel);
 		
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG, "Specifies if Optimization is needed."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed."), setupMap);
 		
 		return setupPanel;
 	}
 	
-	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText);
+	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText, String tooltipText){
+		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, tooltipText);
 	}
 	
-	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText){
+	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), 30);
@@ -722,6 +733,8 @@ public class BuildUI {
 			lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
 		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(tooltipText != null)
+			lbl.setToolTipText(tooltipText);
 		panel.add(lbl);
 		
 		JLabel lbldata = new JLabel(textFieldText);
@@ -733,7 +746,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager){
+	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
@@ -742,6 +755,8 @@ public class BuildUI {
 		lbl.setFont(labelFont);
 		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(tooltipText != null)
+			lbl.setToolTipText(tooltipText);
 		panel.add(lbl);
 		
 		JTextField textField = new JTextField();
@@ -776,7 +791,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createFCHPanel(String textName, JPanel root, int panelY, String textFieldText, boolean folderFlag){
+	private JPanel createFCHPanel(String textName, JPanel root, int panelY, String textFieldText, boolean folderFlag, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), bigLabelSpacing);
 		panel.setLayout(null);
@@ -785,6 +800,8 @@ public class BuildUI {
 		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(tooltipText != null)
+			lbl.setToolTipText(tooltipText);
 		panel.add(lbl);
 		
 		JButton button = new JButton(textFieldText);
@@ -811,11 +828,11 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag){
-		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag);
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag, String tooltipText){
+		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag, tooltipText);
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag){
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
@@ -825,6 +842,8 @@ public class BuildUI {
 		cb.setFont(bigFont);
 		cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
+		if(tooltipText != null)
+			cb.setToolTipText(tooltipText);
 		
 		if(comp != null ){
 			cb.addActionListener(new ActionListener() {
@@ -851,7 +870,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected, String fileTag){
+	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected, String fileTag, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(null);
@@ -860,6 +879,8 @@ public class BuildUI {
 		lbl.setFont(labelFont);
 		lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(tooltipText != null)
+			lbl.setToolTipText(tooltipText);
 		panel.add(lbl);
 		
 		JComboBox<Object> comboBox = new JComboBox<Object>();

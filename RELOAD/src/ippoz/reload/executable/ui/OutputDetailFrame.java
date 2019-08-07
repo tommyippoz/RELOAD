@@ -9,6 +9,7 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
+import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.output.LabelledResult;
 
@@ -52,6 +53,7 @@ import javax.swing.event.DocumentListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -313,7 +315,7 @@ public class OutputDetailFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
             	String s = (String)JOptionPane.showInputDialog(
-	                    detFrame, "Set left threshold for algorithm scores to be shown (" + minRefValue + "<threshold<=" + dfMax.format(maxValue) + ") ", "Scores Threshold",
+	                    detFrame, "Set left threshold for algorithm scores to be shown (" + minRefValue + "<threshold<=" + dfMax.format(maxValue) + "). \n Leave blank if you want to default to the minimum.", "Scores Threshold",
 	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 				if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 					double newThreshold = Double.valueOf(s.trim());
@@ -323,7 +325,11 @@ public class OutputDetailFrame {
 					} else JOptionPane.showMessageDialog(
 	        				detFrame, "Value is not in the [" + minRefValue + ", " + dfMax.format(maxValue) + "] range", "Input Error",
 		                    JOptionPane.ERROR_MESSAGE);
-				} else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
+				} else if((s != null) && (s.trim().length() == 0)){
+					minValue = minRefValue;
+					reload();
+				}
+				else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
 
         });		
@@ -337,7 +343,7 @@ public class OutputDetailFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
             	String s = (String)JOptionPane.showInputDialog(
-	                    detFrame, "Set right threshold for algorithm scores to be shown (" + dfMin.format(minValue) + "<threshold<=" + maxRefValue + ") ", "Scores Threshold",
+	                    detFrame, "Set right threshold for algorithm scores to be shown (" + dfMin.format(minValue) + "<threshold<=" + maxRefValue + ")\n Leave blank if you want to default to the maximum.", "Scores Threshold",
 	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 				if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 					double newThreshold = Double.valueOf(s.trim());
@@ -347,7 +353,10 @@ public class OutputDetailFrame {
 					} else JOptionPane.showMessageDialog(
 	        				detFrame, "Value is not in the [" + dfMin.format(minValue) + ", " + maxRefValue + "] range", "Input Error",
 		                    JOptionPane.ERROR_MESSAGE);
-				} else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
+				} else if((s != null) && (s.trim().length() == 0)){
+					maxValue = maxRefValue;
+					reload();
+				}else JOptionPane.showMessageDialog(detFrame, "Value is not a number", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
 
         });	
@@ -476,7 +485,7 @@ public class OutputDetailFrame {
 							basicPath = basicPath + "_" + dFunction.getClassifierTag();
 						cp = buildChartPanel();
 						printDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + ".csv");
-						//ChartUtilities.saveChartAsPNG(new File(basicPath + ".png"), cp.getChart(), cp.getWidth(), cp.getHeight());
+						ChartUtilities.saveChartAsPNG(new File(basicPath + ".png"), cp.getChart(), (int)cp.getPreferredSize().getWidth(), (int)cp.getPreferredSize().getHeight());
 					}
 				} catch (Exception ex){
 					AppLogger.logException(getClass(), ex, "Unable to save graph to file");
@@ -615,19 +624,22 @@ public class OutputDetailFrame {
 	}
 
 	private ChartPanel buildChartPanel(){
-		int countN = 0;
-		int countA = 0;
 		int countErr = 0;
 		int countInf = 0;
+		
+		List<Double> okList = new LinkedList<>();
+		List<Double> anList = new LinkedList<>();
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					if(lr.getValue().getScore() >= minValue && (maxValue == maxRefValue || lr.getValue().getScore() <= maxValue)){
-						if(lr.getLabel())
-							countA++;
-						else countN++;
+						if(lr.getLabel()){
+							anList.add(lr.getValue().getScore());
+						} else {
+							okList.add(lr.getValue().getScore());
+						}
 						if(!Double.isFinite(lr.getValue().getScore()))
 							countInf++;
 					} else countErr++;
@@ -644,10 +656,10 @@ public class OutputDetailFrame {
 		if(dFunction != null && decisionFunctionFlag)
 			dataset = (IntervalXYDataset)createConfusionMatrixSeries(minValue, maxValue, infiniteFlag);
 		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, infiniteFlag);
-		//dataset.get
+		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + countN + " normal and " + countA + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite)", 
+				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + Overlap_Metric.calculateOverlap(okList, anList)*100.0 + "% overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   

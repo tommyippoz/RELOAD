@@ -31,6 +31,7 @@ import ippoz.reload.metric.FalsePositiveRate_Metric;
 import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
+import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.metric.Precision_Metric;
 import ippoz.reload.metric.Recall_Metric;
 import ippoz.reload.metric.TN_Metric;
@@ -405,7 +406,9 @@ public class InputManager {
 			case "ACCURACY":
 				return new Accuracy_Metric(validAfter);
 			case "CUSTOM":
-				return new Custom_Metric(validAfter);	
+				return new Custom_Metric(validAfter);
+			case "OVERLAP":
+				return new Overlap_Metric(validAfter);
 			default:
 				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
 				return null;
@@ -573,7 +576,7 @@ public class InputManager {
 							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
 						}
 					} catch(Exception ex){
-						AppLogger.logError(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
+						AppLogger.logWarning(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
 					}
 				} 
 			}

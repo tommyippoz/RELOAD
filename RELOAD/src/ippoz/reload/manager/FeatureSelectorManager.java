@@ -9,8 +9,8 @@ import ippoz.reload.commons.dataseries.FractionDataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.dataseries.SumDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.featureselection.FeatureSelector;
-import ippoz.utils.logging.AppLogger;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,7 +58,9 @@ public class FeatureSelectorManager {
 					fs.applyFeatureSelection(selectedFeatures, kList);
 					selectedFeatures = fs.getSelectedSeries();
 					writer.write(fs.getFeatureSelectorType() + "," + fs.getSelectorThreshold() + "," + fs.getScoresStringFor(baselineSeries) + "\n");
-					AppLogger.logInfo(getClass(), "Filter '" + fs.getSelectorName() + "': " + selectedFeatures.size() + " data series are valid");
+					if(selectedFeatures.size() > 0)
+						AppLogger.logInfo(getClass(), "Filter '" + fs.getSelectorName() + "': " + selectedFeatures.size() + " features are valid");
+					else AppLogger.logError(getClass(), "FeatureSelectionError", "Filter '" + fs.getSelectorName() + "': " + selectedFeatures.size() + " no valid features: try relaxing threshold...");
 				}
 			} else AppLogger.logInfo(getClass(), "No Feature Selection technique will be applied");
 			writer.close();

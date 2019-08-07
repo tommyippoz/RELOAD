@@ -10,7 +10,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.utils.logging.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.util.List;
 

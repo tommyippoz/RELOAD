@@ -28,9 +28,14 @@ public abstract class FileLoader extends SimpleLoader {
 	public static final String LABEL_COLUMN = "LABEL_COLUMN";
 
 	/** The Constant EXPERIMENT_ROWS. */
-	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
+	public static final String TRAIN_EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 
-	public static final String EXPERIMENT_SPLIT_ROWS = "EXPERIMENT_SPLIT_ROWS";
+	public static final String TRAIN_EXPERIMENT_SPLIT_ROWS = "EXPERIMENT_SPLIT_ROWS";
+	
+	/** The Constant EXPERIMENT_ROWS. */
+	public static final String VALIDATION_EXPERIMENT_ROWS = "VALIDATION_EXPERIMENT_ROWS";
+
+	public static final String VALIDATION_EXPERIMENT_SPLIT_ROWS = "VALIDATION_EXPERIMENT_SPLIT_ROWS";
 	
 	/** The file. */
 	protected File file;
@@ -129,8 +134,8 @@ public abstract class FileLoader extends SimpleLoader {
 	}
 	
 	protected static int extractExperimentRows(PreferencesManager prefManager){
-		return prefManager.hasPreference(EXPERIMENT_ROWS) && Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)) > 0  
-				? Integer.parseInt(prefManager.getPreference(EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(EXPERIMENT_SPLIT_ROWS));
+		return prefManager.hasPreference(TRAIN_EXPERIMENT_ROWS) && Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) > 0  
+				? Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS));
 	} 
 	
 }

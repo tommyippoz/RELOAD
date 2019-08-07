@@ -3,6 +3,9 @@
  */
 package ippoz.reload.commons.support;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -26,6 +29,8 @@ public class AppLogger {
 	/** The console flag. */
 	private static boolean console;
 	
+	private static String handlerFilename;
+	
 	/**
 	 * Instantiates a new application logger.
 	 *
@@ -34,15 +39,16 @@ public class AppLogger {
 	 * @param console the console flag
 	 */
 	private AppLogger(String logName, String logFolder, boolean console) { 
-	    FileHandler fh;  
-	    try {  
+	    FileHandler fh;
+		try {  
 	    	AppLogger.console = console;
-	    	logger = Logger.getLogger("DetectorLogger"); 
-	    	if(logFolder != null) {
-		        fh = new FileHandler(logFolder + "//" + logName + ".log");  
-		        fh.setFormatter(new SimpleFormatter());  
-		        logger.addHandler(fh); 
-	    	}
+	    	logger = Logger.getLogger("RELOADLogger"); 
+	    	if(logFolder != null) 
+	    		handlerFilename = logFolder + "//" + logName + ".log";  
+	    	else  handlerFilename = "./" + logName + ".log";  
+	    	fh = new FileHandler(handlerFilename);
+    		fh.setFormatter(new SimpleFormatter());  
+	        logger.addHandler(fh); 
 	    	logger.setUseParentHandlers(false);
 	    } catch (SecurityException e) {  
 	    	System.err.println("[Logger] Unable to create logger: permission denied");
@@ -78,6 +84,17 @@ public class AppLogger {
 	}
 	
 	/**
+	 * Logs an error.
+	 *
+	 * @param source the source
+	 * @param error the error
+	 * @param message the message
+	 */
+	public static void logWarning(Class<?> source, String error, String message){
+		log("Warning", error + "@" + source.getName(), message, Level.WARNING, true);
+	}
+	
+	/**
 	 * Logs information without newline.
 	 *
 	 * @param source the source
@@ -109,8 +126,8 @@ public class AppLogger {
 	private static void log(String tag, String location, String message, Level level, boolean newLine){
 		String aggMessage = "[" + tag + "][" + location + "] " + message;
 		if(logger == null)
-			new AppLogger("DetectorLogger", null, true);
-		logger.log(level, aggMessage);
+			new AppLogger("RELOADLogger", null, true);
+		logger.log(level, "[" + System.currentTimeMillis() + "]" + aggMessage);
 		if(console){
 			if(newLine)
 				System.out.println(aggMessage);
@@ -159,5 +176,34 @@ public class AppLogger {
 	 */
 	private static void showMessagePanel(JFrame frame, String caption, String message, int option){
 		JOptionPane.showMessageDialog(frame, message, caption, option);
+	}
+
+	public static String getErrorsSince(long startTime) {
+		BufferedReader reader;
+		String readed;
+		String output = "";
+		try {
+			if(logger.getHandlers().length > 0){	
+				reader = new BufferedReader(new FileReader(new File(handlerFilename)));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.startsWith("SEVERE")){
+							String strTime = readed.substring(readed.indexOf("[")+1, readed.indexOf("]"));
+							if(AppUtility.isNumber(strTime) && Long.parseLong(strTime) > startTime)
+								output = output + readed + "\n";
+						}
+					}
+				}
+				reader.close();
+				if(output.length() == 0)
+					output = null;
+				return output;
+			}
+		} catch(Exception ex){
+			AppLogger.logException(AppLogger.class, ex, "Unable to read log");
+		}
+		return null;
 	}
 }

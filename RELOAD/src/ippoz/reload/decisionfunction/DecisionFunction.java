@@ -4,9 +4,10 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.utils.logging.AppLogger;
+
 
 /**
  * The Class DecisionFunction. Abstract class for decision functions.

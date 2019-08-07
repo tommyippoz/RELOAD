@@ -3,8 +3,8 @@
  */
 package ippoz.reload.executable;
 
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.utils.logging.AppLogger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

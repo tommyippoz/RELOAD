@@ -41,8 +41,7 @@ public class FP_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(Date snapTime, Double anEvaluation,
-			List<InjectedElement> injList) {
+	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {
 		if (injList.isEmpty() && Metric.anomalyTrueFalse(anEvaluation)) {
 			return 1;
 		} else

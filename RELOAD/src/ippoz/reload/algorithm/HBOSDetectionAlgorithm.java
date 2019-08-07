@@ -95,7 +95,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	 * @return the default temporary folder
 	 */
 	private String getDefaultTmpFolder(){
-		return "HBOS_tmp_RELOAD";
+		return File.separatorChar + "tmp" + File.separatorChar + "hbos_tmp_RELOAD";
 	}
 	
 	/* (non-Javadoc)

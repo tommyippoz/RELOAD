@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.loader.Loader;
@@ -57,7 +58,7 @@ public class DetectorOutput {
 	
 	private Map<String, Integer> nVoters;
 	
-	private Map<String, List<TimedValue>> detailedKnowledgeScores;
+	private Map<String, List<TimedResult>> detailedKnowledgeScores;
 	
 	private Loader loader;
 	
@@ -77,7 +78,7 @@ public class DetectorOutput {
 	
 	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, String bestSetup, 
 			List<AlgorithmVoter> voterList, String evaluationMetricsScores, String[] anomalyTresholds, Map<String, Integer> nVoters, 
-			Map<String, List<TimedValue>> detailedKnowledgeScores,
+			Map<String, List<TimedResult>> detailedKnowledgeScores,
 			Loader loader, Map<String, Map<String, List<Map<Metric, Double>>>> evaluations,
 			Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores,
 			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
@@ -309,6 +310,27 @@ public class DetectorOutput {
 		else return null;
 	}
 
+	public String[][] getEvaluationGridAveraged() {
+		int row = 0;
+		String[][] result = new String[detailedMetricScores.keySet().size()*anomalyTresholds.length][getEvaluationMetrics().length + 3];
+		for(String voterTreshold : detailedMetricScores.keySet()){
+			for(String anomalyTreshold : anomalyTresholds){
+				result[row][0] = voterTreshold;
+				result[row][1] = anomalyTreshold.trim();
+				result[row][2] = nVoters.get(voterTreshold.trim()).toString();
+				int col = 3;
+				for(Metric met : getEvaluationMetrics()){
+					String res = Metric.getAverageMetricValue(detailedMetricScores.get(voterTreshold).get(anomalyTreshold.trim()), met);
+					if(res.equals(String.valueOf(Double.NaN))){
+						result[row][col++] = "-";
+					} else result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(res)));
+				}
+				row++;
+			}
+		}
+		return result;
+	}
+	
 	public String[][] getEvaluationGrid() {
 		int row = 0;
 		String[][] result = new String[detailedMetricScores.keySet().size()*anomalyTresholds.length][getEvaluationMetrics().length + 3];

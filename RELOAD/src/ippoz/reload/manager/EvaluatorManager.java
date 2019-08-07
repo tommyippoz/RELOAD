@@ -13,6 +13,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.AlgorithmVoter;
@@ -295,8 +296,8 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}
 	
-	public Map<String, List<TimedValue>> getTimedEvaluations() {
-		Map<String, List<TimedValue>> outMap = new TreeMap<String, List<TimedValue>>();
+	public Map<String, List<TimedResult>> getTimedEvaluations() {
+		Map<String, List<TimedResult>> outMap = new TreeMap<String, List<TimedResult>>();
 		for(Thread t : getThreadList()){
 			ExperimentVoter ev = (ExperimentVoter)t;
 			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());

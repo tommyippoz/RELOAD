@@ -33,5 +33,9 @@ public abstract class ClusteringResult extends AlgorithmResult {
 	 * @return the cluster variance
 	 */
 	public abstract double getClusterVariance();
+	
+	public double getClusterStd(){
+		return Math.sqrt(getClusterVariance());
+	}
 
 }
