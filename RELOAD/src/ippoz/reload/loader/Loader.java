@@ -66,4 +66,14 @@ public interface Loader {
 	 */
 	public abstract Object[] getSampleValuesFor(String featureName);
 	
+	public abstract int getRowNumber();
+	
+	public abstract double getMBSize();
+
+	public abstract boolean canFetch();
+	
+	public abstract double getAnomalyRate();
+	
+	public abstract List<Integer> getLoaderRuns();
+	
 }

@@ -14,7 +14,6 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.TimedResult;
-import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.graphics.HistogramChartDrawer;
 import ippoz.reload.metric.Metric;
 
@@ -215,7 +214,7 @@ public class ExperimentVoter extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(kMap.get(kMap.keySet().iterator().next()), voting, anomalyTreshold));
+				metResults.put(met, met.evaluateAnomalyResults(voting, anomalyTreshold));
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));

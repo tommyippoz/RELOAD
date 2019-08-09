@@ -3,9 +3,13 @@
  */
 package ippoz.reload.loader;
 
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -136,6 +140,54 @@ public abstract class FileLoader extends SimpleLoader {
 	protected static int extractExperimentRows(PreferencesManager prefManager){
 		return prefManager.hasPreference(TRAIN_EXPERIMENT_ROWS) && Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) > 0  
 				? Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS));
-	} 
+	}
+
+	@Override
+	public int getRowNumber() {
+		BufferedReader reader = null;
+		String readLine = null;
+		int rowCount = 0;
+		try {
+			if(file != null && file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				//skip header
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				// read data
+				rowCount = 1;
+				while(reader.ready()){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
+							rowCount++;
+						}
+					}
+				}
+				reader.close();
+			} else return 0;
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		return rowCount;
+	}
+
+	@Override
+	public double getMBSize() {
+		return (file.length() / 1024) / 1024;
+	}
+
+	@Override
+	public boolean canFetch() {
+		return file != null && file.exists();
+	}	
+	
+	
 	
 }

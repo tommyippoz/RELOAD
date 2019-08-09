@@ -3,8 +3,7 @@
  */
 package ippoz.reload.reputation;
 
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.metric.Metric;
 
 import java.util.List;
@@ -35,8 +34,8 @@ public class MetricReputation extends Reputation {
 	 * @see ippoz.multilayer.detector.reputation.Reputation#evaluateExperimentReputation(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	protected double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
-		return metric.evaluateAnomalyResults(knowledge, anomalyEvaluations);
+	protected double evaluateExperimentReputation(List<TimedResult> anomalyEvaluations) {
+		return metric.evaluateAnomalyResults(anomalyEvaluations);
 	}
 
 }

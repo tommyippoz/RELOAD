@@ -160,7 +160,6 @@ public class OutputDetailFrame {
 			if(list != null && list.size() > 0){
 				if(list.get(0) != null){
 					return list.get(0).getValue().getDecisionFunction();
-					//return DecisionFunction.buildDecisionFunction(algorithmScores, list.get(0).getValue().getDecisionFunction().getClassifierTag());
 				}
 			}
 		}
@@ -659,7 +658,7 @@ public class OutputDetailFrame {
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + Overlap_Metric.calculateOverlap(okList, anList)*100.0 + "% overlap)", 
+				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + Overlap_Metric.calculateOverlap(okList, anList) + "% overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   

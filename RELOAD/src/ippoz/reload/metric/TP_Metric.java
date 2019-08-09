@@ -41,8 +41,7 @@ public class TP_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(Date snapTime, Double anEvaluation,
-			List<InjectedElement> injList) {
+	protected int classifyMetric(Date snapTime, Double anEvaluation, List<InjectedElement> injList) {
 		int count = 0;
 		if (!injList.isEmpty() && Metric.anomalyTrueFalse(anEvaluation)) {
 			count = injList.size();

@@ -3,8 +3,13 @@
  */
 package ippoz.reload.loader;
 
+import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.data.IndicatorData;
+import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
@@ -12,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -114,7 +120,62 @@ public abstract class CSVBaseLoader extends FileLoader {
 		}
 		
 		return values;
-	}	
+	}
+
+	@Override
+	public double getAnomalyRate() {
+		BufferedReader reader = null;
+		String readLine = null;
+		double anomalyCount = 0;
+		double itemCount = 0;
+		int rowIndex = 0;
+		int changes = 0;
+		String[] expRowsColumns = new String[]{null, null};
+		try {
+			if(file != null && file.exists() && labelCol >= 0) {
+				reader = new BufferedReader(new FileReader(file));
+				//skip header
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				// anomaly rate
+				while(reader.ready()){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
+							readLine = AppUtility.filterInnerCommas(readLine);
+							if(canReadCSV(rowIndex, changes)){
+								if(readLine.split(",")[labelCol] != null) { 
+									itemCount++;
+									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
+										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
+											anomalyCount++;
+									}
+								}	
+							}
+							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+								expRowsColumns[0] = expRowsColumns[1];
+								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
+									changes++;
+							}
+							rowIndex++;
+						}
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		return 100.0*anomalyCount/itemCount;
+	}
 
 	/* (non-Javadoc)
 	 * @see ippoz.reload.loader.Loader#getName()

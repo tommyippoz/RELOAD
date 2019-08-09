@@ -192,4 +192,34 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		return null;
 	}
 
+	@Override
+	public int getRowNumber() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getMBSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean canFetch() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public double getAnomalyRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Integer> getLoaderRuns() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

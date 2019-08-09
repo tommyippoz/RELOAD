@@ -7,7 +7,7 @@
 
 * kddcup/kddcup_dos.loader
 
-kddcup/kddcup_probe.loader
+* kddcup/kddcup_probe.loader
 
 * kddcup/kddcup_probe_test.loader
 
@@ -27,7 +27,7 @@ kddcup/kddcup_probe.loader
 
 * ISCX 2012
 
-* iscx/iscx_bruteforce.loader
+iscx/iscx_bruteforce.loader
 
 * iscx/iscx_DoS.loader
 

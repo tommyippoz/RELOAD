@@ -14,7 +14,6 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.TimedResult;
-import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.AlgorithmVoter;
 import ippoz.reload.voter.ExperimentVoter;

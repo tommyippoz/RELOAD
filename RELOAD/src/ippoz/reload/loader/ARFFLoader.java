@@ -79,4 +79,10 @@ public class ARFFLoader extends FileLoader {
 		
 	}
 
+	@Override
+	public double getAnomalyRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

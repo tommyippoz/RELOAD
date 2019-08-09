@@ -13,7 +13,6 @@ import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.TimedResult;
-import ippoz.reload.commons.support.TimedValue;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.manager.InputManager;
@@ -44,7 +43,7 @@ public class DetectorOutput {
 	
 	private List<Knowledge> knowledgeList;
 	
-	private double bestScore;
+	private double bestAveragedScore;
 	
 	private String bestSetup;
 	
@@ -86,7 +85,7 @@ public class DetectorOutput {
 			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
-		this.bestScore = bestScore;
+		this.bestAveragedScore = bestScore;
 		this.bestSetup = bestSetup;
 		this.voterList = voterList;
 		this.evaluationMetricsScores = evaluationMetricsScores;
@@ -238,18 +237,23 @@ public class DetectorOutput {
 			}
 			compactWriter.close();
 			writer.close();
-			AppLogger.logInfo(getClass(), "Best score obtained is '" + bestScore + "'");
+			AppLogger.logInfo(getClass(), "Best score obtained is '" + getBestScore() + "'");
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
 	}
 
 	public double getBestScore() {
-		return bestScore;
+		List<TimedResult> allResults = new LinkedList<>();
+		for(String expName : detailedKnowledgeScores.keySet()){
+			if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+				allResults.addAll(detailedKnowledgeScores.get(expName));
+		}
+		return getReferenceMetric().evaluateAnomalyResults(allResults, bestAnomalyThreshold);
 	}
 	
 	public String getFormattedBestScore() {
-		return new DecimalFormat("#.##").format(bestScore);
+		return new DecimalFormat("#.##").format(getBestScore());
 	}
 
 	public String getBestSetup() {
@@ -332,21 +336,24 @@ public class DetectorOutput {
 	}
 	
 	public String[][] getEvaluationGrid() {
-		int row = 0;
-		String[][] result = new String[detailedMetricScores.keySet().size()*anomalyTresholds.length][getEvaluationMetrics().length + 3];
-		for(String voterTreshold : detailedMetricScores.keySet()){
-			for(String anomalyTreshold : anomalyTresholds){
-				result[row][0] = voterTreshold;
-				result[row][1] = anomalyTreshold.trim();
-				result[row][2] = nVoters.get(voterTreshold.trim()).toString();
-				int col = 3;
-				for(Metric met : getEvaluationMetrics()){
-					String res = Metric.getAverageMetricValue(detailedMetricScores.get(voterTreshold).get(anomalyTreshold.trim()), met);
-					if(res.equals(String.valueOf(Double.NaN))){
-						result[row][col++] = "-";
-					} else result[row][col++] = String.valueOf(new DecimalFormat("#.##").format(Double.parseDouble(res)));
-				}
-				row++;
+		String[][] result = new String[1][getEvaluationMetrics().length + 3];
+		if(bestSetup != null){
+			result[0][0] = bestSetup.split("-")[0].trim();
+			result[0][1] = bestSetup.split("-")[1].trim();
+			result[0][2] = String.valueOf(nVoters.get(bestSetup.split("-")[0].trim()));
+			
+			List<TimedResult> allResults = new LinkedList<>();
+			for(String expName : detailedKnowledgeScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+					allResults.addAll(detailedKnowledgeScores.get(expName));
+			}
+			
+			int col = 3;
+			for(Metric met : getEvaluationMetrics()){
+				double res = met.evaluateAnomalyResults(allResults, bestAnomalyThreshold);
+				if(Double.isNaN(res)){
+					result[0][col++] = "-";
+				} else result[0][col++] = String.valueOf(new DecimalFormat("#.##").format(res));
 			}
 		}
 		return result;

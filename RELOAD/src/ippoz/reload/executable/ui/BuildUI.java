@@ -26,7 +26,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -132,12 +131,12 @@ public class BuildUI {
 		
 		double rate = 18*Toolkit.getDefaultToolkit().getScreenSize().getHeight()/1080;
 		
-		bigFont = new Font("Times", Font.BOLD, (int)((18 + rate)/2));
-		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
-		smallLabelFont = new Font("Times", Font.PLAIN, (int)((14 + rate)/2));
+		bigFont = new Font("Times", Font.BOLD, (int)((16 + rate)/2));
+		labelFont = new Font("Times", Font.PLAIN, (int)((13 + rate)/2));
+		smallLabelFont = new Font("Times", Font.PLAIN, (int)((12 + rate)/2));
 		
 		labelSpacing = (int)(frame.getHeight()/25);
-		bigLabelSpacing = (int)(frame.getHeight()/18);
+		bigLabelSpacing = (int)(frame.getHeight()/20);
 		
 		//labelSpacing = (int)(660/25);
 		//bigLabelSpacing = (int)(660/18);
@@ -527,8 +526,8 @@ public class BuildUI {
 		
 		button = new JButton("Add Algorithm");
 		button.setVisible(true);
-		button.setFont(new Font(pathPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(25, 0, pathPanel.getWidth()/5, 25);
+		button.setFont(labelFont);
+		button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				Object[] possibilities = new String[AlgorithmType.values().length];
@@ -550,8 +549,8 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		button = new JButton("Open Algorithms");
 		button.setVisible(true);
-		button.setFont(new Font(pathPanel.getFont().getName(), Font.PLAIN, 16));
-		button.setBounds(0, 0, pathPanel.getWidth()/5, 30);
+		button.setFont(labelFont);
+		button.setBounds(0, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				try {

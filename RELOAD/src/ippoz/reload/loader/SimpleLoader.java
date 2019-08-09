@@ -105,12 +105,11 @@ public abstract class SimpleLoader implements Loader {
 	 */
 	public synchronized boolean canRead(int index){
 		if(runs != null && runs.size() > 0){
-			while(runs.size() > 0 && index > runs.get(0)){
-				runs.remove(0);
+			for(Integer runItem : runs){
+				if(index == runItem)
+					return true;
 			}
-			if(runs.size() > 0)
-				return index == runs.get(0);
-			else return false;
+			return false;
 		} else return false;
 	}
 
@@ -128,7 +127,9 @@ public abstract class SimpleLoader implements Loader {
 		if(getHeader() != null){
 			names = new String[header.size()];
 			for(int i=0;i<header.size();i++){
-				names[i] = header.get(i).getName();
+				if(header.get(i) != null)
+					names[i] = header.get(i).getName();
+				else names[i] = "-";
 			}
 		}
 		return names;
@@ -235,6 +236,11 @@ public abstract class SimpleLoader implements Loader {
 			}
 			return iList.toArray(new Integer[iList.size()]);
 		} else return new Integer[]{};
+	}
+	
+	@Override
+	public List<Integer> getLoaderRuns(){
+		return runs;
 	}
 
 }

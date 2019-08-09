@@ -4,8 +4,7 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -35,33 +34,32 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		int undetectableCount = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		List<InjectedElement> currentInj = new LinkedList<InjectedElement>();
-		for (int i = 0; i < knowledge.size(); i++) {
+		for (int i = 0; i < anomalyEvaluations.size(); i++) {
 			while (!currentInj.isEmpty()
 					&& currentInj.get(0).getFinalTimestamp()
-							.before(knowledge.getTimestamp(i))) {
+							.before(anomalyEvaluations.get(i).getDate())) {
 				currentInj.remove(0);
 			}
-			if (knowledge.getInjection(i) != null) {
-				overallInj.add(knowledge.getInjection(i));
-				currentInj.add(knowledge.getInjection(i));
+			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
+				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
+				currentInj.add(anomalyEvaluations.get(i).getInjectedElement());
 			}
-			int d = classifyMetric(knowledge.getTimestamp(i),
+			int d = classifyMetric(anomalyEvaluations.get(i).getDate(),
 					anomalyEvaluations.get(i).getValue(), currentInj);
 			if (anomalyEvaluations.get(i).getValue() >= 0.0) {
 				detectionHits = detectionHits + d;
 			} else
 				undetectableCount++;
 		}
-		if (knowledge.size() > 0) {
+		if (anomalyEvaluations.size() > 0) {
 			if (!absolute)
 				// getUndetectable?
-				return 1.0 * detectionHits / (knowledge.size() - undetectableCount);
+				return 1.0 * detectionHits / (anomalyEvaluations.size() - undetectableCount);
 			else
 				return detectionHits;
 		} else

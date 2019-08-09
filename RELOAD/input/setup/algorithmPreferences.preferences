@@ -3,7 +3,7 @@
 
 * General Algorithms
 
-HBOS
+* HBOS
 
 * Elki Algorithms
 
@@ -13,7 +13,7 @@ HBOS
 
 * ELKI_FASTABOD
 
-ELKI_LOF
+* ELKI_LOF
 
 * ELKI_COF
 
@@ -48,4 +48,4 @@ ELKI_LOF
 * HBOS, ELKI_KMEANS
 
 * ELKI_KNN
-DBSCAN
+* DBSCAN

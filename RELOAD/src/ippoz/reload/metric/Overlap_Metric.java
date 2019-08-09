@@ -3,9 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.TimedResult;
-import ippoz.reload.commons.support.TimedValue;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -22,11 +20,10 @@ public class Overlap_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
-		for(TimedValue tv : anomalyEvaluations){
-			TimedResult tr = (TimedResult)tv;
+		for(TimedResult tr : anomalyEvaluations){
 			if(tr.getInjectedElement() != null)
 				faultyList.add(tr.getAlgorithmScore());
 			else normalList.add(tr.getAlgorithmScore());
@@ -50,33 +47,47 @@ public class Overlap_Metric extends BetterMinMetric {
 		else {
 			Collections.sort(normalList);
 			Collections.sort(faultyList);
-			boolean minSeries = normalList.get(0) < faultyList.get(0) ? true : false;
-			int good = 0;
-			int bad = 0;
-			for(Double d : normalList){
-				if(minSeries){ 
-					if(d < faultyList.get(0))
-						good++;
-					else bad++;
-				} else {
-					if(d > faultyList.get(faultyList.size()-1))
-						good++;
-					else bad++;
-				}
-			}
-			for(Double d : faultyList){
-				if(minSeries){ 
-					if(d > normalList.get(normalList.size()-1))
-						good++;
-					else bad++;
-				} else {
-					if(d < normalList.get(0))
-						good++;
-					else bad++;
-				}
-			}
-			return 1.0*bad / (good + bad);
+			boolean normalBeforeFaulty = normalList.get(0) < faultyList.get(0) ? true : false;
+			boolean normalEmbedsFaulty = faultyList.get(0) >= normalList.get(0) && 
+						faultyList.get(faultyList.size()-1) <= normalList.get(normalList.size()-1);
+			boolean faultyEmbedsNormal = normalList.get(0) >= faultyList.get(0) && 
+					normalList.get(normalList.size()-1) <= faultyList.get(faultyList.size()-1);
+			if(normalEmbedsFaulty)
+				return overlapFirstEmbedsSecond(normalList, faultyList);
+			else if(faultyEmbedsNormal)
+				return overlapFirstEmbedsSecond(faultyList, normalList);
+			else if(normalBeforeFaulty)
+				return overlapFirstBeforeSecond(normalList, faultyList);
+			else return overlapFirstBeforeSecond(faultyList, normalList);
 		}
+	}
+	
+	private static double overlapFirstBeforeSecond(List<Double> first, List<Double> second){
+		int good = 0;
+		int bad = 0;
+		for(Double d : first){
+			if(d < second.get(0))
+				good++;
+			else bad++;
+		}
+		for(Double d : second){
+			if(d > first.get(first.size()-1))
+				good++;
+			else bad++;
+		}
+		return 100.0*bad / (good + bad);
+	}
+	
+	private static double overlapFirstEmbedsSecond(List<Double> first, List<Double> second){
+		int good = 0;
+		int bad = 0;
+		for(Double d : first){
+			if(d < second.get(0) || d > second.get(second.size()-1))
+				good++;
+			else bad++;
+		}
+		bad = bad + second.size();
+		return 100.0*bad / (good + bad);
 	}
 
 }
