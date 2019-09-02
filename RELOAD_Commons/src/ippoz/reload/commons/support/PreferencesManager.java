@@ -135,4 +135,10 @@ public class PreferencesManager {
 		}
 	}
 
+	public String getCompactFilename() {
+		String extendedName = getFilename();
+		int index = extendedName.indexOf('.');
+		return getFilename().substring(0, index);
+	}
+
 }

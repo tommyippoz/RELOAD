@@ -39,8 +39,8 @@ public class FilterManager extends TrainDataManager {
 	 * Instantiates a new filter manager.
 	 *
 	 */
-	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex, true, kfold);
+	public FilterManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, double filteringThreshold, double pearsonSimple, double pearsonComplex, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, dataTypes, defaultFilterAlgorithm(), pearsonSimple, pearsonComplex, true, kfold);
 		this.filteringThreshold = filteringThreshold;
 	}
 
@@ -96,20 +96,15 @@ public class FilterManager extends TrainDataManager {
 				KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
 				switch(algType){
 					case RCC:
-						trainerList.add(new FixedConfigurationTrainer(algType, null, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType).get(0)));
+						/**/
 						break;
 					case PEA:
-						PearsonCombinationManager pcManager;
-						File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
-						pcManager.calculatePearsonIndexes(0.9);
-						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
-						pcManager.flush();
+						/**/
 						break;
 					default:
 						for(DataSeries dataSeries : seriesList){
 							if(dataSeries.compliesWith(algType))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), kfold));
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
 						}
 						break;
 				}

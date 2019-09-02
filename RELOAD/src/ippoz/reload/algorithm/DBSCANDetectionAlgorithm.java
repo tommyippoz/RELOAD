@@ -353,24 +353,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		}
 		return toReturn.substring(0, toReturn.length()-1);
 	}
-
-	/**
-	 * Gets the filename used to store data about scores and histograms.
-	 *
-	 * @return the filename
-	 */
-	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + ".dbscan";
-	}
-	
-	/**
-	 * Gets the default folder used to store temporary data.
-	 *
-	 * @return the default temporary folder
-	 */
-	private String getDefaultTmpFolder(){
-		return File.separatorChar + "tmp" + File.separatorChar + "dbscan_tmp_RELOAD";
-	}
 	
 	private class ClusterableSnapshot implements Clusterable {
 		

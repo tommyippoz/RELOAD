@@ -36,6 +36,8 @@ public abstract class TrainDataManager extends DataManager {
 	/** The scores folder. */
 	private String scoresFolder;
 	
+	private String datasetName;
+	
 	/** The possible configurations. */
 	protected Map<AlgorithmType, List<AlgorithmConfiguration>> confList;
 	
@@ -57,11 +59,12 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
 		super(map);
 		this.setupFolder = setupFolder;
 		this.dsDomain = dsDomain;
 		this.scoresFolder = scoresFolder;
+		this.datasetName = datasetName;
 		this.confList = confList;
 		this.metric = metric;
 		this.reputation = reputation;
@@ -73,14 +76,18 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
-		this(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+		this(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex, boolean generatePearson, int kfold) {
-		this(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
+	public String getDatasetName(){
+		return datasetName;
+	}
+	
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double pearsonSimple, double pearsonComplex, boolean generatePearson, int kfold) {
+		this(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		seriesList = generateDataSeries(dataTypes, pearsonComplex, generatePearson);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}

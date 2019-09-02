@@ -35,7 +35,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	 * @param configurations the possible configurations
 	 */
 	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, AlgorithmConfiguration configuration) {
-		super(algTag, dataSeries, metric, reputation, kList);
+		super(algTag, dataSeries, metric, reputation, kList, null);
 		try {
 			fixConf = (AlgorithmConfiguration) configuration.clone();
 		} catch (CloneNotSupportedException ex) {

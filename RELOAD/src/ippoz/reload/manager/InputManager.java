@@ -31,6 +31,7 @@ import ippoz.reload.metric.FalsePositiveRate_Metric;
 import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
+import ippoz.reload.metric.OverlapDetail_Metric;
 import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.metric.Precision_Metric;
 import ippoz.reload.metric.Recall_Metric;
@@ -409,6 +410,10 @@ public class InputManager {
 				return new Custom_Metric(validAfter);
 			case "OVERLAP":
 				return new Overlap_Metric(validAfter);
+			case "OVERLAPD":
+			case "OVERLAPDETAIL":
+			case "OVERLAP_DETAIL":
+				return new OverlapDetail_Metric(validAfter);
 			default:
 				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
 				return null;
@@ -1284,9 +1289,9 @@ public class InputManager {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = readed.split("§");
-							if(splitted.length > 3){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 5 ? splitted[5] : null));
+							splitted = AppUtility.splitAndPurify(readed, "§");
+							if(splitted.length > 4){
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
 									case PEA:
@@ -1300,6 +1305,7 @@ public class InputManager {
 									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
 									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
 								voterList.add(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
 							}

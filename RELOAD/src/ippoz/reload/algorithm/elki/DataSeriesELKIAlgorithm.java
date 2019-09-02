@@ -118,24 +118,6 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
 		return trainOut != null;
 	}
-	
-	/**
-	 * Gets the default tmp folder.
-	 *
-	 * @return the default tmp folder
-	 */
-	private String getDefaultTmpFolder(){
-		return "." + File.separatorChar + "tmp" + File.separatorChar + customELKI.getAlgorithmName() + "_tmp_RELOAD";
-	}
-	
-	/**
-	 * Gets the filename used to store the model obtained during training to be used during evaluation.
-	 *
-	 * @return the filename
-	 */
-	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + customELKI.getAlgorithmName();
-	}
 
 	/* (non-Javadoc)
 	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)

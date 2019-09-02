@@ -41,9 +41,9 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param reputation the used reputation metric
 	 * @param expList the considered train data
 	 */
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<AlgorithmConfiguration> basicConfigurations, int kfold) {
-		super(algTag, dataSeries, metric, reputation, kList, kfold);
-		configurations = confClone(basicConfigurations);
+	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<AlgorithmConfiguration> basicConfigurations, String datasetName, int kfold) {
+		super(algTag, dataSeries, metric, reputation, kList, datasetName, kfold);
+		configurations = confCloneAndComplete(basicConfigurations);
 	}
 	
 	/**
@@ -52,11 +52,13 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param inConf the configurations to clone
 	 * @return the cloned list of configuration
 	 */
-	private List<AlgorithmConfiguration> confClone(List<AlgorithmConfiguration> inConf) {
+	private List<AlgorithmConfiguration> confCloneAndComplete(List<AlgorithmConfiguration> inConf) {
 		List<AlgorithmConfiguration> list = new ArrayList<AlgorithmConfiguration>(inConf.size());
 		try {
 			for(AlgorithmConfiguration conf : inConf){
-				list.add((AlgorithmConfiguration) conf.clone());
+				AlgorithmConfiguration ac = (AlgorithmConfiguration) conf.clone();
+				ac.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
+				list.add(ac);
 			}
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone Configurations");

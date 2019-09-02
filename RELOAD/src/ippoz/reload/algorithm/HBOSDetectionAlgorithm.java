@@ -80,24 +80,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		}
 	}
 	
-	/**
-	 * Gets the filename used to store data about scores and histograms.
-	 *
-	 * @return the filename
-	 */
-	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + ".hbos";
-	}
-	
-	/**
-	 * Gets the default folder used to store temporary data.
-	 *
-	 * @return the default temporary folder
-	 */
-	private String getDefaultTmpFolder(){
-		return File.separatorChar + "tmp" + File.separatorChar + "hbos_tmp_RELOAD";
-	}
-	
 	/* (non-Javadoc)
 	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
 	 */
@@ -350,7 +332,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 				reader.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read KMeans Scores file");
+			AppLogger.logException(getClass(), ex, "Unable to read HBOS Scores file");
 		} 
 	}
 	

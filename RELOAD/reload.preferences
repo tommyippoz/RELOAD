@@ -12,7 +12,7 @@ TRAIN_FLAG = 1
 KFOLD_COUNTER = 5
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
-METRIC = OVERLAP
+METRIC = OVERLAP_DETAIL
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = relative

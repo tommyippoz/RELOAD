@@ -213,13 +213,13 @@ public class PearsonCombinationManager {
 		} 
 	}
 	
-	public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
+	/*public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
 		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>(pResults.size());
 		for(PearsonResult pr : pResults){
 			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, kList, adaptConf(confList, pr).get(AlgorithmType.PEA), kfold));
 		}
 		return trainerList;
-	}
+	}*/
 	
 	private Map<AlgorithmType, List<AlgorithmConfiguration>> adaptConf(Map<AlgorithmType, List<AlgorithmConfiguration>> confList, PearsonResult pr) {
 		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){
