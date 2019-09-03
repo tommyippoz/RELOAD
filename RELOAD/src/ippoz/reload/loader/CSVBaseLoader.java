@@ -132,7 +132,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 		int changes = 0;
 		String[] expRowsColumns = new String[]{null, null};
 		try {
-			if(file != null && file.exists() && labelCol >= 0) {
+			if(file != null && file.exists() && labelCol >= 0 && faultyTagList != null && faultyTagList.size() > 0) {
 				reader = new BufferedReader(new FileReader(file));
 				//skip header
 				while(reader.ready() && readLine == null){
@@ -170,11 +170,65 @@ public abstract class CSVBaseLoader extends FileLoader {
 					}
 				}
 				reader.close();
-			}
+			} else return 0.0;
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to parse header");
+		}
+		return 100.0*anomalyCount/itemCount;
+	}
+	
+	@Override
+	public double getSkipRate() {
+		BufferedReader reader = null;
+		String readLine = null;
+		double skipCount = 0;
+		double itemCount = 0;
+		int rowIndex = 0;
+		int changes = 0;
+		String[] expRowsColumns = new String[]{null, null};
+		try {
+			if(file != null && file.exists() && labelCol >= 0 && avoidTagList != null && avoidTagList.size() > 0) {
+				reader = new BufferedReader(new FileReader(file));
+				//skip header
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				// skip rate
+				while(reader.ready()){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
+							readLine = AppUtility.filterInnerCommas(readLine);
+							if(canReadCSV(rowIndex, changes)){
+								if(readLine.split(",")[labelCol] != null) { 
+									itemCount++;
+									if(avoidTagList.contains(readLine.split(",")[labelCol])){
+										skipCount++;
+									}
+								}	
+							}
+							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+								expRowsColumns[0] = expRowsColumns[1];
+								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
+									changes++;
+							}
+							rowIndex++;
+						}
+					}
+				}
+				reader.close();
+			} else return 0.0;
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}
-		return 100.0*anomalyCount/itemCount;
+		return 100.0*skipCount/itemCount;
 	}
 
 	/* (non-Javadoc)

@@ -19,6 +19,8 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,8 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -88,6 +92,15 @@ public class LoaderFrame {
 		
 		loaderPanel = buildMainPanel();
 	}
+	
+	private void reload() {
+		lFrame.setVisible(false);
+		lFrame.getContentPane().removeAll();
+		tLoader = buildLoader("train");
+		vLoader = buildLoader("validation");
+		loaderPanel = buildMainPanel();
+		setVisible(true);
+	}
 
 	private Loader buildLoader(String loaderTag) {
 		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
@@ -139,7 +152,7 @@ public class LoaderFrame {
 		
 		JPanel generalPanel = new JPanel();
 		generalPanel.setBackground(Color.WHITE);
-		generalPanel.setBounds(5, 5, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
+		generalPanel.setBounds(5, 5, containerPanel.getWidth()-10, 3*bigLabelSpacing + 10);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " General Characteristics ", 
 				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		generalPanel.setBorder(tb);
@@ -164,11 +177,6 @@ public class LoaderFrame {
 		showPreferenceCB(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
 				loaderPref.getPreference(Loader.LOADER_TYPE), LoaderType.values(), 
 				"Specify loader type, either CSV, MYSQL or ARFF", null);
-		
-		showPreferenceLabels(generalPanel, 3*bigLabelSpacing, Loader.CONSIDERED_LAYERS, 
-				loaderPref.getPreference(Loader.CONSIDERED_LAYERS), 
-				"Specify considered layers, if indicators of the dataset are grouped through layers. Otherwise, type the 'NO_LAYER' option", null);
-		
 		containerPanel.add(generalPanel);
 		
 		
@@ -243,15 +251,17 @@ public class LoaderFrame {
 		trainPanel.setBackground(Color.WHITE);
 		trainPanel.setBounds(5, generalPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight() + 15, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Train Setup ", 
-				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		trainPanel.setBorder(tb);
 		trainPanel.setLayout(null);
 		
-		
+		JLabel trainDataPointsLabel = initLabel("Not Defined");
+		if(tLoader != null && tLoader.canFetch())
+			trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
 		
 		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
-				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
+				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", trainDataPointsLabel);
 		
 		JLabel trainAnomalyRateLabel = initLabel("Not Defined");
 		if(tLoader != null && tLoader.canFetch())
@@ -261,9 +271,13 @@ public class LoaderFrame {
 				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training", trainAnomalyRateLabel);
 		
+		JLabel trainSkipRateLabel = initLabel("Not Defined");
+		if(tLoader != null && tLoader.canFetch())
+			trainSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(tLoader.getSkipRate()) + "%");
+		
 		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, CSVCompleteLoader.TRAIN_SKIP_ROWS, 
 				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", trainSkipRateLabel);
 			
 		containerPanel.add(trainPanel);
 		
@@ -271,13 +285,17 @@ public class LoaderFrame {
 		validationPanel.setBackground(Color.WHITE);
 		validationPanel.setBounds(5, generalPanel.getHeight() + 20 + trainPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight(), containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Validation Setup ", 
-				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		validationPanel.setBorder(tb);
 		validationPanel.setLayout(null);
 		
+		JLabel validationDataPointsLabel = initLabel("Not Defined");
+		if(vLoader != null && vLoader.canFetch())
+			validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
+		
 		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
-				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas");
+				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", validationDataPointsLabel);
 		
 		JLabel validationAnomalyRateLabel = initLabel("Not Defined");
 		if(vLoader != null && vLoader.canFetch())
@@ -287,9 +305,13 @@ public class LoaderFrame {
 				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation", validationAnomalyRateLabel);
 		
+		JLabel validationSkipRateLabel = initLabel("Not Defined");
+		if(vLoader != null && vLoader.canFetch())
+			validationSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(vLoader.getSkipRate()) + "%");
+		
 		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, CSVCompleteLoader.VALIDATION_SKIP_ROWS, 
 				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.");
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", validationSkipRateLabel);
 		
 		containerPanel.add(validationPanel);
 		
@@ -297,7 +319,7 @@ public class LoaderFrame {
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
-		fPanel.setBounds(10, generalPanel.getHeight() + sourcePanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + 10, containerPanel.getWidth()-20, labelSpacing + 40);
+		fPanel.setBounds(10, generalPanel.getHeight() + sourcePanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + 10, containerPanel.getWidth()-20, 3*labelSpacing);
 		fPanel.setLayout(null);
 		
 		button = new JButton("Save Changes");
@@ -313,6 +335,21 @@ public class LoaderFrame {
 					    "Error while setting parameters", JOptionPane.ERROR_MESSAGE);
 				lFrame.setVisible(false);
 			} } );	
+		fPanel.add(button);
+		
+		ImageIcon ii = new ImageIcon(getClass().getResource("/reload.png"));
+		button = new JButton("", new ImageIcon(ii.getImage().getScaledInstance(labelSpacing+10, labelSpacing+10, Image.SCALE_DEFAULT)));
+		button.setBounds(fPanel.getWidth()/2 - labelSpacing, labelSpacing/2, 2*labelSpacing, 2*labelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				String checkParameters = checkParameters();
+				if(checkParameters == null){
+					loaderPref.updateToFile();
+				} else JOptionPane.showMessageDialog(lFrame, checkParameters,
+					    "Error while setting parameters", JOptionPane.ERROR_MESSAGE);
+				reload();
+			}
+		} );
 		fPanel.add(button);
 		
 		button = new JButton("Discard Changes");
@@ -482,31 +519,24 @@ public class LoaderFrame {
 	}
 	
 	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo){
-		int items = additionalInfo != null ? 3 : 2;
-		int space = 20/(items+1);
-		int basicSize = (root.getWidth()-20) / (1 + items*2);
+		int space = 5;
+		int basicSize = (root.getWidth()-20) / 7;
 		int bigSize = 3*basicSize;
 		int smallSize = 2*basicSize;
 		
-		JPanel panel = new JPanel();
-		panel.setLayout(new GridBagLayout());
-		panel.setBackground(Color.WHITE);
-		panel.setBounds(space, panelY, smallSize, labelSpacing);
-		
-		JCheckBox cb = new JCheckBox();
+		JCheckBox cb = new JCheckBox("Enable");
+		cb.setHorizontalAlignment(SwingConstants.CENTER);
+		cb.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
 		cb.setSelected(activated);
-		
-		panel.add(cb);
 		
 		JLabel lbl = new JLabel(prefName);
 		lbl.setFont(bigFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.setBounds(space, panelY, smallSize, labelSpacing);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
 		
-		panel.add(lbl);
-		
-		root.add(panel);
+		root.add(lbl);
 		
 		JTextField textField = new JTextField();
 		textField.setText(textFieldText);
@@ -514,8 +544,6 @@ public class LoaderFrame {
 		textField.setFont(labelFont);
 		textField.setEnabled(activated);
 		textField.setColumns(10);
-		if(description != null && description.trim().length() > 0)
-			lbl.setToolTipText(description);
 		textField.getDocument().addDocumentListener(new DocumentListener() {
 			  
 			public void changedUpdate(DocumentEvent e) {
@@ -551,6 +579,8 @@ public class LoaderFrame {
 			additionalInfo.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
 			root.add(additionalInfo);
 		}
+		
+		root.add(cb);
 		
 	}
 	

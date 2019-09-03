@@ -74,6 +74,10 @@ public interface Loader {
 	
 	public abstract double getAnomalyRate();
 	
+	public abstract double getSkipRate();
+	
+	public abstract int getDataPoints();
+	
 	public abstract List<Integer> getLoaderRuns();
 	
 }

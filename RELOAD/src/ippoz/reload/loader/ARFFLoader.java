@@ -85,4 +85,16 @@ public class ARFFLoader extends FileLoader {
 		return 0;
 	}
 
+	@Override
+	public double getSkipRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDataPoints() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

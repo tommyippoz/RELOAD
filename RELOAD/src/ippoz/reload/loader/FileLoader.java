@@ -186,8 +186,11 @@ public abstract class FileLoader extends SimpleLoader {
 	@Override
 	public boolean canFetch() {
 		return file != null && file.exists();
+	}
+
+	@Override
+	public int getDataPoints() {
+		return getRunsNumber()*experimentRows;
 	}	
-	
-	
 	
 }

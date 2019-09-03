@@ -19,12 +19,17 @@ TRAIN_CSV_FILE = ISCX2012/ISCX2012_BruteForce_Reduced_OK.csv
 * Training Runs.
 TRAIN_RUN_IDS = 40-50
 
+* Tags Identifying an Attack in This Dataset
+TRAIN_FAULTY_TAGS = "Attack"
+
 * File Used for Evaulating
 VALIDATION_CSV_FILE = ISCX2012/ISCX2012_BruteForce_Reduced_OK.csv
 
 * Evaluation Runs.
 VALIDATION_RUN_IDS = 51-100
 
+* Tags Identifying an Attack in This Dataset
+VALIDATION_FAULTY_TAGS = "Attack", Attack
 
 * Parsing Dataset
 
@@ -36,6 +41,3 @@ LABEL_COLUMN = 17
 
 * Size of Each Experiment
 EXPERIMENT_ROWS = 100
-
-* Tags Identifying an Attack in This Dataset
-FAULTY_TAGS = "Attack", Attack

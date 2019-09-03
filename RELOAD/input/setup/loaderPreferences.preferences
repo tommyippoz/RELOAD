@@ -7,7 +7,7 @@
 
 * kddcup/kddcup_dos.loader
 
-* kddcup/kddcup_probe.loader
+kddcup/kddcup_probe.loader
 
 * kddcup/kddcup_probe_test.loader
 
@@ -19,7 +19,7 @@
 
 * nslkdd/nslkdd_probe.loader
 
-* nslkdd/nslkdd_dos.loader
+nslkdd/nslkdd_dos.loader
 
 * nslkdd/nslkdd_r2l.loader
 
@@ -45,7 +45,7 @@ iscx/iscx_bruteforce.loader
 
 * unsw/unsw_DoS.loader
 
-* unsw/unsw_exploits.loader
+unsw/unsw_exploits.loader
 
 * unsw/unsw_generic.loader
 

@@ -222,4 +222,16 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		return null;
 	}
 
+	@Override
+	public double getSkipRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDataPoints() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

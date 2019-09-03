@@ -62,6 +62,12 @@ public abstract class SimpleLoader implements Loader {
 		return header;
 	}
 	
+	protected int getRunsNumber(){
+		if(runs != null)
+			return runs.size();
+		else return 0;
+	}
+	
 	protected void filterHeader(Integer[] skip) {
 		if(getHeader() != null){
 			for(int i=0;i<getHeader().size();i++){
