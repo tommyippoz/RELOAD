@@ -43,8 +43,6 @@ public class DetectorOutput {
 	
 	private List<Knowledge> knowledgeList;
 	
-	private double bestAveragedScore;
-	
 	private String bestSetup;
 	
 	private String bestRuns;
@@ -85,7 +83,6 @@ public class DetectorOutput {
 			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
-		this.bestAveragedScore = bestScore;
 		this.bestSetup = bestSetup;
 		this.voterList = voterList;
 		this.evaluationMetricsScores = evaluationMetricsScores;

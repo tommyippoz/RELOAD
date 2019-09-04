@@ -3,13 +3,8 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.madness.commons.indicator.Indicator;
 import ippoz.madness.commons.layers.LayerType;
-import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.data.IndicatorData;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
@@ -17,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 

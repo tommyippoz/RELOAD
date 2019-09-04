@@ -461,17 +461,9 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			}
 			
 		}
-
-		public double[] getAvg(){
-			return avg;
-		} 
 		
 		public double getVar(){
 			return var;
-		}
-		
-		public double getStd(){
-			return Math.sqrt(getVar());
 		}
 		
 	}

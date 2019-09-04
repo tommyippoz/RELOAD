@@ -6,13 +6,13 @@
 FEATURE_SELECTION_FLAG = 0
 
 * Perform Training (0 = NO, 1 = YES).
-TRAIN_FLAG = 1
+TRAIN_FLAG = 0
 
 * K Counter for K-Fold Training/Validation
 KFOLD_COUNTER = 5
 
 * The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS, AUC.
-METRIC = OVERLAP_DETAIL
+METRIC = FMEASURE
 
 * The metric type (absolute/relative). Applies only to FN, FP, TN, TP.
 METRIC_TYPE = relative
@@ -27,7 +27,7 @@ VALID_AFTER_INJECTION = true
 REPUTATION = 1.0
 
 * Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted
-INDICATOR_SELECTION = UNION
+INDICATOR_SELECTION = PEARSON(0.6)
 
 * Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT
 OUTPUT_TYPE = null
@@ -35,7 +35,7 @@ OUTPUT_TYPE = null
 * Optimization
 
 * Perform Optimization (0 = NO, 1 = YES).
-OPTIMIZATION_FLAG = 1
+OPTIMIZATION_FLAG = 0
 
 * Filtering
 

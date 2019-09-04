@@ -6,7 +6,6 @@ package ippoz.reload.metric;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.support.TimedResult;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,29 +31,45 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		super(mType, validAfter);
 		this.absolute = absolute;
 	}
+	
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+		int detectionHits = 0;
+		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
+		for (int i = 0; i < anomalyEvaluations.size(); i++) {
+			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
+				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
+			}
+			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
+			int d = classifyMetric(anomalyEvaluations.get(i));
+			detectionHits = detectionHits + d;
+		}
+		if (anomalyEvaluations.size() > 0) {
+			if (!absolute){
+				// getUndetectable?
+				return 1.0 * detectionHits / anomalyEvaluations.size();
+			} else return detectionHits;
+		} else return 0.0;
+	}
 
-	@Override
+	/*@Override
 	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		int undetectableCount = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		List<InjectedElement> currentInj = new LinkedList<InjectedElement>();
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
-			while (!currentInj.isEmpty()
-					&& currentInj.get(0).getFinalTimestamp()
-							.before(anomalyEvaluations.get(i).getDate())) {
+			while (!currentInj.isEmpty() && currentInj.get(0).getFinalTimestamp().before(anomalyEvaluations.get(i).getDate())) {
 				currentInj.remove(0);
 			}
 			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
 				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
 				currentInj.add(anomalyEvaluations.get(i).getInjectedElement());
 			}
-			int d = classifyMetric(anomalyEvaluations.get(i).getDate(),
-					anomalyEvaluations.get(i).getValue(), currentInj);
+			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
+			int d = classifyMetric(anomalyEvaluations.get(i).getDate(), anomalyEvaluations.get(i).getValue(), currentInj);
 			if (anomalyEvaluations.get(i).getValue() >= 0.0) {
 				detectionHits = detectionHits + d;
-			} else
-				undetectableCount++;
+			} else undetectableCount++;
 		}
 		if (anomalyEvaluations.size() > 0) {
 			if (!absolute)
@@ -83,9 +98,8 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 							.getTimestamp().getTime()) / 1000 - current.size());
 		}
 		return undetectable;
-	}
+	}*/
 
-	protected abstract int classifyMetric(Date snapTime, Double anEvaluation,
-			List<InjectedElement> injList);
+	protected abstract int classifyMetric(TimedResult tResult);
 
 }

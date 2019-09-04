@@ -271,5 +271,16 @@ public abstract class Knowledge implements Cloneable {
 		}
 		return map;
 	}
+	
+	public static Indicator[] getIndicators(Map<KnowledgeType, List<Knowledge>> kMap) {
+		List<Knowledge> kList;
+		if(kMap.size() > 0){
+			kList = kMap.get(kMap.keySet().iterator().next());
+			if(kList.size() > 0){
+				return kList.get(0).getIndicators();
+			} else return null;
+		} else return null;
+
+	}
 
 }

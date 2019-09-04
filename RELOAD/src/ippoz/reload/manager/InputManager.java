@@ -8,6 +8,8 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1359,26 +1362,29 @@ public class InputManager {
 		String[] header = null;
 		Map<DataSeries, Map<FeatureSelectorType, Double>> featureMap = new HashMap<>();
 		List<DataSeries> sList = getSelectedSeries(filePrequel);
+		File file = new File(getScoresFolder() + filePrequel + File.separatorChar + "featureScores_[" + datasetName + "].csv");
 		try {
-			reader = new BufferedReader(new FileReader(new File(getScoresFolder() + filePrequel + File.separatorChar + "featureScores_[" + datasetName + "].csv")));
-			while(reader.ready()){
-				readed = reader.readLine();
-				if(readed != null){
-					readed = readed.trim();
-					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						if(header == null){
-							header = readed.split(",");
-							for(DataSeries ds : sList){
-								featureMap.put(ds, new HashMap<>());
-							}
-						} else {
-							String[] splitted = readed.split(",");
-							if(splitted[0] != null && splitted[0].length() > 0){
-								for(int i=2;i<splitted.length;i++){
-									for(DataSeries ds : sList){
-										if(ds.toString().equals(header[i].trim())){
-											featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), Double.valueOf(splitted[i]));
-											break;
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							if(header == null){
+								header = readed.split(",");
+								for(DataSeries ds : sList){
+									featureMap.put(ds, new HashMap<>());
+								}
+							} else {
+								String[] splitted = readed.split(",");
+								if(splitted[0] != null && splitted[0].length() > 0){
+									for(int i=2;i<splitted.length;i++){
+										for(DataSeries ds : sList){
+											if(ds.toString().equals(header[i].trim())){
+												featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), Double.valueOf(splitted[i]));
+												break;
+											}
 										}
 									}
 								}
@@ -1386,12 +1392,143 @@ public class InputManager {
 						}
 					}
 				}
+				reader.close();
+			} else {
+				for(DataSeries ds : sList){
+					featureMap.put(ds, new HashMap<>());
+				}
 			}
-			reader.close();
 		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
+			AppLogger.logException(getClass(), ex, "Unable to read Feature Selection scores file");
 		}
 		return featureMap;
+	}
+	
+	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String setupFolder, String filename) {
+		List<DataSeries> ds = createDataSeries(kMap);
+		saveFilteredSeries(ds, setupFolder, filename);
+		return ds;
+	}
+	
+	private void saveFilteredSeries(List<DataSeries> seriesList, String setupFolder, String filename) {
+		BufferedWriter writer;
+		try {
+			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
+			writer.write("data_series,type\n");
+			for(DataSeries ds : seriesList){
+				writer.write(ds.toString() + "\n");			
+			}
+			writer.close();
+		} catch(IOException ex){
+			AppLogger.logException(getClass(), ex, "Unable to write series");
+		}
+	}
+	
+	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
+		double pearsonSimple;
+		DataCategory[] dataTypes = getDataTypes(); 
+		String dsDomain = getDataSeriesDomain();
+		if(dsDomain.equals("ALL")){
+			return DataSeries.allCombinations(Knowledge.getIndicators(kMap), dataTypes);
+		} else if(dsDomain.equals("UNION")){
+			return DataSeries.unionCombinations(Knowledge.getIndicators(kMap));
+		} else if(dsDomain.equals("SIMPLE")){
+			return DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
+			pearsonCorrelation(kMap, DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes), pearsonSimple, getComplexPearsonThreshold());
+			return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
+		} else return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPossibleIndCombinations());
+	}
+	
+	private void pearsonCorrelation(Map<KnowledgeType, List<Knowledge>> kMap, List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
+		PearsonCombinationManager pcManager;
+		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
+		pcManager = new PearsonCombinationManager(pearsonFile, list, kMap.get(kMap.keySet().iterator().next()));
+		pcManager.calculatePearsonIndexes(pearsonSimple);
+		pcManager.flush();
+	}
+	
+	private List<List<String>> readPossibleIndCombinations(){
+		return readIndCombinations("indicatorCouples.csv");	
+	}
+	
+	private List<List<String>> readIndCombinations(String filename){
+		return readIndCombinations(new File(getSetupFolder() + filename));
+	}
+	
+	private List<List<String>> readIndCombinations(File indCoupleFile){
+		List<List<String>> comb = new LinkedList<List<String>>();
+		List<String> nList;
+		BufferedReader reader;
+		String readed;
+		try {
+			if(indCoupleFile.exists()){
+				reader = new BufferedReader(new FileReader(indCoupleFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
+							if(readed.split(",").length > 0){
+								if(readed.split(",")[0].contains("@")){
+									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
+									for(String sName : readed.split(",")[0].split("@")){
+										nList.add(sName.trim());
+									}
+								} else {
+									nList = new ArrayList<String>(1);
+									nList.add(readed.split(",")[0].trim());
+								}
+								comb.add(nList);
+							}
+						}
+					}
+				}
+				reader.close();
+			} 
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
+		}
+		return comb;
+	}
+	
+	private List<List<String>> readPearsonCombinations(double treshold){
+		List<List<String>> comb = new LinkedList<List<String>>();
+		File pFile = new File(getSetupFolder() + "pearsonCombinations.csv");
+		List<String> nList;
+		BufferedReader reader;
+		String readed;
+		try {
+			if(pFile.exists()){
+				reader = new BufferedReader(new FileReader(pFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
+							if(readed.split(",").length > 0 && Math.abs(Double.valueOf(readed.split(",")[1].trim())) >= treshold){
+								if(readed.split(",")[0].contains("@")){
+									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
+									for(String sName : readed.split(",")[0].split("@")){
+										nList.add(sName.trim());
+									}
+								} else {
+									nList = new ArrayList<String>(1);
+									nList.add(readed.split(",")[0].trim());
+								}
+								comb.add(nList);
+							}
+						}
+					}
+				}
+				reader.close();
+			} 
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
+		}
+		return comb;
 	}
 	
 }

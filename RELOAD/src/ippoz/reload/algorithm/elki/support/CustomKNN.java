@@ -30,7 +30,6 @@ import de.lmu.ifi.dbs.elki.database.ids.DBIDs;
 import de.lmu.ifi.dbs.elki.database.query.distance.DistanceQuery;
 import de.lmu.ifi.dbs.elki.database.query.knn.KNNQuery;
 import de.lmu.ifi.dbs.elki.database.relation.Relation;
-import de.lmu.ifi.dbs.elki.datasource.bundle.SingleObjectBundle;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.DistanceFunction;
 import de.lmu.ifi.dbs.elki.logging.Logging;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -39,7 +38,6 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.OptionID;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.constraints.CommonConstraints;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameterization;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
-
 
 /**
  * @author Tommy
@@ -290,16 +288,6 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		private NumberVector data;
 		
 		private double distanceToKthNeighbour;
-
-		public KNNScore(SingleObjectBundle bundle, double distanceToKthNeighbour) {
-			this.distanceToKthNeighbour = distanceToKthNeighbour;
-			double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
-			data = new Vector(bValues.length);
-			for(int i=0;i<data.getDimensionality();i++){
-				((Vector)data).set(i, bValues[i]);
-			}
-		}
-	
 
 		public KNNScore(String vString, String distK) {
 			this.distanceToKthNeighbour = Double.parseDouble(distK);

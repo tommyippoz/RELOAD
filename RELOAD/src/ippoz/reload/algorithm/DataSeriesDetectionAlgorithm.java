@@ -3,13 +3,13 @@
  */
 package ippoz.reload.algorithm;
 
-import java.io.File;
-
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+
+import java.io.File;
 
 // TODO: Auto-generated Javadoc
 /**

@@ -659,7 +659,7 @@ public class OutputDetailFrame {
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + Overlap_Metric.calculateOverlap(okList, anList) + "% overlap,  " + OverlapDetail_Metric.calculateOverlapDetail(okList, anList) + "% weighted overlap)", 
+				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(OverlapDetail_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   
@@ -686,9 +686,7 @@ public class OutputDetailFrame {
 					((XYPlot)chart.getPlot()).addDomainMarker(domainMarker);
 				}
 			}
-			
 		}
-		
 		
 		// Setting x axis range
 		NumberAxis domain = (NumberAxis) ((XYPlot) chart.getPlot()).getDomainAxis();
@@ -735,7 +733,8 @@ public class OutputDetailFrame {
 		double currentMax = maxValue;
 		if(infiniteFlag)
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
-		
+		// infiniti si vedono anche se tronchi la rappresentazione
+		//a
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(containsPostiveLabel(list)){
@@ -743,7 +742,11 @@ public class OutputDetailFrame {
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
 						currentScore = lr.getValue().getScore();
-					else currentScore = maxValue + maxValue/(numIntervals-1.0);
+					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
+						currentScore = maxValue + maxValue/(numIntervals-1.0);
+					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
+						currentScore = minValue - minValue/(numIntervals-1.0);
+					else currentScore = lr.getValue().getScore();
 					if(currentScore >= minValue && currentScore <= currentMax){
 						double normalizedScore = (lr.getValue().getScore() - minValue) / (currentMax - minValue);
 						int dataIndex = (int) (normalizedScore*numIntervals);
@@ -766,9 +769,9 @@ public class OutputDetailFrame {
 		
 		for(int i=0;i<numIntervals;i++){
 			if(normalCount[i] > 0)
-				falseSeries.add(norm ? (i+0.5) : minValue + i*intervalSize, normalCount[i] + anomalyCount[i]);
+				falseSeries.add(norm ? (i+0.5) : minValue + intervalSize/2 + i*intervalSize, normalCount[i] + anomalyCount[i]);
 			if(anomalyCount[i] > 0)
-				trueSeries.add(norm ? (i+0.5) : minValue + i*intervalSize, anomalyCount[i]);
+				trueSeries.add(norm ? (i+0.5) : minValue + intervalSize/2 + i*intervalSize, anomalyCount[i]);
 		}
 		
 		// Add the series to your data set
@@ -797,7 +800,11 @@ public class OutputDetailFrame {
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
 						currentScore = lr.getValue().getScore();
-					else currentScore = maxValue + maxValue/(numIntervals-1.0);
+					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
+						currentScore = maxValue + maxValue/(numIntervals-1.0);
+					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
+						currentScore = minValue - minValue/(numIntervals-1.0);
+					else currentScore = lr.getValue().getScore();
 					if(currentScore >= minValue && currentScore <= currentMax){
 						double normalizedScore = (currentScore - minValue) / (currentMax - minValue);
 						AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
@@ -827,13 +834,13 @@ public class OutputDetailFrame {
 		
 		for(int i=0;i<numIntervals;i++){
 			if(tpCount[i] > 0)
-				tpSeries.add(norm ? (i + 0.5) : minValue + i*intervalSize, tpCount[i]);
+				tpSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i]);
 			if(tpCount[i] + fnCount[i] > 0)
-				fnSeries.add(norm ? (i + 0.5) : minValue + i*intervalSize, tpCount[i] + fnCount[i]);
+				fnSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] > 0)
-				fpSeries.add(norm ? (i + 0.5) : minValue + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i]);
+				fpSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i] > 0)
-				tnSeries.add(norm ? (i + 0.5) : minValue + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
+				tnSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
 		}
 		
 		// Add the series to your data set

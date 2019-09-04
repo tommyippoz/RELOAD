@@ -3,7 +3,6 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.madness.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
@@ -42,17 +41,6 @@ public abstract class DataManager extends ThreadScheduler {
 	
 	public int experimentsSize(){
 		return kMap.get(kMap.keySet().iterator().next()).size();
-	}
-	
-	public Indicator[] getIndicators() {
-		List<Knowledge> kList;
-		if(kMap.size() > 0){
-			kList = kMap.get(kMap.keySet().iterator().next());
-			if(kList.size() > 0){
-				return kList.get(0).getIndicators();
-			} else return null;
-		} else return null;
-
 	}
 	
 	public boolean isValidKnowledge(){

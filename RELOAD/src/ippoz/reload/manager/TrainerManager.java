@@ -15,7 +15,6 @@ import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
-import ippoz.reload.trainer.FixedConfigurationTrainer;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,25 +50,6 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
 		super(map, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
-		clearTmpFolders(algTypes);
-	}
-	
-	/**
-	 * Instantiates a new trainer manager.
-	 *
-	 * @param prefManager the preference manager
-	 * @param pManager the timing manager
-	 * @param expList the experiment list
-	 * @param confList the configuration list
-	 * @param metric the chosen metric
-	 * @param reputation the chosen reputation metric
-	 * @param dataTypes the data types
-	 * @param complexPearson 
-	 * @param simplePearson 
-	 * @param algTypes2 the algorithm types
-	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, false, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
