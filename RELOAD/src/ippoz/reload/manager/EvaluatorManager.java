@@ -13,7 +13,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.AlgorithmVoter;
 import ippoz.reload.voter.ExperimentVoter;
@@ -221,8 +221,8 @@ public class EvaluatorManager extends DataManager {
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = readed.split("§");
-							if(splitted.length > 3 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 5 ? splitted[5] : null));
+							if(splitted.length > 4 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){
 									case RCC:
 									case PEA:
@@ -236,6 +236,7 @@ public class EvaluatorManager extends DataManager {
 									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
 									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
 								addVoter(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])), voterList);
 							}
@@ -295,8 +296,8 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}
 	
-	public Map<String, List<TimedValue>> getTimedEvaluations() {
-		Map<String, List<TimedValue>> outMap = new TreeMap<String, List<TimedValue>>();
+	public Map<String, List<TimedResult>> getTimedEvaluations() {
+		Map<String, List<TimedResult>> outMap = new TreeMap<String, List<TimedResult>>();
 		for(Thread t : getThreadList()){
 			ExperimentVoter ev = (ExperimentVoter)t;
 			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());

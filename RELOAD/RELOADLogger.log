@@ -1,0 +1,8 @@
+Sep 04, 2019 10:52:50 AM ippoz.reload.commons.support.AppLogger log
+INFO: [1567587170635][Info][ippoz.reload.executable.ui.BuildUI] Screen dimension is java.awt.Dimension[width=1920,height=1080]
+Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
+INFO: [1567587172432][Info][ippoz.reload.executable.DetectorMain] 1 RELOAD instances found.
+Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
+INFO: [1567587172433][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/1]: 'unsw_DoS 541-575 [ELKI_LOF]'
+Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
+INFO: [1567587172434][Info][ippoz.reload.executable.DetectorMain] Starting Evaluation Process

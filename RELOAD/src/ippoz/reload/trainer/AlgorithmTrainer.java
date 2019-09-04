@@ -60,6 +60,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
 	private boolean sameResultFlag;
 	
+	private String datasetName;
+	
 	protected int kfold;
 	
 	private long trainingTime;
@@ -74,13 +76,14 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, int kfold) {
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
 		this.reputation = reputation;
 		this.kList = kList;
 		this.kfold = kfold;
+		this.datasetName = datasetName;
 	}
 	
 	/**
@@ -92,9 +95,11 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param reputation the used reputation metric
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
+	 * @param kfold2 
+	 * @param datasetName 
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList) {
-		this(algTag, dataSeries, metric, reputation, kList, 1);
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName) {
+		this(algTag, dataSeries, metric, reputation, kList, datasetName, 1);
 	}
 	
 	/**
@@ -104,6 +109,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	public boolean isValidTrain(){
 		return !sameResultFlag && (metricScore != null && metricScore.size() > 0) && (trainScore != null && trainScore.size() > 0);
+	}
+	
+	public String getDatasetName(){
+		return datasetName;
 	}
 
 	/* (non-Javadoc)
@@ -129,6 +138,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
 			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
 			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
+			bestConf.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
 		}
 	}
 	

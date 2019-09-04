@@ -55,6 +55,8 @@ public class AlgorithmConfiguration implements Cloneable {
 	public static final String SLIDING_POLICY = "sliding_policy";
 
 	public static final String THRESHOLD = "threshold";
+	
+	public static final String DATASET_NAME = "dataset";
 
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
@@ -188,14 +190,14 @@ public class AlgorithmConfiguration implements Cloneable {
 	 */
 	public String toFileRow(boolean complete){
 		if(complete)
-			return getItem(WEIGHT, false) + ", " + getItem(AVG_SCORE, false) + ", " + getItem(STD_SCORE, false) + ", " + getSpecificItems();
+			return getItem(WEIGHT, false) + ", " + getItem(AVG_SCORE, false) + ", " + getItem(STD_SCORE, false) + ", " + getItem(DATASET_NAME, false) + ", " + getSpecificItems();
 		else return getSpecificItems();
 	}
 
 	private String getSpecificItems() {
 		String all = "";
 		for(String itemTag : confMap.keySet()){
-			if(!itemTag.equals(AVG_SCORE) && !itemTag.equals(STD_SCORE) &&!itemTag.equals(WEIGHT)){
+			if(!itemTag.equals(AVG_SCORE) && !itemTag.equals(STD_SCORE) && !itemTag.equals(WEIGHT) &&!itemTag.equals(DATASET_NAME)){
 				all = all + itemTag + "=" + getRawItem(itemTag, false).toString() + "&";
 			}
 		}

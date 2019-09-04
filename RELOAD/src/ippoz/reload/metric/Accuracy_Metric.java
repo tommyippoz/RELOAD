@@ -3,8 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 
 import java.util.List;
 
@@ -26,16 +25,11 @@ public class Accuracy_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(
-				knowledge, anomalyEvaluations);
-		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(
-				knowledge, anomalyEvaluations);
-		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(
-				knowledge, anomalyEvaluations);
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(
-				knowledge, anomalyEvaluations);
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		if (tp + fp + tn + fn > 0)
 			return 1.0 * (tn + tp) / (tp + fp + tn + fn);
 		else

@@ -3,8 +3,7 @@
  */
 package ippoz.reload.reputation;
 
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.metric.TP_Metric;
 
 import java.util.List;
@@ -33,18 +32,18 @@ public class BetaReputation extends Reputation {
 	 * @see ippoz.multilayer.detector.reputation.Reputation#evaluateExperimentReputation(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations) {
-		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(knowledge, anomalyEvaluations);
-		double nInj = countInjections(knowledge);
+	public double evaluateExperimentReputation(List<TimedResult> anomalyEvaluations) {
+		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(anomalyEvaluations);
+		double nInj = countInjections(anomalyEvaluations);
 		double alpha = tp + 1;
 		double beta = nInj + 1;
 		return alpha*1.0/(alpha + beta);
 	}
 	
-	private int countInjections(Knowledge knowledge){
+	private int countInjections(List<TimedResult> anomalyEvaluations){
 		int count = 0;
-		for(int i=0;i<knowledge.size();i++){
-			if(knowledge.getInjection(i) != null)
+		for(TimedResult tr : anomalyEvaluations){
+			if(tr.getInjectedElement() != null)
 				count++;
 		}
 		return count;

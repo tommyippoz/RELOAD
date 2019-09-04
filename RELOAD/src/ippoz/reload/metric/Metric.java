@@ -4,10 +4,11 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.ValueSeries;
 
 import java.util.ArrayList;
@@ -44,12 +45,11 @@ public abstract class Metric implements Comparable<Metric> {
 		double snapValue;
 		int undetectable = 0;
 		Knowledge knowledge = know.cloneKnowledge();
-		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
+		List<TimedResult> anomalyEvaluations = new ArrayList<TimedResult>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
-			snapValue = DetectionAlgorithm.convertResultIntoDouble(alg
-					.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
-			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i),
-					snapValue));
+			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
+			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
+			anomalyEvaluations.add(new TimedResult(knowledge.getTimestamp(i), snapValue, ar.getScore(), knowledge.getInjection(i)));
 			if (snapValue >= 0.0) {
 				average = average + anomalyEvaluations.get(i).getValue();
 				std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
@@ -65,9 +65,7 @@ public abstract class Metric implements Comparable<Metric> {
 		average = average / (knowledge.size() - undetectable);
 		std = Math.sqrt((std / (knowledge.size() - undetectable))
 				- Math.pow(average, 2));
-		return new double[] {
-				evaluateAnomalyResults(knowledge, anomalyEvaluations), average,
-				std };
+		return new double[] {evaluateAnomalyResults(anomalyEvaluations), average, std};
 	}
 
 	@Override
@@ -88,8 +86,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations);
 
 	/**
 	 * Returns the anomaly evaluation for the given input data.
@@ -102,15 +99,12 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly threshold
 	 * @return the global anomaly evaluation
 	 */
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> voting, double anomalyTreshold) {
-		List<TimedValue> votingWithTreshold = new ArrayList<TimedValue>(
-				voting.size());
-		for (TimedValue vResult : voting) {
-			votingWithTreshold.add(new TimedValue(vResult.getDate(), vResult
-					.getValue() / anomalyTreshold * 1.0));
+	public double evaluateAnomalyResults(List<TimedResult> voting, double anomalyTreshold) {
+		List<TimedResult> votingWithTreshold = new ArrayList<TimedResult>(voting.size());
+		for (TimedResult vResult : voting) {
+			votingWithTreshold.add(new TimedResult(vResult.getDate(), vResult.getValue() / anomalyTreshold * 1.0, vResult.getAlgorithmScore(), vResult.getInjectedElement()));
 		}
-		return evaluateAnomalyResults(knowledge, votingWithTreshold);
+		return evaluateAnomalyResults(votingWithTreshold);
 	}
 
 	/**

@@ -3,10 +3,24 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.result.DBSCANResult;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.support.AppLogger;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,32 +28,32 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.data.Observation;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.service.ServiceCall;
-import ippoz.reload.commons.support.AppLogger;
-
 /**
  * @author Tommy
  *
  */
 public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
 
+	/** The Constant HISTOGRAMS. */
+	public static final String CLUSTERS = "clusters";
+	
 	/** The Constant THRESHOLD. */
 	public static final String THRESHOLD = "threshold";
 	
 	/** The Constant TMP_FILE. */
 	private static final String TMP_FILE = "tmp_file";
-
-	private static final String CLUSTERS = "clusters";
+	
+	/** The Constant EPS. */
+	public static final String EPS = "eps";
+	
+	/** The Constant DEFAULT_EPS. */
+	public static final int DEFAULT_EPS = 3;
+	
+	/** The Constant PTS. */
+	public static final String PTS = "pts";
+	
+	/** The Constant DEFAULT_PTS. */
+	public static final int DEFAULT_PTS = 3;
 	
 	private List<UsableCluster> clSnaps;
 	
@@ -47,15 +61,56 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	
 	public DBSCANDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf);
-		
-		// TODO Auto-generated constructor stub
+		if(conf.hasItem(CLUSTERS)){
+			clSnaps = loadFromConfiguration();
+			loadFile(getFilename());
+			clearLoggedScores();
+			logScores(filterScores());
+		}
+	}
+
+	/**
+	 * Loads clusters from configuration.
+	 *
+	 * @return the clusters
+	 */
+	private List<UsableCluster> loadFromConfiguration(){
+		List<UsableCluster> confClusters = new LinkedList<UsableCluster>();
+		for(String clString : conf.getItem(CLUSTERS).trim().split("ç")){
+			confClusters.add(new UsableCluster(clString));
+		}
+		return confClusters;
+	}
+	
+	/**
+	 * Gets the pts.
+	 *
+	 * @return the pts
+	 */
+	private int getPTS() {
+		return conf.hasItem(PTS) ? Integer.parseInt(conf.getItem(PTS)) : DEFAULT_PTS;
+	}
+	
+	/**
+	 * Gets the eps.
+	 *
+	 * @return the eps
+	 */
+	private int getEPS() {
+		return conf.hasItem(EPS) ? Integer.parseInt(conf.getItem(EPS)) : DEFAULT_EPS;
 	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge,
-			Snapshot sysSnapshot, int currentIndex) {
-		// TODO Auto-generated method stub
-		return null;
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+		AlgorithmResult ar;
+		UsableCluster uc;
+		double[] snapsArray = getSnapValueArray(sysSnapshot);
+		if(clSnaps != null){
+			uc = calculateCluster(snapsArray);
+			ar = new DBSCANResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), uc.distanceFrom(snapsArray), uc.getVar());
+			getDecisionFunction().assignScore(ar, true);
+			return ar;
+		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 
 	@Override
@@ -68,6 +123,71 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	protected void printTextResults(String outFolderName, String expTag) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	/**
+	 * Load file.
+	 *
+	 * @param filename the filename
+	 */
+	public void loadFile(String filename) {
+		loadClustersFile(new File(filename));
+		loadScoresFile(new File(filename + "scores"));		
+	}
+	
+	/**
+	 * Load scores file.
+	 *
+	 * @param file the file
+	 */
+	private void loadScoresFile(File file) {
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				scores = new LinkedList<DBSCANScore>();
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.split(";").length >= 2)
+							scores.add(new DBSCANScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN Scores file");
+		} 
+	}
+	
+	/**
+	 * Load clusters file.
+	 *
+	 * @param file the file
+	 */
+	private void loadClustersFile(File file){
+		BufferedReader reader;
+		String readed;
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				reader.readLine();
+				clSnaps = new LinkedList<UsableCluster>();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						clSnaps.add(new UsableCluster(readed.trim()));
+					}
+				}
+				reader.close();
+			}
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN file");
+		} 
 	}
 	
 	/**
@@ -91,7 +211,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		}
 		
 		DBSCANClusterer<ClusterableSnapshot> dbSCAN;
-		dbSCAN = new DBSCANClusterer<ClusterableSnapshot>(3, 3);
+		dbSCAN = new DBSCANClusterer<ClusterableSnapshot>(getEPS(), clSnapList.get(0).getPoint().length*getPTS());
 		List<Cluster<ClusterableSnapshot>> cSnaps = dbSCAN.cluster(clSnapList);
 		if(cSnaps != null){
 			clSnaps = new LinkedList<UsableCluster>();
@@ -116,11 +236,30 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	    	printFile(new File(getFilename()));
 		}
 		
-		return false;
+		return true;
 	}
 	
 	/**
-	 * Calculate hbos.
+	 * Calculate DBSCAN.
+	 *
+	 * @param snapsArray the snap
+	 * @return the double
+	 */
+	private UsableCluster calculateCluster(double[] sArr){
+		double dbScan = Double.MAX_VALUE;
+		UsableCluster best = null;
+		for(UsableCluster uc : clSnaps){
+			double dist = uc.distanceFrom(sArr);
+			if(dist < dbScan){
+				dbScan = dist;
+				best = uc;
+			}
+		}
+		return best;
+	}
+	
+	/**
+	 * Calculate DBSCAN.
 	 *
 	 * @param snap the snap
 	 * @return the double
@@ -173,14 +312,14 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("histogram\n");
+				writer.write("cluster_avg,cluster_std\n");
 				for(UsableCluster uc : clSnaps){
 					writer.write(uc.toConfiguration().replace("@", ";") + "\n");
 				}
 				writer.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to write KMEANS clusters file");
+			AppLogger.logException(getClass(), ex, "Unable to write DBSCAN clusters file");
 		} 
 	}
 	
@@ -214,24 +353,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		}
 		return toReturn.substring(0, toReturn.length()-1);
 	}
-
-	/**
-	 * Gets the filename used to store data about scores and histograms.
-	 *
-	 * @return the filename
-	 */
-	private String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + ".hbos";
-	}
-	
-	/**
-	 * Gets the default folder used to store temporary data.
-	 *
-	 * @return the default temporary folder
-	 */
-	private String getDefaultTmpFolder(){
-		return "DBSCAN_tmp_RELOAD";
-	}
 	
 	private class ClusterableSnapshot implements Clusterable {
 		
@@ -264,14 +385,8 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		
 		private List<double[]> points;
 		
-		public UsableCluster(double[] avg, Double var) {
-			this.avg = avg;
-			this.var = var;
-			points = null;
-		}
-		
 		public String toConfiguration() {
-			return String.valueOf(avg) + "@" + var;
+			return Arrays.toString(avg) + ";" + var;
 		}
 
 		public UsableCluster(List<ClusterableSnapshot> cSnaps) {
@@ -284,6 +399,20 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			calculateVar();
 		}
 		
+		public UsableCluster(String clString) {
+			String[] splitted;
+			if(clString != null){
+				splitted = clString.split(";");
+				var = Double.valueOf(splitted[1]);
+				clString = splitted[0].replace("[", "").replace("]", "");
+				splitted = clString.split(",");
+				avg = new double[splitted.length];
+				for(int i=0;i<avg.length;i++){
+					avg[i] = Double.valueOf(splitted[i]);
+				}
+			}
+		}
+
 		public double distanceFrom(double[] point){
 			return euclideanDistance(avg, point);
 		}
@@ -332,17 +461,9 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			}
 			
 		}
-
-		public double[] getAvg(){
-			return avg;
-		} 
 		
 		public double getVar(){
 			return var;
-		}
-		
-		public double getStd(){
-			return Math.sqrt(getVar());
 		}
 		
 	}

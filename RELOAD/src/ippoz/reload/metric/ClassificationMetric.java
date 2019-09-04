@@ -4,10 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,35 +31,50 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		super(mType, validAfter);
 		this.absolute = absolute;
 	}
+	
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+		int detectionHits = 0;
+		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
+		for (int i = 0; i < anomalyEvaluations.size(); i++) {
+			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
+				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
+			}
+			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
+			int d = classifyMetric(anomalyEvaluations.get(i));
+			detectionHits = detectionHits + d;
+		}
+		if (anomalyEvaluations.size() > 0) {
+			if (!absolute){
+				// getUndetectable?
+				return 1.0 * detectionHits / anomalyEvaluations.size();
+			} else return detectionHits;
+		} else return 0.0;
+	}
 
-	@Override
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> anomalyEvaluations) {
+	/*@Override
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		int undetectableCount = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		List<InjectedElement> currentInj = new LinkedList<InjectedElement>();
-		for (int i = 0; i < knowledge.size(); i++) {
-			while (!currentInj.isEmpty()
-					&& currentInj.get(0).getFinalTimestamp()
-							.before(knowledge.getTimestamp(i))) {
+		for (int i = 0; i < anomalyEvaluations.size(); i++) {
+			while (!currentInj.isEmpty() && currentInj.get(0).getFinalTimestamp().before(anomalyEvaluations.get(i).getDate())) {
 				currentInj.remove(0);
 			}
-			if (knowledge.getInjection(i) != null) {
-				overallInj.add(knowledge.getInjection(i));
-				currentInj.add(knowledge.getInjection(i));
+			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
+				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
+				currentInj.add(anomalyEvaluations.get(i).getInjectedElement());
 			}
-			int d = classifyMetric(knowledge.getTimestamp(i),
-					anomalyEvaluations.get(i).getValue(), currentInj);
+			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
+			int d = classifyMetric(anomalyEvaluations.get(i).getDate(), anomalyEvaluations.get(i).getValue(), currentInj);
 			if (anomalyEvaluations.get(i).getValue() >= 0.0) {
 				detectionHits = detectionHits + d;
-			} else
-				undetectableCount++;
+			} else undetectableCount++;
 		}
-		if (knowledge.size() > 0) {
+		if (anomalyEvaluations.size() > 0) {
 			if (!absolute)
 				// getUndetectable?
-				return 1.0 * detectionHits / (knowledge.size() - undetectableCount);
+				return 1.0 * detectionHits / (anomalyEvaluations.size() - undetectableCount);
 			else
 				return detectionHits;
 		} else
@@ -85,9 +98,8 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 							.getTimestamp().getTime()) / 1000 - current.size());
 		}
 		return undetectable;
-	}
+	}*/
 
-	protected abstract int classifyMetric(Date snapTime, Double anEvaluation,
-			List<InjectedElement> injList);
+	protected abstract int classifyMetric(TimedResult tResult);
 
 }

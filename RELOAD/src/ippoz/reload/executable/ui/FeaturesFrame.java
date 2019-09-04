@@ -40,8 +40,6 @@ public class FeaturesFrame {
 
 	private Font labelFont;
 
-	private Font labelBoldFont;
-
 	private JPanel featurePanel;
 
 	private DetectorOutput dOut;
@@ -56,8 +54,10 @@ public class FeaturesFrame {
 		this.dOut = dOut;
 		fScores = dOut.getSelectedFeatures();
 		rows = new ArrayList<DataSeries>(fScores.keySet());
-		columns = new ArrayList<FeatureSelectorType>(fScores.get(rows.get(0))
-				.keySet());
+		
+		if(rows != null && rows.size() > 0 && rows.get(0) != null && rows.get(0).size() > 0)
+			columns = new ArrayList<FeatureSelectorType>(fScores.get(rows.get(0)).keySet());
+		else columns = new ArrayList<FeatureSelectorType>();
 
 		buildFrame();
 
@@ -65,7 +65,6 @@ public class FeaturesFrame {
 				.getHeight() / 1080;
 
 		labelFont = new Font("Times", Font.PLAIN, (int) ((16 + rate) / 2));
-		labelBoldFont = new Font("Times", Font.BOLD, (int) ((15 + rate) / 2));
 
 		featurePanel = buildMainPanel();
 	}

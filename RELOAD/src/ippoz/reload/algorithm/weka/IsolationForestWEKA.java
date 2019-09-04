@@ -157,15 +157,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
-	/**
-	 * Gets the filename to be used for storing and loading files.
-	 *
-	 * @return the filename
-	 */
-	private String getFilename(){
-		return DEFAULT_TMP_FOLDER + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "_") + ".iforest";
-	}
-
 	/* (non-Javadoc)
 	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#evaluateWEKASnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
 	 */

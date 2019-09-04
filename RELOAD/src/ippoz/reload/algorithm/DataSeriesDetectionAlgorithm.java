@@ -9,6 +9,8 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
+import java.io.File;
+
 // TODO: Auto-generated Javadoc
 /**
  * The Class IndicatorDetectionAlgorithm.
@@ -40,6 +42,26 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "@" + dataSeries.getName();
+	}
+	
+	/**
+	 * Gets the filename used to store data about scores and histograms.
+	 *
+	 * @return the filename
+	 */
+	protected String getFilename(){
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getAlgorithmType().toString().toLowerCase();
+	}
+	
+	/**
+	 * Gets the default folder used to store temporary data.
+	 *
+	 * @return the default temporary folder
+	 */
+	protected String getDefaultTmpFolder(){
+		if(conf.hasItem(AlgorithmConfiguration.DATASET_NAME) && conf.getItem(AlgorithmConfiguration.DATASET_NAME).length() > 0)
+			return "tmp" + File.separatorChar + conf.getItem(AlgorithmConfiguration.DATASET_NAME) + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
+		else return "tmp" + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
 	}
 
 	@Override

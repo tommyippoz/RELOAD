@@ -8,7 +8,7 @@ import ippoz.reload.algorithm.elki.ELKIAlgorithm;
 import ippoz.reload.algorithm.elki.support.CustomKMeans;
 import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.result.ClusteringResult;
+import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
@@ -64,7 +64,7 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		AlgorithmResult ar;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
-			ar = new ClusteringResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), of);
+			ar = new KMeansResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), of);
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());

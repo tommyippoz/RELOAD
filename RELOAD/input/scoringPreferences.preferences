@@ -4,9 +4,9 @@
 CONVERGENCE_TIME = 10.0
 
 * Set of possible anomaly thresholds. Accepted values are ALL, HALF, THIRD, 'n'.
-ANOMALY_TRESHOLD =  HALF
+ANOMALY_TRESHOLD =  1
 *ANOMALY_TRESHOLD = 1, HALF, THIRD,
 
 * Strategy to select anomaly checkers. Accepted values are 'min metric score', BEST 'n', FILTERED 'n'.
-INDICATOR_SCORE_TRESHOLD = BEST 3
+INDICATOR_SCORE_TRESHOLD = BEST 1
 *INDICATOR_SCORE_TRESHOLD = BEST 1, FILTERED 10, BEST 5

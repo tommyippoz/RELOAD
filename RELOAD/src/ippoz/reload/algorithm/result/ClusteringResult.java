@@ -3,35 +3,20 @@
  */
 package ippoz.reload.algorithm.result;
 
-import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.commons.failure.InjectedElement;
 
 import java.util.List;
 
-import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
-
-// TODO: Auto-generated Javadoc
 /**
  * The Class ClusteringResult.
  *
  * @author Tommy
  */
-public class ClusteringResult extends AlgorithmResult {
-	
-	/** The kmm. */
-	private KMeansModel kmm;
+public abstract class ClusteringResult extends AlgorithmResult {
 
-	/**
-	 * Instantiates a new clustering result.
-	 *
-	 * @param dataValues the data values
-	 * @param injection the injection
-	 * @param of the of
-	 */
-	@SuppressWarnings("rawtypes")
-	public ClusteringResult(List<Double> dataValues, InjectedElement injection, KMeansScore of) {
-		super(dataValues, injection, of.getDistance());
-		kmm = of.getCluster();
+	public ClusteringResult(List<Double> dataValues, InjectedElement injection, double score) {
+		super(dataValues, injection, score);
+		// TODO Auto-generated constructor stub
 	}
 
 	/* (non-Javadoc)
@@ -47,16 +32,10 @@ public class ClusteringResult extends AlgorithmResult {
 	 *
 	 * @return the cluster variance
 	 */
-	public double getClusterVariance(){
-		return kmm.getVarianceContribution();
+	public abstract double getClusterVariance();
+	
+	public double getClusterStd(){
+		return Math.sqrt(getClusterVariance());
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.result.AlgorithmResult#toFileString(java.lang.String)
-	 */
-	@Override
-	public String toFileString(String sep) {
-		return super.toFileString(sep) + sep + "{" + kmm.getMean() + "}" + sep + kmm.getVarianceContribution();
-	}	
 
 }

@@ -15,9 +15,6 @@ import java.util.List;
  */
 public interface Loader {
 	
-	/** The Constant FILTERING_RUN_PREFERENCE. */
-	public static final String FILTERING_RUN_PREFERENCE = "GOLDEN_RUN_IDS";
-	
 	/** The Constant TRAIN_RUN_PREFERENCE. */
 	public static final String TRAIN_RUN_PREFERENCE = "TRAIN_RUN_IDS";
 	
@@ -30,6 +27,10 @@ public interface Loader {
 	/** The Constant CONSIDERED_LAYERS. */
 	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
+	public static final int SAMPLE_VALUES_COUNT = 200;
+
+	public abstract LoaderType getLoaderType();
+
 	/**
 	 * Abstract function to fetch data, returning a list of MonitoredData.
 	 *
@@ -49,6 +50,34 @@ public interface Loader {
 	 *
 	 * @return the name
 	 */
-	public abstract String getName();
+	public abstract String getLoaderName();
+	
+	/**
+	 * Gets the names of the features.
+	 *
+	 * @return the name
+	 */
+	public abstract String[] getFeatureNames();
+	
+	/**
+	 * Gets the first values of a given feature.
+	 *
+	 * @return the name
+	 */
+	public abstract Object[] getSampleValuesFor(String featureName);
+	
+	public abstract int getRowNumber();
+	
+	public abstract double getMBSize();
+
+	public abstract boolean canFetch();
+	
+	public abstract double getAnomalyRate();
+	
+	public abstract double getSkipRate();
+	
+	public abstract int getDataPoints();
+	
+	public abstract List<Integer> getLoaderRuns();
 	
 }

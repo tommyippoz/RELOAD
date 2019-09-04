@@ -14,7 +14,7 @@ import ippoz.reload.commons.support.AppUtility;
  *
  * @author Tommy
  */
-public class KMeansDecision extends DecisionFunction {
+public class ClusterDecision extends DecisionFunction {
 	
 	/** The function text. */
 	private String functionText;
@@ -24,7 +24,7 @@ public class KMeansDecision extends DecisionFunction {
 	 *
 	 * @param functionText the function text
 	 */
-	public KMeansDecision(String functionText) {
+	public ClusterDecision(String functionText) {
 		super("cluster", DecisionFunctionType.CLUSTER);
 		this.functionText = functionText;
 	}

@@ -4,9 +4,10 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.utils.logging.AppLogger;
+
 
 /**
  * The Class DecisionFunction. Abstract class for decision functions.
@@ -117,7 +118,7 @@ public abstract class DecisionFunction {
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
-						return new KMeansDecision(partial);
+						return new ClusterDecision(partial);
 					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
 				} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create decision function '" + thresholdTag + "'");
 			} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "null tag for decision function");

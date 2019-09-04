@@ -16,10 +16,6 @@ import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.metric.Metric;
-import ippoz.reload.reputation.Reputation;
-import ippoz.reload.trainer.AlgorithmTrainer;
-import ippoz.reload.trainer.ConfigurationSelectorTrainer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -213,13 +209,13 @@ public class PearsonCombinationManager {
 		} 
 	}
 	
-	public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
+	/*public List<AlgorithmTrainer> getTrainers(Metric metric, Reputation reputation, Map<AlgorithmType, List<AlgorithmConfiguration>> confList) {
 		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>(pResults.size());
 		for(PearsonResult pr : pResults){
 			trainerList.add(new ConfigurationSelectorTrainer(AlgorithmType.PEA, null, metric, reputation, kList, adaptConf(confList, pr).get(AlgorithmType.PEA), kfold));
 		}
 		return trainerList;
-	}
+	}*/
 	
 	private Map<AlgorithmType, List<AlgorithmConfiguration>> adaptConf(Map<AlgorithmType, List<AlgorithmConfiguration>> confList, PearsonResult pr) {
 		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){

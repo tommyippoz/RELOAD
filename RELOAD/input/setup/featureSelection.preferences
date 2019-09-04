@@ -2,4 +2,4 @@
 
 feature_selection_strategy,threshold
 VARIANCE,3.0
-INFORMATION_GAIN,0.1
+RELIEF,0.05

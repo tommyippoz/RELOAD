@@ -3,8 +3,10 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.madness.commons.indicator.Indicator;
+import ippoz.reload.commons.support.PreferencesManager;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -12,43 +14,87 @@ import java.util.List;
  *
  * @author Tommy
  */
-public class ARFFLoader extends SimpleLoader {
+public class ARFFLoader extends FileLoader {
+	
+	/** The anomaly window. */
+	private int anomalyWindow;
 
 	/**
 	 * Instantiates a new ARFF loader.
 	 *
 	 * @param runs the runs
 	 */
-	public ARFFLoader(List<Integer> runs) {
-		super(runs);
-		// TODO Auto-generated constructor stub
+	public ARFFLoader(List<Integer> runs, File file, Integer[] skip, int labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
+		super(runs, file, labelCol, experimentRows);
+		this.anomalyWindow = anomalyWindow;
+		filterHeader(skip);
+		parseFaultyTags(faultyTags);
+		parseAvoidTags(avoidTags);
+		readARFF();
+	}
+	
+	/**
+	 * Instantiates a new CSV pre-loader.
+	 *
+	 * @param list the list
+	 * @param prefManager the preferences manager
+	 * @param tag the tag
+	 * @param anomalyWindow the anomaly window
+	 * @param datasetsFolder the datasets folder
+	 */
+	public ARFFLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
+		this(list, 
+				extractFile(prefManager, datasetsFolder, tag), 
+				parseColumns(prefManager.getPreference(SKIP_COLUMNS)), 
+				Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), 
+				extractExperimentRows(prefManager), 
+				extractFaultyTags(prefManager, tag), 
+				extractAvoidTags(prefManager, tag), 
+				anomalyWindow);
+	}
+	
+	@Override
+	public LoaderType getLoaderType() {
+		return LoaderType.ARFF;
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.loader.Loader#fetch()
-	 */
 	@Override
-	public List<MonitoredData> fetch() {
+	public String getLoaderName() {
+		return "ARFF - " + file.getName().split(".")[0];
+	}
+
+	@Override
+	public Object[] getSampleValuesFor(String featureName) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.loader.Loader#getRuns()
-	 */
 	@Override
-	public String getRuns() {
+	public List<Indicator> loadHeader() {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private void readARFF(){
+		
+	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.loader.Loader#getName()
-	 */
 	@Override
-	public String getName() {
+	public double getAnomalyRate() {
 		// TODO Auto-generated method stub
-		return null;
+		return 0;
+	}
+
+	@Override
+	public double getSkipRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDataPoints() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

@@ -15,7 +15,6 @@ import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
-import ippoz.reload.trainer.FixedConfigurationTrainer;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -38,11 +37,6 @@ import java.util.Map.Entry;
  */
 public class TrainerManager extends TrainDataManager {
 	
-	/** The output folder. */
-	//private String outputFolder;
-		
-	private InvariantManager invManager;
-	
 	/**
 	 * Instantiates a new trainer manager.
 	 *
@@ -54,27 +48,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
-		super(map, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, kfold);
-		clearTmpFolders(algTypes);
-	}
-	
-	/**
-	 * Instantiates a new trainer manager.
-	 *
-	 * @param prefManager the preference manager
-	 * @param pManager the timing manager
-	 * @param expList the experiment list
-	 * @param confList the configuration list
-	 * @param metric the chosen metric
-	 * @param reputation the chosen reputation metric
-	 * @param dataTypes the data types
-	 * @param complexPearson 
-	 * @param simplePearson 
-	 * @param algTypes2 the algorithm types
-	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, double simplePearson, double complexPearson, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, dataTypes, algTypes, simplePearson, complexPearson, false, kfold);
+	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+		super(map, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -90,8 +65,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, confList, metric, reputation, algTypes, selectedSeries, kfold);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+		super(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		clearTmpFolders(algTypes);
 	}
 	
@@ -107,8 +82,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
-		this(setupFolder, dsDomain, scoresFolder, outputFolder, map, confList, metric, reputation, algTypes, kfold);
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
+		this(setupFolder, dsDomain, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -141,10 +116,10 @@ public class TrainerManager extends TrainDataManager {
 			if(isValidKnowledge()){
 				start();
 				join();
-				Collections.sort((List<AlgorithmTrainer>)getThreadList());
+				Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
 				AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
-				saveScores(filterTrainers(getThreadList()), outFilename + "_scores.csv");
-				saveThresholdRelevance(filterTrainers(getThreadList()), outFilename + "_thresholdrelevance.csv");
+				saveScores(getThreadList(), outFilename + "_scores.csv");
+				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
 			} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 		} catch (InterruptedException ex) {
@@ -183,43 +158,31 @@ public class TrainerManager extends TrainDataManager {
 		}
 	}
 	
-	 private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, boolean ascending)
-	    {
+	private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, boolean ascending)
+    {
 
-	        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
 
-	        // Sorting the list based on values
-	        Collections.sort(list, new Comparator<Entry<String, Integer>>()
-	        {
-	            public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-	                if (ascending) {
-	                    return o1.getValue().compareTo(o2.getValue());
-	                } else {
-	                    return o2.getValue().compareTo(o1.getValue());
-	                }
-	            }
-	        });
+        // Sorting the list based on values
+        Collections.sort(list, new Comparator<Entry<String, Integer>>()
+        {
+            public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+                if (ascending) {
+                    return o1.getValue().compareTo(o2.getValue());
+                } else {
+                    return o2.getValue().compareTo(o1.getValue());
+                }
+            }
+        });
 
-	        // Maintaining insertion order with the help of LinkedList
-	        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-	        for (Entry<String, Integer> entry : list) {
-	            sortedMap.put(entry.getKey(), entry.getValue());
-	        }
+        // Maintaining insertion order with the help of LinkedList
+        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+        for (Entry<String, Integer> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
 
-	        return sortedMap;
-	    }
-
-	private List<? extends Thread> filterTrainers(List<? extends Thread> trainerList) {
-		LinkedList<AlgorithmTrainer> invList = new LinkedList<AlgorithmTrainer>();
-		if(invManager != null){
-			for(Thread t : trainerList){
-				if(((AlgorithmTrainer)t).getAlgType().equals(AlgorithmType.INV))
-					invList.add((AlgorithmTrainer)t);
-			}
-			trainerList.removeAll(invManager.filterInvType(invList));
-		}
-		return trainerList;
-	}
+        return sortedMap;
+    }
 
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
@@ -233,20 +196,15 @@ public class TrainerManager extends TrainDataManager {
 				KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
 				switch(algType){
 					case RCC:
-						trainerList.add(new FixedConfigurationTrainer(algType, null, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType).get(0)));
+						/**/
 						break;
 					case PEA:
-						PearsonCombinationManager pcManager;
-						File pearsonFile = new File(getScoresFolder() + "pearsonCombinations.csv");
-						pcManager = new PearsonCombinationManager(pearsonFile, seriesList, getKnowledge(kType));
-						pcManager.calculatePearsonIndexes(0.9);
-						trainerList.addAll(pcManager.getTrainers(getMetric(), getReputation(), confList));
-						pcManager.flush();
+						/**/
 						break;
 					default:
 						for(DataSeries dataSeries : seriesList){
 							if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), kfold));
+								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
 						}
 						break;
 				}
@@ -309,7 +267,7 @@ public class TrainerManager extends TrainDataManager {
 			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
 			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,metric_score(" + getMetric().getMetricName() + "),configuration\n");
+			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getMetricName() + "),std_metric_score(" + getMetric().getMetricName() + "),dataset,configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
 				if(trainer.isValidTrain()){
@@ -320,6 +278,7 @@ public class TrainerManager extends TrainDataManager {
 								trainer.getReputationScore() + "§" + 
 								trainer.getMetricAvgScore() + "§" +  
 								trainer.getMetricStdScore() + "§" + 
+								trainer.getDatasetName() + "§" +
 								trainer.getBestConfiguration().toFileRow(false) + "\n");
 						statMap.get(trainer.getAlgType())[0] += 1.0;
 						statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();

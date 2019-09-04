@@ -3,8 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 
 import java.util.List;
 
@@ -20,12 +19,11 @@ public class AUC_Metric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(Knowledge knowledge,
-			List<TimedValue> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
 		double tpr = new TruePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(knowledge, anomalyEvaluations);
+				.evaluateAnomalyResults(anomalyEvaluations);
 		double fpr = new FalsePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(knowledge, anomalyEvaluations);
+				.evaluateAnomalyResults(anomalyEvaluations);
 		double auc = (tpr * fpr) / 2 + (tpr + 1) * (1 - fpr) / 2;
 		return auc;
 	}

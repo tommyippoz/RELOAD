@@ -16,7 +16,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
-import ippoz.utils.logging.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -270,6 +270,17 @@ public abstract class Knowledge implements Cloneable {
 				map.add(new SingleKnowledge(expList.get(i)));
 		}
 		return map;
+	}
+	
+	public static Indicator[] getIndicators(Map<KnowledgeType, List<Knowledge>> kMap) {
+		List<Knowledge> kList;
+		if(kMap.size() > 0){
+			kList = kMap.get(kMap.keySet().iterator().next());
+			if(kList.size() > 0){
+				return kList.get(0).getIndicators();
+			} else return null;
+		} else return null;
+
 	}
 
 }

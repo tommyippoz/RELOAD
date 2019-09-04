@@ -170,4 +170,68 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		return expIDs.get(0) + " - " + expIDs.get(expIDs.size() - 1);
 	}
 
+	@Override
+	public LoaderType getLoaderType() {
+		return LoaderType.MYSQL;
+	}
+
+	@Override
+	public String getLoaderName() {
+		return "MYSQL";
+	}
+
+	@Override
+	public String[] getFeatureNames() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object[] getSampleValuesFor(String featureName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getRowNumber() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getMBSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean canFetch() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public double getAnomalyRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Integer> getLoaderRuns() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double getSkipRate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDataPoints() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

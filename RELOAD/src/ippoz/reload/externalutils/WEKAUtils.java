@@ -6,7 +6,7 @@ package ippoz.reload.externalutils;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.utils.logging.AppLogger;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.IOException;
 import java.io.Reader;

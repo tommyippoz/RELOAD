@@ -13,7 +13,7 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.graphics.HistogramChartDrawer;
 import ippoz.reload.metric.Metric;
 
@@ -61,9 +61,9 @@ public class ExperimentVoter extends Thread {
 	private Map<Date, Map<AlgorithmVoter, AlgorithmResult>> partialVoting;
 	
 	/** The contracted results of the voting. */
-	private List<TimedValue> voting;
+	private List<TimedResult> voting;
 	
-	private List<TimedValue> failures;
+	private List<TimedResult> failures;
 	
 	private Map<KnowledgeType, Knowledge> kMap;
 	
@@ -115,19 +115,22 @@ public class ExperimentVoter extends Thread {
 		Map<AlgorithmVoter, AlgorithmResult> snapVoting;
 		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
 		partialVoting = new TreeMap<Date, Map<AlgorithmVoter, AlgorithmResult>>();
-		voting = new ArrayList<TimedValue>(currentKnowledge.size());
-		failures = new LinkedList<TimedValue>();
+		voting = new ArrayList<TimedResult>(currentKnowledge.size());
+		failures = new LinkedList<TimedResult>();
 		if(algList.size() > 0) {
 			for(int i=0;i<currentKnowledge.size();i++){
 				snapVoting = new HashMap<AlgorithmVoter, AlgorithmResult>();
+				double firstScore = Double.NaN;
 				for(AlgorithmVoter aVoter : algList){
 					snapVoting.put(aVoter, aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i));
+					if(Double.isNaN(firstScore))
+						firstScore = snapVoting.get(aVoter).getScore();
 				}
 				partialVoting.put(currentKnowledge.getTimestamp(i), snapVoting);
 				votingResult = voteResults(snapVoting);
-				voting.add(new TimedValue(currentKnowledge.getTimestamp(i), votingResult));
+				voting.add(new TimedResult(currentKnowledge.getTimestamp(i), votingResult, firstScore, currentKnowledge.getInjection(i)));
 				if(currentKnowledge.getInjection(i) != null)
-					failures.add(new TimedValue(currentKnowledge.getTimestamp(i), 1.0));
+					failures.add(new TimedResult(currentKnowledge.getTimestamp(i), 1.0, firstScore, currentKnowledge.getInjection(i)));
 				if(kMap.containsKey(KnowledgeType.SLIDING)){
 					((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).slide(i, votingResult);
 				}
@@ -211,9 +214,7 @@ public class ExperimentVoter extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				//if(!met.getMetricName().equals("AUC"))
-					metResults.put(met, met.evaluateAnomalyResults(kMap.get(kMap.keySet().iterator().next()), voting, anomalyTreshold));
-				//else metResults.put(met, getAUC());
+				metResults.put(met, met.evaluateAnomalyResults(voting, anomalyTreshold));
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
@@ -239,18 +240,18 @@ public class ExperimentVoter extends Thread {
 	 */
 	private void printGraphics(String outFolderName, double anomalyTreshold, double algConvergence){
 		HistogramChartDrawer hist;
-		Map<String, List<TimedValue>> voterMap = new HashMap<String, List<TimedValue>>();
+		Map<String, List<TimedResult>> voterMap = new HashMap<String, List<TimedResult>>();
 		voterMap.put(ANOMALY_SCORE_LABEL, voting);
 		voterMap.put(FAILURE_LABEL, failures);
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, algConvergence);
 		hist.saveToFile(outFolderName + "/voter/graphic/" + expName + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
 	
-	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<TimedValue>> voterMap) {
+	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<TimedResult>> voterMap) {
 		Map<String, Map<Double, Double>> map = new HashMap<String, Map<Double,Double>>();
 		for(String mapTag : voterMap.keySet()){
 			map.put(mapTag, new TreeMap<Double,Double>());
-			for(TimedValue vr : voterMap.get(mapTag)){
+			for(TimedResult vr : voterMap.get(mapTag)){
 				map.get(mapTag).put(vr.getDateOffset(voterMap.get(mapTag).get(0).getDate()), vr.getValue());
 			}
 		}
@@ -337,7 +338,7 @@ public class ExperimentVoter extends Thread {
 		return partialVoting;
 	}
 	
-	public List<TimedValue> getExperimentVoting(){
+	public List<TimedResult> getExperimentVoting(){
 		return voting;
 	}
 

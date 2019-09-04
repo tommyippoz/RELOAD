@@ -4,8 +4,9 @@
 package ippoz.reload.reputation;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.support.TimedValue;
+import ippoz.reload.commons.support.TimedResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,12 +48,13 @@ public abstract class Reputation {
 	 * @return the computed reputation
 	 */
 	public double evaluateReputation(DetectionAlgorithm alg, Knowledge knowledge){
-		List<TimedValue> anomalyEvaluations = new ArrayList<TimedValue>(knowledge.size());
+		List<TimedResult> anomalyEvaluations = new ArrayList<TimedResult>(knowledge.size());
 		for(int i=0;i<knowledge.size();i++){
-			double algScore = DetectionAlgorithm.convertResultIntoDouble(alg.snapshotAnomalyRate(knowledge, i).getScoreEvaluation());
-			anomalyEvaluations.add(new TimedValue(knowledge.getTimestamp(i), algScore));
+			AlgorithmResult aRes = alg.snapshotAnomalyRate(knowledge, i);
+			double algScore = DetectionAlgorithm.convertResultIntoDouble(aRes.getScoreEvaluation());
+			anomalyEvaluations.add(new TimedResult(knowledge.getTimestamp(i), algScore, aRes.getScore(), knowledge.getInjection(i)));
 		}
-		return evaluateExperimentReputation(knowledge, anomalyEvaluations);
+		return evaluateExperimentReputation(anomalyEvaluations);
 	}
 
 	/**
@@ -62,6 +64,6 @@ public abstract class Reputation {
 	 * @param anomalyEvaluations the anomaly evaluations of each snapshot
 	 * @return the final reputation
 	 */
-	protected abstract double evaluateExperimentReputation(Knowledge knowledge, List<TimedValue> anomalyEvaluations);
+	protected abstract double evaluateExperimentReputation(List<TimedResult> anomalyEvaluations);
 	
 }

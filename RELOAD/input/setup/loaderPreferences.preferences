@@ -37,13 +37,13 @@
 
 * UNSW-NB15
 
-unsw/unsw_analysis.loader
+* unsw/unsw_analysis.loader
 
 * unsw/unsw_backdoor.loader
 
 * unsw/unsw_fuzzers.loader
 
-* unsw/unsw_DoS.loader
+unsw/unsw_DoS.loader
 
 * unsw/unsw_exploits.loader
 
@@ -81,3 +81,4 @@ unsw/unsw_analysis.loader
 * nslkdd\nslkdd_r2l_u2r.loader
 * iscx\iscx_infiltrator_bruteforce.loader
 * iscx\iscx_dos_bruteforce.loader
+* secure.loader

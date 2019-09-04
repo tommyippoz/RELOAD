@@ -3,10 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.failure.InjectedElement;
-
-import java.util.Date;
-import java.util.List;
+import ippoz.reload.commons.support.TimedResult;
 
 /**
  * The Class FN_Metric. Implements a metric based on false negatives.
@@ -41,20 +38,10 @@ public class FN_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(Date snapTime, Double anEvaluation,
-			List<InjectedElement> injList) {
-		int count = 0;
-		if (!injList.isEmpty()) {
-			if (Metric.anomalyTrueFalse(anEvaluation)) {
-				injList.clear();
-			} else {
-				for (InjectedElement ie : injList) {
-					if (ie.getFinalTimestamp().equals(snapTime))
-						count++;
-				}
-			}
-		}
-		return count;
+	protected int classifyMetric(TimedResult tResult) {
+		if (tResult.getInjectedElement() != null && !Metric.anomalyTrueFalse(tResult.getValue())) {
+			return 1;
+		} else return 0;
 	}
 
 }

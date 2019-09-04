@@ -119,6 +119,8 @@ public abstract class DetectionAlgorithm {
 		switch(algType){
 			case HBOS:
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
+			case DBSCAN:
+				return new DBSCANDetectionAlgorithm(dataSeries, conf);
 			case ELKI_KMEANS:
 				return new KMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
@@ -169,6 +171,7 @@ public abstract class DetectionAlgorithm {
 				return AlgorithmFamily.STATISTICAL;
 			case ELKI_KMEANS:
 			case SLIDING_ELKI_CLUSTERING:
+			case DBSCAN:
 				return AlgorithmFamily.CLUSTERING;
 			case ELKI_ABOD:
 			case ELKI_FASTABOD:
@@ -215,6 +218,7 @@ public abstract class DetectionAlgorithm {
 			case ELKI_SVM:
 			case ELKI_KNN:
 			case HBOS:
+			case DBSCAN:
 			case SLIDING_ELKI_ABOD:
 			case SLIDING_ELKI_CLUSTERING:
 			case SLIDING_ELKI_COF:

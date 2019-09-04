@@ -5,8 +5,8 @@ package ippoz.reload.featureselection;
 
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.externalutils.WEKAUtils;
-import ippoz.utils.logging.AppLogger;
 
 import java.util.HashMap;
 import java.util.List;

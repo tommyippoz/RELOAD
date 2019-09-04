@@ -241,5 +241,15 @@ public class AppUtility {
 		}
 		return target;
 	}
+
+	public static String[] splitAndPurify(String readed, String sep) {
+		String[] splitted = readed.split(sep);
+		for(int i=0;i<splitted.length;i++){
+			while(splitted[i].length() > 0 && (splitted[i].charAt(splitted[i].length()-1) < ' ' || splitted[i].charAt(splitted[i].length()-1) > 'z')){
+				splitted[i] = splitted[i].substring(0, splitted[i].length()-1);
+			}
+		}
+		return splitted;
+	}
 	
 }
