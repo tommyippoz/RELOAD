@@ -21,15 +21,16 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  *
  * @author Tommy
  */
-public class PearsonFeatureSelector extends FeatureSelector {
+public class PearsonFeatureSelector extends FeatureRanker {
 
 	/**
 	 * Instantiates a new pearson feature selector.
 	 *
 	 * @param selectorThreshold the selector threshold
+	 * @param isRankThreshold 
 	 */
-	public PearsonFeatureSelector(double selectorThreshold) {
-		super(FeatureSelectorType.PEARSON_CORRELATION, selectorThreshold);
+	public PearsonFeatureSelector(double selectorThreshold, boolean isRankThreshold) {
+		super(FeatureSelectorType.PEARSON_CORRELATION, selectorThreshold, isRankThreshold, true, true);
 	}
 
 	/* (non-Javadoc)
@@ -67,16 +68,6 @@ public class PearsonFeatureSelector extends FeatureSelector {
 			}
 		}
 		return outMap;
-	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.featureselection.FeatureSelector#checkSelection(ippoz.reload.commons.dataseries.DataSeries, java.lang.Double, double)
-	 */
-	@Override
-	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
-		if(!Double.isFinite(toCheck))
-			return true;
-		else return Math.abs(toCheck) > threshold;
 	}
 
 	/* (non-Javadoc)

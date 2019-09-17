@@ -1,4 +1,4 @@
-* Default loader file for 'asasas.loader'. Comments with '*'.
+* Default loader file for 'swell_hrv.loader'. Comments with '*'.
 
 
 * Loader type (MYSQL, CSVALL).
@@ -11,28 +11,28 @@ CONSIDERED_LAYERS = NO_LAYER
 
 
 * File Used for Training
-TRAIN_CSV_FILE = 
+TRAIN_CSV_FILE = ProtectID\Swell_HRV_Injected.csv
 
 * Train Runs.
-TRAIN_RUN_IDS = 1 - 10
+TRAIN_RUN_IDS = 1-20
 
 * Train Faulty Tags.
-TRAIN_FAULTY_TAGS = attack
+TRAIN_FAULTY_TAGS = CONTEXTUAL, COLLECTIVE; MISSING, MULTIPLE_REPLAY
 
 * Train Runs.
-TRAIN_SKIP_ROWS = 
+TRAIN_SKIP_ROWS =
 
 * File Used for Validation
-VALIDATION_CSV_FILE = 
+VALIDATION_CSV_FILE = ProtectID\Swell_HRV_Injected.csv
 
 * Validation Runs.
-VALIDATION_RUN_IDS = 1 - 10
+VALIDATION_RUN_IDS = 51-120
 
 * Train Faulty Tags.
-VALIDATION_FAULTY_TAGS = attack
+VALIDATION_FAULTY_TAGS = CONTEXTUAL, COLLECTIVE; MISSING, MULTIPLE_REPLAY
 
 * Train Runs.
-VALIDATION_SKIP_ROWS = 
+VALIDATION_SKIP_ROWS =
 
 * Parsing Dataset.
 
@@ -41,7 +41,10 @@ VALIDATION_SKIP_ROWS =
 SKIP_COLUMNS = 0
 
 * Column Containing the 'Label' Feature
-LABEL_COLUMN = 1
+LABEL_COLUMN = 65
 
 * Size of Each Experiment.
 EXPERIMENT_ROWS = 100
+
+* Label Defining Experiments.
+EXPERIMENT_SPLIT_ROWS = 0

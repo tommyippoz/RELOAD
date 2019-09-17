@@ -1,8 +1,94 @@
-Sep 04, 2019 10:52:50 AM ippoz.reload.commons.support.AppLogger log
-INFO: [1567587170635][Info][ippoz.reload.executable.ui.BuildUI] Screen dimension is java.awt.Dimension[width=1920,height=1080]
-Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
-INFO: [1567587172432][Info][ippoz.reload.executable.DetectorMain] 1 RELOAD instances found.
-Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
-INFO: [1567587172433][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/1]: 'unsw_DoS 541-575 [ELKI_LOF]'
-Sep 04, 2019 10:52:52 AM ippoz.reload.commons.support.AppLogger log
-INFO: [1567587172434][Info][ippoz.reload.executable.DetectorMain] Starting Evaluation Process
+Sep 17, 2019 4:00:19 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728819674][Info][ippoz.reload.executable.ui.BuildUI] Screen dimension is java.awt.Dimension[width=1920,height=1080]
+Sep 17, 2019 4:00:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728821230][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\ProtectID\Wesad_EDA_Injected.csv
+Sep 17, 2019 4:00:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728821862][Info][ippoz.reload.loader.CSVCompleteLoader] Read 3565 rows.
+Sep 17, 2019 4:00:21 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728821864][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\ProtectID\Wesad_EDA_Injected.csv
+Sep 17, 2019 4:00:22 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728822164][Info][ippoz.reload.loader.CSVCompleteLoader] Read 3565 rows.
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827402][Info][ippoz.reload.executable.DetectorMain] 1 RELOAD instances found.
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827405][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/1]: 'wesad_eda 21-45 [HBOS]'
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827406][Info][ippoz.reload.executable.DetectorMain] Starting Filtering Process
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827408][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\ProtectID\Wesad_EDA_Injected.csv
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827561][Info][ippoz.reload.loader.CSVCompleteLoader] Read 3565 rows.
+Sep 17, 2019 4:00:27 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728827999][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'VarianceSelector': 30 features are valid
+Sep 17, 2019 4:00:34 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728834545][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'Relief': 30 features are valid
+Sep 17, 2019 4:01:03 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728863458][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'PearsonSelector': 26 features are valid
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867293][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'InformationGain': 26 features are valid
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867294][Info][ippoz.reload.manager.FeatureSelectorManager] Combined Data Series : 2
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867296][Info][ippoz.reload.manager.FeatureSelectorManager] Finalized Data Series : 2
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867298][Info][ippoz.reload.executable.DetectorMain] Done.
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867305][Info][ippoz.reload.executable.ui.BuildUI$5] RELOAD Execution time: 39901 ms
+Sep 17, 2019 4:01:07 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728867307][Info][ippoz.reload.executable.ui.BuildUI$5] No outputs will be shown.
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928113][Info][ippoz.reload.executable.DetectorMain] 1 RELOAD instances found.
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928115][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/1]: 'wesad_eda 21-45 [HBOS]'
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928116][Info][ippoz.reload.executable.DetectorMain] Starting Filtering Process
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928119][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\ProtectID\Wesad_EDA_Injected.csv
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928290][Info][ippoz.reload.loader.CSVCompleteLoader] Read 3565 rows.
+Sep 17, 2019 4:02:08 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728928553][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'VarianceSelector': 30 features are valid
+Sep 17, 2019 4:02:14 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728934063][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'Relief': 20 features are valid
+Sep 17, 2019 4:02:22 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728942365][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'PearsonSelector': 13 features are valid
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943352][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'InformationGain': 10 features are valid
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943354][Info][ippoz.reload.manager.FeatureSelectorManager] Combined Data Series : 2
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943355][Info][ippoz.reload.manager.FeatureSelectorManager] Finalized Data Series : 2
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943366][Info][ippoz.reload.executable.DetectorMain] Done.
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943373][Info][ippoz.reload.executable.ui.BuildUI$5] RELOAD Execution time: 15258 ms
+Sep 17, 2019 4:02:23 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568728943374][Info][ippoz.reload.executable.ui.BuildUI$5] No outputs will be shown.
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019184][Info][ippoz.reload.executable.DetectorMain] 1 RELOAD instances found.
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019185][Info][ippoz.reload.executable.DetectorMain] Running RELOAD [1/1]: 'wesad_eda 21-45 [HBOS]'
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019187][Info][ippoz.reload.executable.DetectorMain] Starting Filtering Process
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019190][Info][ippoz.reload.loader.CSVCompleteLoader] Loading datasets\ProtectID\Wesad_EDA_Injected.csv
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019300][Info][ippoz.reload.loader.CSVCompleteLoader] Read 3565 rows.
+Sep 17, 2019 4:03:39 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729019583][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'VarianceSelector': 30 features are valid
+Sep 17, 2019 4:03:45 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729025152][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'Relief': 30 features are valid
+Sep 17, 2019 4:04:14 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729054014][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'PearsonSelector': 30 features are valid
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058752][Info][ippoz.reload.manager.FeatureSelectorManager] Filter 'InformationGain': 30 features are valid
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058753][Info][ippoz.reload.manager.FeatureSelectorManager] Combined Data Series : 2
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058753][Info][ippoz.reload.manager.FeatureSelectorManager] Finalized Data Series : 2
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058754][Info][ippoz.reload.executable.DetectorMain] Done.
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058759][Info][ippoz.reload.executable.ui.BuildUI$5] RELOAD Execution time: 39574 ms
+Sep 17, 2019 4:04:18 PM ippoz.reload.commons.support.AppLogger log
+INFO: [1568729058761][Info][ippoz.reload.executable.ui.BuildUI$5] No outputs will be shown.

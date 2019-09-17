@@ -1216,7 +1216,8 @@ public class InputManager {
 							if(readed.contains(",")){
 								splitted = readed.split(",");
 								try {
-									toAdd = FeatureSelector.createSelector(FeatureSelectorType.valueOf(splitted[0].trim()), Double.valueOf(splitted[1].trim()));
+									boolean rankThresholdFlag = splitted.length > 2 && splitted[2].trim().toUpperCase().equals("TRUE");
+									toAdd = FeatureSelector.createSelector(FeatureSelectorType.valueOf(splitted[0].trim()), Double.valueOf(splitted[1].trim()), rankThresholdFlag);
 									if(toAdd != null)
 										fsList.add(toAdd);
 								} catch(Exception ex){
@@ -1230,7 +1231,7 @@ public class InputManager {
 			} else {
 				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
 						featuresFile.getPath() + " not found. Using 'Variance' selector");
-				fsList.add(new VarianceFeatureSelector(1.0));
+				fsList.add(new VarianceFeatureSelector(1.0, false));
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read loaders list");
@@ -1244,9 +1245,9 @@ public class InputManager {
 			if(fsList != null){
 				writer = new BufferedWriter(new FileWriter(new File(getSetupFolder() + "featureSelection.preferences")));
 				writer.write("* This file reports on the feature selection techniques to be applied\n");
-				writer.write("\nfeature_selection_strategy,threshold\n");
+				writer.write("\nfeature_selection_strategy,threshold,ranked_flag\n");
 				for(FeatureSelector fs : fsList){
-					writer.write(fs.getFeatureSelectorType() + "," + fs.getSelectorThreshold() + "\n");
+					writer.write(fs.getFeatureSelectorType() + "," + fs.getSelectorThreshold() + "," + fs.isRankedThreshold() + "\n");
 				}
 				writer.close();
 			} else AppLogger.logInfo(getClass(), "Unable to update Feature Selection preferences");

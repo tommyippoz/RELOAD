@@ -3,7 +3,6 @@
  */
 package ippoz.reload.featureselection;
 
-import ippoz.reload.commons.dataseries.DataSeries;
 import weka.attributeSelection.ASEvaluation;
 import weka.attributeSelection.InfoGainAttributeEval;
 
@@ -12,15 +11,16 @@ import weka.attributeSelection.InfoGainAttributeEval;
  *
  * @author Tommy
  */
-public class InformationGainSelector extends WEKAFeatureSelector {
+public class InformationGainSelector extends WEKAFeatureRanker {
 
 	/**
 	 * Instantiates a new information gain selector.
 	 *
 	 * @param selectorThreshold the selector threshold
+	 * @param isRankThreshold 
 	 */
-	public InformationGainSelector(double selectorThreshold) {
-		super(FeatureSelectorType.INFORMATION_GAIN, selectorThreshold);
+	public InformationGainSelector(double selectorThreshold, boolean isRankThreshold) {
+		super(FeatureSelectorType.INFORMATION_GAIN, selectorThreshold, isRankThreshold, true, false);
 	}
 
 	/* (non-Javadoc)
@@ -29,16 +29,6 @@ public class InformationGainSelector extends WEKAFeatureSelector {
 	@Override
 	protected ASEvaluation instantiateWEKASelector() {
 		return new InfoGainAttributeEval();
-	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.featureselection.FeatureSelector#checkSelection(ippoz.reload.commons.dataseries.DataSeries, java.lang.Double, double)
-	 */
-	@Override
-	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
-		if(!Double.isFinite(toCheck))
-			return true;
-		else return toCheck > threshold;
 	}
 
 	/* (non-Javadoc)

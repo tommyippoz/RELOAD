@@ -1,4 +1,4 @@
-* Default loader file for 'secure.loader'. Comments with '*'.
+* Default loader file for 'wesad_eda.loader'. Comments with '*'.
 
 
 * Loader type (MYSQL, CSVALL).
@@ -11,25 +11,25 @@ CONSIDERED_LAYERS = NO_LAYER
 
 
 * File Used for Training
-TRAIN_CSV_FILE = ErrorDetection\MYSQL_Secure_Filtered.csv
+TRAIN_CSV_FILE = ProtectID\Wesad_EDA_Injected.csv
 
 * Train Runs.
-TRAIN_RUN_IDS = 1 - 10
+TRAIN_RUN_IDS = 1 - 20
 
 * Train Faulty Tags.
-TRAIN_FAULTY_TAGS = MEMORY, NETWORK
+TRAIN_FAULTY_TAGS = CONTEXTUAL, COLLECTIVE, MISSING, MULTIPLE_REPLAY
 
 * Train Runs.
 TRAIN_SKIP_ROWS =
 
 * File Used for Validation
-VALIDATION_CSV_FILE = ErrorDetection\MYSQL_Secure_Filtered.csv
+VALIDATION_CSV_FILE = ProtectID\Wesad_EDA_Injected.csv
 
 * Validation Runs.
-VALIDATION_RUN_IDS = 1 - 100
+VALIDATION_RUN_IDS = 21-45
 
 * Train Faulty Tags.
-VALIDATION_FAULTY_TAGS = MEMORY, NETWORK
+VALIDATION_FAULTY_TAGS = CONTEXTUAL, COLLECTIVE, MISSING, MULTIPLE_REPLAY
 
 * Train Runs.
 VALIDATION_SKIP_ROWS =
@@ -38,10 +38,13 @@ VALIDATION_SKIP_ROWS =
 
 
 * Features to Skip
-SKIP_COLUMNS = 1, 2
+SKIP_COLUMNS = 0
 
 * Column Containing the 'Label' Feature
-LABEL_COLUMN = 3
+LABEL_COLUMN = 45
 
 * Size of Each Experiment.
+EXPERIMENT_ROWS = 100
+
+* Label Defining Experiments.
 EXPERIMENT_SPLIT_ROWS = 0

@@ -109,6 +109,7 @@ public class FeatureSelectionFrame {
 		expPanel.setLayout(null);
 		
 		JLabel lbl = new JLabel("<html> " + FeatureSelector.explainSelectors() + " <br> " + 
+				"Click on 'Ranked Threshold' if, for that strategy, you want to select the n best features, where n = threshold. <br>" + 
 				"Press Add # to add a new configuration below the clicked row. <br>" + 
 				"Press Remove # to remove the configuration reported in the clicked row. </html>");
 		lbl.setFont(labelFont);
@@ -125,10 +126,10 @@ public class FeatureSelectionFrame {
         table.setFillsViewportHeight(true);
         JComboBox<FeatureSelectorType> cb = new JComboBox<FeatureSelectorType>(FeatureSelectorType.values());
         table.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cb));
-        table.getColumnModel().getColumn(2).setCellRenderer(new ButtonRenderer());
-        table.getColumnModel().getColumn(2).setCellEditor(new ButtonEditor(new JCheckBox(), table));
         table.getColumnModel().getColumn(3).setCellRenderer(new ButtonRenderer());
         table.getColumnModel().getColumn(3).setCellEditor(new ButtonEditor(new JCheckBox(), table));
+        table.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
+        table.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JCheckBox(), table));
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -201,7 +202,7 @@ public class FeatureSelectionFrame {
 		private static final long serialVersionUID = 1L;
 		
 		public int getColumnCount() {
-			return 4;
+			return 5;
 		}
 		
 		public int getRowCount() {
@@ -215,8 +216,10 @@ public class FeatureSelectionFrame {
 				case 1:
 					return "Threshold";
 				case 2:
-					return "Add Item";
+					return "Ranked Threshold";
 				case 3:
+					return "Add Item";
+				case 4:
 					return "Remove Item";
 				default:
 					return "-";
@@ -233,9 +236,12 @@ public class FeatureSelectionFrame {
 				ob = fsList.get(row).getSelectorThreshold();
 				break;
 			case 2:
-				ob = "Add " + row;
+				ob = fsList.get(row).isRankedThreshold();
 				break;
 			case 3:
+				ob = "Add " + row;
+				break;
+			case 4:
 				ob = "Remove " + row;
 				break;
 			default:
@@ -262,7 +268,7 @@ public class FeatureSelectionFrame {
 					else fst = FeatureSelectorType.valueOf(aValue.toString().trim());
 		        	threshold = fsList.get(row).getSelectorThreshold();
 		        	fsList.remove(row);
-		        	fsList.add(row, FeatureSelector.createSelector(fst, threshold));
+		        	fsList.add(row, FeatureSelector.createSelector(fst, threshold, fsList.get(row).isRankedThreshold()));
 				} catch(Exception ex){
 					
 				}
@@ -272,6 +278,13 @@ public class FeatureSelectionFrame {
 						threshold = (Double)aValue;
 					else threshold = Double.valueOf(aValue.toString().trim());
 					fsList.get(row).updateSelectorThreshold(threshold);
+				} catch(Exception ex){
+					
+				}
+	        } else if(col == 2){
+				try {
+					if(aValue instanceof Boolean)
+						fsList.get(row).updateRankedThreshold((Boolean)aValue);
 				} catch(Exception ex){
 					
 				}
@@ -330,7 +343,6 @@ public class FeatureSelectionFrame {
 		      }
 		    });
 		    
-
 		  }
 
 		  public Component getTableCellEditorComponent(JTable table, Object value,
@@ -352,7 +364,7 @@ public class FeatureSelectionFrame {
 		    if (isPushed) {
 		    	int index = Integer.parseInt(label.split(" ")[1]);
 		    	if(label.contains("Add")){
-					fsList.add(index+1, new VarianceFeatureSelector(1.0));	
+					fsList.add(index+1, new VarianceFeatureSelector(1.0, false));	
 		    	} else fsList.remove(index);
 		    	((MyTableModel)table.getModel()).fireTableDataChanged();
 		    }

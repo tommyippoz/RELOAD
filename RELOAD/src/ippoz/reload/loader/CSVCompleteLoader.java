@@ -85,7 +85,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 		try {
 			dataList = new LinkedList<MonitoredData>();
 			AppLogger.logInfo(getClass(), "Loading " + file.getPath());
-			if(file != null && file.exists()){
+			if(file != null && !file.isDirectory() && file.exists()){
 				reader = new BufferedReader(new FileReader(file));
 				while(reader.ready() && readLine == null){
 					readLine = reader.readLine();
@@ -128,7 +128,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 									} 
 									i++;
 								}
-								if(readLine.split(",")[labelCol] != null) { 
+								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										obList.add(current);
 										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))

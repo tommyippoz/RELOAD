@@ -148,7 +148,7 @@ public abstract class FileLoader extends SimpleLoader {
 		String readLine = null;
 		int rowCount = 0;
 		try {
-			if(file != null && file.exists()){
+			if(file != null && !file.isDirectory() && file.exists()){
 				reader = new BufferedReader(new FileReader(file));
 				//skip header
 				while(reader.ready() && readLine == null){

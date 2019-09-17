@@ -22,7 +22,7 @@ import weka.core.Instances;
  *
  * @author Tommy
  */
-public abstract class WEKAFeatureSelector extends FeatureSelector {
+public abstract class WEKAFeatureRanker extends FeatureRanker {
 
 	/**
 	 * Instantiates a new WEKA feature selector.
@@ -30,8 +30,8 @@ public abstract class WEKAFeatureSelector extends FeatureSelector {
 	 * @param fsType the feature selector type
 	 * @param selectorThreshold the selector threshold
 	 */
-	public WEKAFeatureSelector(FeatureSelectorType fsType, double selectorThreshold) {
-		super(fsType, selectorThreshold);
+	public WEKAFeatureRanker(FeatureSelectorType fsType, double selectorThreshold, boolean isRankThreshold, boolean higherIsBetter, boolean considerAbsolute) {
+		super(fsType, selectorThreshold, isRankThreshold, higherIsBetter, considerAbsolute);
 	}
 
 	/* (non-Javadoc)

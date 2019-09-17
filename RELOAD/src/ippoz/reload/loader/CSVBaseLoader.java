@@ -47,7 +47,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 		List<Indicator> csvHeader = null;
 		try {
 			csvHeader = new LinkedList<Indicator>();
-			if(file != null && file.exists()){
+			if(file != null && file.exists() && !file.isDirectory()){
 				reader = new BufferedReader(new FileReader(file));
 				while(reader.ready() && readLine == null){
 					readLine = reader.readLine();
@@ -126,7 +126,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 		int changes = 0;
 		String[] expRowsColumns = new String[]{null, null};
 		try {
-			if(file != null && file.exists() && labelCol >= 0 && faultyTagList != null && faultyTagList.size() > 0) {
+			if(file != null && !file.isDirectory() && file.exists() && labelCol >= 0 && faultyTagList != null && faultyTagList.size() > 0) {
 				reader = new BufferedReader(new FileReader(file));
 				//skip header
 				while(reader.ready() && readLine == null){
@@ -145,7 +145,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							readLine = AppUtility.filterInnerCommas(readLine);
 							if(canReadCSV(rowIndex, changes)){
-								if(readLine.split(",")[labelCol] != null) { 
+								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))

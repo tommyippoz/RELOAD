@@ -1,5 +1,5 @@
 * This file reports on the feature selection techniques to be applied
 
-feature_selection_strategy,threshold
-VARIANCE,3.0
-RELIEF,0.05
+feature_selection_strategy,threshold,ranked_flag
+VARIANCE,3.0,false
+INFORMATION_GAIN,10.0,true

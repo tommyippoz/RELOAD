@@ -27,9 +27,10 @@ public class VarianceFeatureSelector extends FeatureSelector {
 	 * Instantiates a new variance feature selector.
 	 *
 	 * @param selectorThreshold the selector threshold
+	 * @param isRankThreshold 
 	 */
-	public VarianceFeatureSelector(double selectorThreshold) {
-		super(FeatureSelectorType.VARIANCE, selectorThreshold);
+	public VarianceFeatureSelector(double selectorThreshold, boolean isRankThreshold) {
+		super(FeatureSelectorType.VARIANCE, selectorThreshold, isRankThreshold);
 	}
 
 	/* (non-Javadoc)
