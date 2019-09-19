@@ -59,6 +59,8 @@ public class DetectorOutput {
 	
 	private Loader loader;
 	
+	private List<DataSeries> selectedSeries;
+	
 	private Map<String, Map<String, List<Map<Metric, Double>>>> detailedMetricScores;
 	
 	private Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores;
@@ -79,7 +81,7 @@ public class DetectorOutput {
 			Loader loader, Map<String, Map<String, List<Map<Metric, Double>>>> evaluations,
 			Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores,
 			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
-			Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
+			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
 			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
@@ -94,6 +96,7 @@ public class DetectorOutput {
 		this.detailedExperimentsScores = detailedExperimentsScores;
 		this.bestAnomalyThreshold = bestAnomalyThreshold;
 		this.injections = injections;
+		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
@@ -392,9 +395,26 @@ public class DetectorOutput {
 		}
 		return toReturn;
 	}
+	
+	public List<DataSeries> getUsedFeatures() {
+		List<DataSeries> usedFeatures = new LinkedList<DataSeries>();
+		for(DataSeries ds : selectedFeatures.keySet()){
+			if(ds.toString().contains("RANGE#PLAIN")){
+				Object a = ds.getClass();
+				a = null;
+			}
+			for(DataSeries ss : getSelectedSeries()){
+				if(ss.contains(ds) && !DataSeries.isIn(usedFeatures, ds)){
+					usedFeatures.add(ds);
+					break;
+				}
+			}
+		}
+		return usedFeatures;
+	}
 
-	public Set<DataSeries> getUsedFeatures() {
-		return selectedFeatures.keySet();
+	public List<DataSeries> getSelectedSeries() {
+		return selectedSeries;
 	}
 
 	public String getFeatureAggregationPolicy() {

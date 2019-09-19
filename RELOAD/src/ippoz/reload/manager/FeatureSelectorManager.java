@@ -123,15 +123,7 @@ public class FeatureSelectorManager {
 	}
 	
 	public void unionCombinations() {
-		List<DataSeries> simpleIndPlain = new LinkedList<DataSeries>();
-		List<DataSeries> simpleIndDiff = new LinkedList<DataSeries>();
-		for(DataSeries ds : selectedFeatures){
-			if(ds.getDataCategory() == DataCategory.PLAIN)
-				simpleIndPlain.add(ds);
-			else simpleIndDiff.add(ds);
-		}
-		combinedFeatures.add(new MultipleDataSeries(simpleIndPlain));
-		combinedFeatures.add(new MultipleDataSeries(simpleIndDiff));
+		combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
 	}
 	
 	private void pearsonCombinations(List<Knowledge> kList, double pearsonThreshold, String setupFolder) {

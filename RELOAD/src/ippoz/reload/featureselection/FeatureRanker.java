@@ -60,9 +60,9 @@ public abstract class FeatureRanker extends FeatureSelector {
 		Map<DataSeries, Double> map = getScoresMap();
 		if(map != null && map.size() > 0){
 			sortedScores = new ArrayList<Double>(map.values());
+			Collections.sort(sortedScores);
 			if(higherIsBetter)
 				Collections.reverse(sortedScores);
-			else Collections.sort(sortedScores);
 		}
 	}
 	

@@ -8,10 +8,13 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.IndicatorDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -1374,16 +1377,18 @@ public class InputManager {
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
 							if(header == null){
 								header = readed.split(",");
-								for(DataSeries ds : sList){
-									featureMap.put(ds, new HashMap<>());
+								for(int i=2;i<header.length;i++){
+									String name = header[i].split("#")[0].trim();
+									String dataCat = header[i].split("#")[1].trim();
+									featureMap.put(new IndicatorDataSeries(new Indicator(name, LayerType.NO_LAYER, Double.class), DataCategory.valueOf(dataCat)), new HashMap<>());
 								}
 							} else {
 								String[] splitted = readed.split(",");
 								if(splitted[0] != null && splitted[0].length() > 0){
 									for(int i=2;i<splitted.length;i++){
-										for(DataSeries ds : sList){
+										for(DataSeries ds : featureMap.keySet()){
 											if(ds.toString().equals(header[i].trim())){
-												featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), Double.valueOf(splitted[i]));
+												featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), AppUtility.isNumber(splitted[i]) ? Double.valueOf(splitted[i]) : Double.NaN);
 												break;
 											}
 										}

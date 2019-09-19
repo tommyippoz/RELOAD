@@ -351,7 +351,8 @@ public class DetectionManager {
 					nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, l,
 					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
 					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
-					bestEManager != null ? bestEManager.getFailures() : null, iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
+					bestEManager != null ? bestEManager.getFailures() : null, 
+					iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
 					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
@@ -486,7 +487,8 @@ public class DetectionManager {
 			getMetricScores(evaluations, metList, new String[]{anomalyThreshold}), new String[]{anomalyThreshold},
 			nVoters, eManager.getTimedEvaluations(), l, 
 			evaluations, eManager.getDetailedEvaluations(),
-			eManager.getAnomalyThreshold(), eManager.getFailures(),	iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
+			eManager.getAnomalyThreshold(), eManager.getFailures(),	
+			iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
 			getWritableTag(), eManager.getInjectionsRatio());
 	}
 
