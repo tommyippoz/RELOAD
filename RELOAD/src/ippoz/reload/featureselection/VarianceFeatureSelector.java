@@ -6,7 +6,7 @@ package ippoz.reload.featureselection;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.utils.maths.MathUtils;
+import ippoz.reload.commons.utils.MathUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +27,10 @@ public class VarianceFeatureSelector extends FeatureSelector {
 	 * Instantiates a new variance feature selector.
 	 *
 	 * @param selectorThreshold the selector threshold
+	 * @param isRankThreshold 
 	 */
-	public VarianceFeatureSelector(double selectorThreshold) {
-		super(FeatureSelectorType.VARIANCE, selectorThreshold);
+	public VarianceFeatureSelector(double selectorThreshold, boolean isRankThreshold) {
+		super(FeatureSelectorType.VARIANCE, selectorThreshold, isRankThreshold);
 	}
 
 	/* (non-Javadoc)

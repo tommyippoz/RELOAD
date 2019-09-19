@@ -3,7 +3,6 @@
  */
 package ippoz.reload.featureselection;
 
-import ippoz.reload.commons.dataseries.DataSeries;
 import weka.attributeSelection.ASEvaluation;
 import weka.attributeSelection.ReliefFAttributeEval;
 
@@ -11,15 +10,16 @@ import weka.attributeSelection.ReliefFAttributeEval;
  * @author Tommy
  *
  */
-public class ReliefFeatureSelector extends WEKAFeatureSelector {
+public class ReliefFeatureSelector extends WEKAFeatureRanker {
 
 	/**
 	 * Instantiates a new information gain selector.
 	 *
 	 * @param selectorThreshold the selector threshold
+	 * @param isRankThreshold 
 	 */
-	public ReliefFeatureSelector(double selectorThreshold) {
-		super(FeatureSelectorType.RELIEF, selectorThreshold);
+	public ReliefFeatureSelector(double selectorThreshold, boolean isRankThreshold) {
+		super(FeatureSelectorType.RELIEF, selectorThreshold, isRankThreshold, true, false);
 	}
 
 	/* (non-Javadoc)
@@ -28,16 +28,6 @@ public class ReliefFeatureSelector extends WEKAFeatureSelector {
 	@Override
 	protected ASEvaluation instantiateWEKASelector() {
 		return new ReliefFAttributeEval();
-	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.featureselection.FeatureSelector#checkSelection(ippoz.reload.commons.dataseries.DataSeries, java.lang.Double, double)
-	 */
-	@Override
-	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
-		if(!Double.isFinite(toCheck))
-			return true;
-		else return toCheck > threshold;
 	}
 
 	/* (non-Javadoc)

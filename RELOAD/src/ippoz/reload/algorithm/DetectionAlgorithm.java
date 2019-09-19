@@ -10,6 +10,7 @@ import ippoz.reload.algorithm.elki.KMeansELKI;
 import ippoz.reload.algorithm.elki.KNNELKI;
 import ippoz.reload.algorithm.elki.LOFELKI;
 import ippoz.reload.algorithm.elki.ODINELKI;
+import ippoz.reload.algorithm.elki.SOSELKI;
 import ippoz.reload.algorithm.elki.SVMELKI;
 import ippoz.reload.algorithm.elki.sliding.ABODSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
@@ -121,6 +122,8 @@ public abstract class DetectionAlgorithm {
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
 			case DBSCAN:
 				return new DBSCANDetectionAlgorithm(dataSeries, conf);
+			case ELKI_SOS:
+				return new SOSELKI(dataSeries, conf);
 			case ELKI_KMEANS:
 				return new KMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
@@ -150,10 +153,9 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_KNN:
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return new IsolationForestSlidingWEKA(dataSeries, conf);
-			default:
-				return null;
+				return new IsolationForestSlidingWEKA(dataSeries, conf);			
 		}
+		return null;
 	}
 	
 	public static AlgorithmFamily getFamily(AlgorithmType algType) {
@@ -163,6 +165,7 @@ public abstract class DetectionAlgorithm {
 			case RCC:
 			case WER:
 			case PEA:
+			case ELKI_SOS:
 				return AlgorithmFamily.STATISTICAL;
 			case INV:
 				return AlgorithmFamily.CLASSIFICATION;
@@ -189,10 +192,8 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return AlgorithmFamily.CLASSIFICATION;
-			default:
-				return null;
-			
 		}
+		return null;
 	}
 	
 	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
@@ -217,6 +218,7 @@ public abstract class DetectionAlgorithm {
 			case ELKI_ODIN:
 			case ELKI_SVM:
 			case ELKI_KNN:
+			case ELKI_SOS:
 			case HBOS:
 			case DBSCAN:
 			case SLIDING_ELKI_ABOD:
@@ -237,9 +239,10 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_WEKA_ISOLATIONFOREST:
 			case WEKA_ISOLATIONFOREST:
 				return dataSeries.size() > 1;
-			default:
-				return false;
+		default:
+			break;
 		}
+		return false;
 	}
 	
 	/**

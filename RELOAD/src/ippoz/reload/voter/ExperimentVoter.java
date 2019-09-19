@@ -3,7 +3,6 @@
  */
 package ippoz.reload.voter;
 
-import ippoz.madness.commons.layers.LayerType;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
@@ -11,6 +10,7 @@ import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.TimedResult;

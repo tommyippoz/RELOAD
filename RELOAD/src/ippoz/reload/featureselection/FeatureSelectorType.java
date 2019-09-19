@@ -20,6 +20,10 @@ public enum FeatureSelectorType {
 	INFORMATION_GAIN, 
 	
 	/** Relief. */
-	RELIEF
+	RELIEF, 
+	
+	ONER, 
+	
+	PCA
 
 }

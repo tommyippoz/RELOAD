@@ -220,7 +220,7 @@ public class EvaluatorManager extends DataManager {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = readed.split("§");
+							splitted = AppUtility.splitAndPurify(readed, "§");
 							if(splitted.length > 4 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
 								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 								switch(AlgorithmType.valueOf(splitted[1])){

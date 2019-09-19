@@ -68,6 +68,8 @@ TechnicalInformationHandler, Serializable {
 			m_subsampleSize = subsampleSize;
 		else m_subsampleSize = DEFAULT_SAMPLE_SIZE;
 	}
+	
+	
 
 	@Override
 	public double classifyInstance(Instance instance) throws Exception {

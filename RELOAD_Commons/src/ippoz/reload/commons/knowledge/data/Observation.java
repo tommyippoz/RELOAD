@@ -3,8 +3,8 @@
  */
 package ippoz.reload.commons.knowledge.data;
 
-import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.madness.commons.indicator.Indicator;
+import ippoz.reload.commons.datacategory.DataCategory;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 

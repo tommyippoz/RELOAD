@@ -27,6 +27,9 @@ public abstract class FeatureSelector {
 	/** The selector threshold. */
 	private double selectorThreshold;
 	
+	/** The rank threshold. */
+	private boolean rankThresholdFlag;
+	
 	/** The scores map. */
 	private Map<DataSeries, Double> scoresMap;
 	
@@ -36,9 +39,10 @@ public abstract class FeatureSelector {
 	 * @param fsType the fs type
 	 * @param selectorThreshold the selector threshold
 	 */
-	public FeatureSelector(FeatureSelectorType fsType, double selectorThreshold){
+	public FeatureSelector(FeatureSelectorType fsType, double selectorThreshold, boolean rankThresholdFlag){
 		this.fsType = fsType;
 		this.selectorThreshold = selectorThreshold;
+		this.rankThresholdFlag = rankThresholdFlag;
 		scoresMap = null;
 	}
 	
@@ -58,6 +62,15 @@ public abstract class FeatureSelector {
 	 */
 	public Double getSelectorThreshold(){
 		return selectorThreshold;
+	}
+	
+	/**
+	 * Gets the selector threshold.
+	 *
+	 * @return the selector threshold
+	 */
+	public boolean isRankedThreshold(){
+		return rankThresholdFlag;
 	}
 	
 	/**
@@ -230,22 +243,26 @@ public abstract class FeatureSelector {
 	 * @param threshold the threshold
 	 * @return the feature selector
 	 */
-	public static FeatureSelector createSelector(FeatureSelectorType fst, double threshold) {
+	public static FeatureSelector createSelector(FeatureSelectorType fst, double threshold, boolean isRankThreshold) {
 		if(fst == null)
 			return null;
 		else {
 			switch(fst){
-				case RELIEF:
-					return new ReliefFeatureSelector(threshold);
+				case RELIEF: 
+					return new ReliefFeatureSelector(threshold, isRankThreshold);
 				case INFORMATION_GAIN:
-					return new InformationGainSelector(threshold);
+					return new InformationGainSelector(threshold, isRankThreshold);
 				case PEARSON_CORRELATION:
-					return new PearsonFeatureSelector(threshold);
+					return new PearsonFeatureSelector(threshold, isRankThreshold);
 				case VARIANCE:
-					return new VarianceFeatureSelector(threshold);
+					return new VarianceFeatureSelector(threshold, isRankThreshold);	
+				case ONER:
+					return new OneRRanker(threshold, isRankThreshold);
+				case PCA:
+					return new PrincipalComponentRanker(threshold, isRankThreshold);
 				default:
 					return null;
-			}
+			} 
 		}
 	}
 
@@ -256,6 +273,10 @@ public abstract class FeatureSelector {
 	 */
 	public void updateSelectorThreshold(double threshold) {
 		selectorThreshold = threshold;
+	}
+
+	public void updateRankedThreshold(boolean b) {
+		rankThresholdFlag = b;
 	}
 
 }
