@@ -2,8 +2,8 @@ package ippoz.reload.executable;
 
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.executable.ui.BuildUI;
 import ippoz.reload.manager.InputManager;
+import ippoz.reload.ui.BuildUI;
 
 import java.awt.EventQueue;
 import java.io.File;

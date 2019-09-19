@@ -3,10 +3,10 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.madness.commons.layers.LayerType;
 import ippoz.reload.commons.datafetcher.DataFetcher;
 import ippoz.reload.commons.datafetcher.DatabaseFetcher;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.commons.support.ThreadScheduler;

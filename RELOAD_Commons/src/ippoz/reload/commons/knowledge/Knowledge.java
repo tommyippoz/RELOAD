@@ -3,11 +3,11 @@
  */
 package ippoz.reload.commons.knowledge;
 
-import ippoz.madness.commons.indicator.Indicator;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;

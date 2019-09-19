@@ -3,7 +3,7 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.madness.commons.indicator.Indicator;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;

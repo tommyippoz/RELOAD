@@ -6,7 +6,7 @@ package ippoz.reload.featureselection;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.utils.maths.MathUtils;
+import ippoz.reload.commons.utils.MathUtils;
 
 import java.util.HashMap;
 import java.util.List;

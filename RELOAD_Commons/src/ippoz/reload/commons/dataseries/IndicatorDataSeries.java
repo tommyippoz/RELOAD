@@ -3,12 +3,12 @@
  */
 package ippoz.reload.commons.dataseries;
 
-import ippoz.madness.commons.datacategory.DataCategory;
-import ippoz.madness.commons.indicator.Indicator;
-import ippoz.madness.commons.layers.LayerType;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;

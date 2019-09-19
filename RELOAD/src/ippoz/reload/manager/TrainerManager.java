@@ -3,10 +3,10 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.madness.commons.datacategory.DataCategory;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;

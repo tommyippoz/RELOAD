@@ -28,8 +28,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="ippoz.reload.executable.ui.BuildUI" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/executable/ui/BuildUI.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="4" language="java" name="ippoz.reload.ui.BuildUI" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/ui/BuildUI.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="589" y="90"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
@@ -46,8 +46,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="ippoz.reload.executable.ui.OutputFrame" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/executable/ui/OutputFrame.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="6" language="java" name="ippoz.reload.ui.OutputFrame" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/ui/OutputFrame.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="259" y="89"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
@@ -55,8 +55,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="7" language="java" name="ippoz.reload.executable.ui.LoaderFrame" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/executable/ui/LoaderFrame.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="7" language="java" name="ippoz.reload.ui.LoaderFrame" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/ui/LoaderFrame.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="825" y="92"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
@@ -73,8 +73,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="9" language="java" name="ippoz.reload.executable.ui.AlgorithmSetupFrame" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/executable/ui/AlgorithmSetupFrame.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="9" language="java" name="ippoz.reload.ui.AlgorithmSetupFrame" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/ui/AlgorithmSetupFrame.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="431" y="134"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
@@ -96,51 +96,47 @@
     <end type="TARGET" refId="4"/>  
   </dependency>  
   <dependency id="12">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="10"/>  
-  </dependency>  
-  <dependency id="13">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="6"/>  
-  </dependency>  
-  <dependency id="14">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="8"/>  
-  </dependency>  
-  <dependency id="15">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="1"/>  
-  </dependency>  
-  <dependency id="16">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="7"/>  
-  </dependency>  
-  <dependency id="17">    
     <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="3"/>  
   </dependency>  
-  <dependency id="18">    
+  <dependency id="13">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="1"/>  
+  </dependency>  
+  <dependency id="14">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="6"/>  
+  </dependency>  
+  <dependency id="15">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="7"/>  
+  </dependency>  
+  <dependency id="16">    
     <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="9"/>  
   </dependency>  
-  <dependency id="19">    
+  <dependency id="17">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="1"/>  
   </dependency>  
-  <association id="20">    
+  <association id="18">    
     <end type="SOURCE" refId="3" navigable="false">      
-      <attribute id="21" name="metric">        
+      <attribute id="19" name="metric">        
         <position height="0" width="0" x="1" y="3"/>      
       </attribute>      
-      <multiplicity id="22" minimum="0" maximum="1">        
+      <multiplicity id="20" minimum="0" maximum="1">        
         <position height="0" width="0" x="1" y="3"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
     <display labels="false" multiplicity="true"/>  
   </association>  
-  <dependency id="23">    
+  <dependency id="21">    
     <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="8"/>  
+  </dependency>  
+  <dependency id="22">    
+    <end type="SOURCE" refId="6"/>    
     <end type="TARGET" refId="8"/>  
   </dependency>  
   <classifier-display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 

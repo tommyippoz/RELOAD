@@ -3,7 +3,7 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.IndicatorData;
 import ippoz.reload.commons.knowledge.data.MonitoredData;

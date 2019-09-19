@@ -3,7 +3,7 @@
  */
 package ippoz.reload.commons.dataseries;
 
-import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.StatPair;

@@ -248,17 +248,21 @@ public abstract class FeatureSelector {
 			return null;
 		else {
 			switch(fst){
-				case RELIEF:
+				case RELIEF: 
 					return new ReliefFeatureSelector(threshold, isRankThreshold);
 				case INFORMATION_GAIN:
 					return new InformationGainSelector(threshold, isRankThreshold);
 				case PEARSON_CORRELATION:
 					return new PearsonFeatureSelector(threshold, isRankThreshold);
 				case VARIANCE:
-					return new VarianceFeatureSelector(threshold, isRankThreshold);
+					return new VarianceFeatureSelector(threshold, isRankThreshold);	
+				case ONER:
+					return new OneRRanker(threshold, isRankThreshold);
+				case PCA:
+					return new PrincipalComponentRanker(threshold, isRankThreshold);
 				default:
 					return null;
-			}
+			} 
 		}
 	}
 

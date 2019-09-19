@@ -6,7 +6,7 @@
 FEATURE_SELECTION_FLAG = 1
 
 * Perform Training (0 = NO, 1 = YES).
-TRAIN_FLAG = 0
+TRAIN_FLAG = 1
 
 * K Counter for K-Fold Training/Validation
 KFOLD_COUNTER = 5
@@ -35,7 +35,7 @@ OUTPUT_TYPE = null
 * Optimization
 
 * Perform Optimization (0 = NO, 1 = YES).
-OPTIMIZATION_FLAG = 0
+OPTIMIZATION_FLAG = 1
 
 * Filtering
 
@@ -48,7 +48,7 @@ SLIDING_WINDOW_SIZE = 20, 50, 100
 * Evaluation
 
 * Perform Evaluation (0 = NO, 1 = YES).
-EVALUATION_FLAG = 0
+EVALUATION_FLAG = 1
 
 
 * Path Setup.

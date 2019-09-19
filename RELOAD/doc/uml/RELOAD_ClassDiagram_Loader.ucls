@@ -46,8 +46,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="ippoz.reload.executable.ui.LoaderFrame" project="RELOAD" 
-    file="/RELOAD/src/ippoz/reload/executable/ui/LoaderFrame.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="6" language="java" name="ippoz.reload.ui.LoaderFrame" project="RELOAD" 
+    file="/RELOAD/src/ippoz/reload/ui/LoaderFrame.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="163" y="37"/>    
     <display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
       sort-features="false" accessors="true" visibility="false">      
@@ -55,14 +55,6 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <generalization id="7">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="8">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
   <classifier-display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
     sort-features="false" accessors="true" visibility="false">    
     <attributes public="false" package="false" protected="false" private="false" static="false"/>    

@@ -3,13 +3,13 @@
  */
 package ippoz.reload.voter;
 
-import ippoz.madness.commons.layers.LayerType;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.layers.LayerType;
 
 /**
  * The Class AlgorithmVoter.

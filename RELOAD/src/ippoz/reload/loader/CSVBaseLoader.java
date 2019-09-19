@@ -3,8 +3,8 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.madness.commons.indicator.Indicator;
-import ippoz.madness.commons.layers.LayerType;
+import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 

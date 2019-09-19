@@ -3,8 +3,8 @@
  */
 package ippoz.reload.performance;
 
-import ippoz.madness.commons.layers.LayerType;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppUtility;
 
 import java.util.HashMap;

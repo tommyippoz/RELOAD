@@ -3,7 +3,7 @@
  */
 package ippoz.reload.commons.knowledge.data;
 
-import ippoz.madness.commons.datacategory.DataCategory;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.util.Map;
