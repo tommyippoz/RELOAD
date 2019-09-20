@@ -3,10 +3,10 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.IndicatorDataSeries;
 import ippoz.reload.commons.indicator.Indicator;
@@ -21,6 +21,8 @@ import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.featureselection.VarianceFeatureSelector;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.ARFFLoader;
 import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
@@ -1535,6 +1537,14 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
 		}
 		return comb;
+	}
+
+	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
+		return new FeatureSelectionInfo(new File(outFilePrequel));
+	}
+
+	public TrainInfo loadTrainInfo(String outFilePrequel) {
+		return new TrainInfo(new File(outFilePrequel));
 	}
 	
 }

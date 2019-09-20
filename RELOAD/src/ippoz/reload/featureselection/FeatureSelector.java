@@ -232,6 +232,12 @@ public abstract class FeatureSelector {
 				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the correlation is strong enough <br>" +
 				FeatureSelectorType.RELIEF + ": used to cut out features that are ranked low by ReliefF Algorithm. "
 				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the ReliefF score is high enough <br>" +
+				FeatureSelectorType.GAIN_RATIO + ": used to cut out features that are ranked low by the GainRatio strategy, which measures infrmation gain of features. "
+				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the GainRatio score is high enough <br>" +
+				FeatureSelectorType.PCA + ": used to cut out features which are not identified as 'Principal Components'. "
+				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the PCA score is high enough <br>" +
+				FeatureSelectorType.ONER + ": used to cut out features that are ranked low by the OneR Algorithm, adapted as Feature Ranker. "
+				+ "<br>   Threshold represents the absolute value (0 < threshold <= 100) that is used to check if the OneR score is high enough <br>" +
 				FeatureSelectorType.INFORMATION_GAIN + ": used to cut out features that embed too much entropy. "
 				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the information gain is big enough <br>";
 	}
@@ -260,6 +266,8 @@ public abstract class FeatureSelector {
 					return new OneRRanker(threshold, isRankThreshold);
 				case PCA:
 					return new PrincipalComponentRanker(threshold, isRankThreshold);
+				case GAIN_RATIO:
+					return new GainRatioFeatureRanker(threshold, isRankThreshold);
 				default:
 					return null;
 			} 

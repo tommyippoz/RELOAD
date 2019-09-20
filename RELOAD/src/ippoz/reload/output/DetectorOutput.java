@@ -14,6 +14,8 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.featureselection.FeatureSelectorType;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
@@ -75,6 +77,10 @@ public class DetectorOutput {
 	
 	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;
 	
+	private FeatureSelectionInfo fsInfo;
+	
+	private TrainInfo tInfo;
+	
 	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, String bestSetup, 
 			List<AlgorithmVoter> voterList, String evaluationMetricsScores, String[] anomalyTresholds, Map<String, Integer> nVoters, 
 			Map<String, List<TimedResult>> detailedKnowledgeScores,
@@ -82,7 +88,7 @@ public class DetectorOutput {
 			Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> detailedExperimentsScores,
 			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
-			String writableTag, double faultsRatio) {
+			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
 		this.bestSetup = bestSetup;
@@ -100,6 +106,8 @@ public class DetectorOutput {
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
+		this.fsInfo = fsInfo;
+		this.tInfo = tInfo;
 	}
 	
 	public void printDetailedKnowledgeScores(String outputFolder){
@@ -431,6 +439,18 @@ public class DetectorOutput {
 	
 	public String getTrainRuns(){
 		return loader.getRuns();
+	}
+
+	public TrainInfo getTrainInfo() {
+		if(tInfo != null)
+			return tInfo;
+		else return new TrainInfo();
+	}
+
+	public FeatureSelectionInfo getFeatureSelectionInfo() {
+		if(fsInfo != null)
+			return fsInfo;
+		else return new FeatureSelectionInfo();
 	}
 
 }

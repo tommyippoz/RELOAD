@@ -320,7 +320,7 @@ public class BuildUI {
 					for(int i=0;i<dmList.size();i++){
 						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
 						partialTime = System.currentTimeMillis();
-						newOut = DetectorMain.runMADneSs(dmList.get(i));
+						newOut = DetectorMain.runMADneSs(dmList.get(i), iManager);
 						final String loggedErrors = AppLogger.getErrorsSince(partialTime);
 						if(loggedErrors != null){
 							Thread t = new Thread(new Runnable(){

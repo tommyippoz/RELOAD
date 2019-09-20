@@ -11,6 +11,8 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.info.TrainInfo;
+import ippoz.reload.loader.Loader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 import ippoz.reload.trainer.AlgorithmTrainer;
@@ -36,6 +38,8 @@ import java.util.Map.Entry;
  * @author Tommy
  */
 public class TrainerManager extends TrainDataManager {
+	
+	private TrainInfo trainInfo;
 	
 	/**
 	 * Instantiates a new trainer manager.
@@ -113,14 +117,22 @@ public class TrainerManager extends TrainDataManager {
 	public void train(String outFilename){
 		long start = System.currentTimeMillis();
 		try {
+			if(trainInfo == null)
+				trainInfo = new TrainInfo();
+			trainInfo.setFaultRatio(getInjectionsRatio());
+			trainInfo.setSeries(seriesList);
+			trainInfo.setKFold(kfold);
+			trainInfo.setAlgorithms(algTypes);
 			if(isValidKnowledge()){
 				start();
 				join();
 				Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
-				AppLogger.logInfo(getClass(), "Training executed in " + (System.currentTimeMillis() - start) + "ms");
+				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
+				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
 				saveScores(getThreadList(), outFilename + "_scores.csv");
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
+				trainInfo.printFile(new File(outFilename + "_trainInfo.info"));
 			} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
@@ -326,6 +338,17 @@ public class TrainerManager extends TrainDataManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}
+	}
+
+	public TrainInfo getTrainInfo() {
+		return trainInfo;
+	}
+
+	public void addLoaderInfo(Loader loader) {
+		if(trainInfo == null)
+			trainInfo = new TrainInfo();
+		trainInfo.setRuns(loader.getRuns());
+		trainInfo.setDataPoints(loader.getDataPoints());
 	}
 	
 }

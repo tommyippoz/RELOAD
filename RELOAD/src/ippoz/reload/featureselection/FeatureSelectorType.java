@@ -13,7 +13,7 @@ public enum FeatureSelectorType {
 	/** The variance. */
 	VARIANCE, 
 	
-	/** The pearson correlation. */
+	/** The Pearson correlation. */
 	PEARSON_CORRELATION,
 	
 	/** The information gain. */
@@ -22,8 +22,13 @@ public enum FeatureSelectorType {
 	/** Relief. */
 	RELIEF, 
 	
+	/** Selection through OneR classifier */
 	ONER, 
 	
-	PCA
+	/** Principal Component Analysis */
+	PCA, 
+	
+	/** Feature Selection through GAIN Ratio */
+	GAIN_RATIO
 
 }

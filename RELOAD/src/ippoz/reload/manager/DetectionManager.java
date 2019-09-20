@@ -184,16 +184,19 @@ public class DetectionManager {
 		List<Knowledge> kList;
 		FeatureSelectorManager fsm;
 		String scoresFolderName;
+		List<Loader> loaders;
 		try {
 			if(needFiltering()) {
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar;
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				kList = Knowledge.generateKnowledge(buildLoader("train").get(0).fetch(), KnowledgeType.SINGLE, null, 0);
+				loaders = buildLoader("train");
+				kList = Knowledge.generateKnowledge(loaders.get(0).fetch(), KnowledgeType.SINGLE, null, 0);
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
 				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
 				fsm.finalizeSelection(iManager.getDataSeriesDomain());
+				fsm.addLoaderInfo(loaders.get(0));
 				fsm.saveFilteredSeries(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
@@ -212,9 +215,11 @@ public class DetectionManager {
 		TrainerManager tManager;
 		String scoresFolderName;
 		Map<KnowledgeType, List<Knowledge>> kMap;
+		List<Loader> loaders;
 		try {
 			if(needTraining()) {
-				kMap = generateKnowledge(buildLoader("train").iterator().next().fetch());
+				loaders = buildLoader("train");
+				kMap = generateKnowledge(loaders.iterator().next().fetch());
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel();
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
@@ -226,6 +231,7 @@ public class DetectionManager {
 					}
 					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.loadSelectedDataSeriesString(buildOutFilePrequel()), iManager.getKFoldCounter());
 				}
+				tManager.addLoaderInfo(loaders.get(0));
 				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1));
 				tManager.flush();
 			}
@@ -353,7 +359,10 @@ public class DetectionManager {
 					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
 					bestEManager != null ? bestEManager.getFailures() : null, 
 					iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
-					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
+					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN, 
+					iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
+					iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
+					
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
 			return null;
@@ -489,7 +498,9 @@ public class DetectionManager {
 			evaluations, eManager.getDetailedEvaluations(),
 			eManager.getAnomalyThreshold(), eManager.getFailures(),	
 			iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
-			getWritableTag(), eManager.getInjectionsRatio());
+			getWritableTag(), eManager.getInjectionsRatio(),
+			iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
+			iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
 	}
 
 	public DetectorOutput evaluateAll(){

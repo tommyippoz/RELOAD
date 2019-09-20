@@ -3,13 +3,13 @@
  */
 package ippoz.reload.featureselection;
 
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.Knowledge;
 
 /**
  * @author Tommy

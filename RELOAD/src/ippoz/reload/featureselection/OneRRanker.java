@@ -4,9 +4,7 @@
 package ippoz.reload.featureselection;
 
 import weka.attributeSelection.ASEvaluation;
-import weka.attributeSelection.ClassifierAttributeEval;
 import weka.attributeSelection.OneRAttributeEval;
-import weka.attributeSelection.WrapperSubsetEval;
 
 /**
  * @author Tommy
