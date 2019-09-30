@@ -1,9 +1,0 @@
-FILTERING_CSV_FILE = datasets/ADFALD/ADFA-LD_Adduser.csv
-TRAIN_CSV_FILE = datasets/ADFALD/ADFA-LD_Adduser.csv
-VALIDATION_CSV_FILE = datasets/ADFALD/ADFA-LD_Adduser.csv
-
-SKIP_COLUMNS = 1, 2
-LABEL_COLUMN = 1
-EXPERIMENT_ROWS = 3000
-
-FAULTY_TAGS = "AddUser", AddUser, "Adduser", Adduser
