@@ -11,6 +11,8 @@ import ippoz.reload.commons.dataseries.SumDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.featureselection.FeatureSelector;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.loader.Loader;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,9 +37,12 @@ public class FeatureSelectorManager {
 	
 	private DataCategory[] dataTypes;
 	
+	private FeatureSelectionInfo fsInfo;
+	
 	public FeatureSelectorManager(List<FeatureSelector> selectorsList, DataCategory[] dataTypes){
 		this.selectorsList = selectorsList;
 		this.dataTypes = dataTypes;
+		fsInfo = new FeatureSelectionInfo(selectorsList);
 	}
 	
 	public List<DataSeries> selectFeatures(List<Knowledge> kList, String setupFolder, String datasetName){
@@ -67,6 +72,7 @@ public class FeatureSelectorManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
 		}
+		fsInfo.setSelectedFeatures(selectedFeatures);
 		return selectedFeatures;
 	}
 	
@@ -78,6 +84,7 @@ public class FeatureSelectorManager {
 
 	public List<DataSeries> combineSelectedFeatures(List<Knowledge> kList, String dsDomain, String setupFolder){
 		combinedFeatures = new LinkedList<DataSeries>();
+		fsInfo.setAggregationStrategy(dsDomain);
 		if(dsDomain.equals("ALL")){
 			allCombinations();
 		} else if(dsDomain.equals("UNION") || dsDomain.equals("SIMPLE")){
@@ -87,6 +94,7 @@ public class FeatureSelectorManager {
 			pearsonCombinations(kList, pearsonSimple, setupFolder);
 		}
 		AppLogger.logInfo(getClass(), "Combined Data Series : " + combinedFeatures.size());
+		fsInfo.setCombinedFeatures(combinedFeatures.size());
 		return combinedFeatures;
 	}
 	
@@ -107,7 +115,8 @@ public class FeatureSelectorManager {
 			finalizedFeatures.addAll(combinedFeatures);
 		}
 		AppLogger.logInfo(getClass(), "Finalized Data Series : " + finalizedFeatures.size());
-		return combinedFeatures;
+		fsInfo.setFinalizedFeatures(finalizedFeatures.size());
+		return finalizedFeatures;
 	}
 	
 	private void allCombinations(){
@@ -123,15 +132,7 @@ public class FeatureSelectorManager {
 	}
 	
 	public void unionCombinations() {
-		List<DataSeries> simpleIndPlain = new LinkedList<DataSeries>();
-		List<DataSeries> simpleIndDiff = new LinkedList<DataSeries>();
-		for(DataSeries ds : selectedFeatures){
-			if(ds.getDataCategory() == DataCategory.PLAIN)
-				simpleIndPlain.add(ds);
-			else simpleIndDiff.add(ds);
-		}
-		combinedFeatures.add(new MultipleDataSeries(simpleIndPlain));
-		combinedFeatures.add(new MultipleDataSeries(simpleIndDiff));
+		combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
 	}
 	
 	private void pearsonCombinations(List<Knowledge> kList, double pearsonThreshold, String setupFolder) {
@@ -146,6 +147,7 @@ public class FeatureSelectorManager {
 	public void saveFilteredSeries(String setupFolder, String filename) {
 		BufferedWriter writer;
 		try {
+			fsInfo.printFile(new File(setupFolder + File.separatorChar + "featureSelectionInfo.info"));
 			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
 			writer.write("data_series,type\n");
 			for(DataSeries ds : finalizedFeatures){
@@ -155,6 +157,11 @@ public class FeatureSelectorManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write series");
 		}
+	}
+
+	public void addLoaderInfo(Loader loader) {
+		fsInfo.setRuns(loader.getRuns());
+		fsInfo.setDataPoints(loader.getDataPoints());
 	}
 	
 }

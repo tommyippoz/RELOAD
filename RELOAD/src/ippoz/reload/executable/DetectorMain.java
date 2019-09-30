@@ -9,6 +9,8 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.info.TrainInfo;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
@@ -65,7 +67,7 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 				for(int i=0;i<dmList.size();i++){
 					AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-					runMADneSs(dmList.get(i));
+					runMADneSs(dmList.get(i), iManager);
 				}
 			} else {
 				AppLogger.logError(DetectorMain.class, "PreferencesError", "Unable to properly load '" + DEFAULT_PREF_FILE + "' preferences.");
@@ -194,7 +196,7 @@ public class DetectorMain {
 		return false;
 	}
 
-	public static DetectorOutput[] runMADneSs(DetectionManager dManager){
+	public static DetectorOutput[] runMADneSs(DetectionManager dManager, InputManager iManager){
 		DetectorOutput oOut = null, dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
@@ -213,7 +215,7 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
 				dOut = dManager.evaluate(oOut);
 			}
-			report(dOut);
+			report(dOut, iManager);
 			AppLogger.logInfo(DetectorMain.class, "Done.");
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
@@ -223,14 +225,20 @@ public class DetectorMain {
 		else return null;
 	}
 
-	private static void report(DetectorOutput dOut){
+	private static void report(DetectorOutput dOut, InputManager iManager){
 		File drFile = new File(DEFAULT_REPORT_FILE);
+		FeatureSelectionInfo fsInfo;
+		TrainInfo tInfo;
 		BufferedWriter writer;
 		try {
 			if(dOut != null){
+				fsInfo = dOut.getFeatureSelectionInfo();
+				tInfo = dOut.getTrainInfo();
 				if(!drFile.exists()){
 					writer = new BufferedWriter(new FileWriter(drFile, false));
-					writer.write("* Report for MADneSs activity on " + new Date(System.currentTimeMillis()) + "\n");
+					writer.write("* Report for RELOAD activity on " + new Date(System.currentTimeMillis()) + "\n");
+					writer.write(FeatureSelectionInfo.getFileHeader() + ",");
+					writer.write(TrainInfo.getFileHeader() + ",");
 					writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
 					for(Metric met : dOut.getEvaluationMetrics()){
 						writer.write("," + met.getMetricName());
@@ -239,6 +247,8 @@ public class DetectorMain {
 				} else {
 					writer = new BufferedWriter(new FileWriter(drFile, true));
 				}
+				writer.write(fsInfo.toFileString() + ",");
+				writer.write(tInfo.toFileString() + ",");
 				writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 				writer.close();
 			}

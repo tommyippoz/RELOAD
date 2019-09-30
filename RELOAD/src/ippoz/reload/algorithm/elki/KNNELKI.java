@@ -8,6 +8,10 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -66,6 +70,14 @@ public class KNNELKI extends DataSeriesELKIAlgorithm {
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0.1)"});
+		defPar.put("k", new String[]{"5", "10", "20", "50"});
+		return defPar;
 	}
 
 }

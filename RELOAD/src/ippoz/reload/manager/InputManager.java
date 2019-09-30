@@ -3,21 +3,25 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.IndicatorDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
-import ippoz.reload.featureselection.VarianceFeatureSelector;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.ARFFLoader;
 import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
@@ -64,6 +68,8 @@ import java.util.Map;
 public class InputManager {
 	
 	private static final String DEFAULT_GLOBAL_PREF_FILE = "reload.preferences";
+	
+	private static final String DEFAULT_SCORING_FS_FILE = "featureSelection.preferences";
 	
 	private static final String DEFAULT_SCORING_PREF_FILE = "scoringPreferences.preferences";
 	
@@ -164,7 +170,7 @@ public class InputManager {
 		this.prefManager = prefManager;
 		try {
 			if(prefManager == null || !prefManager.isValidFile())
-				this.prefManager = generateDefaultMADneSsPreferences();
+				this.prefManager = generateDefaultRELOADPreferences();
 			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
 				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
 			else {
@@ -178,7 +184,7 @@ public class InputManager {
 	public void reload() {
 		try {
 			if(prefManager == null || !prefManager.isValidFile())
-				this.prefManager = generateDefaultMADneSsPreferences();
+				this.prefManager = generateDefaultRELOADPreferences();
 			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
 				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
 			else {
@@ -211,7 +217,9 @@ public class InputManager {
 	}
 
 	public PreferencesManager getLoaderPreferences(String loaderFile) {
-		if(new File(getLoaderFolder() + loaderFile).exists())
+		if(new File(loaderFile).exists())
+			return new PreferencesManager(loaderFile);
+		else if(new File(getLoaderFolder() + loaderFile).exists())
 			return new PreferencesManager(getLoaderFolder() + loaderFile);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Loader '" + 
@@ -314,7 +322,7 @@ public class InputManager {
 	
 	public String getLoaderFolder() {
 		if(prefManager.hasPreference(LOADER_FOLDER))
-			return checkFolder(getInputFolder() + prefManager.getPreference(LOADER_FOLDER));
+			return checkFolder(prefManager.getPreference(LOADER_FOLDER));
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					LOADER_FOLDER + " not found. Using default value of '" + getInputFolder() + "loaders'");
@@ -527,7 +535,7 @@ public class InputManager {
 	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(at);
-		return loadConfigurations(list, windowSize, sPolicy);
+		return loadConfigurations(list, windowSize, sPolicy, false);
 	}
 
 	/**
@@ -537,7 +545,86 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
+	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
+		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
+		if(createMissing && algTypes != null && algTypes.size() != confList.size()){
+			for(AlgorithmType alg : algTypes){
+				if(!confList.containsKey(alg)){
+					AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
+					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, new AlgorithmConfiguration(alg)).getDefaultParameterValues());
+				}
+			}
+			confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
+		}
+		return confList;
+	}
+	
+	private void generateCombinations(Map<String, String[]> confMap, int keyIndex, List<String> keyList, List<String> combinations){
+		int nPrevious = 1, nAfter = 1;
+		for(int i=0; i<keyList.size(); i++){
+			if(i < keyIndex)
+				nPrevious = nPrevious*confMap.get(keyList.get(i)).length;
+			else if(i > keyIndex)
+				nAfter = nAfter*confMap.get(keyList.get(i)).length;
+		}
+		int nOthers= nAfter*nPrevious;
+		if(combinations == null)
+			combinations = new LinkedList<String>();
+		if(combinations.size() < confMap.get(keyList.get(keyIndex)).length*nOthers){
+			for(int i=combinations.size(); i<confMap.get(keyList.get(keyIndex)).length*nOthers; i++){
+				combinations.add("");
+			}
+		}
+		int index = 0;
+		for(int prev=0; prev<nPrevious; prev++){
+			for(int itemIndex=0; itemIndex<confMap.get(keyList.get(keyIndex)).length; itemIndex++){
+				for(int aft=0; aft<nAfter; aft++){
+					System.out.println(prev + " - " + aft + " - " + itemIndex + " - " + index);
+					String partial = combinations.remove(index);
+					partial = partial + confMap.get(keyList.get(keyIndex))[itemIndex] + ", ";
+					combinations.add(index, partial);
+					index++;
+				}
+			}
+		}
+		keyIndex++;
+		if(keyIndex < keyList.size())
+			generateCombinations(confMap, keyIndex, keyList, combinations);
+	}
+	
+	private void generateConfigurationsFile(AlgorithmType alg, Map<String, String[]> confMap) {
+		File confFile;
+		BufferedWriter writer = null;
+		List<String> keyList = null;
+		List<String> combinations = new LinkedList<String>();
+		try {
+			// Generating Combinations
+			keyList = new ArrayList<String>(confMap.keySet());
+			generateCombinations(confMap, 0, keyList, combinations);
+			// Writing Combinations
+			confFile = new File(getConfigurationFolder() + alg.toString() + ".conf");
+			writer = new BufferedWriter(new FileWriter(confFile));
+			writer.write("* Default Configuration file for algorithm '" + alg.toString() + "'\n\n");
+			for(String tag : keyList){
+				writer.write(tag + ",");
+			}
+			writer.write("\n");
+			for(String combination : combinations){
+				writer.write(combination + "\n");
+			}
+			AppLogger.logInfo(getClass(), "Default Configuration file '" + confFile.getName() + "' generated.");
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to generate configuration");
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException ex) {
+				AppLogger.logException(getClass(), ex, "Unable to generate configuration");
+			}
+		}
+	}
+
+	private Map<AlgorithmType, List<AlgorithmConfiguration>> readConfigurationsFile(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
 		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
 		AlgorithmConfiguration alConf;
@@ -748,7 +835,7 @@ public class InputManager {
 		return toRet;
 	}
 	
-	private static PreferencesManager generateDefaultMADneSsPreferences() throws IOException {
+	public static PreferencesManager generateDefaultRELOADPreferences() throws IOException {
 		File prefFile = null;
 		BufferedWriter writer = null;
 		try {
@@ -756,34 +843,37 @@ public class InputManager {
 			if(!prefFile.exists()){
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default preferences file for 'MADneSs'. Comments with '*'.\n");
-				writer.write("\n\n* Data Source - Loaders.\n");
-				writer.write("\n* Loader type (MYSQL, CSV, ARFF).\n" + 
-						"LOADER_FOLDER = loaders\n");
+				writer.write("\n\n* Data Source - Loaders.\n" + 
+						"LOADER_FOLDER = input" + File.separatorChar + "loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
 						"LOADERS = iscx\n");
 				writer.write("\n* Datasets folder.\n" +
 						"DATASETS_FOLDER = datasets\n");
 				writer.write("\n* MADneSs Execution.\n\n");
-				writer.write("\n* Perform Filtering of Indicators (0 = NO, 1 = YES).\n" + 
-						"FILTERING_FLAG = 1\n");
+				writer.write("\n* Perform Feature Selection (0 = NO, 1 = YES).\n" + 
+						"FEATURE_SELECTION_FLAG = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
 						"TRAIN_FLAG = 1\n");
-				writer.write("\n* K for the K-Fold Evaluation (Default is 1).\n" + 
-						"KFOLD_COUNTER = 1\n");
+				writer.write("\n* Perform Optimization (0 = NO, 1 = YES).\n" + 
+						"OPTIMIZATION_FLAG = 1\n");
+				writer.write("\n* Perform Evaluation (0 = NO, 1 = YES).\n" + 
+						"EVALUATION_FLAG = 1\n");
+				writer.write("\n* K for the K-Fold Evaluation (Default is 2).\n" + 
+						"KFOLD_COUNTER = 2\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
-						"METRIC = FSCORE(2)\n");
+						"METRIC = MATTHEWS\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
 						"METRIC_TYPE = absolute\n");
 				writer.write("\n* Expected duration of injected faults (observations).\n" + 
-						"ANOMALY_WINDOW = 1\n");
-				writer.write("\n* Threshold for filtering i.e., minimum value of FPR accepted.\n" + 
-						"FILTERING_TRESHOLD = 0.5\n");
+						"ANOMALY_WINDOW = 0\n");
+				writer.write("\n* Sliding window policy.\n" + 
+						"SLIDING_WINDOW_POLICY = FIFO\n");
 				writer.write("\n* Flag which indicates if we expect more than one fault for each run\n" + 
 						"VALID_AFTER_INJECTION = true\n");
 				writer.write("\n* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS\n" + 
 						"REPUTATION = 1.0\n");
 				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
-						"DATA_SERIES_DOMAIN = PEARSON(0.90)\n");
+						"INDICATOR_SELECTION = PEARSON(0.90)\n");
 				writer.write("\n* Strategy to slide windows. Accepted Values are FIFO, \n" + 
 						"SLIDING_POLICY = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
@@ -807,8 +897,12 @@ public class InputManager {
 				writer.write("\n* Detection Preferences\n" + 
 						"DETECTION_PREFERENCES_FILE = scoringPreferences.preferences\n");						
 			}
+			new File("input").mkdir();
+			new File("input" + File.separatorChar + "setup").mkdir();
+			new File("input" + File.separatorChar + "loaders").mkdir();
+			new File("input" + File.separatorChar + "configurations").mkdir();
 		} catch(IOException ex){
-			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs global preferences");
+			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD global preferences");
 			throw ex;
 		} finally {
 			if(writer != null)
@@ -828,12 +922,34 @@ public class InputManager {
 				writer.write("\n* Time needed for convergence (excluded by metric evaluations).\n" + 
 						"CONVERGENCE_TIME = 10.0\n");
 				writer.write("\n* Set of possible anomaly thresholds. Accepted values are ALL, HALF, THIRD, 'n'.\n" + 
-						"ANOMALY_TRESHOLD = ALL, HALF, 1\n");
+						"ANOMALY_TRESHOLD = ALL, 1\n");
 				writer.write("\n* Strategy to select anomaly checkers. Accepted values are 'min metric score', BEST 'n', FILTERED 'n'.\n" + 
-						"INDICATOR_SCORE_TRESHOLD = BEST 10, BEST 3, 0.9, FILTERED 10, BEST 30\n");
+						"INDICATOR_SCORE_TRESHOLD = BEST 1, BEST 3, FILTERED 10\n");
 			}
 		} catch(IOException ex){
-			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs scoring preferences");
+			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
+			throw ex;
+		} finally {
+			if(writer != null)
+				writer.close();
+		}
+		return new PreferencesManager(getInputFolder() + DEFAULT_SCORING_PREF_FILE);
+	}
+	
+	private PreferencesManager generateDefaultFeatureSelectionPreferences() throws IOException {
+		File prefFile = null;
+		BufferedWriter writer = null;
+		try {
+			prefFile = new File(checkFolder(getSetupFolder()) + DEFAULT_SCORING_FS_FILE);
+			if(!prefFile.exists()){
+				writer = new BufferedWriter(new FileWriter(prefFile));
+				writer.write("* Default feature selection preferences for 'RELOAD'. Comments with '*'.\n");
+				writer.write("* This file reports on the feature selection techniques to be applied. \n");
+				writer.write("\nfeature_selection_strategy,threshold,ranked_flag\n");
+				writer.write("\nVARIANCE,3.0,false\n");
+			}
+		} catch(IOException ex){
+			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
 			throw ex;
 		} finally {
 			if(writer != null)
@@ -1082,6 +1198,10 @@ public class InputManager {
 			} else {
 				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
 						loadersFile.getPath() + " not found. Will be generated. Using default value of ''");
+				BufferedWriter writer = new BufferedWriter(new FileWriter(loadersFile));
+				writer.write("*Default loaders file for RELOAD \n");
+				writer.write("*Add relative paths to loaders starting from loaders folder, or through GUI \n\n");
+				writer.close();
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read loaders list");
@@ -1204,35 +1324,33 @@ public class InputManager {
 		String[] splitted;
 		String readed;
 		try {
-			if(featuresFile.exists()){
-				reader = new BufferedReader(new FileReader(featuresFile));
-				while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
+			if(!featuresFile.exists()){
+				AppLogger.logInfo(getClass(), "Feature Selection preferences do not exist. Default file will be generated.");
+				generateDefaultFeatureSelectionPreferences();
+			}
+			reader = new BufferedReader(new FileReader(featuresFile));
+			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
+			while(reader.ready()){
+				readed = reader.readLine();
+				if(readed != null){
+					readed = readed.trim();
+					if(readed.length() > 0 && !readed.trim().startsWith("*")){
 						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							readed = readed.trim();
-							if(readed.contains(",")){
-								splitted = readed.split(",");
-								try {
-									boolean rankThresholdFlag = splitted.length > 2 && splitted[2].trim().toUpperCase().equals("TRUE");
-									toAdd = FeatureSelector.createSelector(FeatureSelectorType.valueOf(splitted[0].trim()), Double.valueOf(splitted[1].trim()), rankThresholdFlag);
-									if(toAdd != null)
-										fsList.add(toAdd);
-								} catch(Exception ex){
-									AppLogger.logError(getClass(), "FeatureSelectionStrategyError", "Unable to load '" + splitted[0] + "' strategy");
-								}
+						if(readed.contains(",")){
+							splitted = readed.split(",");
+							try {
+								boolean rankThresholdFlag = splitted.length > 2 && splitted[2].trim().toUpperCase().equals("TRUE");
+								toAdd = FeatureSelector.createSelector(FeatureSelectorType.valueOf(splitted[0].trim()), Double.valueOf(splitted[1].trim()), rankThresholdFlag);
+								if(toAdd != null)
+									fsList.add(toAdd);
+							} catch(Exception ex){
+								AppLogger.logError(getClass(), "FeatureSelectionStrategyError", "Unable to load '" + splitted[0] + "' strategy");
 							}
 						}
 					}
 				}
-				reader.close();
-			} else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						featuresFile.getPath() + " not found. Using 'Variance' selector");
-				fsList.add(new VarianceFeatureSelector(1.0, false));
 			}
+			reader.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read loaders list");
 		}
@@ -1374,16 +1492,18 @@ public class InputManager {
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
 							if(header == null){
 								header = readed.split(",");
-								for(DataSeries ds : sList){
-									featureMap.put(ds, new HashMap<>());
+								for(int i=2;i<header.length;i++){
+									String name = header[i].split("#")[0].trim();
+									String dataCat = header[i].split("#")[1].trim();
+									featureMap.put(new IndicatorDataSeries(new Indicator(name, LayerType.NO_LAYER, Double.class), DataCategory.valueOf(dataCat)), new HashMap<>());
 								}
 							} else {
 								String[] splitted = readed.split(",");
 								if(splitted[0] != null && splitted[0].length() > 0){
 									for(int i=2;i<splitted.length;i++){
-										for(DataSeries ds : sList){
+										for(DataSeries ds : featureMap.keySet()){
 											if(ds.toString().equals(header[i].trim())){
-												featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), Double.valueOf(splitted[i]));
+												featureMap.get(ds).put(FeatureSelectorType.valueOf(splitted[0]), AppUtility.isNumber(splitted[i]) ? Double.valueOf(splitted[i]) : Double.NaN);
 												break;
 											}
 										}
@@ -1530,6 +1650,14 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
 		}
 		return comb;
+	}
+
+	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
+		return new FeatureSelectionInfo(new File(outFilePrequel));
+	}
+
+	public TrainInfo loadTrainInfo(String outFilePrequel) {
+		return new TrainInfo(new File(outFilePrequel));
 	}
 	
 }

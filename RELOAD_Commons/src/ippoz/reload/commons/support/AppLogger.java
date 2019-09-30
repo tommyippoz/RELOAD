@@ -45,7 +45,10 @@ public class AppLogger {
 	    	logger = Logger.getLogger("RELOADLogger"); 
 	    	if(logFolder != null) 
 	    		handlerFilename = logFolder + "//" + logName + ".log";  
-	    	else  handlerFilename = "./" + logName + ".log";  
+	    	else  {
+	    		new File("./log").mkdir();
+	    		handlerFilename = "./log/" + logName + ".log";  
+	    	}
 	    	fh = new FileHandler(handlerFilename);
     		fh.setFormatter(new SimpleFormatter());  
 	        logger.addHandler(fh); 

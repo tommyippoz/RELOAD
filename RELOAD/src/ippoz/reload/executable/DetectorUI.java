@@ -34,19 +34,19 @@ public class DetectorUI {
 			} catch (Exception e) {
 			    // If Nimbus is not available, you can set the GUI to another look and feel.
 			}
-			if(new File(DEFAULT_PREF_FILE).exists()){
-				iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							DetectorUI window = new DetectorUI(iManager);
-							window.getFrame().setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+			if(!new File(DEFAULT_PREF_FILE).exists())
+				InputManager.generateDefaultRELOADPreferences();
+			iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
+			EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						DetectorUI window = new DetectorUI(iManager);
+						window.getFrame().setVisible(true);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				});
-			}
+				}
+			});
 		} catch(Exception ex) {
 			AppLogger.logException(DetectorMain.class, ex, "");
 		}

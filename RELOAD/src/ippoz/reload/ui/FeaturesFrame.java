@@ -107,23 +107,23 @@ public class FeaturesFrame {
 		fPanel.setBorder(tb);
 		fPanel.setLayout(new GridLayout(2, 2));
 
-		JLabel lbl = new JLabel("Selected Features: " + String.valueOf(fScores.size()));
+		JLabel lbl = new JLabel("Available Features: " + String.valueOf(fScores.size()));
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Used Features: " + String.valueOf(dOut.getUsedFeatures().size()));
+		lbl = new JLabel("Selected Features: " + String.valueOf(dOut.getUsedFeatures().size()));
 		lbl.setFont(labelFont);
 		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Feature Aggregation: ");
+		lbl = new JLabel("Feature Aggregation: " + dOut.getFeatureAggregationPolicy());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel(dOut.getFeatureAggregationPolicy());
+		lbl = new JLabel("Aggregated Features: " + dOut.getSelectedSeries().size());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
@@ -180,7 +180,7 @@ public class FeaturesFrame {
 		private static final long serialVersionUID = 1L;
 
 		public int getColumnCount() {
-			return columns.size() + 1;
+			return columns.size() + 2;
 		}
 
 		public int getRowCount() {
@@ -190,6 +190,8 @@ public class FeaturesFrame {
 		public String getColumnName(int col) {
 			if (col == 0)
 				return "Feature";
+			else if(col == columns.size() + 1)
+				return "Selected";
 			else
 				return columns.get(col - 1).toString();
 		}
@@ -197,19 +199,21 @@ public class FeaturesFrame {
 		public Object getValueAt(int row, int col) {
 			if (col == 0) {
 				return rows.get(row).getName();
+			} else if(col == columns.size() + 1) {
+				return DataSeries.isIn(dOut.getUsedFeatures(), rows.get(row));
 			} else {
-				Double val = fScores.get(rows.get(row)).get(
-						columns.get(col - 1));
+				Double val = fScores.get(rows.get(row)).get(columns.get(col - 1));
 				if (val != null) {
-					return Double.valueOf(AppUtility.formatDouble(val, 3));
-				} else
-					return "";
+					return Double.isFinite(val) ? Double.valueOf(AppUtility.formatDouble(val, 3)) : Double.NaN;
+				} else return "";
 			}
 		}
 
 		public Class<?> getColumnClass(int c) {
 			if(c == 0)
 				return String.class;
+			else if(c == columns.size() + 1)
+				return Boolean.class;
 			else return Double.class;
 		}
 

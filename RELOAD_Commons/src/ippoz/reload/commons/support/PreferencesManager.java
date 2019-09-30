@@ -21,7 +21,7 @@ import java.util.List;
 public class PreferencesManager {
 	
 	/** The map of the preferences. */
-	private HashMap<String, String> preferences;
+	protected HashMap<String, String> preferences;
 	
 	private File file;
 	

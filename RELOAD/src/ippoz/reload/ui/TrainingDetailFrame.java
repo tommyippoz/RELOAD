@@ -105,7 +105,7 @@ public class TrainingDetailFrame {
 		fPanel.setLayout(new GridLayout(4, 1));
 		((GridLayout)fPanel.getLayout()).setVgap(10);
 
-		JLabel lbl = new JLabel("Used Features: " + String.valueOf(dOut.getUsedFeatures().size()));
+		JLabel lbl = new JLabel("Used Features: " + String.valueOf(dOut.getSelectedSeries().size()));
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setBorder(new EmptyBorder(0, tdFrame.getWidth()/10, 0, tdFrame.getWidth()/10));

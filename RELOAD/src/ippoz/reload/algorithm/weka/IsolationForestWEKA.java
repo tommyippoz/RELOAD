@@ -19,6 +19,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import weka.core.Instances;
 
@@ -181,6 +183,14 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	@Override
 	protected DecisionFunction buildClassifier() {
 		return new StaticThresholdGreaterThanDecision(0.5);
+	}
+
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("n_trees", new String[]{"1", "2", "3", "5"});
+		defPar.put("sample_size", new String[]{"10", "20", "50", "100"});
+		return defPar;
 	}
 
 }

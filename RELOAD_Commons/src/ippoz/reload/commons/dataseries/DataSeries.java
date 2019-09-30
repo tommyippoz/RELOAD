@@ -59,7 +59,9 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 	
 	public boolean contains(DataSeries other){
-		if(this instanceof ComplexDataSeries)
+		if(this instanceof MultipleDataSeries)
+			return DataSeries.isIn(((MultipleDataSeries)this).getSeriesList(), other);
+		else if(this instanceof ComplexDataSeries)
 			return ((ComplexDataSeries)this).getFirstOperand().contains(other) || ((ComplexDataSeries)this).getSecondOperand().contains(other);
 		else return compareTo(other) == 0;
 	}
@@ -272,6 +274,16 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 
 	public String getSanitizedName() {
 		return toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "").replace("COMPOSITION", "");
+	}
+	
+	public static boolean isIn(List<DataSeries> dsList, DataSeries newSeries){
+		if(dsList == null || dsList.size() == 0)
+			return false;
+		for(DataSeries ds : dsList){
+			if(ds.compareTo(newSeries) == 0)
+				return true;
+		}
+		return false;
 	}
 		
 }

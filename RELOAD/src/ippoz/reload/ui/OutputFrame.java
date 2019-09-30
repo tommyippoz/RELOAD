@@ -7,6 +7,7 @@ import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
@@ -29,6 +30,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -113,55 +116,54 @@ public class OutputFrame {
 			outFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.6));
 		else outFrame.setBounds(0, 0, 600, 360);
 		outFrame.setBackground(Color.WHITE);
-		outFrame.setResizable(false);
 	}
 	
 	public void buildSummaryPanel(List<DetectorOutput[]> outList){
 		JPanel summaryPanel = new JPanel();
 		summaryPanel.setBackground(Color.WHITE);
-		summaryPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
-		summaryPanel.setLayout(null);
+		//summaryPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
+		summaryPanel.setLayout(new BorderLayout());
+		summaryPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 		
 		JPanel fPanel = new JPanel();
 		fPanel.setBackground(Color.WHITE);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Common Setups ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
-		fPanel.setBorder(tb);
-		fPanel.setLayout(null);
+		//fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
+		fPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 200, 0, 200), tb));
+		fPanel.setLayout(new GridLayout(1, 1));
 		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? (outList.get(0)[0] != null ? outList.get(0)[0].getReferenceMetric().getMetricName() : (outList.get(0)[1] != null ? outList.get(0)[1].getReferenceMetric().getMetricName() : "-")) : "-"), null));			
-		summaryPanel.add(fPanel);
+		summaryPanel.add(fPanel, BorderLayout.NORTH);
 		
 		JPanel contentPanel = new JPanel();
 		contentPanel.setBackground(Color.WHITE);
-		contentPanel.setBounds(0, 0, summaryPanel.getWidth(), outList.size()*labelSpacing);
-		contentPanel.setLayout(null);
+		//contentPanel.setBounds(0, 0, summaryPanel.getWidth(), outList.size()*labelSpacing);
+		contentPanel.setLayout(new GridLayout(outList.size()+1, 1));
 		
-		summaryPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing));
+		contentPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing), BorderLayout.CENTER);
 		int i = 0;
 		for(DetectorOutput[] dOuts : outList){
 			contentPanel.add(buildOutputSummaryPanel((dOuts[1] != null ? dOuts[1] : dOuts[0]), contentPanel, i++, 0));
 		}
 		
 		JScrollPane scroll = new JScrollPane(contentPanel);
-        scroll.setBounds(0, fPanel.getHeight() + 2*labelSpacing, contentPanel.getWidth(), summaryPanel.getHeight() - fPanel.getHeight() - 3*labelSpacing);
+        //scroll.setBounds(0, fPanel.getHeight() + 2*labelSpacing, contentPanel.getWidth(), summaryPanel.getHeight() - fPanel.getHeight() - 3*labelSpacing);
 		
-		summaryPanel.add(scroll);
+		summaryPanel.add(scroll, BorderLayout.CENTER);
 		
 		tabbedPane.add("Summary", summaryPanel);
 	}
 	
 	private JPanel buildOutputSummaryPanel(DetectorOutput dOut, JPanel root, int i, int tabY){
-		int elements = 6;
+		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setBounds((int) (root.getWidth()*0.02), tabY + labelSpacing*(i), (int) (root.getWidth()*0.96), labelSpacing);
-		panel.setLayout(null);
+		panel.setLayout(new GridLayout(1, 6, 50, 5));
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(0, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(0, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Name of the loader used by RELOAD");
 		panel.add(lbl);
@@ -170,7 +172,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()/elements, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(panel.getWidth()/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Algorithm used by RELOAD");
 		panel.add(lbl);
@@ -179,7 +181,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*2/elements, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(panel.getWidth()*2/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Setup used to aggregate different anomaly checkers, if more than one");
 		panel.add(lbl);
@@ -188,7 +190,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*3/elements, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(panel.getWidth()*3/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Amount of features (simple or combined) used by the Algorithm. Note that this amount depends on the Feature Aggregation policy chosen.");
 		panel.add(lbl);
@@ -197,7 +199,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("% of Faults/Attacks in the Evaluation Set");
 		panel.add(lbl);
@@ -206,7 +208,7 @@ public class OutputFrame {
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
-		lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
+		//lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Metric score on the Evaluation Set");
 		panel.add(lbl);
@@ -217,30 +219,46 @@ public class OutputFrame {
 	private JPanel buildOutputPanel(DetectorOutput oOut, DetectorOutput dOut) {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
-		containerPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
-		containerPanel.setLayout(null);
+		//containerPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
+		containerPanel.setLayout(new BorderLayout());
+		
+		JPanel headerPanel = new JPanel();
+		headerPanel.setBackground(Color.WHITE);
+		headerPanel.setLayout(new GridLayout(1, 2));
+		headerPanel.setBorder(new EmptyBorder(0, 100, 0, 100));
 		
 		JPanel miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		miscPanel.setBounds(5, 10, containerPanel.getWidth()/2 - 10, 3*labelSpacing + 2*bigLabelSpacing);
+		//miscPanel.setBounds(5, 10, containerPanel.getWidth()/2 - 10, 3*labelSpacing + 2*bigLabelSpacing);
 		miscPanel.setBorder(tb);
-		miscPanel.setLayout(null);
+		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
+		
 		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getDataset() : oOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
 		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : oOut.getAlgorithm().replace("[", "").replace("]", ""), "Algorithm used by RELOAD"));
 		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut != null ? dOut.getReferenceMetric().getMetricName() : oOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
-		containerPanel.add(miscPanel);
+		
+		headerPanel.add(miscPanel);
 		
 		miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);
+		
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Details ", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		miscPanel.setBounds(containerPanel.getWidth()/2 + 5, 10, containerPanel.getWidth()/2 - 10, 3*labelSpacing + 2*bigLabelSpacing);
 		miscPanel.setBorder(tb);
-		miscPanel.setLayout(null);
+		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
+
 		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getBestSetup() : oOut.getBestSetup(), "Setup used to aggregate different anomaly checkers, if more than one"));
 		miscPanel.add(createLPanel(true, "Evaluation Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getBestRuns() : oOut.getBestRuns(), "Runs used for Evaluation"));
 		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, dOut != null ? String.valueOf(dOut.getBestScore()) : String.valueOf(oOut.getBestScore()), "Metric Score on Evaluation Runs"));			
-		containerPanel.add(miscPanel);
+		
+		headerPanel.add(miscPanel);
+		
+		containerPanel.add(headerPanel, BorderLayout.NORTH);
+		
+		JPanel centerPanel = new JPanel();
+		centerPanel.setBackground(Color.WHITE);
+		centerPanel.setLayout(new GridLayout(2, 1, 0, 20));
+		centerPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 		   
         String[] columnNames = new String[(dOut != null ? dOut.getEvaluationMetrics().length : oOut.getEvaluationMetrics().length) + 3];
         columnNames[0] = "Voter";
@@ -255,17 +273,21 @@ public class OutputFrame {
         
         JTable table;
         int refWidth = -1;
-        JScrollPane scroll1 = null, scroll2 = null, scroll3 = null;
+        JScrollPane scroll1 = null, scroll3 = null;
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment( JLabel.CENTER );
         
         if(oOut != null){
+        	JPanel optPanel = new JPanel();
+    		optPanel.setBackground(Color.WHITE);
+    		optPanel.setLayout(new BorderLayout());
+    		
         	JLabel lbl = new JLabel("Optimization Results (Average per Run)");
     		lbl.setFont(labelFont);
     		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
     		lbl.setBounds(containerPanel.getWidth()/5, yDist, containerPanel.getWidth()*3/5, bigLabelSpacing);
     		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-    		containerPanel.add(lbl);
+    		optPanel.add(lbl, BorderLayout.NORTH);
     		
     		yDist = yDist + bigLabelSpacing;
     		
@@ -279,41 +301,24 @@ public class OutputFrame {
 	        refWidth = resizeColumnWidth(table, -1);
 	
 	        scroll1 = new JScrollPane(table);
-	        scroll1.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
-	        containerPanel.add(scroll1);
+	        //scroll1.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
+	        optPanel.add(scroll1, BorderLayout.CENTER);
 	        yDist = yDist + scroll1.getHeight();
+	        
+	        centerPanel.add(optPanel);
         }
         
         if(dOut != null) {
-        	JLabel lbl = new JLabel("Evaluation Results (Average per Run)");
+        	JPanel evPanel = new JPanel();
+        	evPanel.setBackground(Color.WHITE);
+        	evPanel.setLayout(new BorderLayout());
+    		
+        	JLabel lbl = new JLabel("Evaluation Results (Global)");
     		lbl.setFont(labelFont);
     		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
     		lbl.setBounds(containerPanel.getWidth()/5, yDist, containerPanel.getWidth()*3/5, bigLabelSpacing);
     		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-    		containerPanel.add(lbl);
-    		
-    		yDist = yDist + bigLabelSpacing;
-    		
-	        table = new JTable(dOut.getEvaluationGridAveraged(), columnNames);
-	        table.setFillsViewportHeight(true);
-	        for(int x=0;x<table.getColumnCount();x++){
-	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
-	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
-	        }
-	        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-	        resizeColumnWidth(table, refWidth);
-	        
-	        scroll2 = new JScrollPane(table);
-	        scroll2.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
-	        containerPanel.add(scroll2);
-	        yDist = yDist + scroll2.getHeight();
-	        
-	        lbl = new JLabel("Evaluation Results (Global)");
-    		lbl.setFont(labelFont);
-    		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
-    		lbl.setBounds(containerPanel.getWidth()/5, yDist, containerPanel.getWidth()*3/5, bigLabelSpacing);
-    		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-    		containerPanel.add(lbl);
+    		evPanel.add(lbl, BorderLayout.NORTH);
     		
     		yDist = yDist + bigLabelSpacing;
     		
@@ -327,18 +332,21 @@ public class OutputFrame {
 	        resizeColumnWidth(table, refWidth);
 	        
 	        scroll3 = new JScrollPane(table);
-	        scroll3.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
-	        containerPanel.add(scroll3);
+	        //scroll3.setBounds(5, yDist, containerPanel.getWidth()-10, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
+	        evPanel.add(scroll3, BorderLayout.CENTER);
 	        yDist = yDist + scroll3.getHeight() + labelSpacing/2;
+	        
+	        centerPanel.add(evPanel);
         }
+        
+        containerPanel.add(centerPanel, BorderLayout.CENTER);
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Detailed Outputs ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
+		//fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(new GridLayout(1, 4));
-		((GridLayout)fPanel.getLayout()).setHgap(20);
+		fPanel.setLayout(new GridLayout(1, 4, 20, 0));
 		
 		JButton button = new JButton("Output Folder");
 		button.setVisible(true);
@@ -391,7 +399,7 @@ public class OutputFrame {
 			} } );	
 		fPanel.add(button);
 		
-		containerPanel.add(fPanel);
+		containerPanel.add(fPanel, BorderLayout.SOUTH);
 		
 		return containerPanel;
 	}
@@ -428,14 +436,14 @@ public class OutputFrame {
 	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), labelSpacing);
-		panel.setLayout(null);
+		//panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), labelSpacing);
+		panel.setLayout(new GridLayout(1, 2, 20, 5));
 		
 		JLabel lbl = new JLabel(textName);
 		lbl.setFont(labelFont);
 		if(bold)
 			lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
-		lbl.setBounds(panel.getWidth()/10, 0, panel.getWidth()*3/10, labelSpacing);
+		//lbl.setBounds(panel.getWidth()/10, 0, panel.getWidth()*3/10, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		if(tooltipText != null)
 			lbl.setToolTipText(tooltipText);
@@ -443,7 +451,7 @@ public class OutputFrame {
 		
 		JLabel lbldata = new JLabel(textFieldText);
 		lbldata.setFont(labelFont);
-		lbldata.setBounds(panel.getWidth()/5*2, 0, panel.getWidth()/2, labelSpacing);
+		//lbldata.setBounds(panel.getWidth()/5*2, 0, panel.getWidth()/2, labelSpacing);
 		lbldata.setHorizontalAlignment(SwingConstants.CENTER);
 		panel.add(lbldata);
 		

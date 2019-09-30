@@ -6,7 +6,6 @@ package ippoz.reload.manager;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
-import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -59,8 +58,6 @@ public class DetectionManager {
 	private Integer windowSize;
 	
 	private SlidingPolicy sPolicy;
-	
-	private List<DataSeries> selectedDataSeries;
 	
 	/**
 	 * Instantiates a new detection manager.
@@ -184,16 +181,19 @@ public class DetectionManager {
 		List<Knowledge> kList;
 		FeatureSelectorManager fsm;
 		String scoresFolderName;
+		List<Loader> loaders;
 		try {
 			if(needFiltering()) {
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar;
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				kList = Knowledge.generateKnowledge(buildLoader("train").get(0).fetch(), KnowledgeType.SINGLE, null, 0);
+				loaders = buildLoader("train");
+				kList = Knowledge.generateKnowledge(loaders.get(0).fetch(), KnowledgeType.SINGLE, null, 0);
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
 				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
 				fsm.finalizeSelection(iManager.getDataSeriesDomain());
+				fsm.addLoaderInfo(loaders.get(0));
 				fsm.saveFilteredSeries(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
@@ -212,20 +212,19 @@ public class DetectionManager {
 		TrainerManager tManager;
 		String scoresFolderName;
 		Map<KnowledgeType, List<Knowledge>> kMap;
+		List<Loader> loaders;
 		try {
 			if(needTraining()) {
-				kMap = generateKnowledge(buildLoader("train").iterator().next().fetch());
+				loaders = buildLoader("train");
+				kMap = generateKnowledge(loaders.iterator().next().fetch());
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel();
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				if(selectedDataSeries != null)
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, algTypes, selectedDataSeries, iManager.getKFoldCounter()); 
-				else {
-					if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
-						iManager.generateDataSeries(kMap, iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar, buildOutFilePrequel() + "_filtered.csv");
-					}
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.loadSelectedDataSeriesString(buildOutFilePrequel()), iManager.getKFoldCounter());
+				if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
+					iManager.generateDataSeries(kMap, iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar, buildOutFilePrequel() + "_filtered.csv");
 				}
+				tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy, true), metric, reputation, dataTypes, algTypes, iManager.loadSelectedDataSeriesString(buildOutFilePrequel()), iManager.getKFoldCounter());
+				tManager.addLoaderInfo(loaders.get(0));
 				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1));
 				tManager.flush();
 			}
@@ -351,8 +350,12 @@ public class DetectionManager {
 					nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, l,
 					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
 					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
-					bestEManager != null ? bestEManager.getFailures() : null, iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
-					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN);
+					bestEManager != null ? bestEManager.getFailures() : null, 
+					iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
+					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN, 
+					iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
+					iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
+					
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
 			return null;
@@ -428,7 +431,6 @@ public class DetectionManager {
 
 	public void flush() {
 		iManager = null;
-		selectedDataSeries = null;
 	}
 
 	public DetectorOutput evaluate(DetectorOutput optOut) {
@@ -486,8 +488,11 @@ public class DetectionManager {
 			getMetricScores(evaluations, metList, new String[]{anomalyThreshold}), new String[]{anomalyThreshold},
 			nVoters, eManager.getTimedEvaluations(), l, 
 			evaluations, eManager.getDetailedEvaluations(),
-			eManager.getAnomalyThreshold(), eManager.getFailures(),	iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
-			getWritableTag(), eManager.getInjectionsRatio());
+			eManager.getAnomalyThreshold(), eManager.getFailures(),	
+			iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
+			getWritableTag(), eManager.getInjectionsRatio(),
+			iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
+			iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
 	}
 
 	public DetectorOutput evaluateAll(){

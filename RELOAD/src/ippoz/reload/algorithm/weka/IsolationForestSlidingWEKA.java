@@ -13,6 +13,10 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -98,6 +102,14 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 		if(conf.hasItem(N_TREES) && AppUtility.isInteger(conf.getItem(N_TREES)))
 			return Integer.parseInt(conf.getItem(N_TREES));
 		else return -1;
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("n_trees", new String[]{"1", "2", "3", "5"});
+		defPar.put("sample_size", new String[]{"10", "20", "50", "100"});
+		return defPar;
 	}
 	
 }

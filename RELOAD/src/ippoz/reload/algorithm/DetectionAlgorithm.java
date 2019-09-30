@@ -34,6 +34,7 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DetectionAlgorithm.
@@ -153,7 +154,9 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_KNN:
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return new IsolationForestSlidingWEKA(dataSeries, conf);			
+				return new IsolationForestSlidingWEKA(dataSeries, conf);
+			default:
+				break;			
 		}
 		return null;
 	}
@@ -530,5 +533,7 @@ public abstract class DetectionAlgorithm {
 				return "Algorithms' details not available.";
 		}
 	}
+
+	public abstract Map<String, String[]> getDefaultParameterValues();
 
 }
