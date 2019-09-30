@@ -9,6 +9,10 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
@@ -100,6 +104,15 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("kernel", new String[]{"LINEAR", "QUADRATIC", "CUBIC", "RBF"});
+		defPar.put("nu", new String[]{"0.02", "0.1", "0.2"});
+		defPar.put("threshold", new String[]{"0.9", "IQR", "RIGHT_IQR"});
+		return defPar;
 	}
 
 }

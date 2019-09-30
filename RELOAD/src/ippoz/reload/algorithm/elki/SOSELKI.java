@@ -8,6 +8,9 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+
+import java.util.Map;
+
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -64,6 +67,12 @@ public class SOSELKI extends DataSeriesELKIAlgorithm {
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		// TODO
+		return null;
 	}
 
 }

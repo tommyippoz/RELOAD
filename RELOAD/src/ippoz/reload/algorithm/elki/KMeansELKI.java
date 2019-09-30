@@ -10,6 +10,10 @@ import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
@@ -74,5 +78,13 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
-
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("threshold", new String[]{"CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"});
+		defPar.put("k", new String[]{"2", "5", "10"});
+		return defPar;
+	}
+	
 }

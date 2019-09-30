@@ -53,12 +53,23 @@
 
 * unsw/unsw_worms.loader
 
-* unsw/unsw_shellcode.loader
+unsw/unsw_shellcode.loader
 
 
 * protectid\leapMotion.loader
 * protectid\swell_eda.loader
 * protectid\swell_hrv.loader
 * protectid\tappy.loader
-protectid\wesad_eda.loader
+* protectid\wesad_eda.loader
 * protectid\wesad_hrv.loader
+* iscx\iscx_bruteforce_infiltrator.loader
+* iscx\iscx_dos_bruteforce.loader
+* kddcup\kddcup_r2l_500.loader
+* kddcup\kddcup_u2r_no.loader
+* nslkdd\nslkdd_dos_u2r.loader
+* nslkdd\nslkdd_probe_500.loader
+* nslkdd\nslkdd_probe_to_unknown.loader
+* nslkdd\nslkdd_probe_u2r.loader
+* iscx\iscx_dos_infiltrator.loader
+* iscx\iscx_infiltrator_500.loader
+* iscx\iscx_infiltrator_bruteforce.loader

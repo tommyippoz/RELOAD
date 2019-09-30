@@ -6,7 +6,6 @@ package ippoz.reload.manager;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
-import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -59,8 +58,6 @@ public class DetectionManager {
 	private Integer windowSize;
 	
 	private SlidingPolicy sPolicy;
-	
-	private List<DataSeries> selectedDataSeries;
 	
 	/**
 	 * Instantiates a new detection manager.
@@ -223,14 +220,10 @@ public class DetectionManager {
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel();
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				if(selectedDataSeries != null)
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, algTypes, selectedDataSeries, iManager.getKFoldCounter()); 
-				else {
-					if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
-						iManager.generateDataSeries(kMap, iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar, buildOutFilePrequel() + "_filtered.csv");
-					}
-					tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy), metric, reputation, dataTypes, algTypes, iManager.loadSelectedDataSeriesString(buildOutFilePrequel()), iManager.getKFoldCounter());
+				if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
+					iManager.generateDataSeries(kMap, iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar, buildOutFilePrequel() + "_filtered.csv");
 				}
+				tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDataSeriesDomain(), iManager.getScoresFolder(), loaderPref.getCompactFilename(), iManager.getOutputFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy, true), metric, reputation, dataTypes, algTypes, iManager.loadSelectedDataSeriesString(buildOutFilePrequel()), iManager.getKFoldCounter());
 				tManager.addLoaderInfo(loaders.get(0));
 				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1));
 				tManager.flush();
@@ -438,7 +431,6 @@ public class DetectionManager {
 
 	public void flush() {
 		iManager = null;
-		selectedDataSeries = null;
 	}
 
 	public DetectorOutput evaluate(DetectorOutput optOut) {

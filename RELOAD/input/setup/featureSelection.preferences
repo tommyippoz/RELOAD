@@ -2,4 +2,4 @@
 
 feature_selection_strategy,threshold,ranked_flag
 VARIANCE,3.0,false
-GAIN_RATIO,10.0,true
+PEARSON_CORRELATION,10.0,true

@@ -12,6 +12,10 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppUtility;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -69,6 +73,14 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 		if(conf.hasItem(K) && AppUtility.isInteger(conf.getItem(K))){
 			return Integer.parseInt(conf.getItem(K));
 		} else return DEFAULT_K;
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0.1)"});
+		defPar.put("k", new String[]{"5", "10", "20", "50"});
+		return defPar;
 	}
 	
 }

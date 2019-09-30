@@ -21,8 +21,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
@@ -505,6 +507,15 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			return snapValue;
 		}
 		
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("threshold", new String[]{"CLUSTER(0.1STD)", "CLUSTER(0.5STD)"});
+		defPar.put("eps", new String[]{"100", "500", "1000"});
+		defPar.put("pts(factor)", new String[]{"0.5", "1", "2"});
+		return defPar;
 	}
 
 }

@@ -206,20 +206,11 @@ public class TrainerManager extends TrainDataManager {
 		for(AlgorithmType algType : algTypes){
 			if(confList.get(algType) != null){
 				KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
-				switch(algType){
-					case RCC:
-						/**/
-						break;
-					case PEA:
-						/**/
-						break;
-					default:
-						for(DataSeries dataSeries : seriesList){
-							if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
-								trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
-						}
-						break;
+				for(DataSeries dataSeries : seriesList){
+					if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
+						trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
 				}
+
 			} else {
 				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration");
 			}	

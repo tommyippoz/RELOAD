@@ -8,10 +8,12 @@ import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.featureselection.VarianceFeatureSelector;
 import ippoz.reload.manager.InputManager;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,6 +30,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
@@ -87,38 +91,38 @@ public class FeatureSelectionFrame {
 		fsFrame = new JFrame();
 		fsFrame.setTitle("Feature Selection Strategies");
 		if(screenSize.getWidth() > 1000)
-			fsFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.5));
-		else fsFrame.setBounds(0, 0, 500, 600);
+			fsFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.6));
+		else fsFrame.setBounds(0, 0, 400, 600);
 		fsFrame.setBackground(Color.WHITE);
-		fsFrame.setResizable(false);
+		//fsFrame.setResizable(false);
 	}
 	
 	private JPanel buildMainPanel() {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
 		containerPanel.setBounds(0, 0, fsFrame.getWidth() - 10, fsFrame.getHeight() - 10);
-		containerPanel.setLayout(null);
+		containerPanel.setLayout(new BorderLayout());
 		
 		// EXPLANATION
 		
 		JPanel expPanel = new JPanel();
 		expPanel.setBackground(Color.WHITE);
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Description of Feature Selectors", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		expPanel.setBounds((int)(containerPanel.getWidth()*0.02), labelSpacing/2, (int)(containerPanel.getWidth()*0.96), (FeatureSelectorType.values().length+1)*2*bigLabelSpacing + labelSpacing);
+		//expPanel.setBounds((int)(containerPanel.getWidth()*0.02), labelSpacing/2, (int)(containerPanel.getWidth()*0.96), (FeatureSelectorType.values().length+1)*2*bigLabelSpacing + labelSpacing);
 		expPanel.setBorder(tb);
-		expPanel.setLayout(null);
+		expPanel.setLayout(new GridLayout(1, 1));
 		
 		JLabel lbl = new JLabel("<html> " + FeatureSelector.explainSelectors() + " <br> " + 
-				"Click on 'Ranked Threshold' if, for that strategy, you want to select the n best features, where n = threshold. <br>" + 
+				"<p style=\"text-align:center\"> Click on 'Ranked Threshold' if, for that strategy, you want to select the n best features, where n = threshold. <br>" + 
 				"Press Add # to add a new configuration below the clicked row. <br>" + 
-				"Press Remove # to remove the configuration reported in the clicked row. </html>");
+				"Press Remove # to remove the configuration reported in the clicked row. </p> </html>");
 		lbl.setFont(labelFont);
-		lbl.setBounds((int)(expPanel.getWidth()*0.02), labelSpacing/2, (int)(expPanel.getWidth()*0.95), (FeatureSelectorType.values().length+1)*2*bigLabelSpacing);
+		//lbl.setBounds((int)(expPanel.getWidth()*0.02), labelSpacing/2, (int)(expPanel.getWidth()*0.95), (FeatureSelectorType.values().length+1)*2*bigLabelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		expPanel.add(lbl);
 		
-		containerPanel.add(expPanel);
+		containerPanel.add(expPanel, BorderLayout.NORTH);
 		
 		// MAIN
 		
@@ -140,22 +144,22 @@ public class FeatureSelectionFrame {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBounds(containerPanel.getWidth()/8, expPanel.getHeight() + labelSpacing, containerPanel.getWidth()*3/4, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
-        containerPanel.add(scroll);
+        //scroll.setBounds(containerPanel.getWidth()/8, expPanel.getHeight() + labelSpacing, containerPanel.getWidth()*3/4, (int)table.getPreferredSize().getHeight() + 2*labelSpacing);
+        containerPanel.add(scroll, BorderLayout.CENTER);
 		
 		// FOOTER
         
         JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Apply Changes", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
-		fPanel.setBounds(containerPanel.getWidth()/4, expPanel.getHeight() + scroll.getHeight() + labelSpacing, containerPanel.getWidth()/2, 2*bigLabelSpacing);
-		fPanel.setBorder(tb);
-		fPanel.setLayout(null);
+		//fPanel.setBounds(containerPanel.getWidth()/4, expPanel.getHeight() + scroll.getHeight() + labelSpacing, containerPanel.getWidth()/2, 2*bigLabelSpacing);
+		fPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 40, 0, 40)));
+		fPanel.setLayout(new GridLayout(1, 2, 50, 0));
 		
 		JButton button = new JButton("Save Changes");
 		button.setVisible(true);
 		button.setFont(labelBoldFont);
-		button.setBounds(labelSpacing, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
+		//button.setBounds(labelSpacing, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				iManager.updateFeatureSelectionPolicies(fsList);
@@ -165,14 +169,14 @@ public class FeatureSelectionFrame {
 		button = new JButton("Exit");
 		button.setVisible(true);
 		button.setFont(labelBoldFont);
-		button.setBounds(fPanel.getWidth()/2 + 30, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
+		//button.setBounds(fPanel.getWidth()/2 + 30, labelSpacing, fPanel.getWidth()/2 - 60, bigLabelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				fsFrame.setVisible(false);
 			} } );	
 		fPanel.add(button);
 		
-		containerPanel.add(fPanel);
+		containerPanel.add(fPanel, BorderLayout.SOUTH);
 		
 		if(fsFrame.getHeight() < expPanel.getHeight() + scroll.getHeight() + fPanel.getHeight() + 70)
 			fsFrame.setBounds(fsFrame.getX(), fsFrame.getY(), fsFrame.getWidth(), expPanel.getHeight() + scroll.getHeight() + fPanel.getHeight() + 70);

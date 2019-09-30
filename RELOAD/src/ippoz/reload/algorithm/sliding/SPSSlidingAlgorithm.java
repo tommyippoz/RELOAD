@@ -19,6 +19,7 @@ import ippoz.reload.decisionfunction.DecisionFunction;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.special.Erf;
@@ -443,6 +444,12 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 			}
 		}
 		
+	}
+
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
