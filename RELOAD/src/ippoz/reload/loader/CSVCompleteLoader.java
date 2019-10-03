@@ -161,4 +161,10 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 		return LoaderType.CSV;
 	}
 
+	@Override
+	public boolean isComment(String readedString) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

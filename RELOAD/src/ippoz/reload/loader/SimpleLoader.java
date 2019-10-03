@@ -21,13 +21,13 @@ import java.util.List;
 public abstract class SimpleLoader implements Loader {
 	
 	/** The Constant TRAIN_CSV_FILE. */
-	public static final String TRAIN_CSV_FILE = "TRAIN_CSV_FILE";
+	public static final String TRAIN_FILE = "TRAIN_FILE";
 	
 	/** The Constant TRAIN_FAULTY_TAGS. */
 	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
 
 	/** The Constant VALIDATION_CSV_FILE. */
-	public static final String VALIDATION_CSV_FILE = "VALIDATION_CSV_FILE";
+	public static final String VALIDATION_FILE = "VALIDATION_FILE";
 	
 	/** The Constant VALIDATION_FAULTY_TAGS. */
 	public static final String VALIDATION_FAULTY_TAGS = "VALIDATION_FAULTY_TAGS";

@@ -89,16 +89,9 @@ public abstract class Knowledge implements Cloneable {
 	}
 	
 	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries){
-		switch(algType){
-			case INV:
-				if(dataSeries instanceof MultipleDataSeries)
-					return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
-				else return null;
-			default:
-				if(dataSeries.size() == 1)
-					return baseData.generateDataSeriesSnapshot(dataSeries, index);
-				else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
-		}
+		if(dataSeries.size() == 1)
+			return baseData.generateDataSeriesSnapshot(dataSeries, index);
+		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
 	}
 
 	public List<SnapshotValue> getDataSeriesValues(DataSeries ds){

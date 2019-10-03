@@ -25,6 +25,7 @@ import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.ARFFLoader;
 import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
+import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.AUC_Metric;
 import ippoz.reload.metric.Accuracy_Metric;
@@ -1255,12 +1256,12 @@ public class InputManager {
 		return null;
 	}
 
-	public PreferencesManager generateDefaultLoaderPreferences(String loaderName) {
-		File file = createDefaultLoader(loaderName);
+	public PreferencesManager generateDefaultLoaderPreferences(String loaderName, LoaderType loaderType) {
+		File file = createDefaultLoader(loaderName, loaderType);
 		return new PreferencesManager(file);
 	}
 
-	private File createDefaultLoader(String loaderName) {
+	private File createDefaultLoader(String loaderName, LoaderType loaderType) {
 		BufferedWriter writer = null;
 		File lFile = new File(getLoaderFolder() + loaderName);
 		try {
@@ -1269,15 +1270,15 @@ public class InputManager {
 				
 				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
 				
-				writer.write("\n\n* Loader type (MYSQL, CSVALL).\n" + 
-						"LOADER_TYPE = CSVALL\n");
+				writer.write("\n\n* Loader type (CSV, ARFF).\n" + 
+						"LOADER_TYPE = " + loaderType + "\n");
 				writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
 						"CONSIDERED_LAYERS = NO_LAYER\n");
 				
 				writer.write("\n* Data Partitioning.\n\n");
 				
 				writer.write("\n* File Used for Training\n" +
-						"TRAIN_CSV_FILE = \n");
+						"TRAIN_FILE = \n");
 				writer.write("\n* Train Runs.\n" + 
 						"TRAIN_RUN_IDS = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
@@ -1285,7 +1286,7 @@ public class InputManager {
 				writer.write("\n* Train Runs.\n" + 
 						"TRAIN_SKIP_ROWS = \n");
 				writer.write("\n* File Used for Validation\n" +
-						"VALIDATION_CSV_FILE = \n");
+						"VALIDATION_FILE = \n");
 				writer.write("\n* Validation Runs.\n" + 
 						"VALIDATION_RUN_IDS = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
@@ -1414,22 +1415,14 @@ public class InputManager {
 							splitted = AppUtility.splitAndPurify(readed, "§");
 							if(splitted.length > 4){
 								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-								switch(AlgorithmType.valueOf(splitted[1])){
-									case RCC:
-									case PEA:
-										seriesString = null;
-										break;
-									default:
-										seriesString = splitted[0];
-										break;
-								}
+								seriesString = splitted[0];
 								if(conf != null){
 									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
 									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
-								voterList.add(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, conf.getAlgorithmType() != AlgorithmType.INV), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
+								voterList.add(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
 							}
 						}
 					}

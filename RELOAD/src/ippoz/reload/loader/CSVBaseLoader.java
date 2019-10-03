@@ -232,5 +232,41 @@ public abstract class CSVBaseLoader extends FileLoader {
 	public String getLoaderName() {
 		return "CSV - " + file.getName().split(".")[0];
 	}
+	
+	@Override
+	public int getRowNumber() {
+		BufferedReader reader = null;
+		String readLine = null;
+		int rowCount = 0;
+		try {
+			if(file != null && !file.isDirectory() && file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				//skip header
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				// read data
+				rowCount = 1;
+				while(reader.ready()){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
+							rowCount++;
+						}
+					}
+				}
+				reader.close();
+			} else return 0;
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		return rowCount;
+	}
 
 }

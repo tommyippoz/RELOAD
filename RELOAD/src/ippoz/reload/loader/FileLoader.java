@@ -3,13 +3,9 @@
  */
 package ippoz.reload.loader;
 
-import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -71,9 +67,17 @@ public abstract class FileLoader extends SimpleLoader {
 	 * @param tag the tag
 	 * @return the file
 	 */
-	protected static File extractFile(PreferencesManager prefManager, String datasetsFolder, String tag){
+	public static File extractFile(PreferencesManager prefManager, String datasetsFolder, String tag){
 		String filename = datasetsFolder;
-		filename = datasetsFolder + prefManager.getPreference(tag.equals("train") ? TRAIN_CSV_FILE : VALIDATION_CSV_FILE);
+		if(tag.equals("train")){
+			if(prefManager.hasPreference(TRAIN_FILE))
+				filename = filename + prefManager.getPreference(TRAIN_FILE);
+			else filename = filename + prefManager.getPreference("TRAIN_" + prefManager.getPreference(Loader.LOADER_TYPE) + "_FILE");
+		} else {
+			if(prefManager.hasPreference(VALIDATION_FILE))
+				filename = filename + prefManager.getPreference(VALIDATION_FILE);
+			else filename = filename + prefManager.getPreference("VALIDATION_" + prefManager.getPreference(Loader.LOADER_TYPE) + "_FILE");
+		}
 		return new File(filename);
 	}
 	
@@ -142,41 +146,7 @@ public abstract class FileLoader extends SimpleLoader {
 				? Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS));
 	}
 
-	@Override
-	public int getRowNumber() {
-		BufferedReader reader = null;
-		String readLine = null;
-		int rowCount = 0;
-		try {
-			if(file != null && !file.isDirectory() && file.exists()){
-				reader = new BufferedReader(new FileReader(file));
-				//skip header
-				while(reader.ready() && readLine == null){
-					readLine = reader.readLine();
-					if(readLine != null){
-						readLine = readLine.trim();
-						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
-							readLine = null;
-					}
-				}
-				// read data
-				rowCount = 1;
-				while(reader.ready()){
-					readLine = reader.readLine();
-					if(readLine != null){
-						readLine = readLine.trim();
-						if(readLine.length() > 0 && !readLine.startsWith("*")){
-							rowCount++;
-						}
-					}
-				}
-				reader.close();
-			} else return 0;
-		} catch (IOException ex){
-			AppLogger.logException(getClass(), ex, "unable to parse header");
-		}
-		return rowCount;
-	}
+	public abstract int getRowNumber();
 
 	@Override
 	public double getMBSize() {
@@ -192,5 +162,7 @@ public abstract class FileLoader extends SimpleLoader {
 	public int getDataPoints() {
 		return getRunsNumber()*experimentRows;
 	}	
+	
+	public abstract boolean isComment(String readedString);
 	
 }

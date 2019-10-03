@@ -44,7 +44,7 @@ public abstract class ComplexDataSeries extends DataSeries {
 	
 	@Override
 	public boolean compliesWith(AlgorithmType algType) {
-		return !algType.equals(AlgorithmType.INV);
+		return true;
 	}
 
 	@Override

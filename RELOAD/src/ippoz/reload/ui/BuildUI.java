@@ -12,8 +12,9 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.executable.DetectorMain;
-import ippoz.reload.loader.CSVCompleteLoader;
+import ippoz.reload.loader.FileLoader;
 import ippoz.reload.loader.Loader;
+import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
@@ -375,13 +376,9 @@ public class BuildUI {
 				
 				JPanel innerPanel = new JPanel();
 				innerPanel.setBackground(Color.WHITE);
-				//innerPanel.setLayout(new GridLayout(1, 2, 20, 0));
 				innerPanel.setLayout(new GridBagLayout());
 				
-				
-				
 				lbl = new JLabel(option);
-				//lbl.setBounds(fromX, fromY + i*space, panel.getWidth() - fromX - 3*buttonsSpace, space);
 				lbl.setFont(smallLabelFont);
 				lbl.setHorizontalAlignment(SwingConstants.CENTER);
 				
@@ -407,10 +404,11 @@ public class BuildUI {
 							}
 						} else {
 							LoaderFrame lf;
+							String type = option.split("-")[0].trim();
 							String a = option.split("-")[1].trim();
 							String b = a.split(" ")[0];
 							try {
-								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(b));
+								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(b), LoaderType.valueOf(type));
 								lf.setVisible(true);
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to open dataset '" + b + "' preferences");
@@ -451,9 +449,6 @@ public class BuildUI {
 			    c.gridy = 1;
 			    c.gridwidth = 1;
 			    c.fill = GridBagConstraints.NONE; // Remember to reset to none
-			    
-			    //innerPanel.add(lbl);
-				//innerPanel.add(innerInnerPanel);
 				
 				panel.add(innerPanel);
 			}
@@ -498,6 +493,7 @@ public class BuildUI {
 			public void actionPerformed(ActionEvent e) { 
 				LoaderFrame lf;
 				String loaderName = null;
+				LoaderType loaderType = null;
 				String s = (String)JOptionPane.showInputDialog(
 	                    frame, "Set name for the new loader", "Create Loader",
 	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
@@ -505,11 +501,21 @@ public class BuildUI {
 					loaderName = s.trim();
 				} else {
 					loaderName = "newLoader";
-					AppLogger.logError(getClass(), "WrongLoaderFilename", "Loader name unspecified. Using default 'newLoader.loader'");;
+					AppLogger.logError(getClass(), "WrongLoaderFilename", "Loader name unspecified. Using default 'newLoader.loader'");
 				}
 				loaderName = loaderName + ".loader";
+				loaderType = (LoaderType)JOptionPane.showInputDialog(
+	                    frame, "Choose type for the new loader", "Create Loader",
+	                    JOptionPane.PLAIN_MESSAGE, null, LoaderType.values(), LoaderType.CSV);
+				if (loaderType == null){
+					loaderType = LoaderType.CSV;
+					AppLogger.logError(getClass(), "WrongLoaderType", "Loader type unspecified. Using default 'CSV'");
+				}
 				try {
-					lf = new LoaderFrame(iManager, iManager.generateDefaultLoaderPreferences(loaderName));
+					PreferencesManager newPref = iManager.generateDefaultLoaderPreferences(loaderName, loaderType);
+					iManager.addDataset(Paths.get(newPref.getFile().getAbsolutePath()).toString());
+					reload();
+					lf = new LoaderFrame(iManager, newPref, loaderType);
 					lf.setVisible(true);
 				} catch(Exception ex){
 					AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "' preferences");
@@ -591,10 +597,8 @@ public class BuildUI {
 				Object[] possibilities = new String[AlgorithmType.values().length];
 				int i = 0;
 				for(AlgorithmType at : AlgorithmType.values()){
-					if(at != AlgorithmType.RCC && at != AlgorithmType.HIST && at != AlgorithmType.CONF 
-						&& at != AlgorithmType.PEA && at != AlgorithmType.INV && at != AlgorithmType.WER
-						&& at != AlgorithmType.TEST && !Arrays.asList(getAlgorithms()).contains(at.toString()))
-					possibilities[i++] = at.toString();
+					if(!Arrays.asList(getAlgorithms()).contains(at.toString()))
+						possibilities[i++] = at.toString();
 				}
 				String returnValue = (String)JOptionPane.showInputDialog(
 				                    frame, "Choose an Algorithm", "Add Algorithm",
@@ -635,7 +639,8 @@ public class BuildUI {
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
 				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
 			else {
-				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + lPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE) + ")";
+				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " - " + lPref.getFilename() + " (" + 
+						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
 			}
 		}
 		return dsStrings;

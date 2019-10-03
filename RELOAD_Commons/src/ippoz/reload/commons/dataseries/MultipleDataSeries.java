@@ -66,7 +66,7 @@ public class MultipleDataSeries extends DataSeries {
 	@Override
 	public boolean compliesWith(AlgorithmType algType) {
 		if(dsList != null && dsList.size() > 0){
-			return (dsList.size() == 2 && algType.equals(AlgorithmType.INV)) || algType.equals(AlgorithmType.ELKI_KMEANS);
+			return true;
 		} else return false;
 	}
 

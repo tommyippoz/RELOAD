@@ -51,10 +51,6 @@ public class OverlapDetail_Metric extends BetterMinMetric {
 			Collections.sort(normalList);
 			Collections.sort(faultyList);
 			boolean normalBeforeFaulty = normalList.get(0) < faultyList.get(0) ? true : false;
-			boolean normalEmbedsFaulty = faultyList.get(0) >= normalList.get(0) && 
-						faultyList.get(faultyList.size()-1) <= normalList.get(normalList.size()-1);
-			boolean faultyEmbedsNormal = normalList.get(0) >= faultyList.get(0) && 
-					normalList.get(normalList.size()-1) <= faultyList.get(faultyList.size()-1);
 			if(normalBeforeFaulty)
 				return overlapFirstBeforeSecond(normalList, faultyList);
 			else return overlapFirstBeforeSecond(faultyList, normalList);

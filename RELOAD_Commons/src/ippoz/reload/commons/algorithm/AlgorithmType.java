@@ -9,7 +9,7 @@ package ippoz.reload.commons.algorithm;
  */
 public enum AlgorithmType {
 	
-	RCC, HIST, CONF, WER, INV, PEA, TEST, HBOS, DBSCAN,
+	HBOS, DBSCAN,
 	
 	ELKI_KMEANS, ELKI_ABOD, ELKI_FASTABOD, ELKI_LOF, ELKI_COF, ELKI_ODIN, ELKI_SVM, ELKI_KNN, ELKI_SOS,
 	

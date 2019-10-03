@@ -7,8 +7,8 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVBaseLoader;
 import ippoz.reload.loader.CSVCompleteLoader;
+import ippoz.reload.loader.FileLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
@@ -28,11 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -73,7 +73,7 @@ public class LoaderFrame {
 	
 	private Loader vLoader;
 	
-	public LoaderFrame(InputManager iManager, PreferencesManager loaderPref) {
+	public LoaderFrame(InputManager iManager, PreferencesManager loaderPref, LoaderType loaderType) {
 		this.iManager = iManager;
 		this.loaderPref = loaderPref;
 		tLoader = buildLoader("train");
@@ -103,14 +103,16 @@ public class LoaderFrame {
 
 	private Loader buildLoader(String loaderTag) {
 		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
+		List<Integer> runIds = null;
+		if(loaderTag.equals("train"))
+			runIds = iManager.readRunIds(loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE));
+		else runIds = iManager.readRunIds(loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE));
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
 			return new MySQLLoader(null, loaderPref, loaderTag, "NO_LAYER", null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
-			if(loaderTag.equals("train"))
-				return new CSVCompleteLoader(iManager.readRunIds(loaderPref.getPreference(CSVBaseLoader.TRAIN_RUN_PREFERENCE)), loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
-			else return new CSVCompleteLoader(iManager.readRunIds(loaderPref.getPreference(CSVBaseLoader.VALIDATION_RUN_PREFERENCE)), loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
+			return new CSVCompleteLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
 		} else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
-			return new ARFFLoader(null, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
+			return new ARFFLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;
@@ -178,9 +180,8 @@ public class LoaderFrame {
 		
 		showPreference2Labels(generalPanel, bigLabelSpacing, "Loader Path", loaderPref.getFilename(), "", button);
 		
-		showPreferenceCB(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
-				loaderPref.getPreference(Loader.LOADER_TYPE), LoaderType.values(), 
-				"Specify loader type, either CSV, MYSQL or ARFF", null);
+		showPreference2Labels(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
+				loaderPref.getPreference(Loader.LOADER_TYPE), "Specifies loader type, either CSV, MYSQL or ARFF", null);
 		twoRowPanel.add(generalPanel);
 		
 		JPanel sourcePanel = new JPanel();
@@ -195,16 +196,16 @@ public class LoaderFrame {
 		if(tLoader != null && tLoader.canFetch())
 			trainDatasetLabel.setText("Size: " + tLoader.getMBSize() + " MB, " + tLoader.getRowNumber() + " rows");
 		
-		showPreferenceButton(sourcePanel, 1*bigLabelSpacing, CSVCompleteLoader.TRAIN_CSV_FILE, 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE), 
+		showPreferenceButton(sourcePanel, 1*bigLabelSpacing, FileLoader.TRAIN_FILE, 
+				loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? loaderPref.getPreference(FileLoader.TRAIN_FILE) : loaderPref.getPreference("TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
 				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'", trainDatasetLabel);
 		
 		JLabel validationDatasetLabel = initLabel("Not Defined");
 		if(vLoader != null && vLoader.canFetch())
 			validationDatasetLabel.setText("Size: " + vLoader.getMBSize() + " MB, " + vLoader.getRowNumber() + " rows");
 		
-		showPreferenceButton(sourcePanel, 2*bigLabelSpacing, CSVCompleteLoader.VALIDATION_CSV_FILE, 
-				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE), 
+		showPreferenceButton(sourcePanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FILE, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_FILE) ? loaderPref.getPreference(FileLoader.VALIDATION_FILE) : loaderPref.getPreference("VALIDATION_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
 				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'", validationDatasetLabel);
 		
 		twoRowPanel.add(sourcePanel);
@@ -383,25 +384,21 @@ public class LoaderFrame {
 	
 	protected String checkParameters() {
 		String output = "";
-		if(loaderPref.hasPreference(Loader.LOADER_TYPE) && 
-				!loaderPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL") && !loaderPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL")){
-			output = output + "Wrong LOADER_TYPE value: insert either CSVALL or MYSQL.\n";
-		}
 		if(loaderPref.hasPreference(Loader.CONSIDERED_LAYERS) && 
 				!loaderPref.getPreference(Loader.CONSIDERED_LAYERS).equals("NO_LAYER")){
 			output = output + "Wrong CONSIDERED_LAYERS value: consider trying with 'NO_LAYER'.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_CSV_FILE) || 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FILE) || 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE).trim().length() == 0){
 			output = output + "Wrong TRAIN_CSV_FILE value: remember to specify file for training.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE)).exists()){
-			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_CSV_FILE)) +  ") does not exist.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE)).exists()){
+			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_CSV_FILE) || 
-				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE).trim().length() == 0){
+		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FILE) || 
+				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_CSV_FILE value: remember to specify file for validation.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE)).exists()){
-			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_CSV_FILE)) +  ") does not exist.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE)).exists()){
+			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE)) +  ") does not exist.\n";
 		}
 		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE) || 
 				loaderPref.getPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
@@ -428,67 +425,7 @@ public class LoaderFrame {
 		return output.trim().length() > 0 ? output : null;
 	}
 	
-	private void showPreferenceCB(JPanel root, int panelY, String prefName, String textFieldText, Object[] itemList, String description, JComponent additionalInfo){
-		int items = additionalInfo != null ? 3 : 2;
-		int space = 20/(items+1);
-		int basicSize = (root.getWidth()-20) / (1 + items*2);
-		int bigSize = 3*basicSize;
-		int smallSize = 2*basicSize;
-		
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));
-		
-		JLabel lbl = new JLabel(prefName);
-		//lbl.setBounds(space, panelY, smallSize, labelSpacing);
-		lbl.setFont(bigFont);
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		if(description != null && description.trim().length() > 0)
-			lbl.setToolTipText(description);
-		
-		panel.add(lbl);
-		
-		JComboBox<Object> comboBox = new JComboBox<Object>();
-		comboBox.setFont(labelFont);
-		//comboBox.setBounds(smallSize + 2*space, panelY, bigSize, bigLabelSpacing);
-		
-		if(itemList != null){
-			for(Object ob : itemList){
-				comboBox.addItem(ob);
-			}
-			comboBox.addActionListener (new ActionListener () {
-			    public void actionPerformed(ActionEvent e) {
-			        String newValue = comboBox.getSelectedItem().toString();
-			        loaderPref.updatePreference(Loader.LOADER_TYPE, newValue, false);	
-			    }
-			});
-		}
-		
-		if(textFieldText != null)
-			comboBox.setSelectedItem(textFieldText);
-		
-		panel.add(comboBox);
-		
-		if(additionalInfo != null){
-			//additionalInfo.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
-			panel.add(additionalInfo);
-		}
-		
-		root.add(panel);
-		
-	}
-	
-	private void showPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, String description){
-		showPreferenceLabels(root, panelY, prefName, textFieldText, description, null);
-	}
-
 	private void showPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, String description, JComponent additionalInfo){
-		int items = additionalInfo != null ? 3 : 2;
-		int space = 20/(items+1);
-		int basicSize = (root.getWidth()-20) / (1 + items*2);
-		int bigSize = 3*basicSize;
-		int smallSize = 2*basicSize;
-		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));
@@ -542,11 +479,6 @@ public class LoaderFrame {
 	}
 	
 	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo){
-		int space = 5;
-		int basicSize = (root.getWidth()-20) / 7;
-		int bigSize = 3*basicSize;
-		int smallSize = 2*basicSize;
-		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, additionalInfo != null ? 4 : 3));
@@ -655,12 +587,6 @@ public class LoaderFrame {
 	}
 	
 	private void showPreference2Labels(JPanel root, int panelY, String prefName, String textFieldText, String description, JComponent additionalInfo){
-		int items = additionalInfo != null ? 3 : 2;
-		int space = 20/(items+1);
-		int basicSize = (root.getWidth()-20) / (1 + items*2);
-		int bigSize = 3*basicSize;
-		int smallSize = 2*basicSize;
-		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));

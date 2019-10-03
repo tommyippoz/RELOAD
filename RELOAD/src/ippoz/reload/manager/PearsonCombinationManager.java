@@ -3,8 +3,6 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.FractionDataSeries;
@@ -43,8 +41,6 @@ public class PearsonCombinationManager {
 	private List<DataSeries> seriesList;
 	
 	private List<Knowledge> kList;
-	
-	private int kfold;
 	
 	private Map<DataSeries, Map<String, List<Double>>> seriesExpData;
 	
@@ -216,13 +212,6 @@ public class PearsonCombinationManager {
 		}
 		return trainerList;
 	}*/
-	
-	private Map<AlgorithmType, List<AlgorithmConfiguration>> adaptConf(Map<AlgorithmType, List<AlgorithmConfiguration>> confList, PearsonResult pr) {
-		for(AlgorithmConfiguration ac : confList.get(AlgorithmType.PEA)){
-			ac.addItem(AlgorithmConfiguration.DETAIL, pr.toFileRow());
-		}
-		return confList;
-	}
 
 	public void flush(){
 		seriesExpData.clear();
