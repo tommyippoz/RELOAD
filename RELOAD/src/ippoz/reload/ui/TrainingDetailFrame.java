@@ -39,8 +39,6 @@ public class TrainingDetailFrame {
 
 	private Font labelFont;
 
-	private Font labelBoldFont;
-
 	private JPanel trainPanel;
 
 	private DetectorOutput dOut;
@@ -57,7 +55,6 @@ public class TrainingDetailFrame {
 				.getHeight() / 1080;
 
 		labelFont = new Font("Times", Font.PLAIN, (int) ((16 + rate) / 2));
-		labelBoldFont = new Font("Times", Font.BOLD, (int) ((15 + rate) / 2));
 
 		trainPanel = buildMainPanel();
 	}

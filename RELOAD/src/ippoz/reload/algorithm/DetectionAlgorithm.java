@@ -163,15 +163,7 @@ public abstract class DetectionAlgorithm {
 	
 	public static AlgorithmFamily getFamily(AlgorithmType algType) {
 		switch(algType){
-			case HIST:
-			case CONF:
-			case RCC:
-			case WER:
-			case PEA:
 			case ELKI_SOS:
-				return AlgorithmFamily.STATISTICAL;
-			case INV:
-				return AlgorithmFamily.CLASSIFICATION;
 			case HBOS:
 			case SLIDING_SPS:
 				return AlgorithmFamily.STATISTICAL;
@@ -195,20 +187,16 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return AlgorithmFamily.CLASSIFICATION;
+		default:
+			break;
 		}
 		return null;
 	}
 	
 	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
-		switch(algType){
-			case INV:
-			case RCC:
-				return KnowledgeType.GLOBAL;
-			default:
-				if(algType.name().toUpperCase().contains("SLIDING"))
-					return KnowledgeType.SLIDING;
-				else return KnowledgeType.SINGLE;
-		}
+		if(algType.name().toUpperCase().contains("SLIDING"))
+			return KnowledgeType.SLIDING;
+		else return KnowledgeType.SINGLE;
 	}
 	
 	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
@@ -229,16 +217,8 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_COF:
 			case SLIDING_ELKI_KNN:
 				return true;
-			case TEST:
-			case WER:
-			case PEA:
-			case RCC:
-			case CONF:
-			case HIST:
 			case SLIDING_SPS:
-				return true; //dataSeries.size() == 1;
-			case INV:
-				return dataSeries.size() == 2;
+				return true;
 			case SLIDING_WEKA_ISOLATIONFOREST:
 			case WEKA_ISOLATIONFOREST:
 				return dataSeries.size() > 1;

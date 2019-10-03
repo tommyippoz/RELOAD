@@ -24,8 +24,11 @@ public abstract class DataManager extends ThreadScheduler {
 	public DataManager(Map<KnowledgeType, List<Knowledge>> map) {
 		super();
 		kMap = map;
-		if(isValidKnowledge())
+		if(isValidKnowledge()){
 			AppLogger.logInfo(getClass(), "Instances Loaded with " + getInjectionsRatio() + "% of Faults/Attacks");
+			if(getInjectionsRatio() <= 0)
+				AppLogger.logError(getClass(), "NoAttacksInSetError", "Portion of the Dataset you choose does not contain attacks.");
+		}
 	}      
 	
 	public double getInjectionsRatio(){

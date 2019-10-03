@@ -407,10 +407,6 @@ public class DetectorOutput {
 	public List<DataSeries> getUsedFeatures() {
 		List<DataSeries> usedFeatures = new LinkedList<DataSeries>();
 		for(DataSeries ds : selectedFeatures.keySet()){
-			if(ds.toString().contains("RANGE#PLAIN")){
-				Object a = ds.getClass();
-				a = null;
-			}
 			for(DataSeries ss : getSelectedSeries()){
 				if(ss.contains(ds) && !DataSeries.isIn(usedFeatures, ds)){
 					usedFeatures.add(ds);

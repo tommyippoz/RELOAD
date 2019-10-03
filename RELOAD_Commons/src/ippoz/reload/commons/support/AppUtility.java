@@ -37,7 +37,7 @@ public class AppUtility {
 					format = format + "#";
 				}
 				formatter = new DecimalFormat(format);
-				while(Double.valueOf(formatter.format(value)) == 0 && value != 0){
+				while(isNumber(formatter.format(value)) && Double.valueOf(formatter.format(value)) == 0 && value != 0){
 					format = format + "#";
 					formatter = new DecimalFormat(format);
 				}

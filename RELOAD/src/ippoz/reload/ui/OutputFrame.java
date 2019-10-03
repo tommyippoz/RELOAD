@@ -225,7 +225,7 @@ public class OutputFrame {
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(Color.WHITE);
 		headerPanel.setLayout(new GridLayout(1, 2));
-		headerPanel.setBorder(new EmptyBorder(0, 100, 0, 100));
+		headerPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
 		
 		JPanel miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);

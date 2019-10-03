@@ -47,10 +47,6 @@ public class FeatureSelectionFrame {
 	
 	private JFrame fsFrame;
 	
-	private int labelSpacing;
-	
-	private int bigLabelSpacing;
-	
 	private Font labelFont;
 	
 	private Font labelBoldFont;
@@ -71,9 +67,6 @@ public class FeatureSelectionFrame {
 		
 		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
 		labelBoldFont = new Font("Times", Font.BOLD, (int)((15 + rate)/2));
-		
-		labelSpacing = (int)(fsFrame.getHeight()/25);
-		bigLabelSpacing = (int)(fsFrame.getHeight()/18);
 		
 		fsPanel = buildMainPanel();
 	}

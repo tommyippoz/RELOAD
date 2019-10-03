@@ -4,9 +4,16 @@
 package ippoz.reload.loader;
 
 import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -71,8 +78,32 @@ public class ARFFLoader extends FileLoader {
 
 	@Override
 	public List<Indicator> loadHeader() {
-		// TODO Auto-generated method stub
-		return null;
+		BufferedReader reader = null;
+		String readLine = null;
+		List<Indicator> arffHeader = null;
+		try {
+			arffHeader = new LinkedList<Indicator>();
+			if(file != null && file.exists() && !file.isDirectory()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null && !isComment(readLine)){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				readLine = AppUtility.filterInnerCommas(readLine);
+				for(String splitted : readLine.split(",")){
+					arffHeader.add(new Indicator(splitted.replace("\"", ""), LayerType.NO_LAYER, String.class));
+				}
+				reader.close();
+			}
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		
+		return arffHeader;
 	}
 	
 	private void readARFF(){
@@ -90,9 +121,14 @@ public class ARFFLoader extends FileLoader {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	
+	@Override
+	public boolean isComment(String readedString){
+		return readedString != null && readedString.length() > 0 && readedString.startsWith("%");
+	}
 
 	@Override
-	public int getDataPoints() {
+	public int getRowNumber() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
