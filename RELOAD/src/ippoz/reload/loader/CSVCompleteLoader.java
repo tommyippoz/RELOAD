@@ -108,7 +108,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 								obList = new LinkedList<Observation>();
 							}
 							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadCSV(rowIndex, changes)){
+							if(canReadFile(rowIndex, changes)){
 								i = 0;
 								current = new Observation(obList.size() > 0 ? obList.getLast().getTimestamp().getTime() + 1000 : System.currentTimeMillis());
 								for(String splitted : readLine.split(",")){

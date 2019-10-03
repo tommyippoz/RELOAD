@@ -144,7 +144,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadCSV(rowIndex, changes)){
+							if(canReadFile(rowIndex, changes)){
 								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
@@ -199,7 +199,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadCSV(rowIndex, changes)){
+							if(canReadFile(rowIndex, changes)){
 								if(readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList.contains(readLine.split(",")[labelCol])){

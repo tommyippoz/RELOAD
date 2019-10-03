@@ -96,7 +96,7 @@ public abstract class FileLoader extends SimpleLoader {
 	/* (non-Javadoc)
 	 * @see ippoz.reload.loader.SimpleLoader#canRead(int)
 	 */
-	public boolean canReadCSV(int index, int pastChanges) {
+	public boolean canReadFile(int index, int pastChanges) {
 		return canRead(getRun(index, pastChanges));
 	}
 
