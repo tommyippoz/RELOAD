@@ -236,7 +236,7 @@ public class LoaderFrame {
 		
 		JLabel labelColumnLabel = initLabel("Not Defined");
 		if(featureNumber > 0)
-			labelColumnLabel.setText("Available indexes: 0 - " + (featureNumber - 1));
+			labelColumnLabel.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
 		
 		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVCompleteLoader.LABEL_COLUMN, 
 				loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN), 
@@ -244,7 +244,7 @@ public class LoaderFrame {
 		
 		JLabel labelColumnLabel2 = initLabel("Not Defined");
 		if(featureNumber > 0)
-			labelColumnLabel2.setText("Available indexes: 0 - " + (featureNumber - 1));
+			labelColumnLabel2.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
 		
 		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVCompleteLoader.SKIP_COLUMNS, 
 				loaderPref.getPreference(CSVCompleteLoader.SKIP_COLUMNS), 
@@ -384,21 +384,24 @@ public class LoaderFrame {
 	
 	protected String checkParameters() {
 		String output = "";
+		String prefString;
 		if(loaderPref.hasPreference(Loader.CONSIDERED_LAYERS) && 
 				!loaderPref.getPreference(Loader.CONSIDERED_LAYERS).equals("NO_LAYER")){
 			output = output + "Wrong CONSIDERED_LAYERS value: consider trying with 'NO_LAYER'.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FILE) || 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE).trim().length() == 0){
-			output = output + "Wrong TRAIN_CSV_FILE value: remember to specify file for training.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE)).exists()){
-			output = output + "TRAIN_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.TRAIN_FILE)) +  ") does not exist.\n";
+		prefString = loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? FileLoader.TRAIN_FILE : "TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE";
+		if(!loaderPref.hasPreference(prefString) || 
+				loaderPref.getPreference(prefString).trim().length() == 0){
+			output = output + "Wrong TRAIN_FILE value: remember to specify file for training.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)).exists()){
+			output = output + "TRAIN_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FILE) || 
-				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE).trim().length() == 0){
-			output = output + "Wrong VALIDATION_CSV_FILE value: remember to specify file for validation.\n";
-		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE)).exists()){
-			output = output + "VALIDATION_CSV_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FILE)) +  ") does not exist.\n";
+		prefString = loaderPref.hasPreference(FileLoader.VALIDATION_FILE) ? FileLoader.VALIDATION_FILE : "VALIDATION_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE";
+		if(!loaderPref.hasPreference(prefString) || 
+				loaderPref.getPreference(prefString).trim().length() == 0){
+			output = output + "Wrong VALIDATION_FILE value: remember to specify file for validation.\n";
+		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)).exists()){
+			output = output + "VALIDATION_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)) +  ") does not exist.\n";
 		}
 		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE) || 
 				loaderPref.getPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
@@ -417,10 +420,6 @@ public class LoaderFrame {
 				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS).length() > 0 && 
 					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS))){
 			output = output + "Wrong EXPERIMENT_SPLIT_COLUMN value: insert a positive integer number.\n";
-		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.LABEL_COLUMN) ||
-				!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN))){
-			output = output + "Wrong LABEL_COLUMN value: insert a positive integer number.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
 	}

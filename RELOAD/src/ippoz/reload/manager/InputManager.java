@@ -1539,6 +1539,10 @@ public class InputManager {
 	}
 	
 	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), getDataTypes());
+	}
+	
+	/*public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
 		double pearsonSimple;
 		DataCategory[] dataTypes = getDataTypes(); 
 		String dsDomain = getDataSeriesDomain();
@@ -1553,9 +1557,9 @@ public class InputManager {
 			pearsonCorrelation(kMap, DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes), pearsonSimple, getComplexPearsonThreshold());
 			return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
 		} else return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPossibleIndCombinations());
-	}
+	}*/
 	
-	private void pearsonCorrelation(Map<KnowledgeType, List<Knowledge>> kMap, List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
+	/*private void pearsonCorrelation(Map<KnowledgeType, List<Knowledge>> kMap, List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
 		PearsonCombinationManager pcManager;
 		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
 		pcManager = new PearsonCombinationManager(pearsonFile, list, kMap.get(kMap.keySet().iterator().next()));
@@ -1643,7 +1647,7 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
 		}
 		return comb;
-	}
+	}*/
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
 		return new FeatureSelectionInfo(new File(outFilePrequel));

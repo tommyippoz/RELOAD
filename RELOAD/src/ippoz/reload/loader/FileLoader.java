@@ -3,6 +3,8 @@
  */
 package ippoz.reload.loader;
 
+import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 
 import java.io.File;
@@ -52,13 +54,52 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The list of tags to be avoided when reading. */
 	protected List<String> avoidTagList;
 
-	public FileLoader(List<Integer> runs, File file, int labelCol, int experimentRows) {
+	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, int experimentRows) {
 		super(runs, null);
 		this.file = file;
-		this.labelCol = labelCol;
+		this.labelCol = extractIndexOf(labelColString);
 		this.experimentRows = experimentRows;
+		filterHeader(parseSkipColumns(toSkip));
 	}
 	
+	/**
+	 * Parses the columns to be considered.
+	 *
+	 * @param colString the column string
+	 * @return the integer[]
+	 */
+	protected Integer[] parseSkipColumns(String colString) {
+		LinkedList<Integer> iList = new LinkedList<Integer>();
+		if(colString != null && colString.length() > 0){
+			for(String str : colString.split(",")){
+				Integer newSkip = extractIndexOf(str.trim());
+				if(newSkip >= 0)
+					iList.add(newSkip);
+			}
+			if(labelCol >= 0)
+				iList.add(labelCol);
+			return iList.toArray(new Integer[iList.size()]);
+		} else return new Integer[]{labelCol};
+	}
+	
+	protected int extractIndexOf(String labelColString) {
+		List<Indicator> header = getHeader();
+		if(labelColString != null && header != null && header.size() > 0){
+			labelColString = labelColString.trim();
+			if(AppUtility.isNumber(labelColString))
+				return Integer.parseInt(labelColString);
+			else {
+				int i = 0;
+				for(Indicator ind : header){
+					if(ind.getName().toUpperCase().equals(labelColString.toUpperCase()))
+						return i;
+					i++;
+				}
+			}
+		}
+		return -1;
+	}
+
 	/**
 	 * Extracts the CSV file to be read.
 	 *
@@ -96,7 +137,7 @@ public abstract class FileLoader extends SimpleLoader {
 	/* (non-Javadoc)
 	 * @see ippoz.reload.loader.SimpleLoader#canRead(int)
 	 */
-	public boolean canReadCSV(int index, int pastChanges) {
+	public boolean canReadFile(int index, int pastChanges) {
 		return canRead(getRun(index, pastChanges));
 	}
 

@@ -126,7 +126,7 @@ public class DetectorOutput {
 				
 				Iterator<String> it = detailedExperimentsScores.keySet().iterator();
 				String tag = it.next();
-				while(it.hasNext() && detailedExperimentsScores.get(tag) != null){
+				while(it.hasNext() && (detailedExperimentsScores.get(tag) == null || detailedExperimentsScores.get(tag).size() == 0)){
 					tag = it.next();
 				}
 				

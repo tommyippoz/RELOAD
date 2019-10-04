@@ -27,13 +27,12 @@ public abstract class CSVBaseLoader extends FileLoader {
 	 *
 	 * @param runs the runs
 	 * @param csvFile the CSV file
-	 * @param skip the skip columns
+	 * @param parseSkipColumns(colString)toSkip the skip columns
 	 * @param labelCol the label column
 	 * @param experimentRows the experiment rows
 	 */
-	protected CSVBaseLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows) {
-		super(runs, csvFile, labelCol, experimentRows);
-		filterHeader(skip);
+	protected CSVBaseLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, int experimentRows) {
+		super(runs, csvFile, toSkip, labelColString, experimentRows);
 	}	
 
 	/**
@@ -144,7 +143,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadCSV(rowIndex, changes)){
+							if(canReadFile(rowIndex, changes)){
 								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
@@ -199,7 +198,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadCSV(rowIndex, changes)){
+							if(canReadFile(rowIndex, changes)){
 								if(readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList.contains(readLine.split(",")[labelCol])){
