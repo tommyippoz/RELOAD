@@ -6,6 +6,7 @@ package ippoz.reload.commons.dataseries;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.layers.LayerType;
@@ -15,6 +16,7 @@ import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -284,6 +286,37 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				return true;
 		}
 		return false;
+	}
+	
+	public static List<DataSeries> allCombinations(List<DataSeries> selectedFeatures){
+		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
+		for(int i=0;i<selectedFeatures.size();i++){
+			for(int j=i+1;j<selectedFeatures.size();j++){
+				if(!selectedFeatures.get(i).getName().equals(selectedFeatures.get(j).getName())){
+					combinedFeatures.add(new SumDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
+					combinedFeatures.add(new FractionDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
+					combinedFeatures.add(new MultipleDataSeries(selectedFeatures.get(i), selectedFeatures.get(j)));
+				}
+			}
+		}
+		return combinedFeatures;
+	}
+	
+	public static List<DataSeries> unionCombinations(List<DataSeries> selectedFeatures) {
+		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
+		combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
+		return combinedFeatures;
+	}
+	
+	public static List<DataSeries> pearsonCombinations(List<Knowledge> kList, double pearsonThreshold, String setupFolder, List<DataSeries> selectedFeatures) {
+		PearsonCombinationManager pcManager;
+		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
+		File pearsonFile = new File(setupFolder + "pearsonCombinations.csv");
+		pcManager = new PearsonCombinationManager(pearsonFile, selectedFeatures, kList);
+		pcManager.calculatePearsonIndexes(pearsonThreshold);
+		combinedFeatures = pcManager.getPearsonCombinedSeries();
+		pcManager.flush();
+		return combinedFeatures;
 	}
 		
 }

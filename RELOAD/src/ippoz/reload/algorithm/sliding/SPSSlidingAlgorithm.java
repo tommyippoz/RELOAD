@@ -17,6 +17,7 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,9 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	/** The Constant SPS_POS. */
 	public static final String SPS_POS = "pos";
 	
+	/** The Constant SPS_POS. */
+	public static final String SPS_P = "p";
+	
 	/** The Constant SPS_DYN_WEIGHT. */
 	public static final String SPS_DYN_WEIGHT = "dweight";
 	
@@ -70,10 +74,17 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 */
 	public SPSSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
 		super(dataSeries, conf);
-		pdv = Double.parseDouble(conf.getItem(SPS_PDV));
-		pov = Double.parseDouble(conf.getItem(SPS_POV));
-		pds = Double.parseDouble(conf.getItem(SPS_PDS));
-		pos = Double.parseDouble(conf.getItem(SPS_POS));
+		if(conf.hasItem(SPS_P)){
+			pdv = Double.parseDouble(conf.getItem(SPS_P));
+			pov = Double.parseDouble(conf.getItem(SPS_P));
+			pds = Double.parseDouble(conf.getItem(SPS_P));
+			pos = Double.parseDouble(conf.getItem(SPS_P));
+		} else {
+			pdv = Double.parseDouble(conf.getItem(SPS_PDV));
+			pov = Double.parseDouble(conf.getItem(SPS_POV));
+			pds = Double.parseDouble(conf.getItem(SPS_PDS));
+			pos = Double.parseDouble(conf.getItem(SPS_POS));
+		}
 		dynamicWeights = (Double.parseDouble(conf.getItem(SPS_DYN_WEIGHT)) == 1.0);	
 	}
 	
@@ -448,8 +459,10 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
-		// TODO Auto-generated method stub
-		return null;
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("p", new String[]{"0.9999", "0.999", "0.99", "0.9"});
+		defPar.put("dweight", new String[]{"0", "1"});
+		return defPar;
 	}
 
 }

@@ -88,7 +88,7 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
 		this(setupFolder, dsDomain, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
-		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
+		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes, dsDomain);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
@@ -103,9 +103,27 @@ public class TrainerManager extends TrainDataManager {
 		}
 	}
 	
-	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
-		List<DataSeries> finalList = DataSeries.fromString(selectedSeriesString, false);
-		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + finalList.size());
+	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes, String dsDomain) {
+		List<DataSeries> selected = DataSeries.fromString(selectedSeriesString, false);
+		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + selected.size());
+		List<DataSeries> finalList = selected;
+		List<DataSeries> combined = new LinkedList<DataSeries>();
+		if(dsDomain.equals("ALL")){
+			combined = DataSeries.allCombinations(selected);
+			finalList.addAll(combined);
+		} else if(dsDomain.equals("UNION")){
+			combined = DataSeries.unionCombinations(selected);
+			finalList = combined;
+		} else if(dsDomain.equals("SIMPLE")){
+			combined = DataSeries.unionCombinations(selected);
+			finalList.addAll(combined);
+		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
+			double pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
+			combined = DataSeries.pearsonCombinations(getKnowledge(), pearsonSimple, setupFolder, selected);
+			finalList.addAll(combined);
+		}
+		AppLogger.logInfo(getClass(), "Combined Data Series Created: " + combined.size());
+		AppLogger.logInfo(getClass(), "Finalized Data Series (" + dsDomain + "): " + finalList.size());
 		return finalList;
 	}
 

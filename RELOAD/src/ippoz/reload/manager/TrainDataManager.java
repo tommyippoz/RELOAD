@@ -22,7 +22,7 @@ import java.util.Map;
 public abstract class TrainDataManager extends DataManager {
 	
 	/** The setup folder. */
-	private String setupFolder;
+	protected String setupFolder;
 	
 	/** The data series domain. */
 	protected String dsDomain;

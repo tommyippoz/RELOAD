@@ -191,10 +191,10 @@ public class DetectionManager {
 				kList = Knowledge.generateKnowledge(loaders.get(0).fetch(), KnowledgeType.SINGLE, null, 0);
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
 				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
-				fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
-				fsm.finalizeSelection(iManager.getDataSeriesDomain());
+				//fsm.combineSelectedFeatures(kList, iManager.getDataSeriesDomain(), scoresFolderName);
+				//fsm.finalizeSelection(iManager.getDataSeriesDomain());
 				fsm.addLoaderInfo(loaders.get(0));
-				fsm.saveFilteredSeries(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
+				fsm.saveSelectedFeatures(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
@@ -303,7 +303,7 @@ public class DetectionManager {
 				//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
 				AppLogger.logInfo(getClass(), "Final Optimized score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 			} else {
-				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
+				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
 				return null;
 			}
 		} catch(Exception ex){
@@ -357,7 +357,7 @@ public class DetectionManager {
 					iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
 					
 		} else {
-			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
+			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
 			return null;
 		}
 	}

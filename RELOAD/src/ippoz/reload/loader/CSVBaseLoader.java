@@ -27,13 +27,12 @@ public abstract class CSVBaseLoader extends FileLoader {
 	 *
 	 * @param runs the runs
 	 * @param csvFile the CSV file
-	 * @param skip the skip columns
+	 * @param parseSkipColumns(colString)toSkip the skip columns
 	 * @param labelCol the label column
 	 * @param experimentRows the experiment rows
 	 */
-	protected CSVBaseLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows) {
-		super(runs, csvFile, labelCol, experimentRows);
-		filterHeader(skip);
+	protected CSVBaseLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, int experimentRows) {
+		super(runs, csvFile, toSkip, labelColString, experimentRows);
 	}	
 
 	/**

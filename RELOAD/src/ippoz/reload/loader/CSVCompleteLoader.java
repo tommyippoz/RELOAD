@@ -42,8 +42,8 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 	 * @param avoidTags the avoid tags
 	 * @param anomalyWindow the anomaly window
 	 */
-	public CSVCompleteLoader(List<Integer> runs, File csvFile, Integer[] skip, int labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
-		super(runs, csvFile, skip, labelCol, experimentRows);
+	public CSVCompleteLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
+		super(runs, csvFile, toSkip, labelColString, experimentRows);
 		this.anomalyWindow = anomalyWindow;
 		parseFaultyTags(faultyTags);
 		parseAvoidTags(avoidTags);
@@ -62,8 +62,8 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 	public CSVCompleteLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
 		this(list, 
 				extractFile(prefManager, datasetsFolder, tag), 
-				parseColumns(prefManager.getPreference(SKIP_COLUMNS)), 
-				Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), 
+				prefManager.getPreference(SKIP_COLUMNS), 
+				prefManager.getPreference(LABEL_COLUMN), 
 				extractExperimentRows(prefManager), 
 				extractFaultyTags(prefManager, tag), 
 				extractAvoidTags(prefManager, tag), 

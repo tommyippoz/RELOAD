@@ -226,24 +226,6 @@ public abstract class SimpleLoader implements Loader {
 		else return prefManager.getPreference("FAULTY_TAGS");
 	}
 	
-	
-	
-	/**
-	 * Parses the columns to be considered.
-	 *
-	 * @param colString the column string
-	 * @return the integer[]
-	 */
-	protected static Integer[] parseColumns(String colString) {
-		LinkedList<Integer> iList = new LinkedList<Integer>();
-		if(colString != null && colString.length() > 0){
-			for(String str : colString.split(",")){
-				iList.add(new Integer(str.trim()));
-			}
-			return iList.toArray(new Integer[iList.size()]);
-		} else return new Integer[]{};
-	}
-	
 	@Override
 	public List<Integer> getLoaderRuns(){
 		return runs;

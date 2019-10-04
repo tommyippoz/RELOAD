@@ -513,6 +513,12 @@ public abstract class DetectionAlgorithm {
 				return "Algorithms' details not available.";
 		}
 	}
+	
+	public static AlgorithmType[] availableAlgorithms(){
+		return new AlgorithmType[]{AlgorithmType.HBOS, AlgorithmType.ELKI_KMEANS, AlgorithmType.DBSCAN, AlgorithmType.ELKI_ABOD, AlgorithmType.ELKI_COF, AlgorithmType.ELKI_FASTABOD, 
+				AlgorithmType.ELKI_LOF, AlgorithmType.ELKI_ODIN, AlgorithmType.ELKI_SVM, AlgorithmType.ELKI_KNN, AlgorithmType.WEKA_ISOLATIONFOREST, 
+				AlgorithmType.SLIDING_SPS, AlgorithmType.SLIDING_ELKI_CLUSTERING, AlgorithmType.SLIDING_ELKI_COF, AlgorithmType.SLIDING_ELKI_KNN};
+	}
 
 	public abstract Map<String, String[]> getDefaultParameterValues();
 

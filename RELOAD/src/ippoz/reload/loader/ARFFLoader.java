@@ -37,10 +37,9 @@ public class ARFFLoader extends FileLoader {
 	 *
 	 * @param runs the runs
 	 */
-	public ARFFLoader(List<Integer> runs, File file, Integer[] skip, int labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
-		super(runs, file, labelCol, experimentRows);
+	public ARFFLoader(List<Integer> runs, File file, String toSkip, String labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
+		super(runs, file, toSkip, labelCol, experimentRows);
 		this.anomalyWindow = anomalyWindow;
-		filterHeader(skip);
 		parseFaultyTags(faultyTags);
 		parseAvoidTags(avoidTags);
 		readARFF();
@@ -58,8 +57,8 @@ public class ARFFLoader extends FileLoader {
 	public ARFFLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
 		this(list, 
 				extractFile(prefManager, datasetsFolder, tag), 
-				parseColumns(prefManager.getPreference(SKIP_COLUMNS)), 
-				Integer.parseInt(prefManager.getPreference(LABEL_COLUMN)), 
+				prefManager.getPreference(SKIP_COLUMNS), 
+				prefManager.getPreference(LABEL_COLUMN), 
 				extractExperimentRows(prefManager), 
 				extractFaultyTags(prefManager, tag), 
 				extractAvoidTags(prefManager, tag), 

@@ -1,14 +1,9 @@
 /**
  * 
  */
-package ippoz.reload.manager;
+package ippoz.reload.commons.dataseries;
 
 import ippoz.reload.commons.datacategory.DataCategory;
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.FractionDataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.dataseries.ProductDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.service.StatPair;

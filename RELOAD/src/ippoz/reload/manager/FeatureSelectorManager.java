@@ -5,9 +5,6 @@ package ippoz.reload.manager;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.FractionDataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.dataseries.SumDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.featureselection.FeatureSelector;
@@ -18,7 +15,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -30,10 +26,6 @@ public class FeatureSelectorManager {
 	private List<FeatureSelector> selectorsList;
 	
 	private List<DataSeries> selectedFeatures;
-	
-	private List<DataSeries> combinedFeatures;
-	
-	private List<DataSeries> finalizedFeatures;
 	
 	private DataCategory[] dataTypes;
 	
@@ -81,76 +73,14 @@ public class FeatureSelectorManager {
 			return DataSeries.basicCombinations(kList.get(0).getIndicators(), dataTypes);
 		} else return null;
 	}
-
-	public List<DataSeries> combineSelectedFeatures(List<Knowledge> kList, String dsDomain, String setupFolder){
-		combinedFeatures = new LinkedList<DataSeries>();
-		fsInfo.setAggregationStrategy(dsDomain);
-		if(dsDomain.equals("ALL")){
-			allCombinations();
-		} else if(dsDomain.equals("UNION") || dsDomain.equals("SIMPLE")){
-			unionCombinations();
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			double pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
-			pearsonCombinations(kList, pearsonSimple, setupFolder);
-		}
-		AppLogger.logInfo(getClass(), "Combined Data Series : " + combinedFeatures.size());
-		fsInfo.setCombinedFeatures(combinedFeatures.size());
-		return combinedFeatures;
-	}
 	
-	public List<DataSeries> finalizeSelection(String dsDomain){
-		finalizedFeatures = new LinkedList<DataSeries>();
-		if(dsDomain.equals("ALL")){
-			finalizedFeatures.addAll(selectedFeatures);
-			finalizedFeatures.addAll(combinedFeatures);
-		} else if(dsDomain.equals("UNION")){
-			finalizedFeatures.addAll(combinedFeatures);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			finalizedFeatures.addAll(selectedFeatures);
-			finalizedFeatures.addAll(combinedFeatures);
-		} else if(dsDomain.contains("NONE")){
-			finalizedFeatures.addAll(selectedFeatures);
-		} else if(dsDomain.contains("SIMPLE")){
-			finalizedFeatures.addAll(selectedFeatures);
-			finalizedFeatures.addAll(combinedFeatures);
-		}
-		AppLogger.logInfo(getClass(), "Finalized Data Series : " + finalizedFeatures.size());
-		fsInfo.setFinalizedFeatures(finalizedFeatures.size());
-		return finalizedFeatures;
-	}
-	
-	private void allCombinations(){
-		for(int i=0;i<selectedFeatures.size();i++){
-			for(int j=i+1;j<selectedFeatures.size();j++){
-				if(!selectedFeatures.get(i).getName().equals(selectedFeatures.get(j).getName())){
-					combinedFeatures.add(new SumDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
-					combinedFeatures.add(new FractionDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
-					combinedFeatures.add(new MultipleDataSeries(selectedFeatures.get(i), selectedFeatures.get(j)));
-				}
-			}
-		}
-	}
-	
-	public void unionCombinations() {
-		combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
-	}
-	
-	private void pearsonCombinations(List<Knowledge> kList, double pearsonThreshold, String setupFolder) {
-		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(setupFolder + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, selectedFeatures, kList);
-		pcManager.calculatePearsonIndexes(pearsonThreshold);
-		combinedFeatures = pcManager.getPearsonCombinedSeries();
-		pcManager.flush();
-	}
-	
-	public void saveFilteredSeries(String setupFolder, String filename) {
+	public void saveSelectedFeatures(String setupFolder, String filename) {
 		BufferedWriter writer;
 		try {
 			fsInfo.printFile(new File(setupFolder + File.separatorChar + "featureSelectionInfo.info"));
 			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
 			writer.write("data_series,type\n");
-			for(DataSeries ds : finalizedFeatures){
+			for(DataSeries ds : selectedFeatures){
 				writer.write(ds.toString() + "\n");			
 			}
 			writer.close();
