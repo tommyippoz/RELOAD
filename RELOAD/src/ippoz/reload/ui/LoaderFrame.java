@@ -225,7 +225,7 @@ public class LoaderFrame {
 				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.", null);
 		
 		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), 
+				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), false, 
 				"Specify the index (starting from 0) of the column that changes when experiments change", null);
 		
 		int featureNumber = 0;
