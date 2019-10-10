@@ -43,7 +43,7 @@ public class AppUtility {
 				}
 			}
 			
-			return formatter.format(value); 
+			return formatter.format(value).replace(",", "."); 
 		} else return "-";
 	}
 	
