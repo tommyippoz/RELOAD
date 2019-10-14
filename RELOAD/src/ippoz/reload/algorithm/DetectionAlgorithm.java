@@ -6,6 +6,7 @@ package ippoz.reload.algorithm;
 import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
+import ippoz.reload.algorithm.elki.ISOSELKI;
 import ippoz.reload.algorithm.elki.KMeansELKI;
 import ippoz.reload.algorithm.elki.KNNELKI;
 import ippoz.reload.algorithm.elki.LOFELKI;
@@ -125,6 +126,8 @@ public abstract class DetectionAlgorithm {
 				return new DBSCANDetectionAlgorithm(dataSeries, conf);
 			case ELKI_SOS:
 				return new SOSELKI(dataSeries, conf);
+			case ELKI_ISOS:
+				return new ISOSELKI(dataSeries, conf);
 			case ELKI_KMEANS:
 				return new KMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
@@ -164,6 +167,7 @@ public abstract class DetectionAlgorithm {
 	public static AlgorithmFamily getFamily(AlgorithmType algType) {
 		switch(algType){
 			case ELKI_SOS:
+			case ELKI_ISOS:
 			case HBOS:
 			case SLIDING_SPS:
 				return AlgorithmFamily.STATISTICAL;
@@ -210,6 +214,7 @@ public abstract class DetectionAlgorithm {
 			case ELKI_SVM:
 			case ELKI_KNN:
 			case ELKI_SOS:
+			case ELKI_ISOS:
 			case HBOS:
 			case DBSCAN:
 			case SLIDING_ELKI_ABOD:
@@ -515,7 +520,7 @@ public abstract class DetectionAlgorithm {
 	}
 	
 	public static AlgorithmType[] availableAlgorithms(){
-		return new AlgorithmType[]{AlgorithmType.HBOS, AlgorithmType.ELKI_KMEANS, AlgorithmType.DBSCAN, AlgorithmType.ELKI_ABOD, AlgorithmType.ELKI_COF, AlgorithmType.ELKI_FASTABOD, 
+		return new AlgorithmType[]{AlgorithmType.HBOS, AlgorithmType.ELKI_KMEANS, AlgorithmType.DBSCAN, AlgorithmType.ELKI_ABOD, AlgorithmType.ELKI_SOS, AlgorithmType.ELKI_ISOS, AlgorithmType.ELKI_COF, AlgorithmType.ELKI_FASTABOD, 
 				AlgorithmType.ELKI_LOF, AlgorithmType.ELKI_ODIN, AlgorithmType.ELKI_SVM, AlgorithmType.ELKI_KNN, AlgorithmType.WEKA_ISOLATIONFOREST, 
 				AlgorithmType.SLIDING_SPS, AlgorithmType.SLIDING_ELKI_CLUSTERING, AlgorithmType.SLIDING_ELKI_COF, AlgorithmType.SLIDING_ELKI_KNN};
 	}

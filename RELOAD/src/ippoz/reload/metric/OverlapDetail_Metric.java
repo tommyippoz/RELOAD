@@ -96,6 +96,52 @@ public class OverlapDetail_Metric extends BetterMinMetric {
 			} else if(sortedFirstKeys.get(i) < sortedSecondKeys.get(j)){
 				good = good + firstMap.get(sortedFirstKeys.get(i));
 				i++;
+			} else {
+				bad = bad + firstMap.get(sortedFirstKeys.get(i)) + secondMap.get(sortedSecondKeys.get(j));
+				j++;
+				i++;
+			}
+		}
+		while(i<sortedFirstKeys.size()){
+			good = good + firstMap.get(sortedFirstKeys.get(i));
+			i++;
+		}
+		while(j<sortedSecondKeys.size()){
+			good = good + secondMap.get(sortedSecondKeys.get(j));
+			j++;
+		}
+		
+		return 100.0*bad / (good + bad);
+	}
+	
+	/*
+	private static double overlapFirstBeforeSecond(List<Double> first, List<Double> second){
+		int good = 0;
+		int bad = 0;
+		Map<Double, Integer> firstMap = toFrequencyMap(first);
+		List<Double> sortedFirstKeys = new ArrayList<Double>(firstMap.keySet());
+		Collections.sort(sortedFirstKeys);
+		Map<Double, Integer> secondMap = toFrequencyMap(second);
+		List<Double> sortedSecondKeys = new ArrayList<Double>(secondMap.keySet());
+		Collections.sort(sortedSecondKeys);
+		int i = 0, j = 0;
+		while(i<sortedFirstKeys.size() && j < sortedSecondKeys.size()){
+			while(sortedFirstKeys.get(i) == null){
+				i++;
+			}
+			if(i >= sortedFirstKeys.size())
+				break;
+			while(sortedSecondKeys.get(j) == null){
+				j++;
+			}
+			if(j >= sortedSecondKeys.size())
+				break;
+			if(sortedFirstKeys.get(i) > sortedSecondKeys.get(j)){
+				good = good + secondMap.get(sortedSecondKeys.get(j));
+				j++;
+			} else if(sortedFirstKeys.get(i) < sortedSecondKeys.get(j)){
+				good = good + firstMap.get(sortedFirstKeys.get(i));
+				i++;
 			} else if(firstMap.get(sortedFirstKeys.get(i)) > secondMap.get(sortedSecondKeys.get(j))){
 				good = good + firstMap.get(sortedFirstKeys.get(i));
 				bad = bad + secondMap.get(sortedSecondKeys.get(j));
@@ -118,6 +164,6 @@ public class OverlapDetail_Metric extends BetterMinMetric {
 		}
 		
 		return 100.0*bad / (good + bad);
-	}
+	}*/
 
 }
