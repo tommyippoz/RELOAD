@@ -594,7 +594,7 @@ public class BuildUI {
 		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().length];
+				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().size()];
 				int i = 0;
 				for(AlgorithmType at : DetectionAlgorithm.availableAlgorithms()){
 					if(!Arrays.asList(getAlgorithms()).contains(at.toString()))

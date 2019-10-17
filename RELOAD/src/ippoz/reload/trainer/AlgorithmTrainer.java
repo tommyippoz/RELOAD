@@ -10,7 +10,6 @@ import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.Metric;
@@ -56,9 +55,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	
 	/** The reputation score. */
 	private double reputationScore;
-	
-	/** Flag that indicates if the trained algorithm retrieves different values (e.g., not always true / false). */
-	private boolean sameResultFlag;
 	
 	private String datasetName;
 	
@@ -108,7 +104,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @return true, if is valid train
 	 */
 	public boolean isValidTrain(){
-		return !sameResultFlag && (metricScore != null && metricScore.size() > 0) && (trainScore != null && trainScore.size() > 0);
+		return true;
 	}
 	
 	public String getDatasetName(){
@@ -170,7 +166,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			metricResults.addValue(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
-		sameResultFlag = kList.size() > 1 && AppUtility.calcStd(algResults, AppUtility.calcAvg(algResults)) == 0.0;
 		return metricResults;
 	}
 

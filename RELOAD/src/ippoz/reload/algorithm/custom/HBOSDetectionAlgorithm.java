@@ -1,8 +1,10 @@
 /**
  * 
  */
-package ippoz.reload.algorithm;
+package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
+import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;

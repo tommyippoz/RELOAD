@@ -203,7 +203,7 @@ public class FeatureSelectionFrame {
 		}
 		
 		public int getRowCount() {
-			return fsList.size();
+			return fsList.size() + 1;
 		}
 		
 		public String getColumnName(int col) {
@@ -227,13 +227,19 @@ public class FeatureSelectionFrame {
 			Object ob;
 			switch(col){
 			case 0:
-				ob = fsList.get(row).getFeatureSelectorType();
+				if(row < fsList.size())
+					ob = fsList.get(row).getFeatureSelectorType();
+				else ob = "";
 				break;
 			case 1:
-				ob = fsList.get(row).getSelectorThreshold();
+				if(row < fsList.size())
+					ob = fsList.get(row).getSelectorThreshold();
+				else ob = "";
 				break;
 			case 2:
-				ob = fsList.get(row).isRankedThreshold();
+				if(row < fsList.size())
+					ob = fsList.get(row).isRankedThreshold();
+				else ob = "";
 				break;
 			case 3:
 				ob = "Add " + row;
@@ -259,6 +265,8 @@ public class FeatureSelectionFrame {
 			double threshold;
 			boolean flag;
 			FeatureSelectorType fst;
+			if(col <= 2 && fsList.size() <= row)
+				fsList.add(FeatureSelector.createSelector(FeatureSelectorType.VARIANCE, 3.0, false));
 			if(col == 0){
 				try {
 					if(aValue instanceof FeatureSelectorType)
@@ -364,7 +372,8 @@ public class FeatureSelectionFrame {
 		    	int index = Integer.parseInt(label.split(" ")[1]);
 		    	if(label.contains("Add")){
 					fsList.add(index+1, new VarianceFeatureSelector(1.0, false));	
-		    	} else fsList.remove(index);
+		    	} else if(index < fsList.size())
+		    		fsList.remove(index);
 		    	((MyTableModel)table.getModel()).fireTableDataChanged();
 		    }
 		    isPushed = false;

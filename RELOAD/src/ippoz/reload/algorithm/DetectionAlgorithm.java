@@ -3,6 +3,10 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
+import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
+import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
+import ippoz.reload.algorithm.custom.LDCOFKMeansDetectionAlgorithm;
 import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
@@ -34,6 +38,8 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -124,6 +130,10 @@ public abstract class DetectionAlgorithm {
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
 			case DBSCAN:
 				return new DBSCANDetectionAlgorithm(dataSeries, conf);
+			case LDCOF_KMEANS:
+				return new LDCOFKMeansDetectionAlgorithm(dataSeries, conf);
+			case LDCOF_DBSCAN:
+				return new LDCOFDBSCANDetectionAlgorithm(dataSeries, conf);
 			case ELKI_SOS:
 				return new SOSELKI(dataSeries, conf);
 			case ELKI_ISOS:
@@ -157,9 +167,7 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_KNN:
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return new IsolationForestSlidingWEKA(dataSeries, conf);
-			default:
-				break;			
+				return new IsolationForestSlidingWEKA(dataSeries, conf);		
 		}
 		return null;
 	}
@@ -181,6 +189,8 @@ public abstract class DetectionAlgorithm {
 				return AlgorithmFamily.ANGLE;
 			case ELKI_LOF:
 			case ELKI_COF:
+			case LDCOF_KMEANS:
+			case LDCOF_DBSCAN:
 			case SLIDING_ELKI_COF:
 				return AlgorithmFamily.DENSITY;
 			case ELKI_KNN:
@@ -191,8 +201,6 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return AlgorithmFamily.CLASSIFICATION;
-		default:
-			break;
 		}
 		return null;
 	}
@@ -217,6 +225,8 @@ public abstract class DetectionAlgorithm {
 			case ELKI_ISOS:
 			case HBOS:
 			case DBSCAN:
+			case LDCOF_KMEANS:
+			case LDCOF_DBSCAN:
 			case SLIDING_ELKI_ABOD:
 			case SLIDING_ELKI_CLUSTERING:
 			case SLIDING_ELKI_COF:
@@ -227,8 +237,6 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_WEKA_ISOLATIONFOREST:
 			case WEKA_ISOLATIONFOREST:
 				return dataSeries.size() > 1;
-		default:
-			break;
 		}
 		return false;
 	}
@@ -441,6 +449,9 @@ public abstract class DetectionAlgorithm {
 			case ELKI_KMEANS:
 			case SLIDING_ELKI_CLUSTERING:
 				return base + "(k) the number of clusters.";
+			case LDCOF_KMEANS:
+				return base + "(k) the number of clusters, <br>"
+						+ "(gamma) the LDCOF parameter to separate small/large clusters";
 			case ELKI_SVM:
 				return base + "(kernel) the type of kernel, <br>"
 						+ "(nu) an upper bound on the fraction of margin errors and a lower bound <br>"
@@ -458,6 +469,13 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return "Parameters: (ntrees) number of trees in the forest, <br>"
 						+ "(sample_size) instances to be sampled to train each tree.";
+			case DBSCAN:
+				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
+						+ "(pts) is the minimum number of neighbors within 'eps' radius";
+			case LDCOF_DBSCAN:
+				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
+						+ "(pts) is the minimum number of neighbors within 'eps' radius, <br>"
+						+ "(gamma) the LDCOF parameter to separate small/large clusters";
 			default:
 				return "Parameters are shown in the table.";
 		}
@@ -472,6 +490,12 @@ public abstract class DetectionAlgorithm {
 						+ "The smaller the ABOF, the greater the anomality of the data point.";
 			case SLIDING_ELKI_ABOD:
 				return "Sliding version of ABOD.";
+			case ELKI_SOS:
+				return "Statistical algorithm. <br>"
+						+ "It takes as input either a feature matrix or a dissimilarity matrix and outputs for each data point an outlier probability. <br>"
+						+ "Intuitively, a data point is considered to be an outlier when the other data points have insufficient affinity with it.";
+			case ELKI_ISOS:
+				return "Fast version of SOS (Intrinsic SOS), calculating dissimilarity with the kNN of the data point.";
 			case ELKI_LOF:
 				return "Local Outlier Factor algorithm. <br>"
 						+ "LOF is based on a concept of a local density, where locality is given by kNN, <br>"
@@ -514,15 +538,30 @@ public abstract class DetectionAlgorithm {
 				return "Creates a forest of Isolation Trees, which are evaluated as an ensemble.";
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return "Sliding version of Isolation Forest";
+			case DBSCAN:
+				return "DBSCAN is based on this intuitive notions of 'clusters' and 'radius'. <br>"
+						+ "The key idea is that for each point of a cluster, the neighborhood of a given radius has to contain at least a minimum number of points.";
+			case LDCOF_KMEANS:
+			case LDCOF_DBSCAN:
+				return "Local Density Cluster-Based Outlier Factor (LDCOF). <br>"
+						+ "The LDCOF score is defined as the distance to the nearest large cluster divided by the average distance of each element <br>"
+						+ "to the center of the large cluster. When small clusters are considered anomalous, the elements inside the small clusters <br>"
+						+ "are assigned to the nearest large cluster which becomes its local neighborhood. <br>"
+						+ "It can be istantiated with any clustering algorithm, in RELOAD with KMeans or DBSCAN.";
 			default:
 				return "Algorithms' details not available.";
 		}
 	}
 	
-	public static AlgorithmType[] availableAlgorithms(){
-		return new AlgorithmType[]{AlgorithmType.HBOS, AlgorithmType.ELKI_KMEANS, AlgorithmType.DBSCAN, AlgorithmType.ELKI_ABOD, AlgorithmType.ELKI_SOS, AlgorithmType.ELKI_ISOS, AlgorithmType.ELKI_COF, AlgorithmType.ELKI_FASTABOD, 
-				AlgorithmType.ELKI_LOF, AlgorithmType.ELKI_ODIN, AlgorithmType.ELKI_SVM, AlgorithmType.ELKI_KNN, AlgorithmType.WEKA_ISOLATIONFOREST, 
-				AlgorithmType.SLIDING_SPS, AlgorithmType.SLIDING_ELKI_CLUSTERING, AlgorithmType.SLIDING_ELKI_COF, AlgorithmType.SLIDING_ELKI_KNN};
+	private static AlgorithmType[] temporaryAlgorithms(){
+		return new AlgorithmType[]{AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST};
+	}
+	
+	public static List<AlgorithmType> availableAlgorithms(){
+		List<AlgorithmType> types = new LinkedList<AlgorithmType>();
+		types.addAll(Arrays.asList(AlgorithmType.values()));
+		types.removeAll(Arrays.asList(temporaryAlgorithms()));
+		return types;
 	}
 
 	public abstract Map<String, String[]> getDefaultParameterValues();

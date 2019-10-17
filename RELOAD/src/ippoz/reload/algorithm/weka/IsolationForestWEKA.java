@@ -106,8 +106,8 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			
 			conf.addItem(TMP_FILE, getFilename());
 			if(createOutput){
-		    	if(!new File(DEFAULT_TMP_FOLDER).exists())
-		    		new File(DEFAULT_TMP_FOLDER).mkdirs();
+				if(!new File(getDefaultTmpFolder()).exists())
+		    		new File(getDefaultTmpFolder()).mkdirs();
 		    	storeSerialized();
 		    	iForest.printScores(new File(getFilename() + "scores"));
 		    }

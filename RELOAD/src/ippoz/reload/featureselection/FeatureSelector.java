@@ -227,19 +227,19 @@ public abstract class FeatureSelector {
 	 */
 	public static String explainSelectors() {
 		return "<p style=\"text-align:center\"><b>" + FeatureSelectorType.VARIANCE + "</b>: used to cut out features that are too static. "
-				+ "<br>   Threshold represents the ratio that is used to check if the variance is big enough (var > threshold*avg) <br>" +
-				"<b>" + FeatureSelectorType.PEARSON_CORRELATION + "</b>: used to cut out features that are not correlated to the label. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the correlation is strong enough <br>" +
+				+ "<br>   Threshold represents the ratio that is used to check if the variance is big enough (var &gt threshold*avg) <br>" +
+				"<b>" + FeatureSelectorType.PEARSON_CORRELATION + "</b>: used to cut out features that are not pearson-correlated with the label. "
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the correlation is strong enough <br>" +
 				"<b>" + FeatureSelectorType.RELIEF + "</b>: used to cut out features that are ranked low by ReliefF Algorithm. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the ReliefF score is high enough <br>" +
-				"<b>" + FeatureSelectorType.GAIN_RATIO + "</b>: used to cut out features that are ranked low by the GainRatio strategy, which measures infrmation gain of features. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the GainRatio score is high enough <br>" +
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the ReliefF score is high enough <br>" +
+				"<b>" + FeatureSelectorType.GAIN_RATIO + "</b>: used to cut out features that are ranked low by the GainRatio strategy, which measures information gain of features. "
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the GainRatio score is high enough <br>" +
 				"<b>" + FeatureSelectorType.PCA + "</b>: used to cut out features which are not identified as 'Principal Components'. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the PCA score is high enough <br>" +
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the PCA score is high enough <br>" +
 				"<b>" + FeatureSelectorType.ONER + "</b>: used to cut out features that are ranked low by the OneR Algorithm, adapted as Feature Ranker. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 100) that is used to check if the OneR score is high enough <br>" +
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 100) that is used to check if the OneR score is high enough <br>" +
 				"<b>" + FeatureSelectorType.INFORMATION_GAIN + "</b>: used to cut out features that embed too much entropy. "
-				+ "<br>   Threshold represents the absolute value (0 < threshold <= 1) that is used to check if the information gain is big enough <br>" + "</p>";
+				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the information gain is big enough <br>" + "</p>";
 	}
 
 	/**

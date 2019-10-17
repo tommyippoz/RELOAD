@@ -16,6 +16,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.externalutils.WEKAUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
@@ -131,5 +132,25 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @return the algorithm result
 	 */
 	protected abstract AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot);
+	
+	/**
+	 * Gets the filename used to store data about scores and histograms.
+	 *
+	 * @return the filename
+	 */
+	protected String getFilename(){
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getAlgorithmType().toString().toLowerCase();
+	}
+	
+	/**
+	 * Gets the default folder used to store temporary data.
+	 *
+	 * @return the default temporary folder
+	 */
+	protected String getDefaultTmpFolder(){
+		if(conf.hasItem(AlgorithmConfiguration.DATASET_NAME) && conf.getItem(AlgorithmConfiguration.DATASET_NAME).length() > 0)
+			return "tmp" + File.separatorChar + conf.getItem(AlgorithmConfiguration.DATASET_NAME) + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
+		else return "tmp" + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
+	}
 
 }

@@ -270,7 +270,7 @@ public class DetectionManager {
 		Loader bestLoader = null;
 		DetectorOutput dOut = null;
 		String bestRuns = null;
-		double bestScore = 0;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		double score;
 		int index = 0;
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
@@ -364,7 +364,7 @@ public class DetectionManager {
 	
 	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){
 		double score;
-		double bestScore = -1;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		String bVoter = null;
 		String bAnT = null;
 		String out = "";
@@ -411,7 +411,7 @@ public class DetectionManager {
 	
 	private String getBestSetup(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
 		double score;
-		double bestScore = 0;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		String bSetup = null;
 		for(String voterTreshold : evaluations.keySet()){
 			for(String anomalyTreshold : anomalyTresholds){
@@ -504,7 +504,7 @@ public class DetectionManager {
 		Loader bestLoader = null;
 		DetectorOutput dOut = null;
 		String bestRuns = null;
-		double bestScore = 0;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		double score;
 		int index = 0;
 		try {
