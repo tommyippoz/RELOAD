@@ -4,10 +4,6 @@
 package ippoz.reload.externalutils;
 
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 
 import java.util.List;
 

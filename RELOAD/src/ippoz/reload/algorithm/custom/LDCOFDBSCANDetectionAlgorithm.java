@@ -3,6 +3,11 @@
  */
 package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.support.ClusterableSnapshot;
+import ippoz.reload.algorithm.support.GenericCluster;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,11 +15,6 @@ import java.util.Map;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
-
-import ippoz.reload.algorithm.support.ClusterableSnapshot;
-import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
-import ippoz.reload.commons.dataseries.DataSeries;
 
 /**
  * @author Tommy

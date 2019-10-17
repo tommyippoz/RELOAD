@@ -172,73 +172,72 @@ public abstract class DetectionAlgorithm {
 		return null;
 	}
 	
-	public static AlgorithmFamily getFamily(AlgorithmType algType) {
+	public static List<AlgorithmFamily> getFamily(AlgorithmType algType) {
+		List<AlgorithmFamily> afl = new LinkedList<AlgorithmFamily>();
 		switch(algType){
 			case ELKI_SOS:
 			case ELKI_ISOS:
 			case HBOS:
 			case SLIDING_SPS:
-				return AlgorithmFamily.STATISTICAL;
+				afl.add(AlgorithmFamily.STATISTICAL);
+			default:
+				break;
+		}
+		switch(algType){
 			case ELKI_KMEANS:
 			case SLIDING_ELKI_CLUSTERING:
 			case DBSCAN:
-				return AlgorithmFamily.CLUSTERING;
+			case LDCOF_KMEANS:
+			case LDCOF_DBSCAN:
+				afl.add(AlgorithmFamily.CLUSTERING);
+			default:
+				break;
+		}
+		switch(algType){
 			case ELKI_ABOD:
 			case ELKI_FASTABOD:
 			case SLIDING_ELKI_ABOD:
-				return AlgorithmFamily.ANGLE;
+				afl.add(AlgorithmFamily.ANGLE);
+			default:
+				break;
+		}
+		switch(algType){
 			case ELKI_LOF:
 			case ELKI_COF:
 			case LDCOF_KMEANS:
 			case LDCOF_DBSCAN:
 			case SLIDING_ELKI_COF:
-				return AlgorithmFamily.DENSITY;
+				afl.add(AlgorithmFamily.DENSITY);
+			default:
+				break;
+		}
+		switch(algType){
 			case ELKI_KNN:
 			case ELKI_ODIN:
 			case SLIDING_ELKI_KNN:
-				return AlgorithmFamily.NEIGHBOUR;
+			case ELKI_FASTABOD:
+			case ELKI_LOF:
+			case ELKI_COF:
+			case ELKI_ISOS:
+				afl.add(AlgorithmFamily.NEIGHBOUR);
+			default:
+				break;
+		}
+		switch(algType){
 			case ELKI_SVM:
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return AlgorithmFamily.CLASSIFICATION;
+				afl.add(AlgorithmFamily.CLASSIFICATION);
+			default:
+				break;
 		}
-		return null;
+		return afl;
 	}
 	
 	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
 		if(algType.name().toUpperCase().contains("SLIDING"))
 			return KnowledgeType.SLIDING;
 		else return KnowledgeType.SINGLE;
-	}
-	
-	public static boolean isSeriesValidFor(AlgorithmType algType, DataSeries dataSeries) {
-		switch(algType){
-			case ELKI_ABOD:
-			case ELKI_COF:
-			case ELKI_FASTABOD:
-			case ELKI_KMEANS:
-			case ELKI_LOF:
-			case ELKI_ODIN:
-			case ELKI_SVM:
-			case ELKI_KNN:
-			case ELKI_SOS:
-			case ELKI_ISOS:
-			case HBOS:
-			case DBSCAN:
-			case LDCOF_KMEANS:
-			case LDCOF_DBSCAN:
-			case SLIDING_ELKI_ABOD:
-			case SLIDING_ELKI_CLUSTERING:
-			case SLIDING_ELKI_COF:
-			case SLIDING_ELKI_KNN:
-				return true;
-			case SLIDING_SPS:
-				return true;
-			case SLIDING_WEKA_ISOLATIONFOREST:
-			case WEKA_ISOLATIONFOREST:
-				return dataSeries.size() > 1;
-		}
-		return false;
 	}
 	
 	/**

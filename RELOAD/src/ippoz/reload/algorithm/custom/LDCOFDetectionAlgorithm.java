@@ -3,17 +3,6 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -27,6 +16,15 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Tommy

@@ -648,16 +648,16 @@ public class BuildUI {
 
 	private String[] getAlgorithms(){
 		int i = 0;
-		AlgorithmFamily family;
+		List<AlgorithmFamily> family = new LinkedList<AlgorithmFamily>();
 		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
 		for(List<AlgorithmType> aList : aComb){
 			try {
 				family = DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1)));
 			} catch(Exception ex){
-				family = AlgorithmFamily.MIXED;
+				family.add(AlgorithmFamily.MIXED);
 			}
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " (" + family + ")";
+			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " " + Arrays.toString(family.toArray());
 		}
 		return algStrings;
 	}

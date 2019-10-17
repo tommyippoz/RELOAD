@@ -3,6 +3,13 @@
  */
 package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.elki.support.CustomKMeans;
+import ippoz.reload.algorithm.support.ClusterableSnapshot;
+import ippoz.reload.algorithm.support.GenericCluster;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.externalutils.ELKIUtils;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +18,6 @@ import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGe
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.random.RandomFactory;
-import ippoz.reload.algorithm.elki.support.CustomKMeans;
-import ippoz.reload.algorithm.support.ClusterableSnapshot;
-import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.externalutils.ELKIUtils;
 
 /**
  * @author Tommy

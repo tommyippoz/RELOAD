@@ -408,7 +408,7 @@ TechnicalInformationHandler, Serializable {
 							inst.setValue(i, Double.parseDouble(splitted[i].trim()));
 						}
 						//inst.setClassValue(splitted[splitted.length-1]);
-						ifScores.add(new IsolationForestScore(inst, Double.parseDouble(readed.split(",")[1].trim())));
+						ifScores.add(new IsolationForestScore(inst, Double.parseDouble(readed.split(";")[1].trim())));
 					}
 				}
 				reader.close();
