@@ -1,6 +1,8 @@
 # RELOAD
 RELOAD (Rapid EvaLuation Of Anomaly Detectors) is a tool that allows to easily compare different algorithms for anomaly detection. It is written in Java, wrapping algorithms coming from other Java-based frameworks such as ELKI or WEKA.
 
+The tool is provided under [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html) License.
+
 For futher information, please visit the WIKI.
 
 To cite, and therefore, support, our work, please consider citing
