@@ -225,8 +225,7 @@ public class TrainerManager extends TrainDataManager {
 			if(confList.get(algType) != null){
 				KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
 				for(DataSeries dataSeries : seriesList){
-					if(DetectionAlgorithm.isSeriesValidFor(algType, dataSeries))
-						trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
+					trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
 				}
 
 			} else {

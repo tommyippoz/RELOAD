@@ -91,7 +91,7 @@ public abstract class FileLoader extends SimpleLoader {
 			else {
 				int i = 0;
 				for(Indicator ind : header){
-					if(ind.getName().toUpperCase().equals(labelColString.toUpperCase()))
+					if(ind.getName().trim().toUpperCase().equals(labelColString.toUpperCase()))
 						return i;
 					i++;
 				}

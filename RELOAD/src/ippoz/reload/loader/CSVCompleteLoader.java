@@ -131,7 +131,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										obList.add(current);
-										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
+										if(readLine.split(",")[labelCol] != null && hasFault(readLine.split(",")[labelCol]))
 											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
 									}
 								}	
@@ -153,7 +153,6 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}
 	}
-
 	
 
 	@Override

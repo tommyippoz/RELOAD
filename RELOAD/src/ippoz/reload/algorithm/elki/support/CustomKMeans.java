@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -50,7 +51,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	   */
 	  private static final Logging LOG = Logging.getLogger(KMeansLloyd.class);
 	  
-	  private List<KMeansModel> finalClusters;
+	  private List<GenericCluster> finalClusters;
 	  
 	  private List<KMeansScore> scoresList;
 	  
@@ -62,7 +63,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	   * @param maxiter Maxiter parameter
 	   * @param initializer Initialization method
 	   */
-	  public CustomKMeans(NumberVectorDistanceFunction<? super V> distanceFunction, int k, int maxiter, KMeansInitialization<? super V> initializer, List<KMeansModel> finalClusters) {
+	  public CustomKMeans(NumberVectorDistanceFunction<? super V> distanceFunction, int k, int maxiter, KMeansInitialization<? super V> initializer, List<GenericCluster> finalClusters) {
 	    super(distanceFunction, k, maxiter, initializer);
 	    this.finalClusters = finalClusters;
 	  }
@@ -71,7 +72,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 		  return finalClusters != null && finalClusters.size() > 0;
 	  }
 	  
-	  public KMeansModel getCluster(int index){
+	  public GenericCluster getCluster(int index){
 		  return finalClusters.get(index);
 	  }
 
@@ -106,7 +107,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 
 	    // Wrap result
 	    Clustering<KMeansModel> result = new Clustering<>("k-Means Clustering", "kmeans-clustering");
-	    finalClusters = new ArrayList<KMeansModel>(clusters.size());
+	    finalClusters = new ArrayList<GenericCluster>(clusters.size());
 	    for(int i = 0; i < clusters.size(); i++) {
 	      DBIDs ids = clusters.get(i);
 	      if(ids.size() == 0) {
@@ -114,7 +115,15 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	      }
 	      KMeansModel model = new KMeansModel(means.get(i), varsum[i]);
 	      result.addToplevelCluster(new Cluster<>(ids, model));
-	      finalClusters.add(model);
+	      List<double[]> points = new LinkedList<double[]>();
+	      for(DBIDIter it = ids.iter(); it.valid(); it.advance()) {
+	    	  	points.add(((DoubleVector)(database.getBundle(it).data(1))).getValues());
+	      }
+	      double[] avg = new double[means.get(i).getDimensionality()];
+	      for(int j=0;j<means.get(i).getDimensionality();j++){
+	    	  avg[j] =means.get(i).doubleValue(j);
+	      }
+	      finalClusters.add(new GenericCluster(avg, varsum[i], points));
 	    }
 	    
 	    // Calculating Distances
@@ -144,7 +153,8 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 		  KMeansScore kms = new KMeansScore(newData);
 		  KMeansModel minKmm = null;
 		  if(finalClusters != null && finalClusters.size() > 0){
-			for(KMeansModel kmm : finalClusters){
+			for(GenericCluster km : finalClusters){
+				KMeansModel kmm = km.generateKMeansModel();
 				partial = Math.abs(SquaredEuclideanDistanceFunction.STATIC.minDist(newData, kmm.getMean()));
 				if(partial < minValue){
 					minValue = partial;
@@ -164,7 +174,8 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	  
 	  public String clustersToString() {
 		  String outString = "";
-		  for(KMeansModel kmm : finalClusters){
+		  for(GenericCluster km : finalClusters){
+			  KMeansModel kmm = km.generateKMeansModel();
 			  outString = outString + kmm.getVarianceContribution() + "#";
 			  for(int i=0;i<kmm.getMean().getDimensionality();i++){
 				  outString = outString + kmm.getMean().get(i) + ",";
@@ -214,7 +225,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	    }
 	  }
 
-	public List<KMeansModel> getClusters() {
+	public List<GenericCluster> getClusters() {
 		return finalClusters;
 	}
 
@@ -250,8 +261,8 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	private void loadClustersFile(File file){
 		BufferedReader reader;
 		String readed;
-		Vector vec;
-		finalClusters = new LinkedList<KMeansModel>();
+		double[] vec;
+		finalClusters = new LinkedList<GenericCluster>();
 		try {
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));
@@ -261,11 +272,11 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 					if(readed != null){
 						readed = readed.trim();
 						String[] sSplitted = readed.split("#")[1].split(",");
-						vec = new Vector(sSplitted.length);
+						vec = new double[sSplitted.length];
 						for(int i=0; i<sSplitted.length;i++){
-							vec.set(i, Double.parseDouble(sSplitted[i].trim()));
+							vec[i] = Double.parseDouble(sSplitted[i].trim());
 						}
-						finalClusters.add(new KMeansModel(vec, Double.parseDouble(readed.split("#")[0])));
+						finalClusters.add(new GenericCluster(vec, Double.parseDouble(readed.split("#")[0]), Double.parseDouble(readed.split("#")[2]), Integer.parseInt(readed.split("#")[3]), Boolean.getBoolean(readed.split("#")[4])));
 					}
 				}
 				reader.close();
@@ -304,12 +315,14 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("cluster\n");
-				for(KMeansModel kmm : finalClusters){
+				for(GenericCluster km : finalClusters){
+					KMeansModel kmm = km.generateKMeansModel();
 					String outString = kmm.getVarianceContribution() + "#";
 					for(int i=0;i<kmm.getMean().getDimensionality();i++){
 						outString = outString + kmm.getMean().get(i) + ",";
 					}
-					outString = outString.substring(0, outString.length()-1);
+					outString = outString + "#" + km.getAvgDistanceFromCenter() 
+							+ "#" + km.getSize() + "#" + km.isLarge();
 					writer.write(outString + "\n");
 				}
 				writer.close();

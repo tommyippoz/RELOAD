@@ -1,10 +1,14 @@
 /**
  * 
  */
-package ippoz.reload.algorithm;
+package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
+import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.DBSCANResult;
+import ippoz.reload.algorithm.support.ClusterableSnapshot;
+import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
@@ -20,14 +24,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
-import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 
 /**
@@ -57,7 +59,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	/** The Constant DEFAULT_PTS. */
 	public static final int DEFAULT_PTS = 3;
 	
-	private List<UsableCluster> clSnaps;
+	private List<GenericCluster> clSnaps;
 	
 	private List<DBSCANScore> scores;
 	
@@ -76,10 +78,10 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	 *
 	 * @return the clusters
 	 */
-	private List<UsableCluster> loadFromConfiguration(){
-		List<UsableCluster> confClusters = new LinkedList<UsableCluster>();
+	private List<GenericCluster> loadFromConfiguration(){
+		List<GenericCluster> confClusters = new LinkedList<GenericCluster>();
 		for(String clString : conf.getItem(CLUSTERS).trim().split("ç")){
-			confClusters.add(new UsableCluster(clString));
+			confClusters.add(new GenericCluster(clString));
 		}
 		return confClusters;
 	}
@@ -105,7 +107,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
-		UsableCluster uc;
+		GenericCluster uc;
 		double[] snapsArray = getSnapValueArray(sysSnapshot);
 		if(clSnaps != null){
 			uc = calculateCluster(snapsArray);
@@ -177,12 +179,12 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));
 				reader.readLine();
-				clSnaps = new LinkedList<UsableCluster>();
+				clSnaps = new LinkedList<GenericCluster>();
 				while(reader.ready()){
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						clSnaps.add(new UsableCluster(readed.trim()));
+						clSnaps.add(new GenericCluster(readed.trim()));
 					}
 				}
 				reader.close();
@@ -209,16 +211,16 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
 		List<ClusterableSnapshot> clSnapList = new LinkedList<>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			clSnapList.add(new ClusterableSnapshot(snap));
+			clSnapList.add(new ClusterableSnapshot(snap, getDataSeries()));
 		}
 		
 		DBSCANClusterer<ClusterableSnapshot> dbSCAN;
 		dbSCAN = new DBSCANClusterer<ClusterableSnapshot>(getEPS(), clSnapList.get(0).getPoint().length*getPTS());
 		List<Cluster<ClusterableSnapshot>> cSnaps = dbSCAN.cluster(clSnapList);
 		if(cSnaps != null){
-			clSnaps = new LinkedList<UsableCluster>();
+			clSnaps = new LinkedList<GenericCluster>();
 			for(Cluster<ClusterableSnapshot> cs : cSnaps){
-				clSnaps.add(new UsableCluster(cs.getPoints()));
+				clSnaps.add(new GenericCluster(cs.getPoints()));
 			}
 		}
 		
@@ -247,10 +249,10 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	 * @param snapsArray the snap
 	 * @return the double
 	 */
-	private UsableCluster calculateCluster(double[] sArr){
+	private GenericCluster calculateCluster(double[] sArr){
 		double dbScan = Double.MAX_VALUE;
-		UsableCluster best = null;
-		for(UsableCluster uc : clSnaps){
+		GenericCluster best = null;
+		for(GenericCluster uc : clSnaps){
 			double dist = uc.distanceFrom(sArr);
 			if(dist < dbScan){
 				dbScan = dist;
@@ -269,7 +271,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	private double calculateDBSCAN(Snapshot snap){
 		double[] sArr = getSnapValueArray(snap);
 		double dbScan = Double.MAX_VALUE;
-		for(UsableCluster uc : clSnaps){
+		for(GenericCluster uc : clSnaps){
 			double dist = uc.distanceFrom(sArr);
 			if(dist < dbScan)
 				dbScan = dist;
@@ -315,7 +317,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("cluster_avg,cluster_std\n");
-				for(UsableCluster uc : clSnaps){
+				for(GenericCluster uc : clSnaps){
 					writer.write(uc.toConfiguration().replace("@", ";") + "\n");
 				}
 				writer.close();
@@ -350,124 +352,10 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	
 	private String clustersToConfiguration() {
 		String toReturn = "";
-		for(UsableCluster uc : clSnaps){
+		for(GenericCluster uc : clSnaps){
 			toReturn = toReturn + uc.toConfiguration() + "ç";
 		}
 		return toReturn.substring(0, toReturn.length()-1);
-	}
-	
-	private class ClusterableSnapshot implements Clusterable {
-		
-		private Snapshot clSnap;
-		
-		public ClusterableSnapshot(Snapshot snap){
-			clSnap = snap;
-		}
-
-		@Override
-		public double[] getPoint() {
-			double[] points = new double[getDataSeries().size()];
-			if(getDataSeries().size() == 1){
-				points[0] = ((DataSeriesSnapshot)clSnap).getSnapValue().getFirst();
-			} else {
-				for(int j=0;j<getDataSeries().size();j++){
-					points[j] = ((MultipleSnapshot)clSnap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				}
-			}
-			return points;
-		}
-		
-	}
-	
-	private class UsableCluster {
-		
-		private double[] avg;
-		
-		private Double var;
-		
-		private List<double[]> points;
-		
-		public String toConfiguration() {
-			return Arrays.toString(avg) + ";" + var;
-		}
-
-		public UsableCluster(List<ClusterableSnapshot> cSnaps) {
-			avg = null;
-			points = new LinkedList<double[]>();
-			for(ClusterableSnapshot cs : cSnaps){
-				points.add(cs.getPoint());
-			}
-			calculateAvg();
-			calculateVar();
-		}
-		
-		public UsableCluster(String clString) {
-			String[] splitted;
-			if(clString != null){
-				splitted = clString.split(";");
-				var = Double.valueOf(splitted[1]);
-				clString = splitted[0].replace("[", "").replace("]", "");
-				splitted = clString.split(",");
-				avg = new double[splitted.length];
-				for(int i=0;i<avg.length;i++){
-					avg[i] = Double.valueOf(splitted[i]);
-				}
-			}
-		}
-
-		public double distanceFrom(double[] point){
-			return euclideanDistance(avg, point);
-		}
-
-		private void calculateVar() {
-			double val = 0;
-			if(points != null && points.size() > 0){
-				if(avg != null){
-					for(double[] point : points){
-						if(point != null){
-							val = val + Math.pow(euclideanDistance(avg, point), 2);
-						}
-					}
-				}
-			}
-			var = val;
-		}
-		
-		private double euclideanDistance(double[] d1, double[] d2){
-			double res = 0;
-			if(d1 == null || d2 == null)
-				return Double.MAX_VALUE;
-			if(d1.length == d2.length){
-				for(int i=0;i<d1.length;i++){
-					res = res + Math.pow(d1[i] - d2[i], 2);
-				}
-			}
-			return Math.sqrt(res);
-		}
-
-		private void calculateAvg() {
-			int count = 0;
-			if(points != null && points.size() > 0 && points.get(0) != null){
-				avg = new double[points.get(0).length];
-				for(double[] point : points){
-					if(point != null){
-						for(int i=0;i<avg.length;i++){
-							avg[i] = avg[i] + point[i];
-						}
-						count++;
-					}
-				}
-				for(int i=0;i<avg.length;i++){
-					avg[i] = avg[i]/count;
-				} 
-			}
-			
-		}
-		
-		public double getVar(){
-			return var;
-		}
-		
 	}
 	
 	private class DBSCANScore {
@@ -514,7 +402,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		defPar.put("threshold", new String[]{"CLUSTER(0.1STD)", "CLUSTER(0.5STD)"});
 		defPar.put("eps", new String[]{"100", "500", "1000"});
-		defPar.put("pts(factor)", new String[]{"0.5", "1", "2"});
+		defPar.put("pts", new String[]{"0.5", "1", "2"});
 		return defPar;
 	}
 

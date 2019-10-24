@@ -594,7 +594,7 @@ public class BuildUI {
 		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().length];
+				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().size()];
 				int i = 0;
 				for(AlgorithmType at : DetectionAlgorithm.availableAlgorithms()){
 					if(!Arrays.asList(getAlgorithms()).contains(at.toString()))
@@ -638,7 +638,10 @@ public class BuildUI {
 		for(PreferencesManager lPref : lList){
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
 				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
-			else {
+			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
+				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + 
+						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+			} else {
 				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " - " + lPref.getFilename() + " (" + 
 						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
 			}
@@ -648,16 +651,16 @@ public class BuildUI {
 
 	private String[] getAlgorithms(){
 		int i = 0;
-		AlgorithmFamily family;
+		List<AlgorithmFamily> family = new LinkedList<AlgorithmFamily>();
 		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
 		for(List<AlgorithmType> aList : aComb){
 			try {
 				family = DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1)));
 			} catch(Exception ex){
-				family = AlgorithmFamily.MIXED;
+				family.add(AlgorithmFamily.MIXED);
 			}
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " (" + family + ")";
+			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " " + Arrays.toString(family.toArray());
 		}
 		return algStrings;
 	}

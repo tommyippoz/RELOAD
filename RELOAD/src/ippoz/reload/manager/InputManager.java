@@ -288,6 +288,21 @@ public class InputManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
+		try {
+			Metric m = getTargetMetric();
+			boolean found = false;
+			for(Metric met : metricList){
+				if(m.compareTo(met) == 0){
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+				metricList.add(m);
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to process Target Metric");
+		}
+		
 		return metricList.toArray(new Metric[metricList.size()]);
 	}
 

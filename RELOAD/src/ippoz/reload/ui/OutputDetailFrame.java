@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -159,8 +160,10 @@ public class OutputDetailFrame {
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
-				if(list.get(0) != null){
-					return list.get(0).getValue().getDecisionFunction();
+				for(int i=0;i<list.size();i++){
+					if(list.get(i) != null && list.get(i).getValue() != null && list.get(i).getValue().getDecisionFunction() != null){
+						return list.get(i).getValue().getDecisionFunction();
+					}
 				}
 			}
 		}
@@ -368,16 +371,7 @@ public class OutputDetailFrame {
 		secondHeaderPanel.setBackground(Color.WHITE);
 		secondHeaderPanel.setLayout(new GridLayout(1, 4));
 		
-		String suggDecision = null;
-		for(String expName : dOut.getLabelledScores().keySet()){
-			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(list != null && list.size() > 0){
-				if(list.get(0) != null){
-					suggDecision = list.get(0).getValue().getDecisionFunction().getName();
-					break;
-				}
-			}
-		}
+		DecisionFunction suggDecision = createDefaultDecisionFunction();
 		
 		lbl = new JLabel("Decision Function");
 		lbl.setFont(labelFont);
@@ -400,7 +394,8 @@ public class OutputDetailFrame {
 		cbDecisionFunction = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
 		if(dFunction != null)
 			cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
-		else cbDecisionFunction.setSelectedItem(suggDecision);
+		else if(suggDecision != null)
+			cbDecisionFunction.setSelectedItem(suggDecision.getName());
 		cbDecisionFunction.addActionListener (new ActionListener () {
 		    public void actionPerformed(ActionEvent e) {
 		        if(!isUpdating){
@@ -485,6 +480,7 @@ public class OutputDetailFrame {
 							basicPath = basicPath + "_" + dFunction.getClassifierTag();
 						cp = buildChartPanel();
 						printDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + ".csv");
+						printDetailedDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + "_detailed.csv");
 						ChartUtilities.saveChartAsPNG(new File(basicPath + ".png"), cp.getChart(), (int)cp.getPreferredSize().getWidth(), (int)cp.getPreferredSize().getHeight());
 					}
 				} catch (Exception ex){
@@ -492,6 +488,51 @@ public class OutputDetailFrame {
 				}
 			}
 			
+			private void printDetailedDataset(XYDataset dataset, String filename) {
+				BufferedWriter writer;
+				Map<Double, Integer> okList = new TreeMap<>();
+				Map<Double, Integer> anList = new TreeMap<>();
+				try {
+					// TODO
+					for(String expName : dOut.getLabelledScores().keySet()){
+						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
+						if(containsPostiveLabel(list)){
+							for(LabelledResult lr : list){
+								double score = lr.getValue().getScore(); 
+								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
+									if(lr.getLabel()){
+										if(anList.containsKey(score))
+											anList.put(score, anList.get(score) + 1);
+										else anList.put(score, 1);
+									} else {
+										if(okList.containsKey(score))
+											okList.put(score, okList.get(score) + 1);
+										else okList.put(score, 1);
+									}
+								}
+							}
+						}
+					}
+					List<Double> keys = new LinkedList<Double>(anList.keySet());
+					List<Double> temp = new LinkedList<Double>(okList.keySet());
+					temp.removeAll(keys);
+					keys.addAll(temp);
+					Collections.sort(keys);
+					
+					writer = new BufferedWriter(new FileWriter(new File(filename)));
+					writer.write(dOut.getAlgorithm() + "_scores,normal,anomaly\n");
+					for(Double xValue : keys){
+						writer.write(xValue + ",");
+						writer.write((okList.containsKey(xValue) ? okList.get(xValue) : "0") + ",");
+						writer.write((anList.containsKey(xValue) ? anList.get(xValue) : "0") + ",");
+						writer.write("\n");
+					}
+					writer.close();
+				} catch(IOException ex){
+					AppLogger.logException(getClass(), ex, "Unable to write summary files");
+				}
+			}
+
 			private void printDataset(XYDataset dataset, String filename){
 				BufferedWriter writer;
 				List<Double> xValues = new LinkedList<Double>();

@@ -98,7 +98,6 @@ public class AlgorithmSetupFrame {
 			asFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.8));
 		else asFrame.setBounds(0, 0, 500, 600);
 		asFrame.setBackground(Color.WHITE);
-		asFrame.setResizable(false);
 	}
 	
 	private JPanel buildMainPanel() {	

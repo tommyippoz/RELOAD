@@ -3,6 +3,10 @@
  */
 package ippoz.reload.externalutils;
 
+import ippoz.reload.algorithm.support.ClusterableSnapshot;
+
+import java.util.List;
+
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.database.StaticArrayDatabase;
 import de.lmu.ifi.dbs.elki.datasource.ArrayAdapterDatabaseConnection;
@@ -25,6 +29,20 @@ public class ELKIUtils {
 	    Database db = new StaticArrayDatabase(dbc, null);
 	    db.initialize();  
 	    return db;
+	}
+	
+	/**
+	 * Creates the elki database.
+	 *
+	 * @param data the data
+	 * @return the database
+	 */
+	public static Database createElkiDatabase(List<ClusterableSnapshot> list){
+		double[][] data = new double[list.size()][];
+		for(int i=0;i<list.size();i++){
+			data[i] = list.get(i).getPoint();
+		}
+		return createElkiDatabase(data);
 	}
 
 }

@@ -157,7 +157,7 @@ public class OutputFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, 6, 50, 5));
+		panel.setLayout(new GridLayout(1, 5, 50, 5));
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
@@ -175,15 +175,6 @@ public class OutputFrame {
 		//lbl.setBounds(panel.getWidth()/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Algorithm used by RELOAD");
-		panel.add(lbl);
-		
-		lbl = new JLabel(dOut != null ? dOut.getBestSetup() : "Best Setup");
-		if(dOut == null)
-			lbl.setFont(labelBoldFont);
-		else lbl.setFont(smallLabelFont);
-		//lbl.setBounds(panel.getWidth()*2/elements, 0, panel.getWidth()/elements, labelSpacing);
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		lbl.setToolTipText("Setup used to aggregate different anomaly checkers, if more than one");
 		panel.add(lbl);
 		
 		lbl = new JLabel(dOut != null ? String.valueOf(dOut.getUsedFeatures().size()) : "Selected Features");
