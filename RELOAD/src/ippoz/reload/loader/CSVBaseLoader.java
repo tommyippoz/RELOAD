@@ -58,7 +58,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 				}
 				readLine = AppUtility.filterInnerCommas(readLine);
 				for(String splitted : readLine.split(",")){
-					csvHeader.add(new Indicator(splitted.replace("\"", ""), LayerType.NO_LAYER, String.class));
+					csvHeader.add(new Indicator(splitted.trim().replace("\"", ""), LayerType.NO_LAYER, String.class));
 				}
 				reader.close();
 			}
@@ -147,7 +147,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
-										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
+										if(readLine.split(",")[labelCol] != null && hasFault(readLine.split(",")[labelCol]))
 											anomalyCount++;
 									}
 								}	
@@ -168,6 +168,16 @@ public abstract class CSVBaseLoader extends FileLoader {
 			AppLogger.logException(getClass(), ex, "Unable to parse header");
 		}
 		return 100.0*anomalyCount/itemCount;
+	}
+	
+	protected boolean hasFault(String string){
+		if(faultyTagList == null)
+			return false;
+		for(String fault : faultyTagList){
+			if(fault.toUpperCase().trim().compareTo(string.trim().toUpperCase()) == 0)
+				return true;
+		}
+		return false;
 	}
 	
 	@Override

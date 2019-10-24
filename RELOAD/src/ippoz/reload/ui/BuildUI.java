@@ -638,7 +638,10 @@ public class BuildUI {
 		for(PreferencesManager lPref : lList){
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
 				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
-			else {
+			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
+				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + 
+						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+			} else {
 				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " - " + lPref.getFilename() + " (" + 
 						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
 			}

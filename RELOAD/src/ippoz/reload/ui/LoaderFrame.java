@@ -76,6 +76,9 @@ public class LoaderFrame {
 	public LoaderFrame(InputManager iManager, PreferencesManager loaderPref, LoaderType loaderType) {
 		this.iManager = iManager;
 		this.loaderPref = loaderPref;
+		if(loaderPref.hasPreference(Loader.LOADER_TYPE) && loaderPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL"))
+			loaderPref.updatePreference(Loader.LOADER_TYPE, "CSV", true);
+		
 		tLoader = buildLoader("train");
 		vLoader = buildLoader("validation");
 		
@@ -460,9 +463,7 @@ public class LoaderFrame {
 			}
 
 			public void workOnUpdate() {
-				if (textField.getText() != null && textField.getText().length() > 0){
-	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
-	        	}
+	        	loaderPref.updatePreference(prefName, textField.getText(), true, false);
 			}
 		});
 		

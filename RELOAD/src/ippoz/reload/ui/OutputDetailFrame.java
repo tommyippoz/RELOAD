@@ -160,8 +160,10 @@ public class OutputDetailFrame {
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
-				if(list.get(0) != null){
-					return list.get(0).getValue().getDecisionFunction();
+				for(int i=0;i<list.size();i++){
+					if(list.get(i) != null && list.get(i).getValue() != null && list.get(i).getValue().getDecisionFunction() != null){
+						return list.get(i).getValue().getDecisionFunction();
+					}
 				}
 			}
 		}
@@ -369,16 +371,7 @@ public class OutputDetailFrame {
 		secondHeaderPanel.setBackground(Color.WHITE);
 		secondHeaderPanel.setLayout(new GridLayout(1, 4));
 		
-		String suggDecision = null;
-		for(String expName : dOut.getLabelledScores().keySet()){
-			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(list != null && list.size() > 0){
-				if(list.get(0) != null){
-					suggDecision = list.get(0).getValue().getDecisionFunction().getName();
-					break;
-				}
-			}
-		}
+		DecisionFunction suggDecision = createDefaultDecisionFunction();
 		
 		lbl = new JLabel("Decision Function");
 		lbl.setFont(labelFont);
@@ -401,7 +394,8 @@ public class OutputDetailFrame {
 		cbDecisionFunction = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
 		if(dFunction != null)
 			cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
-		else cbDecisionFunction.setSelectedItem(suggDecision);
+		else if(suggDecision != null)
+			cbDecisionFunction.setSelectedItem(suggDecision.getName());
 		cbDecisionFunction.addActionListener (new ActionListener () {
 		    public void actionPerformed(ActionEvent e) {
 		        if(!isUpdating){

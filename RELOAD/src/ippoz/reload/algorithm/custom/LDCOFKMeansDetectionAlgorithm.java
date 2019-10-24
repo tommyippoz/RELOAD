@@ -49,7 +49,7 @@ public class LDCOFKMeansDetectionAlgorithm extends LDCOFDetectionAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"IQR", "LEFT_IQR"});
+		defPar.put("threshold", new String[]{"RIGHT_CONFIDENCE_INTERVAL(0.1)", "RIGHT_CONFIDENCE_INTERVAL(0.5)", "RIGHT_IQR(0.1)", "RIGHT_IQR(0.5)"});
 		defPar.put("k", new String[]{"5", "10", "20", "50"});
 		defPar.put("gamma", new String[]{"0.3", "0.5"});
 		return defPar;

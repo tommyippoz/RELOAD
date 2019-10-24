@@ -91,7 +91,8 @@ public abstract class DecisionFunction {
 								else return new IQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3());
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
-					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create IQR decision function '" + thresholdTag + "'");
+					} else 
+						AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create IQR decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.contains("CONFIDENCE_INTERVAL")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("CONFIDENCE_INTERVAL"))

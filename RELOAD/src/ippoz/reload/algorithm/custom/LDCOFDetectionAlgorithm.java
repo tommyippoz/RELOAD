@@ -391,7 +391,9 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesDetectionAlgorit
 			
 			double score = 0;
 			GenericCluster centroid = getClusterFor(data);
-			if(centroid.isLarge() || findNearestLargeClusterFor(data) == null) {
+			if(centroid == null)
+				return Double.NaN;
+			else if(centroid.isLarge() || findNearestLargeClusterFor(data) == null) {
 				//it is a large cluster
 				score = (centroid.distanceFrom(data))/centroid.getAvgDistanceFromCenter();
 			} else {

@@ -103,7 +103,7 @@ public class PreferencesManager {
 		boolean found = false;
 		List<String> fileLines = new LinkedList<String>();
 		try {
-			if(file.exists() && newValue != null && newValue.length() > 0){
+			if(file.exists() && newValue != null){
 				reader = new BufferedReader(new FileReader(file));
 				while(reader.ready()){
 					readed = reader.readLine();
@@ -116,13 +116,13 @@ public class PreferencesManager {
 					}
 				}
 				reader.close();
-				if(found) {
-					writer = new BufferedWriter(new FileWriter(file));
-					for(String st : fileLines){
-						writer.write(st + "\n");
-					}
-					writer.close();
+				if(!found)
+					fileLines.add(tag + " = " + newValue.trim());
+				writer = new BufferedWriter(new FileWriter(file));
+				for(String st : fileLines){
+					writer.write(st + "\n");
 				}
+				writer.close();
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
