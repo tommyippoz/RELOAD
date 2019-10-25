@@ -32,8 +32,10 @@ import ippoz.reload.commons.dataseries.ComplexDataSeries;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
@@ -55,6 +57,8 @@ public abstract class DetectionAlgorithm {
 	
 	protected ValueSeries loggedScores;
 	
+	protected ValueSeries loggedAnomalyScores;
+	
 	protected DecisionFunction decisionFunction;
 	
 	/**
@@ -65,35 +69,62 @@ public abstract class DetectionAlgorithm {
 	public DetectionAlgorithm(AlgorithmConfiguration conf){
 		this.conf = conf;
 		loggedScores = new ValueSeries();
+		loggedAnomalyScores = new ValueSeries();
 		decisionFunction = null;
 	}
 	
-	protected DecisionFunction buildClassifier() {
+	protected DecisionFunction buildClassifier(ValueSeries vs, boolean revertFlag) {
 		if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD))
-			return DecisionFunction.buildDecisionFunction(loggedScores, conf.getItem(AlgorithmConfiguration.THRESHOLD));
+			return DecisionFunction.buildDecisionFunction(vs, conf.getItem(AlgorithmConfiguration.THRESHOLD), revertFlag);
 		else return null;
 	}
 	
-	public DecisionFunction getDecisionFunction(){
-		return decisionFunction;
+	protected DecisionFunction buildClassifier(String dFunctionString, ValueSeries vs, boolean revertFlag) {
+		return DecisionFunction.buildDecisionFunction(vs, dFunctionString, revertFlag);
+	}
+	
+	protected void setDecisionFunction(String dFunctionString, ValueSeries vs, boolean revertFlag) {
+		decisionFunction = DecisionFunction.buildDecisionFunction(vs, dFunctionString, revertFlag);
+	}
+	
+	public void setDecisionFunction(String dFunctionString){
+		if(loggedAnomalyScores != null && loggedAnomalyScores.size() > 0)
+			decisionFunction = buildClassifier(dFunctionString, loggedAnomalyScores, true);
+		else decisionFunction = buildClassifier(dFunctionString, loggedScores, false);
 	}
 	
 	protected void setDecisionFunction(){
-		decisionFunction = buildClassifier();
+		if(loggedAnomalyScores != null && loggedAnomalyScores.size() > 0)
+			setDecisionFunction(loggedAnomalyScores, true);
+		else setDecisionFunction(loggedScores, false);
 	}
 	
-	protected void logScore(double score){
+	public DecisionFunction getDecisionFunction(){
+		if(decisionFunction == null){
+			setDecisionFunction();
+		}
+		return decisionFunction;
+	}
+	
+	protected void setDecisionFunction(ValueSeries vs, boolean flag){
+		decisionFunction = buildClassifier(vs, flag);
+	}
+	
+	protected void logScore(double score, boolean anomaly){
 		loggedScores.addValue(score);
+		if(anomaly)
+			loggedAnomalyScores.addValue(score);
 	}
 	
-	protected void logScores(List<Double> list) {
-		for(Double score : list){
-			logScore(score);
+	protected void logScores(List<? extends LabelledValue> list) {
+		for(LabelledValue lv : list){
+			logScore(lv.getValue(), lv.getLabel());
 		}
 	}
 	
 	public void clearLoggedScores() {
 		loggedScores.clear();
+		loggedAnomalyScores.clear();
 	}
 	
 	/**
@@ -294,7 +325,7 @@ public abstract class DetectionAlgorithm {
 	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	protected abstract AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
+	public abstract AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
 	
 	/**
 	 * Prints the results of the detection.
@@ -564,5 +595,22 @@ public abstract class DetectionAlgorithm {
 	}
 
 	public abstract Map<String, String[]> getDefaultParameterValues();
+	
+	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
+		int insertIndex = 0;
+		String[] anomalyLabels;
+		if(includeFaulty)
+			anomalyLabels = new String[kSnapList.size()];
+		else anomalyLabels = new String[Knowledge.goldenPointsSize(kSnapList)]; 
+		if(anomalyLabels.length > 0) {
+			for(int i=0;i<kSnapList.size();i++){
+				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
+					anomalyLabels[insertIndex] = kSnapList.get(i).getInjectedElement() == null ? "no" : "yes";
+					insertIndex++;
+				}
+			}
+		}
+		return anomalyLabels;
+	}
 
 }

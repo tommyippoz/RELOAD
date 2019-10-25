@@ -4,6 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
@@ -22,15 +23,23 @@ public abstract class DecisionFunction {
 	/** The classifier type. */
 	private DecisionFunctionType functionType;
 	
+	/** Specifies if anomalies are extern or intern */
+	private boolean revertFlag;
+	
 	/**
 	 * Instantiates a new decision function.
 	 *
 	 * @param classifierName the classifier name
 	 * @param classifierType the classifier type
 	 */
-	protected DecisionFunction(String classifierName, DecisionFunctionType classifierType) {
+	protected DecisionFunction(String classifierName, DecisionFunctionType classifierType, boolean revertFlag) {
 		this.decisionFunctionName = classifierName;
 		this.functionType = classifierType;
+		this.revertFlag = revertFlag;
+	}
+	
+	protected boolean getRevertFlag(){
+		return revertFlag;
 	}
 	
 	/**
@@ -40,7 +49,7 @@ public abstract class DecisionFunction {
 	 * @param thresholdTag the threshold tag
 	 * @return the decision function
 	 */
-	public static DecisionFunction buildDecisionFunction(ValueSeries algorithmScores, String thresholdTag){
+	public static DecisionFunction buildDecisionFunction(ValueSeries algorithmScores, String thresholdTag, boolean flag){
 		String partial;
 		if(thresholdTag != null && thresholdTag.length() > 0){
 			thresholdTag = thresholdTag.trim();
@@ -72,23 +81,23 @@ public abstract class DecisionFunction {
 				} else if(thresholdTag.contains("IQR")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("IQR"))
-							return new IQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3());
+							return new IQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 						else if(thresholdTag.equals("LEFT_IQR"))
-							return new LeftIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3());
+							return new LeftIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 						else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
-							return new LeftPositiveIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3());
+							return new LeftPositiveIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 						else if(thresholdTag.equals("RIGHT_IQR"))
-							return new RightIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3());
+							return new RightIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_IQR"))
-									return new LeftIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3());
+									return new LeftIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 								else if(thresholdTag.contains("LEFT_POSITIVE_IQR"))
-									return new LeftPositiveIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3());
+									return new LeftPositiveIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 								else if(thresholdTag.contains("RIGHT_IQR"))
-									return new RightIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3());
-								else return new IQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3());
+									return new RightIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+								else return new IQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 					} else 
@@ -96,30 +105,30 @@ public abstract class DecisionFunction {
 				} else if(thresholdTag.contains("CONFIDENCE_INTERVAL")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("CONFIDENCE_INTERVAL"))
-							return new ConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd());
+							return new ConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 						else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
-							return new LeftConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd());
+							return new LeftConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 						else if(thresholdTag.equals("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
-							return new LeftPositiveConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd());
+							return new LeftPositiveConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 						else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
-							return new RightConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd());
+							return new RightConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_CONFIDENCE_INTERVAL"))
-									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd());
+									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 								else if(thresholdTag.contains("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
-									return new LeftPositiveConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd());
+									return new LeftPositiveConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 								else if(thresholdTag.contains("RIGHT_CONFIDENCE_INTERVAL"))
-									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd());
-								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd());
+									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create CONF decision function '" + thresholdTag + "'");
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
-						return new ClusterDecision(partial);
+						return new ClusterDecision(partial, flag);
 					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
 				} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create decision function '" + thresholdTag + "'");
 			} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "null tag for decision function");
@@ -241,7 +250,7 @@ public abstract class DecisionFunction {
 	 * @param aResult the algorithm result
 	 * @return the anomaly result
 	 */
-	protected abstract AnomalyResult classify(AlgorithmResult aResult);
+	public abstract AnomalyResult classify(AlgorithmResult aResult);
 
 	/**
 	 * Gets the parameter details. Used by GUIs.
@@ -297,6 +306,10 @@ public abstract class DecisionFunction {
 	 * @return the string
 	 */
 	public abstract String toCompactString();
+	
+	public String toCompactStringComplete(){
+		return toCompactString() + " revert:" + revertFlag;
+	}
 
 	/**
 	 * Gets the thresholds defined by this decision function.
@@ -304,5 +317,15 @@ public abstract class DecisionFunction {
 	 * @return the thresholds
 	 */
 	public abstract double[] getThresholds();
+
+	public static boolean isApplicableTo(AlgorithmType algType, String decFunctString) {
+		if(decFunctString == null || !checkDecisionFunction(decFunctString))
+			return false;
+		else if(decFunctString.contains("CLUSTER") && (algType.equals(AlgorithmType.DBSCAN) || algType.equals(AlgorithmType.ELKI_KMEANS)))
+			return true;
+		else if(!decFunctString.contains("CLUSTER") && !algType.equals(AlgorithmType.DBSCAN) && !algType.equals(AlgorithmType.ELKI_KMEANS))
+			return true;
+		else return false;
+	}
 
 }

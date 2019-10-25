@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.elki;
 
-import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
@@ -28,10 +27,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  *
  * @author Tommy
  */
-public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
-	
-	/** The Constant TMP_FILE. */
-	private static final String TMP_FILE = "tmp_file";
+public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm {
 	
 	/** The flag to decide on outliers in training. */
 	private boolean outliersInTraining;
@@ -53,15 +49,8 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 		customELKI = generateELKIAlgorithm();
 		if(conf.hasItem(TMP_FILE)){
 			customELKI.loadFile(conf.getItem(TMP_FILE));
-			clearLoggedScores();
-			logScores(customELKI.getScoresList());
 		}
 	}
-	
-	/**
-	 * Stores additional preferences (if any).
-	 */
-	protected abstract void storeAdditionalPreferences();
 
 	/**
 	 * Gets the ELKI algorithm.
@@ -70,6 +59,13 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 */
 	protected ELKIAlgorithm<?> getAlgorithm(){
 		return customELKI;
+	}
+	
+	
+
+	@Override
+	public List<Double> getTrainScores() {
+		return customELKI.getScoresList();
 	}
 
 	/**
@@ -80,13 +76,14 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract ELKIAlgorithm<?> generateELKIAlgorithm();
 
 	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
+	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		Database db = translateKnowledge(kList, outliersInTraining);
-		if(db != null)
-			return automaticElkiTraining(db, createOutput);
+		if(db != null){
+			return automaticElkiTraining(db, kList, createOutput);
+		}
 		else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 			return false;
@@ -100,21 +97,12 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @param createOutput the create output flag
 	 * @return true, if training is successful
 	 */
-	protected boolean automaticElkiTraining(Database db, boolean createOutput){
+	protected boolean automaticElkiTraining(Database db, List<Knowledge> kList, boolean createOutput){
 		Object trainOut = customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-		if(trainOut != null){
-			clearLoggedScores();
-			logScores(customELKI.getScoresList());
-			
-			conf.addItem(TMP_FILE, getFilename());
-		    
+		if(trainOut != null){		    
 		    if(createOutput){
-		    	if(!new File(getDefaultTmpFolder()).exists())
-		    		new File(getDefaultTmpFolder()).mkdirs();
 		    	customELKI.printFile(new File(getFilename()));
 		    }
-		    
-		    storeAdditionalPreferences();
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
 		return trainOut != null;
 	}

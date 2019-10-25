@@ -10,8 +10,6 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +18,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import weka.core.Instances;
@@ -36,9 +35,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	
 	/** The Constant SAMPLE_SIZE. */
 	private static final String SAMPLE_SIZE = "sample_size";
-	
-	/** The Constant TMP_FILE. */
-	private static final String TMP_FILE = "tmp_file";
 	
 	/** The Constant DEFAULT_TMP_FOLDER. */
 	public static final String DEFAULT_TMP_FOLDER = "iforest_tmp_RELOAD";
@@ -57,8 +53,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		if(conf.hasItem(TMP_FILE)){
 			iForest = loadSerialized(conf.getItem(TMP_FILE));
 			iForest.loadScores(new File(conf.getItem(TMP_FILE) + "scores"));
-			clearLoggedScores();
-			logScores(iForest.getScores());
 		}
 	}
 
@@ -87,6 +81,11 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 		return isf;
 	}
+	
+	@Override
+	public List<Double> getTrainScores() {
+		return iForest.getScores();
+	}
 
 	/* (non-Javadoc)
 	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#automaticWEKATraining(weka.core.Instances, boolean)
@@ -100,14 +99,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			sampleSize = loadSampleSize();
 			iForest = new CustomIsolationForest(nTrees, sampleSize);
 			iForest.buildClassifier(db);
-			
-			clearLoggedScores();
-			logScores(iForest.getScores());
-			
-			conf.addItem(TMP_FILE, getFilename());
 			if(createOutput){
-				if(!new File(getDefaultTmpFolder()).exists())
-		    		new File(getDefaultTmpFolder()).mkdirs();
 		    	storeSerialized();
 		    	iForest.printScores(new File(getFilename() + "scores"));
 		    }
@@ -177,20 +169,18 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
-	 */
-	@Override
-	protected DecisionFunction buildClassifier() {
-		return new StaticThresholdGreaterThanDecision(0.5);
-	}
-
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		defPar.put("n_trees", new String[]{"1", "2", "3", "5"});
 		defPar.put("sample_size", new String[]{"10", "20", "50", "100"});
 		return defPar;
+	}
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

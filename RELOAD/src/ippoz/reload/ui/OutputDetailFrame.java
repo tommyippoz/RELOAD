@@ -400,6 +400,7 @@ public class OutputDetailFrame {
 		    public void actionPerformed(ActionEvent e) {
 		        if(!isUpdating){
 		        	String newValue = cbDecisionFunction.getSelectedItem().toString();
+		        	boolean flag = false;
 		        	
 		        	String descriptionString = "Insert parameter for " + newValue;
 		        	if(newValue.contains("DOUBLE_THRESHOLD")){
@@ -434,9 +435,20 @@ public class OutputDetailFrame {
 						if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 							newValue = newValue + "(" + s + ")";
 						} else newValue = newValue + "(1)";
+						
+						if(newValue.contains("IQR") || newValue.contains("CONF")){
+							s = (String)JOptionPane.showInputDialog(
+			        				detFrame, descriptionString, "Define if anomalies are inside (true) or outside (false) of the interval",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0)) {
+								try {
+									flag = Boolean.parseBoolean(s);
+								} catch(Exception ex){}
+							} 
+						}
 		        	}
 		        	
-		        	dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, newValue);
+		        	dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, newValue, flag);
 		        	if(dFunction != null){
 		        		cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
 		        		reload();
@@ -597,7 +609,7 @@ public class OutputDetailFrame {
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label);
 			
-			label = new JLabel(dFunction.toCompactString());
+			label = new JLabel(dFunction.toCompactStringComplete());
 			label.setFont(labelBoldFont);
 			label.setBorder(new EmptyBorder(0, 10, 0, 10));
 			label.setHorizontalAlignment(SwingConstants.CENTER);

@@ -30,8 +30,8 @@ public class LeftPositiveConfidenceIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public LeftPositiveConfidenceIntervalFunction(double ratio, double avg, double std) {
-		super("left_positive_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL);
+	public LeftPositiveConfidenceIntervalFunction(double ratio, double avg, double std, boolean revertFlag) {
+		super("left_positive_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag);
 		this.avg = avg;
 		this.std = std;
 		this.ratio = tuneRatio(ratio, avg, std);
@@ -57,7 +57,7 @@ public class LeftPositiveConfidenceIntervalFunction extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult aResult) {
+	public AnomalyResult classify(AlgorithmResult aResult) {
 		if(!Double.isFinite(aResult.getScore()))
 			return AnomalyResult.UNKNOWN;
 		if(aResult.getScore() < avg - ratio*std)

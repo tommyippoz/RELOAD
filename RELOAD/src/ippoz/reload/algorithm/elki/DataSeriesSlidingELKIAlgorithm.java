@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.externalutils.ELKIUtils;
 
 import java.util.List;
@@ -63,13 +64,15 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 */
 	@Override
 	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+		AlgorithmResult ar;
 		Database windowDb = translateSnapList(snapList, true);
 		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
 			customELKI = generateELKIAlgorithm();
-			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-			logScores(customELKI.getScoresList());
-			setDecisionFunction();
-			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot); 
+			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));			
+			setDecisionFunction("IQR", new ValueSeries(customELKI.getScoresList()), false);
+			ar = evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot);			
+			logScore(ar.getScore(), dsSnapshot.isAnomalous());
+			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
 	}
 

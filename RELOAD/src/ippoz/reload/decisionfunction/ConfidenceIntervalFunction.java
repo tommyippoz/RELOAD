@@ -30,8 +30,8 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public ConfidenceIntervalFunction(double ratio, double avg, double std) {
-		super("confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL);
+	public ConfidenceIntervalFunction(double ratio, double avg, double std, boolean revertFlag) {
+		super("confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag);
 		this.avg = avg;
 		this.std = std;
 		this.ratio = ratio;
@@ -41,14 +41,20 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult aResult) {
+	public AnomalyResult classify(AlgorithmResult aResult) {
 		if(!Double.isFinite(aResult.getScore()))
 			return AnomalyResult.UNKNOWN;
-		if(aResult.getScore() < avg - ratio*std)
-			return AnomalyResult.ANOMALY;
-		else if(aResult.getScore() > avg + ratio*std)
-			return AnomalyResult.ANOMALY;
-		else return AnomalyResult.NORMAL;
+		if(getRevertFlag()){
+			if(aResult.getScore() >= avg - ratio*std && aResult.getScore() <= avg + ratio*std)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		} else {
+			if(aResult.getScore() < avg - ratio*std)
+				return AnomalyResult.ANOMALY;
+			else if(aResult.getScore() > avg + ratio*std)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -56,7 +62,9 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		return "CONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ") - {ANOMALY: value < " + AppUtility.formatDouble(avg -ratio*std) + " or value > " + AppUtility.formatDouble(avg +ratio*std) + "}";
+		if(getRevertFlag())
+			return "CONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ") - {ANOMALY: value >= " + AppUtility.formatDouble(avg -ratio*std) + " and value <= " + AppUtility.formatDouble(avg +ratio*std) + "}";		
+		else return "CONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ") - {ANOMALY: value < " + AppUtility.formatDouble(avg -ratio*std) + " or value > " + AppUtility.formatDouble(avg +ratio*std) + "}";
 	}
 
 	/* (non-Javadoc)

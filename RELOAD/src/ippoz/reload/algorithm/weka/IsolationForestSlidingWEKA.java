@@ -11,8 +11,6 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,14 +70,6 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
 		}
 		return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
-	}
-	
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
-	 */
-	@Override
-	protected DecisionFunction buildClassifier() {
-		return new StaticThresholdGreaterThanDecision(0.5);
 	}
 	
 	/**

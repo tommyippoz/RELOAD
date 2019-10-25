@@ -3,8 +3,7 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
-import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
+import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
@@ -30,7 +29,7 @@ import java.util.List;
  * @author Tommy
  *
  */
-public abstract class LDCOFDetectionAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
+public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	/** The Constant HISTOGRAMS. */
 	public static final String CLUSTERS = "clusters";
@@ -57,13 +56,11 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesDetectionAlgorit
 			model = new LDCOFModel(clSnaps);
 			model.train(getGamma());
 			loadFile(getFilename());
-			clearLoggedScores();
-			logScores(filterScores());
 		}
 	}
 	
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		List<ClusterableSnapshot> clSnapList = new LinkedList<>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			clSnapList.add(new ClusterableSnapshot(snap, getDataSeries()));
@@ -79,15 +76,9 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesDetectionAlgorit
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(snap)));
 		}
-		clearLoggedScores();
-		logScores(filterScores());
-		
-		conf.addItem(TMP_FILE, getFilename());
 		
 		if(createOutput) {
 			conf.addItem(CLUSTERS, clustersToConfiguration());
-			if(!new File(getDefaultTmpFolder()).exists())
-	    		new File(getDefaultTmpFolder()).mkdirs();
 	    	printFile(new File(getFilename()));
 		}
 		
@@ -225,7 +216,8 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesDetectionAlgorit
 	 *
 	 * @return the list
 	 */
-	private List<Double> filterScores() {
+	@Override
+	public List<Double> getTrainScores() {
 		List<Double> list = new LinkedList<Double>();
 		for(LDCOFScore score : scores){
 			list.add(score.getLDCOF());

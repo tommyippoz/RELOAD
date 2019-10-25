@@ -30,8 +30,8 @@ public class RightIQRFunction extends DecisionFunction {
 	 * @param q1 the q1
 	 * @param q3 the q3
 	 */
-	protected RightIQRFunction(double ratio, double q1, double q3) {
-		super("RIGHT_IQR", DecisionFunctionType.RIGHT_IQR);
+	protected RightIQRFunction(double ratio, double q1, double q3, boolean revertFlag) {
+		super("RIGHT_IQR", DecisionFunctionType.RIGHT_IQR, revertFlag);
 		this.q1 = q1;
 		this.q3 = q3;
 		this.ratio = ratio;
@@ -41,12 +41,18 @@ public class RightIQRFunction extends DecisionFunction {
 	 * @see ippoz.madness.detector.decisionfunction.DecisionFunction#classify(double)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		double iqr = q3 - q1;
 		boolean outright = value.getScore() > q3 + ratio*iqr;
-		if(outright)
-			return AnomalyResult.ANOMALY;
-		else return AnomalyResult.NORMAL;
+		if(getRevertFlag()){
+			if(!outright)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		} else {
+			if(outright)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -55,7 +61,9 @@ public class RightIQRFunction extends DecisionFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		return "RIGHT_IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " IQR: " + AppUtility.formatDouble(iqr) + " ratio:" + ratio + ") - {ANOMALY: value > " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
+		if(getRevertFlag())
+			return "RIGHT_IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " IQR: " + AppUtility.formatDouble(iqr) + " ratio:" + ratio + ") - {ANOMALY: value <= " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
+		else return "RIGHT_IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " IQR: " + AppUtility.formatDouble(iqr) + " ratio:" + ratio + ") - {ANOMALY: value > " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
 	}
 
 	/* (non-Javadoc)

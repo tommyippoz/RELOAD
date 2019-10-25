@@ -72,7 +72,7 @@ public class SOSELKI extends DataSeriesELKIAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"IQR", "IQR(0)"});
+		//defPar.put("threshold", new String[]{"IQR", "IQR(0)"});
 		defPar.put("h", new String[]{"5", "10", "20", "50"});
 		return defPar;
 	}

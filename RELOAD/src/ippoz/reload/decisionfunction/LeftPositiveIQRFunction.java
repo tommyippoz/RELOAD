@@ -30,8 +30,8 @@ public class LeftPositiveIQRFunction extends DecisionFunction {
 	 * @param q1 the q1
 	 * @param q3 the q3
 	 */
-	protected LeftPositiveIQRFunction(double ratio, double q1, double q3) {
-		super("LEFT_POSITIVE_IQR", DecisionFunctionType.LEFT_POSITIVE_IQR);
+	protected LeftPositiveIQRFunction(double ratio, double q1, double q3, boolean revertFlag) {
+		super("LEFT_POSITIVE_IQR", DecisionFunctionType.LEFT_POSITIVE_IQR, revertFlag);
 		this.q1 = q1;
 		this.q3 = q3;
 		this.ratio = tuneRatio(ratio, q1, q3);
@@ -60,7 +60,7 @@ public class LeftPositiveIQRFunction extends DecisionFunction {
 	 * @see ippoz.madness.detector.decisionfunction.DecisionFunction#classify(double)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		double iqr = q3 - q1;
 		boolean outleft = value.getScore() < q1 - ratio*iqr;
 		if(outleft)

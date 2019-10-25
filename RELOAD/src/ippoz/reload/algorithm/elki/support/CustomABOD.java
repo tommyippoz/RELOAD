@@ -37,6 +37,7 @@ import de.lmu.ifi.dbs.elki.database.relation.DoubleRelation;
 import de.lmu.ifi.dbs.elki.database.relation.MaterializedDoubleRelation;
 import de.lmu.ifi.dbs.elki.database.relation.Relation;
 import de.lmu.ifi.dbs.elki.datasource.bundle.SingleObjectBundle;
+import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.distance.similarityfunction.SimilarityFunction;
 import de.lmu.ifi.dbs.elki.distance.similarityfunction.kernel.KernelMatrix;
 import de.lmu.ifi.dbs.elki.distance.similarityfunction.kernel.PolynomialKernelFunction;
@@ -166,7 +167,7 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
-		else if((partialResult = hasResult(newInstance)) != Double.NaN)
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
 			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
@@ -176,10 +177,12 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		    for(int i=0;i<resList.size();i++) {
 		      
 		      double simBB = getSimilarity(sq, resList.get(i).getVector(), resList.get(i).getVector());
+		      //System.out.println("simBB:" + simBB);
 			  double simAB = getSimilarity(sq, newInstance, resList.get(i).getVector());
+			  //System.out.println("simAB:" + simBB);
 			  double sqdAB = simAA + simBB - simAB - simAB;
 		      if(!(sqdAB > 0.)) {
-		        continue;
+		    	  sqdAB = -sqdAB;
 		      }
 		      
 		      for(int j=i+1;j<resList.size();j++) {
@@ -189,27 +192,40 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 				double sqdAC = simAA + simCC - simAC - simAC;
 		        
 		        if(!(sqdAC > 0.)) {
-		          continue;
+		          sqdAC = -sqdAC;
 		        }
 		        // Exploit bilinearity of scalar product:
 		        // <B-A, C-A> = <B,C-A> - <A,C-A>
 		        // = <B,C> - <B,A> - <A,C> + <A,A>
+		        //System.out.println(resList.get(i).getVector());
+		        //System.out.println(resList.get(j).getVector());
 		        double simBC = getSimilarity(sq, resList.get(i).getVector(), resList.get(j).getVector());
 		        double numerator = simBC - simAB - simAC + simAA;
+		        //System.out.println("sqdAB " + sqdAB + " sqdAC " + sqdAC);
 		        double div = 1. / (sqdAB * sqdAC);
-		        s.put(numerator * div, Math.sqrt(div));
+		        //System.out.println("numerator " + numerator + " div " + div);
+		        if(!Double.isFinite(numerator))
+		        	s.put(numerator * div, Math.sqrt(div));
 		      }
 		    }
 		    // Sample variance probably would be better here, but the ABOD publication
 		    // uses the naive variance.
-		    if(s.getNaiveVariance() > 0)
-		    	System.out.println(s.getNaiveVariance());
 		    return s.getNaiveVariance();
 		}
 	  }
 	  
 	  private double getSimilarity(SimilarityQuery<V> sq, V o1, V o2){
-			return sq.similarity(o1, o2);
+				double res = 0;
+				if(o1 == null || o2 == null)
+					return Double.MAX_VALUE;
+				if(o1.getDimensionality() == o2.getDimensionality()){
+					for(int i=0;i<o1.getDimensionality();i++){
+						res = res + Math.pow(o1.doubleValue(i) - o2.doubleValue(i), 2);
+					}
+				}
+				return Math.sqrt(res);
+		  //return HellingerDistanceFunction.STATIC.distance(o1, o2);
+		  //return sq.similarity(o1, o2);
 		}
 		
 		public int rankSingleABOF(V newInstance) {

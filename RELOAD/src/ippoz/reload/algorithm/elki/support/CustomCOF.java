@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -492,7 +493,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						reader.close();
 					}
 				} catch (IOException ex) {
-					//AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
+					AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
 				} 
 			}
 
@@ -510,7 +511,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						writer.close();
 					}
 				} catch (IOException ex) {
-					//AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
+					AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
 				} 
 			}
 			

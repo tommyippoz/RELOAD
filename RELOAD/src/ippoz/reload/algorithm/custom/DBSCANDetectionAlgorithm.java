@@ -3,8 +3,7 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
-import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
+import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.DBSCANResult;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
@@ -17,6 +16,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.LabelledValue;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -36,7 +36,7 @@ import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
  * @author Tommy
  *
  */
-public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
+public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 
 	/** The Constant HISTOGRAMS. */
 	public static final String CLUSTERS = "clusters";
@@ -68,8 +68,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		if(conf.hasItem(CLUSTERS)){
 			clSnaps = loadFromConfiguration();
 			loadFile(getFilename());
-			clearLoggedScores();
-			logScores(filterScores());
 		}
 	}
 
@@ -91,8 +89,8 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	 *
 	 * @return the pts
 	 */
-	private int getPTS() {
-		return conf.hasItem(PTS) ? Integer.parseInt(conf.getItem(PTS)) : DEFAULT_PTS;
+	private double getPTS() {
+		return conf.hasItem(PTS) ? Double.parseDouble(conf.getItem(PTS)) : DEFAULT_PTS;
 	}
 	
 	/**
@@ -102,6 +100,15 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 	 */
 	private int getEPS() {
 		return conf.hasItem(EPS) ? Integer.parseInt(conf.getItem(EPS)) : DEFAULT_EPS;
+	}
+	
+	@Override
+	public List<Double> getTrainScores() {
+		List<Double> list = new LinkedList<Double>();
+		for(LabelledValue score : scores){
+			list.add(score.getValue());
+		}
+		return list;
 	}
 
 	@Override
@@ -157,7 +164,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new DBSCANScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
+							scores.add(new DBSCANScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1]), Boolean.parseBoolean(readed.split(";")[2])));
 					}
 				}
 				reader.close();
@@ -193,29 +200,16 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN file");
 		} 
 	}
-	
-	/**
-	 * Filter scores.
-	 *
-	 * @return the list
-	 */
-	private List<Double> filterScores() {
-		List<Double> list = new LinkedList<Double>();
-		for(DBSCANScore score : scores){
-			list.add(score.getDBSCAN());
-		}
-		return list;	
-	}
 
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		List<ClusterableSnapshot> clSnapList = new LinkedList<>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			clSnapList.add(new ClusterableSnapshot(snap, getDataSeries()));
 		}
 		
 		DBSCANClusterer<ClusterableSnapshot> dbSCAN;
-		dbSCAN = new DBSCANClusterer<ClusterableSnapshot>(getEPS(), clSnapList.get(0).getPoint().length*getPTS());
+		dbSCAN = new DBSCANClusterer<ClusterableSnapshot>(getEPS(), (int) (clSnapList.get(0).getPoint().length*getPTS()));
 		List<Cluster<ClusterableSnapshot>> cSnaps = dbSCAN.cluster(clSnapList);
 		if(cSnaps != null){
 			clSnaps = new LinkedList<GenericCluster>();
@@ -226,10 +220,8 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		
 		scores = new LinkedList<DBSCANScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new DBSCANScore(Snapshot.snapToString(snap, getDataSeries()), calculateDBSCAN(snap)));
+			scores.add(new DBSCANScore(Snapshot.snapToString(snap, getDataSeries()), calculateDBSCAN(snap), snap.isAnomalous()));
 		}
-		clearLoggedScores();
-		logScores(filterScores());
 		
 		conf.addItem(TMP_FILE, getFilename());
 		
@@ -341,7 +333,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("data(enclosed in {});dbscan\n");
 				for(DBSCANScore score : scores){
-					writer.write(score.getSnapValue() + ";" + score.getDBSCAN() + "\n");
+					writer.write(score.getSnapValue() + ";" + score.getDBSCAN() + ";" + score.getLabel() + "\n");
 				}
 				writer.close();
 			}
@@ -358,10 +350,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		return toReturn.substring(0, toReturn.length()-1);
 	}
 	
-	private class DBSCANScore {
-		
-		/** The DBSCAN. */
-		private double dbscan;
+	private class DBSCANScore extends LabelledValue {
 		
 		/** The snap value. */
 		private String snapValue;
@@ -372,8 +361,8 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		 * @param snapValue the snap value
 		 * @param dbscan the hbos
 		 */
-		public DBSCANScore(String snapValue, double dbscan) {
-			this.dbscan = dbscan;
+		public DBSCANScore(String snapValue, double dbscan, boolean flag) {
+			super(dbscan, flag);
 			this.snapValue = snapValue;
 		}
 
@@ -383,7 +372,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		 * @return the hbos
 		 */
 		public double getDBSCAN() {
-			return dbscan;
+			return super.getValue();
 		}
 
 		/**
@@ -404,6 +393,12 @@ public class DBSCANDetectionAlgorithm extends DataSeriesDetectionAlgorithm imple
 		defPar.put("eps", new String[]{"100", "500", "1000"});
 		defPar.put("pts", new String[]{"0.5", "1", "2"});
 		return defPar;
+	}
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

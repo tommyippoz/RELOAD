@@ -11,9 +11,10 @@ package ippoz.reload.commons.support;
 public class LabelledValue {
 	
 	private boolean label;
+	
 	private Double value;
 	
-	public LabelledValue(boolean label, Double value) {
+	public LabelledValue(Double value, boolean label) {
 		this.label = label;
 		this.value = value;
 	}

@@ -110,4 +110,8 @@ public abstract class Snapshot {
 		return snapValue + "}";
 	}
 	
+	public boolean isAnomalous(){
+		return injEl != null;
+	}
+	
 }

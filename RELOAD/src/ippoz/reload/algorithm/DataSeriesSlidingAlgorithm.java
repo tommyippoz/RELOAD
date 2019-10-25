@@ -27,13 +27,21 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 		if(conf.hasItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE) && AppUtility.isInteger(conf.getItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE))){
 			windowSize = Integer.parseInt(conf.getItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE));
 		} else windowSize = -1;
+		logScore(0.0, false);
+	}
+	
+	@Override
+	protected void logScore(double score, boolean flag) {
+		if(loggedScores.size() >= getWindowSize())
+			loggedScores.removeFirst();
+		super.logScore(score, flag);
 	}
 
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar = calculateSnapshotScore(knowledge, sysSnapshot, currentIndex);
 		if(currentIndex >= getWindowSize()){
-			logScore(ar.getScore());
+			logScore(ar.getScore(), sysSnapshot.isAnomalous());
 		}
 		return ar;
 	}

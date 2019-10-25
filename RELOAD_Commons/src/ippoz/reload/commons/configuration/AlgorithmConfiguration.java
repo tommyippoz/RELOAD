@@ -58,6 +58,12 @@ public class AlgorithmConfiguration implements Cloneable {
 	
 	public static final String DATASET_NAME = "dataset";
 
+	public static final String ANOMALY_AVG = "anomaly_avg";
+	
+	public static final String ANOMALY_STD = "anomaly_std";
+	
+	public static final String ANOMALY_MED = "anomaly_med";
+
 	/** The configuration map. */
 	private HashMap<String, Object> confMap;
 	

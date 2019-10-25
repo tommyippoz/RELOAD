@@ -30,8 +30,8 @@ public class IQRFunction extends DecisionFunction {
 	 * @param q1 the q1
 	 * @param q3 the q3
 	 */
-	protected IQRFunction(double ratio, double q1, double q3) {
-		super("IQR", DecisionFunctionType.IQR);
+	protected IQRFunction(double ratio, double q1, double q3, boolean revertFlag) {
+		super("IQR", DecisionFunctionType.IQR, revertFlag);
 		this.ratio = ratio;
 		if(q1 <= q3) {
 			this.q1 = q1;
@@ -46,13 +46,18 @@ public class IQRFunction extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		double iqr = q3 - q1;
 		boolean outleft = value.getScore() < q1 - ratio*iqr;
 		boolean outright = value.getScore() > q3 + ratio*iqr;
-		if(outleft || outright)
-			return AnomalyResult.ANOMALY;
-		else return AnomalyResult.NORMAL;
+		boolean inside = value.getScore() >= q1 - ratio*iqr && value.getScore() <= q3 + ratio*iqr;
+		if(getRevertFlag()){
+			return inside ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL; 
+		} else {
+			if(outleft || outright)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -61,7 +66,9 @@ public class IQRFunction extends DecisionFunction {
 	@Override
 	public String toCompactString() {
 		double iqr = q3 - q1;
-		return "IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " ratio:" + ratio + ") - {ANOMALY: value < " + AppUtility.formatDouble(q1 - ratio*iqr) + " or value > " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
+		if(getRevertFlag())
+			return "IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " ratio:" + ratio + ") - {ANOMALY: value >= " + AppUtility.formatDouble(q1 - ratio*iqr) + " and value <= " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
+		else return "IQR(Q1:" + AppUtility.formatDouble(q1) + " Q3:" + AppUtility.formatDouble(q3) + " ratio:" + ratio + ") - {ANOMALY: value < " + AppUtility.formatDouble(q1 - ratio*iqr) + " or value > " + AppUtility.formatDouble(q3 + ratio*iqr) + "}";
 	}
 
 	/* (non-Javadoc)

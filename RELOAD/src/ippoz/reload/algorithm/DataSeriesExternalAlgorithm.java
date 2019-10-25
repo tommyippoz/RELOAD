@@ -18,7 +18,7 @@ import java.util.List;
  * @author Tommy
  *
  */
-public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlgorithm {
+public abstract class DataSeriesExternalAlgorithm extends DataSeriesNonSlidingAlgorithm {
 
 	private static final String MINMAX = "MINMAX";
 	
@@ -69,23 +69,6 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesDetectionAlg
 	
 	protected String[] extractLabels(List<Knowledge> kList, boolean includeFaulty) {
 		return extractLabels(includeFaulty, Knowledge.toSnapList(kList, getDataSeries()));
-	}
-	
-	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
-		int insertIndex = 0;
-		String[] anomalyLabels;
-		if(includeFaulty)
-			anomalyLabels = new String[kSnapList.size()];
-		else anomalyLabels = new String[Knowledge.goldenPointsSize(kSnapList)]; 
-		if(anomalyLabels.length > 0) {
-			for(int i=0;i<kSnapList.size();i++){
-				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
-					anomalyLabels[insertIndex] = kSnapList.get(i).getInjectedElement() == null ? "no" : "yes";
-					insertIndex++;
-				}
-			}
-		}
-		return anomalyLabels;
 	}
 	
 	protected double[][] convertSnapshotListIntoMatrix(List<Snapshot> kSnapList, boolean includeFaulty) {

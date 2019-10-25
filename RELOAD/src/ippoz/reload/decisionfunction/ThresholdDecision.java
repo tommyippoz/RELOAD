@@ -26,7 +26,7 @@ public class ThresholdDecision extends DecisionFunction {
 	 * @param scores the scores
 	 */
 	public ThresholdDecision(double threshold, ValueSeries scores) {
-		super("threshold", DecisionFunctionType.THRESHOLD);
+		super("threshold", DecisionFunctionType.THRESHOLD, false);
 		this.threshold = threshold;
 		this.scores = scores;
 	}
@@ -35,7 +35,7 @@ public class ThresholdDecision extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		int index = (int)(threshold*scores.size())-1;
 		if(index < 0)
 			index = 0;

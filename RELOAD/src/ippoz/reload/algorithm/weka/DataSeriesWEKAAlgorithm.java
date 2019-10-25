@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.weka;
 
-import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
@@ -29,7 +28,7 @@ import weka.core.Instances;
  *
  * @author Tommy
  */
-public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorithm implements AutomaticTrainingAlgorithm {
+public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorithm {
 
 	/** Flag to specify if faulty items should be used for training. */
 	private boolean outliersInTraining;
@@ -51,11 +50,13 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		Instances db = translateKnowledge(kList);
-		if(db != null)
-			return automaticWEKATraining(db, createOutput);
-		else {
+		if(db != null) {
+			boolean trainFlag = automaticWEKATraining(db, createOutput);
+			
+			return trainFlag;
+		} else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 			return false;
 		}
