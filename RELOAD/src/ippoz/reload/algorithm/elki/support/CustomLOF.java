@@ -22,6 +22,7 @@ import java.util.Map;
 import de.lmu.ifi.dbs.elki.algorithm.AbstractDistanceBasedAlgorithm;
 import de.lmu.ifi.dbs.elki.algorithm.outlier.OutlierAlgorithm;
 import de.lmu.ifi.dbs.elki.algorithm.outlier.lof.LOF;
+import de.lmu.ifi.dbs.elki.algorithm.outlier.lof.LOF.Parameterizer;
 import de.lmu.ifi.dbs.elki.data.DoubleVector;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.data.type.TypeInformation;
@@ -58,8 +59,55 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameteriz
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
 
 /**
- * @author Tommy
- *
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2018
+ */
+
+/**
+ * <p>
+ * Algorithm to compute density-based local outlier factors in a database based
+ * on a specified parameter {@link Parameterizer#K_ID} ({@code -lof.k}).
+ * </p>
+ * 
+ * <p>
+ * The original LOF parameter was called &quot;minPts&quot;, but for consistency
+ * within ELKI we have renamed this parameter to &quot;k&quot;.
+ * </p>
+ * 
+ * <p>
+ * Compatibility note: as of ELKI 0.7.0, we no longer include the query point,
+ * for consistency with other methods.
+ * </p>
+ * 
+ * Reference:
+ * <p>
+ * M. M. Breunig, H.-P. Kriegel, R. Ng, J. Sander:<br />
+ * LOF: Identifying Density-Based Local Outliers.<br />
+ * In: Proc. 2nd ACM SIGMOD Int. Conf. on Management of Data (SIGMOD'00),
+ * Dallas, TX, 2000.
+ * </p>
+ * 
+ * @author Erich Schubert
+ * @author Elke Achtert
+ * @since 0.2
+ * 
+ * @apiviz.has KNNQuery
+ * 
+ * @param <O> the type of data objects handled by this algorithm
  */
 public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	  /**

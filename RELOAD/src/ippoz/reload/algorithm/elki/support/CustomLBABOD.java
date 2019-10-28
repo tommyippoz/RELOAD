@@ -45,6 +45,25 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameteriz
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
 
 /**
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2019
+ */
+
+/**
  * Angle-Based Outlier Detection / Angle-Based Outlier Factor.
  *
  * LB-ABOD (lower-bound) version. Exact on the top k outliers, approximate on

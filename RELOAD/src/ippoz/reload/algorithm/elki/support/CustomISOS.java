@@ -1,5 +1,24 @@
 package ippoz.reload.algorithm.elki.support;
 
+/**
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2019
+ */
+
 /*
  * This file is part of ELKI:
  * Environment for Developing KDD-Applications Supported by Index-Structures

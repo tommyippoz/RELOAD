@@ -34,15 +34,70 @@ import de.lmu.ifi.dbs.elki.distance.distancefunction.DistanceFunction;
 import de.lmu.ifi.dbs.elki.logging.Logging;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 import de.lmu.ifi.dbs.elki.result.outlier.OutlierResult;
+import de.lmu.ifi.dbs.elki.utilities.Alias;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Description;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Reference;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Title;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.OptionID;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.constraints.CommonConstraints;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameterization;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
 
 /**
- * @author Tommy
- *
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Spring 2019
+ * 
  */
+
+/**
+ * Outlier Detection based on the distance of an object to its k nearest
+ * neighbor.
+ *
+ * This implementation differs from the original pseudocode: the k nearest
+ * neighbors do not exclude the point that is currently evaluated. I.e. for k=1
+ * the resulting score is the distance to the 1-nearest neighbor that is not the
+ * query point and therefore should match k=2 in the exact pseudocode - a value
+ * of k=1 in the original code does not make sense, as the 1NN distance will be
+ * 0 for every point in the database. If you for any reason want to use the
+ * original algorithm, subtract 1 from the k parameter.
+ *
+ * Reference:
+ * <p>
+ * S. Ramaswamy, and R. Rastogi, and K. Shim<br />
+ * Efficient Algorithms for Mining Outliers from Large Data Sets.<br />
+ * In: Proc. Int. Conf. on Management of Data, 2000.
+ * </p>
+ *
+ * @author Lisa Reichert
+ * @since 0.3
+ *
+ * @apiviz.has KNNQuery
+ *
+ * @param <O> the type of DatabaseObjects handled by this Algorithm
+ */
+@Title("KNN outlier: Efficient Algorithms for Mining Outliers from Large Data Sets")
+@Description("Outlier Detection based on the distance of an object to its k nearest neighbor.")
+@Reference(authors = "S. Ramaswamy, and R. Rastogi, and K. Shim", //
+title = "Efficient Algorithms for Mining Outliers from Large Data Sets", //
+booktitle = "Proc. Int. Conf. on Management of Data, 2000", //
+url = "http://dx.doi.org/10.1145/342009.335437")
+@Alias({ "de.lmu.ifi.dbs.elki.algorithm.outlier.KNNOutlier", "knno" })
+
+
 public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	  /**
 	   * The logger for this class.

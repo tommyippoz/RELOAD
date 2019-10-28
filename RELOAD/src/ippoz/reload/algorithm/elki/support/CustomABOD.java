@@ -20,6 +20,8 @@ import java.util.List;
 import de.lmu.ifi.dbs.elki.algorithm.AbstractAlgorithm;
 import de.lmu.ifi.dbs.elki.algorithm.outlier.OutlierAlgorithm;
 import de.lmu.ifi.dbs.elki.algorithm.outlier.anglebased.ABOD;
+import de.lmu.ifi.dbs.elki.algorithm.outlier.anglebased.FastABOD;
+import de.lmu.ifi.dbs.elki.algorithm.outlier.anglebased.LBABOD;
 import de.lmu.ifi.dbs.elki.data.DoubleVector;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.data.type.TypeInformation;
@@ -54,9 +56,46 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameteriz
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.ObjectParameter;
 
 /**
- * @author Tommy
- *
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2018
+ * 
  */
+
+/**
+* Angle-Based Outlier Detection / Angle-Based Outlier Factor.
+*
+* Outlier detection using variance analysis on angles, especially for high
+* dimensional data sets. Exact version, which has cubic runtime (see also
+* {@link FastABOD} and {@link LBABOD} for faster versions).
+*
+* Reference:
+* <p>
+* H.-P. Kriegel, M. Schubert, and A. Zimek:<br />
+* Angle-Based Outlier Detection in High-dimensional Data.<br />
+* In: Proc. 14th ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Mining
+* (KDD '08), Las Vegas, NV, 2008.
+* </p>
+*
+* @author Matthias Schubert (Original Code)
+* @author Erich Schubert (ELKIfication)
+* @since 0.2
+*
+* @param <V> Vector type
+*/
 public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<V> {
 	
 	/**

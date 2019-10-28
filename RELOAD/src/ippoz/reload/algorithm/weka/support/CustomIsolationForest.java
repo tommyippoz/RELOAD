@@ -35,6 +35,21 @@ import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
 
 /**
+ * 
+ * This file is part of RELOAD but it was inherited by WEKA, and updated under AGPLv3 License.
+ * 
+ * Changes regard the function buildClassifier, to store results in an array which becomes 
+ * a new parameter of the class.
+ * 
+ * The array can then be saved to file (printScores function) and then load from the file (loadScores function)
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Winter 2018
+ * 
+ */
+
+/**
  * <!-- globalinfo-start -->
  * Implements the isolation forest method for anomaly detection.<br>
  * <br>

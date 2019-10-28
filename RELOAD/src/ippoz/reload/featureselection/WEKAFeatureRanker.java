@@ -17,6 +17,9 @@ import weka.attributeSelection.AttributeEvaluator;
 import weka.core.Instances;
 
 /**
+ * 
+ * This file is part of RELOAD but it calls some WEKA functions under AGPLv3 License.
+ * 
  * The Class WEKAFeatureSelector. Wrapper for possible feature selection strategies 
  * taken by WEKA framework.
  *
