@@ -19,6 +19,9 @@ import java.io.File;
  */
 public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	
+	/** The Constant TMP_FILE. */
+	protected static final String TMP_FILE = "tmp_file";
+	
 	protected final static int DEFAULT_MINIMUM_ITEMS = 5;
 	
 	/** The indicator. */
@@ -70,7 +73,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	}
 
 	@Override
-	protected AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
+	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		return evaluateDataSeriesSnapshot(knowledge, knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
 	}
 

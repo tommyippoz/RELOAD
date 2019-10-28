@@ -53,6 +53,9 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** The metric score. */
 	protected ValueSeries trainScore;
 	
+	/** The metric score. */
+	protected ValueSeries anomalyTrainScore;
+	
 	/** The reputation score. */
 	private double reputationScore;
 	
@@ -135,9 +138,30 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
 			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
 			bestConf.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
+			bestConf.addItem(AlgorithmConfiguration.ANOMALY_AVG, getAnomalyAvg());
+			bestConf.addItem(AlgorithmConfiguration.ANOMALY_STD, getAnomalyStd());
+			bestConf.addItem(AlgorithmConfiguration.ANOMALY_MED, getAnomalyMed());
 		}
 	}
 	
+	private double getAnomalyMed() {
+		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
+			return anomalyTrainScore.getMedian();
+		else return Double.NaN;
+	}
+
+	private double getAnomalyStd() {
+		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
+			return anomalyTrainScore.getStd();
+		else return Double.NaN;
+	}
+
+	private double getAnomalyAvg() {
+		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
+			return anomalyTrainScore.getAvg();
+		else return Double.NaN;
+	}
+
 	public long getTrainingTime() {
 		return trainingTime;
 	}

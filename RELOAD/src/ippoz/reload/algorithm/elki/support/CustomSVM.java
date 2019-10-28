@@ -55,7 +55,38 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameteriz
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.EnumParameter;
 
 /**
- * @author Tommy
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2018
+ * 
+ */
+
+/**
+ * @Reference(authors="B. Sch\u00f6lkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, R. C. Williamson",
+           title="Estimating the support of a high-dimensional distribution",
+           booktitle="Neural computation 13.7")
+ * Outlier-detection using one-class support vector machines. Important note: from literature, the one-class SVM is trained as if 0 was the only counterexample. Outliers will only be detected when they are close to the origin!
+ * 
+ * Reference:
+ * B. Schölkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, R. C. Williamson 
+ * Estimating the support of a high-dimensional distribution
+ * Neural computation 13.7
+ * 
+ * @since 0.6.0
+ * @author Erich Schubert
  *
  */
 public class CustomSVM extends AbstractAlgorithm<OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {

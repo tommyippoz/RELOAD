@@ -171,7 +171,7 @@ public class DetectorOutput {
 										}
 									}
 									writer.write("," + map.get(av).getScore() + "," + 
-											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactString() : "CUSTOM")  + "," + 
+											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
 											map.get(av).getScoreEvaluation() + ",");
 									if(knowledge != null){
 										Snapshot snap = knowledge.buildSnapshotFor(i, av.getDataSeries());

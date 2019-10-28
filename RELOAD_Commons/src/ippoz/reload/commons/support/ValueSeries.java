@@ -13,17 +13,24 @@ import java.util.List;
  */
 public class ValueSeries {
 	
+	private List<Double> allValues;
+	
 	private List<Double> values;
 	
 	private boolean sorted;
 	
 	public ValueSeries(){
 		values = new LinkedList<Double>();
+		allValues = new LinkedList<Double>();
 		sorted = true;
 	}
 	
 	public ValueSeries(List<Double> scoresList) {
-		values = scoresList;
+		values = new LinkedList<Double>();
+		allValues = new LinkedList<Double>();
+		for(Double d : scoresList){
+			addValue(d);
+		}
 		Collections.sort(values);
 		sorted = true;
 	}
@@ -34,8 +41,11 @@ public class ValueSeries {
 	}
 	
 	public void addValue(double newValue){
-		values.add(newValue);
-		sorted = false;
+		allValues.add(newValue);
+		if(Double.isFinite(newValue)){
+			values.add(newValue);
+			sorted = false;
+		}
 	}
 	
 	public double getMin(){
@@ -94,5 +104,9 @@ public class ValueSeries {
 		}
 		return values.get(i);
 	}	
+	
+	public List<Double> getValues(){
+		return values;
+	}
 
 }

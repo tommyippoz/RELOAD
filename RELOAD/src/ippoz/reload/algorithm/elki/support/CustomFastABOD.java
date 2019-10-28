@@ -49,15 +49,64 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 import de.lmu.ifi.dbs.elki.result.outlier.InvertedOutlierScoreMeta;
 import de.lmu.ifi.dbs.elki.result.outlier.OutlierResult;
 import de.lmu.ifi.dbs.elki.result.outlier.OutlierScoreMeta;
+import de.lmu.ifi.dbs.elki.utilities.Alias;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Description;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Reference;
+import de.lmu.ifi.dbs.elki.utilities.documentation.Title;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.OptionID;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.constraints.GreaterEqualConstraint;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameterization;
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
 
 /**
- * @author Tommy
- *
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2018
  */
+
+/**
+ * Angle-Based Outlier Detection / Angle-Based Outlier Factor.
+ *
+ * Fast-ABOD (approximateABOF) version.
+ *
+ * Note: the minimum k is 3. The 2 nearest neighbors yields one 1 angle, which
+ * implies a constant 0 variance everywhere.
+ *
+ * Reference:
+ * <p>
+ * H.-P. Kriegel, M. Schubert, and A. Zimek:<br />
+ * Angle-Based Outlier Detection in High-dimensional Data.<br />
+ * In: Proc. 14th ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Mining
+ * (KDD '08), Las Vegas, NV, 2008.
+ * </p>
+ *
+ * @author Matthias Schubert (Original Code)
+ * @author Erich Schubert (ELKIfication)
+ * @since 0.6.0
+ *
+ * @param <V> Vector type
+ */
+@Title("Approximate ABOD: Angle-Based Outlier Detection")
+@Description("Outlier detection using variance analysis on angles, especially for high dimensional data sets.")
+@Reference(authors = "H.-P. Kriegel, M. Schubert, A. Zimek", //
+title = "Angle-Based Outlier Detection in High-dimensional Data", //
+booktitle = "Proc. 14th ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Mining (KDD '08), Las Vegas, NV, 2008", //
+url = "http://dx.doi.org/10.1145/1401890.1401946")
+@Alias({ "de.lmu.ifi.dbs.elki.algorithm.outlier.FastABOD", "fastabod" })
+
 public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements ELKIAlgorithm<V> {
 	/**
 	 * The logger for this class.

@@ -3,8 +3,7 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
-import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
+import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -15,6 +14,7 @@ import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.LogThresholdDecision;
 
@@ -34,7 +34,7 @@ import java.util.Map;
  *
  * @author Tommy
  */
-public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
+public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 
 	/** The Constant HISTOGRAMS. */
 	public static final String HISTOGRAMS = "histograms";
@@ -50,9 +50,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	
 	/** The Constant DEFAULT_THRESHOLD. */
 	public static final double DEFAULT_THRESHOLD = 0.8;
-	
-	/** The Constant TMP_FILE. */
-	private static final String TMP_FILE = "tmp_file";
 	
 	/** The Constant DEFAULT_K. */
 	public static final int DEFAULT_K = 10;
@@ -77,8 +74,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		if(conf.hasItem(HISTOGRAMS)){
 			histograms = loadFromConfiguration();
 			loadFile(getFilename());
-			clearLoggedScores();
-			logScores(filterScores());
 		}
 	}
 	
@@ -86,10 +81,10 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	 * @see ippoz.reload.algorithm.DetectionAlgorithm#buildClassifier()
 	 */
 	@Override
-	protected DecisionFunction buildClassifier() {
+	protected DecisionFunction buildClassifier(ValueSeries vs, boolean flag) {
 		double perc = 0.0;
 		if(DecisionFunction.checkDecisionFunction(conf.getItem(THRESHOLD))){
-			return super.buildClassifier();
+			return super.buildClassifier(vs, flag);
 		} else {
 			if(conf != null && conf.hasItem(THRESHOLD)){
 				if(AppUtility.isNumber(conf.getItem(THRESHOLD)))
@@ -98,7 +93,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 					perc = Double.parseDouble(conf.getItem(THRESHOLD).replace("LOG(", "").replace(")",""));
 				} else perc = DEFAULT_THRESHOLD;
 			} else perc = DEFAULT_THRESHOLD;
-			return new LogThresholdDecision(perc, histograms.size());
+			return new LogThresholdDecision(perc, histograms.size(), flag);
 		}
 	}
 
@@ -129,10 +124,10 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	}
 
 	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
+	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
 			generateDynamicHistograms(Knowledge.toSnapList(kList, getDataSeries()));
 		else generateStaticHistograms(Knowledge.toSnapList(kList, getDataSeries()), getK());
@@ -141,8 +136,6 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			scores.add(new HBOSScore(Snapshot.snapToString(snap, getDataSeries()), calculateHBOS(snap)));
 		}
-		clearLoggedScores();
-		logScores(filterScores());
 		
 		conf.addItem(TMP_FILE, getFilename());
 		
@@ -155,13 +148,9 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 		
 		return true;
 	}
-
-	/**
-	 * Filter scores.
-	 *
-	 * @return the list
-	 */
-	private List<Double> filterScores() {
+	
+	@Override
+	public List<Double> getTrainScores() {
 		List<Double> list = new LinkedList<Double>();
 		for(HBOSScore score : scores){
 			list.add(score.getHbos());
@@ -673,9 +662,15 @@ public class HBOSDetectionAlgorithm extends DataSeriesDetectionAlgorithm impleme
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"RIGHT_CONFIDENCE_INTERVAL(0.5)", "RIGHT_CONFIDENCE_INTERVAL(1)", "RIGHT_IQR(0.5)", "RIGHT_IQR(1)"});
+		//defPar.put("threshold", new String[]{"RIGHT_CONFIDENCE_INTERVAL(0.5)", "RIGHT_CONFIDENCE_INTERVAL(1)", "RIGHT_IQR(0.5)", "RIGHT_IQR(1)"});
 		defPar.put("k", new String[]{"3", "5", "10", "20"});
 		return defPar;
+	}
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

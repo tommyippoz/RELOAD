@@ -21,7 +21,7 @@ public class StaticThresholdLowerThanDecision extends DecisionFunction {
 	 * @param threshold the threshold
 	 */
 	public StaticThresholdLowerThanDecision(double threshold) {
-		super("StaticLowerThanClassifier", DecisionFunctionType.STATIC_THRESHOLD_LOWERTHAN);
+		super("StaticLowerThanClassifier", DecisionFunctionType.STATIC_THRESHOLD_LOWERTHAN, false);
 		this.threshold = threshold;
 	}
 
@@ -29,7 +29,7 @@ public class StaticThresholdLowerThanDecision extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		if(value.getScore() >= threshold)
 			return AnomalyResult.NORMAL;
 		else return AnomalyResult.ANOMALY;

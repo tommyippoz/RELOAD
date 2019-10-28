@@ -75,7 +75,6 @@ public class LOFELKI extends DataSeriesELKIAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"0.9", "RIGHT_IQR"});
 		defPar.put("k", new String[]{"3", "5", "10", "20", "50"});
 		return defPar;
 	}

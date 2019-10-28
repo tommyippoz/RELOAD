@@ -26,7 +26,7 @@ public class DoubleThresholdIntern extends DecisionFunction {
 	 * @param upperThreshold the upper threshold
 	 */
 	protected DoubleThresholdIntern(double lowerThreshold, double upperThreshold) {
-		super("DoubleThresholdIntern", DecisionFunctionType.DOUBLE_THRESHOLD_INTERN);
+		super("DoubleThresholdIntern", DecisionFunctionType.DOUBLE_THRESHOLD_INTERN, false);
 		this.lowerThreshold = lowerThreshold;
 		this.upperThreshold = upperThreshold;
 	}
@@ -34,7 +34,7 @@ public class DoubleThresholdIntern extends DecisionFunction {
 	/* (non-Javadoc)
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		if(value.getScore() <= lowerThreshold || value.getScore() >= upperThreshold)
 			return AnomalyResult.NORMAL;
 		else return AnomalyResult.ANOMALY;

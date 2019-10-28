@@ -73,7 +73,7 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_CONFIDENCE_INTERVAL(0.5)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)"});
+		//defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_CONFIDENCE_INTERVAL(0.5)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)"});
 		defPar.put("k", new String[]{"5", "10", "20", "50"});
 		return defPar;
 	}

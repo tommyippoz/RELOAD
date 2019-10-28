@@ -58,7 +58,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(getDecisionFunction() != null && v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v));
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v)));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
@@ -76,7 +76,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_IQR"});
+		//defPar.put("threshold", new String[]{"LEFT_POSITIVE_CONFIDENCE_INTERVAL", "LEFT_POSITIVE_IQR"});
 		defPar.put("k", new String[]{"5", "10", "20", "50"});
 		return defPar;
 	}

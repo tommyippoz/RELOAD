@@ -24,8 +24,8 @@ public class ClusterDecision extends DecisionFunction {
 	 *
 	 * @param functionText the function text
 	 */
-	public ClusterDecision(String functionText) {
-		super("cluster", DecisionFunctionType.CLUSTER);
+	public ClusterDecision(String functionText, boolean revertFlag) {
+		super("cluster", DecisionFunctionType.CLUSTER, revertFlag);
 		this.functionText = functionText;
 	}
 
@@ -33,7 +33,7 @@ public class ClusterDecision extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult aResult) {
+	public AnomalyResult classify(AlgorithmResult aResult) {
 		String partialText;
 		ClusteringResult cr = (ClusteringResult)aResult;
 		double clusterVariance = cr.getClusterVariance();

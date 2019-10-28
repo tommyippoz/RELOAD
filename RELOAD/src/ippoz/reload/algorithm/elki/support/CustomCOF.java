@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -56,8 +57,38 @@ import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameterization.Parameteriz
 import de.lmu.ifi.dbs.elki.utilities.optionhandling.parameters.IntParameter;
 
 /**
- * @author Tommy
+ * 
+ * This file is part of RELOAD but it was inherited by ELKI, and updated under AGPLv3 License.
+ * 
+ * Changes regard its new inheritance to ELKIAlgorithm<V>, which is used by RELOAD to provide 
+ * a common layer of functionalities that are shared among algorithms inherited by ELKI.
+ * 
+ * Methods to be overridden include:
+ * loadFile(String filename);
+ * public List<Double> getScoresList();
+ * public String getAlgorithmName();
+ * public void printFile(File file);
+ * public Object run(Database db, Relation<V> relation);
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Fall 2018
+ */
+
+/**
+ * Connectivity-based outlier factor (COF).
  *
+ * Reference:
+ * <p>
+ * J. Tang, Z. Chen, A. W. C. Fu, D. W. Cheung<br />
+ * Enhancing effectiveness of outlier detections for low density patterns.<br />
+ * In Advances in Knowledge Discovery and Data Mining.
+ * </p>
+ *
+ * @author Erich Schubert
+ * @since 0.2
+ *
+ * @param <O> Object type
  */
 public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, OutlierResult> implements OutlierAlgorithm, ELKIAlgorithm<NumberVector> {
 	
@@ -492,7 +523,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						reader.close();
 					}
 				} catch (IOException ex) {
-					//AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
+					AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
 				} 
 			}
 
@@ -510,7 +541,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						writer.close();
 					}
 				} catch (IOException ex) {
-					//AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
+					AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
 				} 
 			}
 			

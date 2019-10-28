@@ -35,8 +35,79 @@ import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
 
 /**
- * @author Tommy
- *
+ * 
+ * This file is part of RELOAD but it was inherited by WEKA, and updated under AGPLv3 License.
+ * 
+ * Changes regard the function buildClassifier, to store results in an array which becomes 
+ * a new parameter of the class.
+ * 
+ * The array can then be saved to file (printScores function) and then load from the file (loadScores function)
+ * 
+ * Other functions may be added to support the functionalities above.
+ * 
+ * Added on: Winter 2018
+ * 
+ */
+
+/**
+ * <!-- globalinfo-start -->
+ * Implements the isolation forest method for anomaly detection.<br>
+ * <br>
+ * Note that this classifier is designed for anomaly detection, it is not designed for solving two-class or multi-class classification problems!<br>
+ * <br>
+ * The data is expected to have have a class attribute with one or two values, which is ignored at training time. The distributionForInstance() method returns (1 - anomaly score) as the first element in the distribution, the second element (in the case of two classes) is the anomaly score.<br>
+ * <br>
+ * To evaluate performance of this method for a dataset where anomalies are known, simply code the anomalies using the class attribute: normal cases should correspond to the first value of the class attribute, anomalies to the second one.<br>
+ * <br>
+ * For more information, see:<br>
+ * <br>
+ * Fei Tony Liu, Kai Ming Ting, Zhi-Hua Zhou: Isolation Forest. In: ICDM, 413-422, 2008.
+ * <br><br>
+ * <!-- globalinfo-end -->
+ * 
+ * <!-- technical-bibtex-start -->
+ * BibTeX:
+ * <pre>
+ * &#64;inproceedings{Liu2008,
+ *    author = {Fei Tony Liu and Kai Ming Ting and Zhi-Hua Zhou},
+ *    booktitle = {ICDM},
+ *    pages = {413-422},
+ *    publisher = {IEEE Computer Society},
+ *    title = {Isolation Forest},
+ *    year = {2008}
+ * }
+ * </pre>
+ * <br><br>
+ * <!-- technical-bibtex-end -->
+ * 
+ * <!-- options-start -->
+ * Valid options are: <p>
+ * 
+ * <pre> -I &lt;number of trees&gt;
+ *  The number of trees in the forest (default 100).</pre>
+ * 
+ * <pre> -N &lt;the size of the subsample for each tree&gt;
+ *  The subsample size for each tree (default 256).</pre>
+ * 
+ * <pre> -S &lt;num&gt;
+ *  Random number seed.
+ *  (default 1)</pre>
+ * 
+ * <pre> -output-debug-info
+ *  If set, classifier is run in debug mode and
+ *  may output additional info to the console</pre>
+ * 
+ * <pre> -do-not-check-capabilities
+ *  If set, classifier capabilities are not checked before classifier is built
+ *  (use with caution).</pre>
+ * 
+ * <pre> -num-decimal-places
+ *  The number of decimal places for the output of numbers in the model (default 2).</pre>
+ * 
+ * <!-- options-end -->
+ * 
+ * @author Eibe Frank (eibe@cs.waikato.ac.nz)
+ * @version $Revision$
  */
 public class CustomIsolationForest extends RandomizableClassifier implements
 TechnicalInformationHandler, Serializable {

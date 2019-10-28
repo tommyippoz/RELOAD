@@ -13,6 +13,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
@@ -89,7 +90,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	}
 	
 	@Override
-	protected DecisionFunction buildClassifier() {
+	protected DecisionFunction buildClassifier(ValueSeries vs, boolean flag) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -27,6 +27,10 @@ public class TimedValue {
 		return value;
 	}
 	
+	protected void updateValue(Double v){
+		value = v;
+	}
+	
 	public Double getDateOffset(Date ref){
 		if(ref != null)
 			return AppUtility.getSecondsBetween(vDate, ref);

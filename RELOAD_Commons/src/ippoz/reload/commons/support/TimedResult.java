@@ -55,9 +55,11 @@ public class TimedResult extends TimedValue {
 
 	@Override
 	public String toString() {
-		return "[AScore:" + algorithmScore + ",Score:" + getValue() + ", Injection:" + (injectedElement!= null) + "]";
+		return "[AScore:" + algorithmScore + ", Score:" + getValue() + ", Injection:" + (injectedElement!= null) + "]";
 	}
 	
-	
+	public void updateEvaluationScore(double newEvalScore) {
+		updateValue(newEvalScore);
+	}	
  
 }

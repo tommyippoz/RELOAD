@@ -111,7 +111,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		defPar.put("kernel", new String[]{"LINEAR", "QUADRATIC", "CUBIC", "RBF"});
 		defPar.put("nu", new String[]{"0.02", "0.1", "0.2"});
-		defPar.put("threshold", new String[]{"0.9", "IQR", "RIGHT_IQR"});
+		//defPar.put("threshold", new String[]{"0.9", "IQR", "RIGHT_IQR"});
 		return defPar;
 	}
 

@@ -595,7 +595,6 @@ public class InputManager {
 		for(int prev=0; prev<nPrevious; prev++){
 			for(int itemIndex=0; itemIndex<confMap.get(keyList.get(keyIndex)).length; itemIndex++){
 				for(int aft=0; aft<nAfter; aft++){
-					System.out.println(prev + " - " + aft + " - " + itemIndex + " - " + index);
 					String partial = combinations.remove(index);
 					partial = partial + confMap.get(keyList.get(keyIndex))[itemIndex] + ", ";
 					combinations.add(index, partial);
@@ -616,7 +615,8 @@ public class InputManager {
 		try {
 			// Generating Combinations
 			keyList = new ArrayList<String>(confMap.keySet());
-			generateCombinations(confMap, 0, keyList, combinations);
+			if(confMap != null && confMap.size() > 0)
+				generateCombinations(confMap, 0, keyList, combinations);
 			// Writing Combinations
 			confFile = new File(getConfigurationFolder() + alg.toString() + ".conf");
 			writer = new BufferedWriter(new FileWriter(confFile));

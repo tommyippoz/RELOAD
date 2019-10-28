@@ -30,8 +30,8 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public LeftConfidenceIntervalFunction(double ratio, double avg, double std) {
-		super("left_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL);
+	public LeftConfidenceIntervalFunction(double ratio, double avg, double std, boolean revertFlag) {
+		super("left_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag);
 		this.avg = avg;
 		this.std = std;
 		this.ratio = ratio;
@@ -41,12 +41,18 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult aResult) {
+	public AnomalyResult classify(AlgorithmResult aResult) {
 		if(!Double.isFinite(aResult.getScore()))
 			return AnomalyResult.UNKNOWN;
-		if(aResult.getScore() < avg - ratio*std)
-			return AnomalyResult.ANOMALY;
-		else return AnomalyResult.NORMAL;
+		if(getRevertFlag()){
+			if(aResult.getScore() >= avg - ratio*std)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		} else {
+			if(aResult.getScore() < avg - ratio*std)
+				return AnomalyResult.ANOMALY;
+			else return AnomalyResult.NORMAL;
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -54,7 +60,9 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		return "LCONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ")  - {ANOMALY: value < " + AppUtility.formatDouble(avg - ratio*std) + "}";
+		if(getRevertFlag())
+			return "LCONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ")  - {ANOMALY: value >= " + AppUtility.formatDouble(avg - ratio*std) + "}";		
+		else return "LCONF(avg:" + AppUtility.formatDouble(avg) + " ratio:" + ratio + " std:" + AppUtility.formatDouble(std) + ")  - {ANOMALY: value < " + AppUtility.formatDouble(avg - ratio*std) + "}";
 	}
 	
 	/* (non-Javadoc)

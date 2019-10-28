@@ -71,11 +71,17 @@ public class LDCOFDBSCANDetectionAlgorithm extends LDCOFDetectionAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"IQR", "LEFT_IQR"});
+		//defPar.put("threshold", new String[]{"IQR", "LEFT_IQR"});
 		defPar.put("eps", new String[]{"100", "500", "1000"});
 		defPar.put("pts", new String[]{"0.5", "1", "2"});
 		defPar.put("gamma", new String[]{"0.3", "0.5"});
 		return defPar;
+	}
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

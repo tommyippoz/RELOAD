@@ -222,15 +222,15 @@ public class TrainerManager extends TrainDataManager {
 		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
 		for(AlgorithmType algType : algTypes){
-			if(confList.get(algType) != null){
-				KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
-				for(DataSeries dataSeries : seriesList){
-					trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
-				}
-
-			} else {
-				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration");
-			}	
+			if(confList.get(algType) == null || confList.get(algType).size() > 0){
+				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration: basic will be applied");
+				confList.put(algType, new LinkedList<AlgorithmConfiguration>());
+				confList.get(algType).add(new AlgorithmConfiguration(algType));
+			}
+			KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
+			for(DataSeries dataSeries : seriesList){
+				trainerList.add(new ConfigurationSelectorTrainer(algType, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList.get(algType), getDatasetName(), kfold));
+			}
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting");
@@ -330,7 +330,8 @@ public class TrainerManager extends TrainDataManager {
 					statMap.get(at)[7] = statMap.get(at)[7] / statMap.get(at)[4];
 				if(statMap.get(at)[5] > 0)
 					statMap.get(at)[8] = statMap.get(at)[8] / statMap.get(at)[5];
-				statMap.get(at)[9] = (double) confList.get(at).size();
+				if(confList != null && confList.size() > 0)
+					statMap.get(at)[9] = (double) confList.get(at).size();
 			}
 			statWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + "trainingTimings.csv")));
 			statWriter.write("algorithm,knowledge,#checkers,avg_time(ms),avg_" + getMetric().getMetricName() + ",#top10,#top50,#top100,avg_" + getMetric().getMetricName() + "_top10,avg_" + getMetric().getMetricName() + "_top50,avg_" + getMetric().getMetricName() + "_top100,#conf\n");

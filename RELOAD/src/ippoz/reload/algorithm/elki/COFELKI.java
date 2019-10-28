@@ -74,7 +74,7 @@ public class COFELKI extends DataSeriesELKIAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"IQR", "LEFT_IQR"});
+		//defPar.put("threshold", new String[]{"IQR", "LEFT_IQR"});
 		defPar.put("k", new String[]{"5", "10", "20", "50"});
 		return defPar;
 	}

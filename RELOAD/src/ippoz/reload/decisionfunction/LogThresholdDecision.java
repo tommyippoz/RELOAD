@@ -25,8 +25,8 @@ public class LogThresholdDecision extends DecisionFunction {
 	 * @param perc the perc
 	 * @param size the size
 	 */
-	public LogThresholdDecision(double perc, double size) {
-		super("logthreshold", DecisionFunctionType.LOG_THRESHOLD);
+	public LogThresholdDecision(double perc, double size, boolean revertFlag) {
+		super("logthreshold", DecisionFunctionType.LOG_THRESHOLD, revertFlag);
 		this.perc = perc;
 		this.size = size;
 	}
@@ -35,7 +35,7 @@ public class LogThresholdDecision extends DecisionFunction {
 	 * @see ippoz.reload.decisionfunction.DecisionFunction#classify(ippoz.reload.algorithm.result.AlgorithmResult)
 	 */
 	@Override
-	protected AnomalyResult classify(AlgorithmResult value) {
+	public AnomalyResult classify(AlgorithmResult value) {
 		double threshold = size*Math.log(1.0/(perc));
 		return value.getScore() > threshold ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
