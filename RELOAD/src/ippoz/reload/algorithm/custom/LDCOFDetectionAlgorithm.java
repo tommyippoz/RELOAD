@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author Tommy
+ * @author Tommaso Capecchi, Tommaso Zoppi
  *
  */
 public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {

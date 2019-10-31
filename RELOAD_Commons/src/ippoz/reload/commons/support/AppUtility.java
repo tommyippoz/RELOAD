@@ -69,6 +69,18 @@ public class AppUtility {
 		return readLine;
 	}
 	
+	public static double euclideanDistance(Double[] d1, Double[] d2){
+		double res = 0;
+		if(d1 == null || d2 == null)
+			return Double.MAX_VALUE;
+		if(d1.length == d2.length){
+			for(int i=0;i<d1.length;i++){
+				res = res + Math.pow(d1[i] - d2[i], 2);
+			}
+		} else return Double.NaN;				
+		return Math.sqrt(res);
+	}
+	
 	public static HashMap<String, String> loadPreferences(File prefFile, String[] tags) throws IOException {
 		String readed, tag, value; 
 		BufferedReader reader;

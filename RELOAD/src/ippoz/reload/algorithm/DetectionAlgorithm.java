@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFKMeansDetectionAlgorithm;
+import ippoz.reload.algorithm.custom.SDODetectionAlgorithm;
 import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
@@ -165,6 +166,8 @@ public abstract class DetectionAlgorithm {
 				return new LDCOFKMeansDetectionAlgorithm(dataSeries, conf);
 			case LDCOF_DBSCAN:
 				return new LDCOFDBSCANDetectionAlgorithm(dataSeries, conf);
+			case SDO:
+				return new SDODetectionAlgorithm(dataSeries, conf);
 			case ELKI_SOS:
 				return new SOSELKI(dataSeries, conf);
 			case ELKI_ISOS:
@@ -233,6 +236,7 @@ public abstract class DetectionAlgorithm {
 				break;
 		}
 		switch(algType){
+			case SDO:
 			case ELKI_LOF:
 			case ELKI_COF:
 			case LDCOF_KMEANS:
@@ -465,7 +469,7 @@ public abstract class DetectionAlgorithm {
 	}
 
 	public static String explainParameters(AlgorithmType algType) {
-		String base = "Parameters: (threshold) string defining the DecisionFunction converting numeric to boolean scores <br>";
+		String base = "Parameters: ";
 		switch(algType){
 			case ELKI_ABOD:
 			case SLIDING_ELKI_ABOD:
@@ -506,6 +510,10 @@ public abstract class DetectionAlgorithm {
 				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
 						+ "(pts) is the minimum number of neighbors within 'eps' radius, <br>"
 						+ "(gamma) the LDCOF parameter to separate small/large clusters";
+			case SDO:
+				return base + "(k) the amount of observers <br>"
+						+ "(q) the 'observation threshold' to derive observers (% of training set size), <br>"
+						+ "(x) the amount of 'closest' observers";
 			default:
 				return "Parameters are shown in the table.";
 		}
@@ -578,6 +586,11 @@ public abstract class DetectionAlgorithm {
 						+ "to the center of the large cluster. When small clusters are considered anomalous, the elements inside the small clusters <br>"
 						+ "are assigned to the nearest large cluster which becomes its local neighborhood. <br>"
 						+ "It can be istantiated with any clustering algorithm, in RELOAD with KMeans or DBSCAN.";
+			case SDO:
+				return "Sparse Data Observers (SDO). <br>"
+						+ "SDO builds a low density data model formed by observers. <br> "
+						+ "An observer is a data object placed within the data mass and ideally equidistant to other observers within the same cluster. <br>"
+						+ "The outlierness of a data object is evaluated based on the distance to its x-closest observers.";
 			default:
 				return "Algorithms' details not available.";
 		}
