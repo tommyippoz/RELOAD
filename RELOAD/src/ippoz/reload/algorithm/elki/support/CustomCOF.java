@@ -133,7 +133,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		    //LOG.beginStep(stepprog, 2, "Computing Average Chaining Distances.");
 		    WritableDoubleDataStore acds = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_TEMP);
 		    computeAverageChainingDistances(knnq, dq, ids, acds);
-
+		  
 		    // compute COF_SCORE of each db object
 		    //LOG.beginStep(stepprog, 3, "Computing Connectivity-based Outlier Factors.");
 		    WritableDoubleDataStore cofs = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_DB);
@@ -275,10 +275,13 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		   */
 		  private void computeCOFScores(Database database, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore acds, WritableDoubleDataStore cofs, DoubleMinMax cofminmax) {
 		    //FiniteProgress progressCOFs = LOG.isVerbose() ? new FiniteProgress("COF for objects", ids.size(), LOG) : null;
-		    resList = new ArrayList<OFScore>(ids.size());
+			resList = new ArrayList<OFScore>(ids.size());
 		    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
-		      double cof = computeCOFScore(knnq, iter, acds);
-		      resList.add(new OFScore(database.getBundle(iter), cof, acds.doubleValue(iter)));
+		      KNNList neighbors = knnq.getKNNForDBID(iter, k);
+		      OFScore newScore = computeCOFScore(database.getBundle(iter), neighbors, iter, acds);
+		      double cof = newScore.getOF();
+		      resList.add(newScore);
+		      //resList.add(new OFScore(database.getBundle(iter), cof, acds.doubleValue(iter)));
 		      cofs.putDouble(iter, cof);
 		      // update minimum and maximum
 		      cofminmax.put(cof);
@@ -288,18 +291,22 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		    //LOG.ensureCompleted(progressCOFs);
 		  }
 		  
-		  private double computeCOFScore(KNNQuery<NumberVector> knnq, DBIDIter iter, DoubleDataStore acds) {
-			  final KNNList neighbors = knnq.getKNNForDBID(iter, k);
+		  private OFScore computeCOFScore(SingleObjectBundle bundle, KNNList neighbors, DBIDIter iter, DoubleDataStore acds) {
 		      // Aggregate the average chaining distances of all neighbors:
 		      double sum = 0.;
+		      double knn = 0;
+		     
 		      for(DBIDIter neighbor = neighbors.iter(); neighbor.valid(); neighbor.advance()) {
 		        // skip the point itself
 		        if(DBIDUtil.equal(neighbor, iter)) {
 		          continue;
 		        }
 		        sum += acds.doubleValue(neighbor);
+		        if(acds.doubleValue(neighbor) > knn)
+		        	knn = acds.doubleValue(neighbor);
 		      }
-		      return (sum > 0.) ? (acds.doubleValue(iter) * k / sum) : (acds.doubleValue(iter) > 0. ? Double.POSITIVE_INFINITY : 1.); 
+		      double cof = (sum > 0.) ? (acds.doubleValue(iter) * k / sum) : (acds.doubleValue(iter) > 0. ? Double.POSITIVE_INFINITY : 1.);
+		      return new OFScore(bundle, cof, acds.doubleValue(iter), knn);
 		}
 
 		public double calculateSingleOF(NumberVector newInstance) {
@@ -309,15 +316,15 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				else if(!Double.isNaN(partialResult = hasResult(newInstance)))
 					return partialResult;
 				else {
-					List<KNNValue> nn = getKNNs(newInstance, true);
+					DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
 					double sum = 0.;
-				    OFScore ofs;
-					for(int i=0;i<k;i++){
-						if(i < nn.size()){
-							ofs = resList.get(nn.get(i).getIndex()); 
-							if(ofs.getVector() != newInstance) {
-				  				sum += ofs.getACDS();
-			      			}
+					List<KNNValue> nn = new LinkedList<KNNValue>();
+					for(int i=0;i<resList.size();i++) {
+						OFScore of = resList.get(i);
+						double dist = getSimilarity(sq, newInstance, of.getVector());
+						if(dist <= of.getKNN()){
+				  			sum += of.getACDS();
+				  			nn.add(new KNNValue(dist, i));
 						}
 				    }
 					double acds = singleACDS(nn, newInstance);
@@ -330,6 +337,35 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					}
 				}
 		}
+		
+		public double calculateSingleOF_Old(NumberVector newInstance) {
+			double partialResult;
+			if(resList == null || resList.size() == 0) 
+				return Double.MAX_VALUE;
+			else if(!Double.isNaN(partialResult = hasResult(newInstance)))
+				return partialResult;
+			else {
+				List<KNNValue> nn = getKNNs(newInstance, true);
+				double sum = 0.;
+			    OFScore ofs;
+				for(int i=0;i<k;i++){
+					if(i < nn.size()){
+						ofs = resList.get(nn.get(i).getIndex()); 
+						if(ofs.getVector() != newInstance) {
+			  				sum += ofs.getACDS();
+		      			}
+					}
+			    }
+				double acds = singleACDS(nn, newInstance);
+				if(sum > 0){
+					return acds * k / sum;
+				} else {
+					if(acds > 0)
+						return Double.POSITIVE_INFINITY;
+					else return 1.0;
+				}
+			}
+	}
 
 		private List<KNNValue> getKNNs(NumberVector newInstance, boolean flag){
 			  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
@@ -382,10 +418,13 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				private double of;
 				
 				private double acds;
+				
+				private double knn;
 
-				public OFScore(SingleObjectBundle bundle, double of, double acds) {
+				public OFScore(SingleObjectBundle bundle, double of, double acds, double knn) {
 					this.of = of;
 					this.acds = acds;
+					this.knn = knn;
 					double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
 					data = new Vector(bValues.length);
 					for(int i=0;i<data.getDimensionality();i++){
@@ -393,9 +432,10 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					}
 				}
 				
-				public OFScore(String vString, String acds, String of) {
+				public OFScore(String vString, String acds, String of, String knn) {
 					this.of = Double.parseDouble(of);
 					this.acds = Double.parseDouble(acds);
+					this.knn = Double.parseDouble(knn);
 					String[] splitted = vString.split(",");
 					data = new Vector(splitted.length);
 					for(int i=0;i<data.getDimensionality();i++){
@@ -409,6 +449,10 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				
 				public double getACDS() {
 					return acds;
+				}
+				
+				public double getKNN() {
+					return knn;
 				}
 				
 				public NumberVector getVector(){
@@ -517,7 +561,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 							readed = reader.readLine();
 							if(readed != null){
 								readed = readed.trim();
-								resList.add(new OFScore(readed.split(";")[0], readed.split(";")[1], readed.split(";")[2]));
+								resList.add(new OFScore(readed.split(";")[0], readed.split(";")[1], readed.split(";")[2], readed.split(";")[3]));
 							}
 						}
 						reader.close();
@@ -534,14 +578,14 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						if(file.exists())
 							file.delete();
 						writer = new BufferedWriter(new FileWriter(file));
-						writer.write("data;acds;cof\n");
+						writer.write("data;acds;cof;distance_knn\n");
 						for(OFScore ar : resList){
-							writer.write(ar.getVector().toString() + ";" + ar.getACDS() + ";" + ar.getOF()+ "\n");
+							writer.write(ar.getVector().toString() + ";" + ar.getACDS() + ";" + ar.getOF()+ ";" + ar.getKNN() + "\n");
 						}
 						writer.close();
 					}
 				} catch (IOException ex) {
-					AppLogger.logException(getClass(), ex, "Unable to write ABOD file");
+					AppLogger.logException(getClass(), ex, "Unable to write COF file");
 				} 
 			}
 			

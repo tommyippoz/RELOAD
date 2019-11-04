@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author Tommy
+ * @author Tommaso Capecchi, Tommaso Zoppi
  *
  */
 public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
@@ -36,9 +36,6 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	
 	/** The Constant HISTOGRAMS. */
 	public static final String GAMMA = "gamma";
-	
-	/** The Constant TMP_FILE. */
-	private static final String TMP_FILE = "tmp_file";
 	
 	/** The Constant HISTOGRAMS. */
 	public static final double DEFAULT_GAMMA = 0.6;

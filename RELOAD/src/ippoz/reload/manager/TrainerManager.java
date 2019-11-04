@@ -222,7 +222,7 @@ public class TrainerManager extends TrainDataManager {
 		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
 		for(AlgorithmType algType : algTypes){
-			if(confList.get(algType) == null || confList.get(algType).size() > 0){
+			if(confList.get(algType) == null || confList.get(algType).size() == 0){
 				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration: basic will be applied");
 				confList.put(algType, new LinkedList<AlgorithmConfiguration>());
 				confList.get(algType).add(new AlgorithmConfiguration(algType));
