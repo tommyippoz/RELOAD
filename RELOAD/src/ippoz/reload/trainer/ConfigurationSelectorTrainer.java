@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	public static String[] DECISION_FUNCTIONS = {"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", "CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"};
+	public static String[] DECISION_FUNCTIONS = {"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", "CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", "CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"};
 
 	/** The possible configurations. */
 	private List<AlgorithmConfiguration> configurations;

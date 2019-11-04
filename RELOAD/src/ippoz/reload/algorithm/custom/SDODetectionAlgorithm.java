@@ -454,11 +454,11 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 			return this.score;
 		}
 
-		public double getValue(int i) {
+		/*public double getValue(int i) {
 			if(values != null && i<values.length)
 				return values[i];
 			else return Double.NaN;
-		}
+		}*/
 		
 	}
 	

@@ -143,6 +143,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	  @Override
 	  public OutlierResult run(Database database, Relation<NumberVector> relation) {
 	    //StepProgress stepprog = LOG.isVerbose() ? new StepProgress("LOF", 3) : null;
+		  DistanceQuery<NumberVector> dq = database.getDistanceQuery(relation, getDistanceFunction());
 	    DBIDs ids = relation.getDBIDs();
 
 	    //LOG.beginStep(stepprog, 1, "Materializing nearest-neighbor sets.");
@@ -158,7 +159,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    WritableDoubleDataStore lofs = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_DB);
 	    // track the maximum value for normalization.
 	    DoubleMinMax lofminmax = new DoubleMinMax();
-	    computeLOFScores(database, knnq, ids, lrds, lofs, lofminmax);
+	    computeLOFScores(database, dq, knnq, ids, lrds, lofs, lofminmax);
 
 	    //LOG.setCompleted(stepprog);
 
@@ -216,14 +217,16 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    int count = 0;
 	    OFScore ofs;
 	    for(int i=0;i<k-1;i++) {
-	    	ofs = resList.get(nn.get(i).getIndex());
-	    	if(!newInstance.equals(ofs.getVector())) {
-	    	  List<KNNValue> nnList = getKNNs(ofs.getVector(), false);
-	    	  double nd = nn.get(i).getScore();
-	    	  double nnd = (nnList.size() >= k-1) ? nnList.get(k -2).getScore() : Double.POSITIVE_INFINITY;
-	    	  sum += MathUtil.max(nd, nnd);
-		      count++;
-	      }
+	    	if(nn.size() > i) {
+		    	ofs = resList.get(nn.get(i).getIndex());
+		    	if(!newInstance.equals(ofs.getVector())) {
+		    	  List<KNNValue> nnList = getKNNs(ofs.getVector(), false);
+		    	  double nd = nn.get(i).getScore();
+		    	  double nnd = (nnList.size() >= k-1) ? nnList.get(k -2).getScore() : Double.POSITIVE_INFINITY;
+		    	  sum += MathUtil.max(nd, nnd);
+			      count++;
+		    	}
+	    	}
 	    }
 	    return (sum > 0) ? (count / sum) : Double.POSITIVE_INFINITY;
 	  }
@@ -231,6 +234,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	  /**
 	   * Compute local outlier factors.
 	 * @param database 
+	 * @param dq 
 	   * 
 	   * @param knnq KNN query
 	   * @param ids IDs to process
@@ -238,13 +242,15 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   * @param lofs Local outlier factor storage
 	   * @param lofminmax Score minimum/maximum tracker
 	   */
-	  private void computeLOFScores(Database database, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore lrds, WritableDoubleDataStore lofs, DoubleMinMax lofminmax) {
+	  private void computeLOFScores(Database database, DistanceQuery<NumberVector> dq, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore lrds, WritableDoubleDataStore lofs, DoubleMinMax lofminmax) {
 	    //FiniteProgress progressLOFs = LOG.isVerbose() ? new FiniteProgress("Local Outlier Factor (LOF) scores", ids.size(), LOG) : null;
-	    double lof;
-	    resList = new ArrayList<OFScore>(ids.size());
+		
+		resList = new ArrayList<OFScore>(ids.size());
 	    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
-	      lof = computeLOFScore(knnq, iter, lrds);
-	      resList.add(new OFScore(database.getBundle(iter), lof, lrds.doubleValue(iter)));
+	      OFScore newScore = computeLOFScore(database.getBundle(iter), dq, knnq, iter, lrds);
+	      double lof = newScore.getOF();
+	      resList.add(newScore);
+	      //resList.add(new OFScore(database.getBundle(iter), lof, lrds.doubleValue(iter)));
 	      lofs.putDouble(iter, lof);
 	      // update minimum and maximum
 	      lofminmax.put(lof);
@@ -256,17 +262,17 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 
 	  /**
 	   * Compute a single LOF score.
+	 * @param dq 
 	   * 
 	   * @param knnq kNN query
 	   * @param cur Current object
 	   * @param lrds Stored reachability densities
 	   * @return LOF score.
 	   */
-	  protected double computeLOFScore(KNNQuery<NumberVector> knnq, DBIDRef cur, DoubleDataStore lrds) {
+	  protected OFScore computeLOFScore(SingleObjectBundle bundle, DistanceQuery<NumberVector> dq, KNNQuery<NumberVector> knnq, DBIDRef cur, DoubleDataStore lrds) {
 	    final double lrdp = lrds.doubleValue(cur);
-	    if(Double.isInfinite(lrdp)) {
-	      return 1.0;
-	    }
+	    double lof;
+	    double knn = 0;
 	    double sum = 0.;
 	    int count = 0;
 	    final KNNList neighbors = knnq.getKNNForDBID(cur, k);
@@ -276,9 +282,15 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	        continue;
 	      }
 	      sum += lrds.doubleValue(neighbor);
+	      double dist = dq.distance(cur, neighbor);
+	      if(dist > knn)
+	    	  knn = dist;
 	      ++count;
 	    }
-	    return sum / (lrdp * count);
+	    if(Double.isInfinite(lrdp))
+	    	lof = 1.0;
+		else lof = sum / (lrdp * count);
+	    return new OFScore(bundle, lof, lrdp, knn);
 	  }
 	  
 	  public double calculateSingleOF(NumberVector newInstance) {
@@ -288,23 +300,49 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		else if(!Double.isNaN(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
-			List<KNNValue> nn = getKNNs(newInstance, true);
+			DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
+			List<KNNValue> nn = new LinkedList<KNNValue>();
 			double sum = 0.;
 		    int count = 0;
-		    OFScore ofs;
-			for(int i=0;i<k;i++){
-				if(i < nn.size() && nn.get(i).getIndex() < resList.size()){
-					ofs = resList.get(nn.get(i).getIndex()); 
-					if(ofs.getVector() != newInstance) {
-		  				sum += ofs.getLRD();
-	    				++count;
-	    			}
+		    for(int i=0;i<resList.size();i++) {
+				OFScore of = resList.get(i);
+				double dist = getSimilarity(sq, newInstance, of.getVector());
+				if(dist <= of.getKNN()){
+					sum += of.getLRD();
+    				++count;
+		  			nn.add(new KNNValue(dist, i));
 				}
 		    }
 		    return sum / (singleLRD(nn, newInstance)*count);
 		
 		}
 	  }
+	  
+	  public double calculateSingleOF_Old(NumberVector newInstance) {
+			double partialResult;
+			if(resList == null || resList.size() == 0) 
+				return Double.MAX_VALUE;
+			else if(!Double.isNaN(partialResult = hasResult(newInstance)))
+				return partialResult;
+			else {
+				List<KNNValue> nn = getKNNs(newInstance, true);
+				double sum = 0.;
+			    int count = 0;
+			    OFScore ofs;
+				for(int i=0;i<k;i++){
+					if(i < nn.size() && nn.get(i).getIndex() < resList.size()){
+						ofs = resList.get(nn.get(i).getIndex()); 
+						if(ofs.getVector() != newInstance) {
+			  				sum += ofs.getLRD();
+		    				++count;
+		    			}
+					}
+			    }
+			    return sum / (singleLRD(nn, newInstance)*count);
+			
+			}
+		  }
+		  
 	  
 	  private List<KNNValue> getKNNs(NumberVector newInstance, boolean flag){
 		  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
@@ -366,10 +404,13 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			private double of;
 			
 			private double lrd;
+			
+			private double knn;
 
-			public OFScore(SingleObjectBundle bundle, double of, double lrd) {
+			public OFScore(SingleObjectBundle bundle, double of, double lrd, double knn) {
 				this.of = of;
 				this.lrd = lrd;
+				this.knn = knn;
 				double[] bValues = ((DoubleVector)bundle.data(1)).getValues();
 				data = new Vector(bValues.length);
 				for(int i=0;i<data.getDimensionality();i++){
@@ -377,9 +418,10 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				}
 			}
 			
-			public OFScore(String vString, String lrd, String of) {
+			public OFScore(String vString, String lrd, String of, String knn) {
 				this.of = Double.parseDouble(of);
 				this.lrd = Double.parseDouble(lrd);
+				this.knn = Double.parseDouble(knn);
 				String[] splitted = vString.split(",");
 				data = new Vector(splitted.length);
 				for(int i=0;i<data.getDimensionality();i++){
@@ -389,6 +431,10 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			
 			public double getOF() {
 				return of;
+			}
+			
+			public double getKNN() {
+				return knn;
 			}
 			
 			public double getLRD() {
@@ -501,7 +547,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						readed = reader.readLine();
 						if(readed != null){
 							readed = readed.trim();
-							resList.add(new OFScore(readed.split(";")[0].trim().substring(1, readed.split(";")[0].trim().length()-1), readed.split(";")[2].trim(), readed.split(";")[3].trim()));
+							resList.add(new OFScore(readed.split(";")[0].trim().substring(1, readed.split(";")[0].trim().length()-1), readed.split(";")[2].trim(), readed.split(";")[3].trim(), readed.split(";")[4].trim()));
 						}
 					}
 					reader.close();
@@ -519,9 +565,9 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					if(file.exists())
 						file.delete();
 					writer = new BufferedWriter(new FileWriter(file));
-					writer.write("data(vector enclosed in {});k;Local Reachability Distance (lrd);Local Outrlier Factor (lof)\n");
+					writer.write("data(vector enclosed in {});k;Local Reachability Distance (lrd);Local Outlier Factor (lof); distance_knn\n");
 					for(OFScore ar : resList){
-						writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getLRD() + ";" + ar.getOF()+ "\n");
+						writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getLRD() + ";" + ar.getOF() + ";" + ar.getKNN() + "\n");
 					}
 					writer.close();
 				}
