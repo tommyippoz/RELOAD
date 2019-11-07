@@ -63,6 +63,7 @@ public abstract class WEKAFeatureRanker extends FeatureRanker {
 				attEval.buildEvaluator(data);
 				for(int i=0;i<seriesList.size();i++){
 					scores.put(seriesList.get(i), ((AttributeEvaluator)attEval).evaluateAttribute(i));
+					AppLogger.logInfo(getClass(), "Feature '" + seriesList.get(i).getName() + "' Score: " + scores.get(seriesList.get(i)));
 				}
 			} else AppLogger.logError(getClass(), "AttributeSelectorError", "Unable to instantiate correct attribute evaluator");
 		} catch (Exception ex) {

@@ -91,6 +91,8 @@ public class OutputDetailFrame {
 	
 	private ValueSeries algorithmScores;
 	
+	private ValueSeries anomalyScores;
+	
 	private JTextField intTextField;
 	
 	private JComboBox<DecisionFunctionType> cbDecisionFunction;
@@ -111,6 +113,8 @@ public class OutputDetailFrame {
 	
 	private boolean decisionFunctionFlag;
 	
+	private boolean anomalyNormalFlag;
+	
 	private int numIntervals;
 	
 	private DecisionFunction dFunction;
@@ -124,6 +128,12 @@ public class OutputDetailFrame {
 		
 		numIntervals = NUM_INTERVALS;
 		algorithmScores = createScoresValueSeries();
+		anomalyScores = createAnomalyValueSeries();
+		
+		if(anomalyScores != null && anomalyScores.size() > 0)
+			anomalyNormalFlag = true;
+		else anomalyNormalFlag = false;
+		
 		dFunction = createDefaultDecisionFunction();
 		
 		setMinMaxValues();
@@ -185,6 +195,20 @@ public class OutputDetailFrame {
 		return series;
 	}
 	
+	private ValueSeries createAnomalyValueSeries() {
+		ValueSeries series = new ValueSeries();
+		for(String expName : dOut.getLabelledScores().keySet()){
+			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
+			if(containsPostiveLabel(list)) {
+				for(LabelledResult lr : list){
+					if(Double.isFinite(lr.getValue().getScore()) && lr.getLabel())
+						series.addValue(lr.getValue().getScore());
+				}
+			}
+		}
+		return series;
+	}
+	
 
 	private boolean containsPostiveLabel(List<LabelledResult> list){
 		for(LabelledResult lr : list){
@@ -230,7 +254,7 @@ public class OutputDetailFrame {
 		mainPanel.setBounds(0, 0, detFrame.getWidth() - 10, detFrame.getHeight() - 10);
 		mainPanel.setLayout(new BorderLayout());
 		
-		mainPanel.add(buildChartPanel(), BorderLayout.CENTER);
+		
 		
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(Color.WHITE);
@@ -369,7 +393,7 @@ public class OutputDetailFrame {
 		
 		JPanel secondHeaderPanel = new JPanel();
 		secondHeaderPanel.setBackground(Color.WHITE);
-		secondHeaderPanel.setLayout(new GridLayout(1, 4));
+		secondHeaderPanel.setLayout(new GridLayout(1, 5));
 		
 		DecisionFunction suggDecision = createDefaultDecisionFunction();
 		
@@ -400,9 +424,9 @@ public class OutputDetailFrame {
 		    public void actionPerformed(ActionEvent e) {
 		        if(!isUpdating){
 		        	String newValue = cbDecisionFunction.getSelectedItem().toString();
-		        	boolean flag = false;
 		        	
 		        	String descriptionString = "Insert parameter for " + newValue;
+		        	
 		        	if(newValue.contains("DOUBLE_THRESHOLD")){
 		        		descriptionString = "Insert lower bound for " + newValue;
 		        		String s = (String)JOptionPane.showInputDialog(
@@ -436,19 +460,10 @@ public class OutputDetailFrame {
 							newValue = newValue + "(" + s + ")";
 						} else newValue = newValue + "(1)";
 						
-						if(newValue.contains("IQR") || newValue.contains("CONF")){
-							s = (String)JOptionPane.showInputDialog(
-			        				detFrame, descriptionString, "Define if anomalies are inside (true) or outside (false) of the interval",
-				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
-							if ((s != null) && (s.trim().length() > 0)) {
-								try {
-									flag = Boolean.parseBoolean(s);
-								} catch(Exception ex){}
-							} 
-						}
 		        	}
-		        	
-		        	dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, newValue, flag);
+		        	if(anomalyNormalFlag)
+		        		dFunction = DecisionFunction.buildDecisionFunction(anomalyScores, newValue, true);
+		        	else dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, newValue, false);
 		        	if(dFunction != null){
 		        		cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
 		        		reload();
@@ -457,6 +472,24 @@ public class OutputDetailFrame {
 		    }
 		});
 		secondHeaderPanel.add(cbDecisionFunction);
+		
+		JCheckBox anomalyNormalCB = new JCheckBox("Anomaly Series");
+		anomalyNormalCB.setSelected(anomalyNormalFlag);
+		anomalyNormalCB.setBorder(new EmptyBorder(0, 10, 0, 10));
+		anomalyNormalCB.setFont(labelFont);
+		anomalyNormalCB.setHorizontalAlignment(SwingConstants.CENTER);
+		anomalyNormalCB.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		    	anomalyNormalFlag = !anomalyNormalFlag;
+		    	if(anomalyNormalFlag)
+	        		dFunction = DecisionFunction.buildDecisionFunction(anomalyScores, dFunction.getClassifierTag(), true);
+	        	else dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, dFunction.getClassifierTag(), false);
+		        reload();
+		    }
+		});
+		
+		secondHeaderPanel.add(anomalyNormalCB);
 		
 		JCheckBox decisionFunctionCB = new JCheckBox("Apply Decision");
 		decisionFunctionCB.setSelected(decisionFunctionFlag);
@@ -594,7 +627,7 @@ public class OutputDetailFrame {
 		
 		mainPanel.add(headerPanel, BorderLayout.NORTH);
 		
-		// TODO
+		mainPanel.add(buildChartPanel(), BorderLayout.CENTER);
 		
 		if(dFunction != null && decisionFunctionFlag){	
 			

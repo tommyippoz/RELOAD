@@ -383,9 +383,7 @@ public class DetectionManager {
 			}
 		}
 		for(Metric met : metList){
-			if(bestScore >= 0)
-				score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(bVoter).get(bAnT.trim()), met));
-			else score = Double.NaN;
+			score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(bVoter).get(bAnT.trim()), met));
 			out = out + score + ",";
 		}
 		return out.substring(0, out.length()-1);

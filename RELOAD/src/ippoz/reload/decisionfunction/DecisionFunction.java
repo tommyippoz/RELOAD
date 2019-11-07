@@ -125,6 +125,50 @@ public abstract class DecisionFunction {
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create CONF decision function '" + thresholdTag + "'");
+				} else if(thresholdTag.contains("MODE_INTERVAL")) {
+					if(algorithmScores != null && algorithmScores.size() > 0){
+						if(thresholdTag.equals("MODE_INTERVAL"))
+							return new ModeIntervalFunction(1.0, algorithmScores.getMode(), algorithmScores.getStd(), flag);
+						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+								return new ModeIntervalFunction(Double.parseDouble(partial), algorithmScores.getMode(), algorithmScores.getStd(), flag);
+							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MCONF decision function '" + thresholdTag + "'");
+				} else if(thresholdTag.contains("MODE")) {
+					if(algorithmScores != null && algorithmScores.size() > 0){
+						if(thresholdTag.equals("MODE"))
+							return new ModeFunction(1.0, algorithmScores.getMode(), flag);
+						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+								return new ModeFunction(Double.parseDouble(partial), algorithmScores.getMode(), flag);
+							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MODE decision function '" + thresholdTag + "'");
+				} else if(thresholdTag.contains("MEDIAN_INTERVAL")) {
+					if(algorithmScores != null && algorithmScores.size() > 0){
+						if(thresholdTag.equals("MEDIAN_INTERVAL"))
+							return new MedianIntervalFunction(1.0, algorithmScores.getMedian(), algorithmScores.getStd(), flag);
+						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+								return new MedianIntervalFunction(Double.parseDouble(partial), algorithmScores.getMedian(), algorithmScores.getStd(), flag);
+							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MEDCONF decision function '" + thresholdTag + "'");
+				} else if(thresholdTag.contains("MEDIAN")) {
+					if(algorithmScores != null && algorithmScores.size() > 0){
+						if(thresholdTag.equals("MEDIAN"))
+							return new MedianFunction(1.0, algorithmScores.getMedian(), flag);
+						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+								return new MedianFunction(Double.parseDouble(partial), algorithmScores.getMedian(), flag);
+							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MEDIAN decision function '" + thresholdTag + "'");
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
@@ -190,6 +234,42 @@ public abstract class DecisionFunction {
 							return true;
 						} else return false;
 					} else return false;
+				} else if(thresholdTag.contains("MODE_INTERVAL")) {
+					if(thresholdTag.equals("MODE_INTERVAL"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
+				} else if(thresholdTag.contains("MODE")) {
+					if(thresholdTag.equals("MODE"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
+				} else if(thresholdTag.contains("MEDIAN_INTERVAL")) {
+					if(thresholdTag.equals("MEDIAN_INTERVAL"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
+				} else if(thresholdTag.contains("MEDIAN")) {
+					if(thresholdTag.equals("MEDIAN"))
+						return true;
+					else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+							return true;
+						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
+					} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));

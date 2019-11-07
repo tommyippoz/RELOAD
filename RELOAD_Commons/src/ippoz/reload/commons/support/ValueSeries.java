@@ -4,8 +4,10 @@
 package ippoz.reload.commons.support;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tommy
@@ -17,17 +19,21 @@ public class ValueSeries {
 	
 	private List<Double> values;
 	
+	private Map<Double, Integer> frequencies;
+	
 	private boolean sorted;
 	
 	public ValueSeries(){
 		values = new LinkedList<Double>();
 		allValues = new LinkedList<Double>();
+		frequencies = new HashMap<Double, Integer>();
 		sorted = true;
 	}
 	
 	public ValueSeries(List<Double> scoresList) {
 		values = new LinkedList<Double>();
 		allValues = new LinkedList<Double>();
+		frequencies = new HashMap<Double, Integer>();
 		for(Double d : scoresList){
 			addValue(d);
 		}
@@ -42,6 +48,9 @@ public class ValueSeries {
 	
 	public void addValue(double newValue){
 		allValues.add(newValue);
+		if(frequencies.containsKey(newValue)){
+			frequencies.put(newValue, frequencies.get(newValue) + 1);
+		} else frequencies.put(newValue, 1);
 		if(Double.isFinite(newValue)){
 			values.add(newValue);
 			sorted = false;
@@ -107,6 +116,20 @@ public class ValueSeries {
 	
 	public List<Double> getValues(){
 		return values;
+	}
+	
+	public double getMode() {
+		double toReturn = Double.NaN;
+		int maxOcc = 0;
+		if(frequencies != null){
+			for(Double d : frequencies.keySet()){
+				if(frequencies.get(d) > maxOcc){
+					maxOcc = frequencies.get(d);
+					toReturn = d;
+				}
+			}
+		}
+		return toReturn;
 	}
 
 }

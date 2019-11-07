@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	public static String[] DECISION_FUNCTIONS = {"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", "CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", "CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"};
+	public static String[] DECISION_FUNCTIONS = {"MODE(0.5)", "MODE(0.2)", "MODE(0.05)", "MEDIAN(0.5)", "MEDIAN(0.2)", "MEDIAN(0.05)", "MEDIAN_INTERVAL(0.1)", "MEDIAN_INTERVAL(0.05)", "MEDIAN_INTERVAL(0)", "MODE_INTERVAL(0.1)", "MODE_INTERVAL(0.05)", "MODE_INTERVAL(0)", "IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", "CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", "CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"};
 
 	/** The possible configurations. */
 	private List<AlgorithmConfiguration> configurations;
@@ -121,7 +121,9 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						for(String decFunctString : DECISION_FUNCTIONS){
 							if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
 								List<TimedResult> updatedList = updateResultWithDecision(algorithm, resultList, decFunctString);
-								currentMetricValue.get(decFunctString).addValue(getMetric().evaluateAnomalyResults(updatedList));
+								double val = getMetric().evaluateAnomalyResults(updatedList);
+								//System.out.println(decFunctString + " ADD " + val);
+								currentMetricValue.get(decFunctString).addValue(val);
 							}
 						}
 						
@@ -131,8 +133,10 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				/* Chooses the best decision function out of the available ones */
 				for(String decFunctString : DECISION_FUNCTIONS){
 					if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
+						//System.out.println(decFunctString + " - " + currentMetricValue.get(decFunctString).getAvg());
 						if(metricScore == null || getMetric().compareResults(currentMetricValue.get(decFunctString), metricScore) == 1){	
 							metricScore = currentMetricValue.get(decFunctString);
+							//System.out.println("UPDATE " + decFunctString + " - " + metricScore);
 							bestConf = (AlgorithmConfiguration) conf.clone();
 							bestConf.addItem(AlgorithmConfiguration.THRESHOLD, decFunctString);
 						}
@@ -140,6 +144,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				}
 				
 			}
+			
+			System.out.println(bestConf.getItem(AlgorithmConfiguration.THRESHOLD));
 			
 			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
@@ -163,6 +169,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		for(TimedResult tr : resMap.keySet()){
 			AnomalyResult ar = algorithm.getDecisionFunction().classify(resMap.get(tr));
 			tr.updateEvaluationScore(DetectionAlgorithm.convertResultIntoDouble(ar));
+			newList.add(tr);
 		}
 		return newList;
 	}

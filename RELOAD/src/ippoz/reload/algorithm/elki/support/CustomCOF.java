@@ -139,7 +139,7 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		    WritableDoubleDataStore cofs = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_HOT | DataStoreFactory.HINT_DB);
 		    // track the maximum value for normalization.
 		    DoubleMinMax cofminmax = new DoubleMinMax();
-		    computeCOFScores(database, knnq, ids, acds, cofs, cofminmax);
+		    computeCOFScores(database, dq, knnq, ids, acds, cofs, cofminmax);
 
 		    //LOG.setCompleted(stepprog);
 
@@ -214,58 +214,59 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		  }
 		  
 		  private double singleACDS(List<KNNValue> neighbors, NumberVector newInstance) {
-			  	  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
-			      final int r = neighbors.size();
-			      // DoubleDBIDListIter it1 = neighbors.iter(), it2 = neighbors.iter();
-			      
-			      // Store the current lowest reachability.
-			      // OFScore ofs;
-			      final double[] mindists = new double[r];
-			      boolean allNAN = true;
-			      for(int i = 0; i < neighbors.size(); ++i) {
-			    	 mindists[i] = newInstance.equals(resList.get(neighbors.get(i).getIndex()).getVector()) ? Double.NaN : neighbors.get(i).getScore();
-			    	 if(Double.isFinite(mindists[i]))
-			    		 allNAN = false;
-			      }
-			      if(allNAN)
-			    	  return Double.NaN;
+		  	  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
+		      final int r = neighbors.size();
+		      // DoubleDBIDListIter it1 = neighbors.iter(), it2 = neighbors.iter();
+		      
+		      // Store the current lowest reachability.
+		      // OFScore ofs;
+		      final double[] mindists = new double[r];
+		      boolean allNAN = true;
+		      for(int i = 0; i < neighbors.size(); ++i) {
+		    	 mindists[i] = newInstance.equals(resList.get(neighbors.get(i).getIndex()).getVector()) ? Double.NaN : neighbors.get(i).getScore();
+		    	 if(Double.isFinite(mindists[i]))
+		    		 allNAN = false;
+		      }
+		      if(allNAN)
+		    	  return Double.NaN;
 
-			      double acsum = 0.;
-			      for(int j = ((r < k) ? r : k) - 1; j > 0; --j) {
-			        // Find the minimum:
-			        int minpos = -1;
-			        double mindist = Double.NaN;
-			        for(int i = 0; i < mindists.length; ++i) {
-			          double curdist = mindists[i];
-			          // Both values could be NaN, deliberately.
-			          if(curdist == curdist && !(curdist > mindist)) {
-			            minpos = i;
-			            mindist = curdist;
-			          }
-			        }
-			        acsum += mindist * j; // Weighted sum, decreasing weights
-			        if(minpos >= 0)
-			        	mindists[minpos] = Double.NaN;
-			        else {
-			        	return Double.NaN;
-			        }
+		      double acsum = 0.;
+		      for(int j = ((r < k) ? r : k) - 1; j > 0; --j) {
+		        // Find the minimum:
+		        int minpos = -1;
+		        double mindist = Double.NaN;
+		        for(int i = 0; i < mindists.length; ++i) {
+		          double curdist = mindists[i];
+		          // Both values could be NaN, deliberately.
+		          if(curdist == curdist && !(curdist > mindist)) {
+		            minpos = i;
+		            mindist = curdist;
+		          }
+		        }
+		        acsum += mindist * j; // Weighted sum, decreasing weights
+		        if(minpos >= 0)
+		        	mindists[minpos] = Double.NaN;
+		        else {
+		        	return Double.NaN;
+		        }
 
-			        for(int i = 0; i < neighbors.size(); ++i) {
-			          final double curdist = mindists[i];
-			          if(curdist != curdist) {
-			            continue; // NaN = processed!
-			          }
-			          double newdist = getSimilarity(sq, resList.get(neighbors.get(minpos).getIndex()).getVector(), resList.get(neighbors.get(i).getIndex()).getVector());
-			          if(newdist < curdist) {
-			            mindists[i] = newdist;
-			          }
-			        }
-			      }
-			      return acsum / (r * 0.5 * (r - 1.));
-			}
+		        for(int i = 0; i < neighbors.size(); ++i) {
+		          final double curdist = mindists[i];
+		          if(curdist != curdist) {
+		            continue; // NaN = processed!
+		          }
+		          double newdist = getSimilarity(sq, resList.get(neighbors.get(minpos).getIndex()).getVector(), resList.get(neighbors.get(i).getIndex()).getVector());
+		          if(newdist < curdist) {
+		            mindists[i] = newdist;
+		          }
+		        }
+		      }
+		      return acsum / (r * 0.5 * (r - 1.));
+		}
 
 		  /**
 		   * Compute Connectivity outlier factors.
+		 * @param dq 
 		   *
 		   * @param knnq KNN query
 		   * @param ids IDs to process
@@ -273,12 +274,12 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		   * @param cofs Connectivity outlier factor storage
 		   * @param cofminmax Score minimum/maximum tracker
 		   */
-		  private void computeCOFScores(Database database, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore acds, WritableDoubleDataStore cofs, DoubleMinMax cofminmax) {
+		  private void computeCOFScores(Database database, DistanceQuery<NumberVector> dq, KNNQuery<NumberVector> knnq, DBIDs ids, DoubleDataStore acds, WritableDoubleDataStore cofs, DoubleMinMax cofminmax) {
 		    //FiniteProgress progressCOFs = LOG.isVerbose() ? new FiniteProgress("COF for objects", ids.size(), LOG) : null;
 			resList = new ArrayList<OFScore>(ids.size());
 		    for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
 		      KNNList neighbors = knnq.getKNNForDBID(iter, k);
-		      OFScore newScore = computeCOFScore(database.getBundle(iter), neighbors, iter, acds);
+		      OFScore newScore = computeCOFScore(database.getBundle(iter), dq, neighbors, iter, acds);
 		      double cof = newScore.getOF();
 		      resList.add(newScore);
 		      //resList.add(new OFScore(database.getBundle(iter), cof, acds.doubleValue(iter)));
@@ -291,10 +292,11 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		    //LOG.ensureCompleted(progressCOFs);
 		  }
 		  
-		  private OFScore computeCOFScore(SingleObjectBundle bundle, KNNList neighbors, DBIDIter iter, DoubleDataStore acds) {
+		  private OFScore computeCOFScore(SingleObjectBundle bundle, DistanceQuery<NumberVector> dq, KNNList neighbors, DBIDIter iter, DoubleDataStore acds) {
 		      // Aggregate the average chaining distances of all neighbors:
 		      double sum = 0.;
 		      double knn = 0;
+		      double newDist = 0;
 		     
 		      for(DBIDIter neighbor = neighbors.iter(); neighbor.valid(); neighbor.advance()) {
 		        // skip the point itself
@@ -302,8 +304,9 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		          continue;
 		        }
 		        sum += acds.doubleValue(neighbor);
-		        if(acds.doubleValue(neighbor) > knn)
-		        	knn = acds.doubleValue(neighbor);
+		        newDist = dq.distance(iter, neighbor);
+		        if(newDist > knn)
+		        	knn = newDist;
 		      }
 		      double cof = (sum > 0.) ? (acds.doubleValue(iter) * k / sum) : (acds.doubleValue(iter) > 0. ? Double.POSITIVE_INFINITY : 1.);
 		      return new OFScore(bundle, cof, acds.doubleValue(iter), knn);
@@ -328,17 +331,19 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						}
 				    }
 					double acds = singleACDS(nn, newInstance);
-					if(sum > 0){
+					//System.out.println("acds:" + acds);
+					if(sum > 0 && !Double.isNaN(acds)){
+						//System.out.println(acds * k / sum);
 						return acds * k / sum;
 					} else {
-						if(acds > 0)
+						if(!Double.isNaN(acds) && acds > 0)
 							return Double.POSITIVE_INFINITY;
 						else return 1.0;
 					}
 				}
 		}
 		
-		public double calculateSingleOF_Old(NumberVector newInstance) {
+		private double calculateSingleOF_Old(NumberVector newInstance) {
 			double partialResult;
 			if(resList == null || resList.size() == 0) 
 				return Double.MAX_VALUE;

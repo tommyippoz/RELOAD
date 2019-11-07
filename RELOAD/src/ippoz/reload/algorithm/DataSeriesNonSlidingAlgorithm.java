@@ -46,11 +46,13 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					readed = reader.readLine();
 					if(readed != null && !readed.startsWith("*") && readed.contains(";")){
 						readed = readed.trim();
-						boolean flag = Boolean.valueOf(readed.split(";")[1]);
-						double score = Double.parseDouble(readed.split(";")[0]);
-						if(flag)
-							loggedAnomalyScores.addValue(score);
-						else loggedScores.addValue(score);
+						if(readed.contains(";")){
+							boolean flag = Boolean.valueOf(readed.split(";")[1]);
+							double score = Double.parseDouble(readed.split(";")[0]);
+							if(flag)
+								loggedAnomalyScores.addValue(score);
+							else loggedScores.addValue(score);
+						} else loggedScores.addValue(Double.parseDouble(readed));
 					}
 				}
 				reader.close();

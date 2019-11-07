@@ -68,11 +68,11 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	private double getQ(int size) {
-		return size*(conf.hasItem(Q) ? Double.parseDouble(conf.getItem(K)) : DEFAULT_Q);
+		return size*(conf.hasItem(Q) ? Double.parseDouble(conf.getItem(Q)) : DEFAULT_Q);
 	}
 	
 	private int getX() {
-		return conf.hasItem(X) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_X;
+		return conf.hasItem(X) ? Integer.parseInt(conf.getItem(X)) : DEFAULT_X;
 	}
 
 	@Override
@@ -397,17 +397,8 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 				writer.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to write KMEANS scores file");
+			AppLogger.logException(getClass(), ex, "Unable to write SDO scores file");
 		} 
-	}
-
-	@Override
-	public Map<String, String[]> getDefaultParameterValues() {
-		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("k", new String[]{"20", "50", "100"});
-		defPar.put("q", new String[]{"0.1", "0.2"});
-		defPar.put("x", new String[]{"5", "10"});
-		return defPar;
 	}
 	
 	private class Point {
@@ -453,6 +444,13 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		public double getScore() {
 			return this.score;
 		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString(values) + ":" + score;
+		}
+		
+		
 
 		/*public double getValue(int i) {
 			if(values != null && i<values.length)
@@ -502,6 +500,15 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 			return snapValue;
 		}
 		
+	}
+	
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put("k", new String[]{"20", "50", "100"});
+		defPar.put("q", new String[]{"0.1", "0.2"});
+		defPar.put("x", new String[]{"3", "5", "10"});
+		return defPar;
 	}
 
 }
