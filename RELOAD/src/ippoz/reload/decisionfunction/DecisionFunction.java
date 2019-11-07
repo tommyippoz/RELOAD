@@ -401,11 +401,9 @@ public abstract class DecisionFunction {
 	public static boolean isApplicableTo(AlgorithmType algType, String decFunctString) {
 		if(decFunctString == null || !checkDecisionFunction(decFunctString))
 			return false;
-		else if(decFunctString.contains("CLUSTER") && (algType.equals(AlgorithmType.DBSCAN) || algType.equals(AlgorithmType.ELKI_KMEANS)))
-			return true;
-		else if(!decFunctString.contains("CLUSTER") && !algType.equals(AlgorithmType.DBSCAN) && !algType.equals(AlgorithmType.ELKI_KMEANS))
-			return true;
-		else return false;
+		else if(decFunctString.contains("CLUSTER"))
+			return algType.equals(AlgorithmType.DBSCAN) || algType.equals(AlgorithmType.ELKI_KMEANS);
+		else return true;
 	}
 
 }
