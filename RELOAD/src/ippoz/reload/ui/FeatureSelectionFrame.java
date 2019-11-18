@@ -87,7 +87,7 @@ public class FeatureSelectionFrame {
 			fsFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.6));
 		else fsFrame.setBounds(0, 0, 400, 600);
 		fsFrame.setBackground(Color.WHITE);
-		//fsFrame.setResizable(false);
+		//fsFrame.setResizable(true);
 	}
 	
 	private JPanel buildMainPanel() {	

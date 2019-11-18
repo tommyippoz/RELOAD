@@ -663,7 +663,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		//defPar.put("threshold", new String[]{"RIGHT_CONFIDENCE_INTERVAL(0.5)", "RIGHT_CONFIDENCE_INTERVAL(1)", "RIGHT_IQR(0.5)", "RIGHT_IQR(1)"});
-		defPar.put("k", new String[]{"3", "5", "10", "20"});
+		defPar.put("k", new String[]{"5", "10", "20", "50", "100"});
 		return defPar;
 	}
 

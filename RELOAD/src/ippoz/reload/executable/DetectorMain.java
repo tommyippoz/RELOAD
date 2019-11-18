@@ -239,7 +239,7 @@ public class DetectorMain {
 					writer.write("* Report for RELOAD activity on " + new Date(System.currentTimeMillis()) + "\n");
 					writer.write(FeatureSelectionInfo.getFileHeader() + ",");
 					writer.write(TrainInfo.getFileHeader() + ",");
-					writer.write("dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+					writer.write("best_dataseries,dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
 					for(Metric met : dOut.getEvaluationMetrics()){
 						writer.write("," + met.getMetricName());
 					}
@@ -249,7 +249,7 @@ public class DetectorMain {
 				}
 				writer.write(fsInfo.toFileString() + ",");
 				writer.write(tInfo.toFileString() + ",");
-				writer.write(dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
+				writer.write(dOut.getBestSeriesString() + "," + dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 				writer.close();
 			}
 		} catch(IOException ex){

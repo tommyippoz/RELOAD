@@ -319,42 +319,33 @@ public class BuildUI {
 		}).start();
 		new Thread(new Runnable() {
 			public void run() {
-				List<DetectionManager> dmList;
+				int tot = 0;
+				int index = 1;
 				try {
-					dmList = new LinkedList<DetectionManager>();
+					for(PreferencesManager loaderPref : iManager.readLoaders()){
+						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+							if(DetectorMain.hasSliding(aList)){
+								tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
+							} else {
+								tot++;
+							}
+						}
+					}
+					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
+					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
+					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
 						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										dmList.add(new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy));
+										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy), pBar, index++, tot);
 									}
 								}
 							} else {
-								dmList.add(new DetectionManager(iManager, aList, loaderPref));
+								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref), pBar, index++, tot);
 							}
 						}
-					}
-					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
-					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(dmList.size());
-					DetectorOutput[] newOut;
-					long partialTime, startTime = System.currentTimeMillis();
-					for(int i=0;i<dmList.size();i++){
-						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-						partialTime = System.currentTimeMillis();
-						newOut = DetectorMain.runMADneSs(dmList.get(i), iManager);
-						final String loggedErrors = AppLogger.getErrorsSince(partialTime);
-						if(loggedErrors != null){
-							Thread t = new Thread(new Runnable(){
-						        public void run(){
-						        	JOptionPane.showMessageDialog(frame, loggedErrors, "Errors while running RELOAD", JOptionPane.ERROR_MESSAGE);
-						        }
-						    });
-							t.start();
-						}	
-						if(newOut != null)
-							outList.add(newOut);
-						pBar.moveNext();
 					}
 					pBar.deleteFrame();
 					AppLogger.logInfo(getClass(), "RELOAD Execution time: " + (System.currentTimeMillis() - startTime) + " ms");
@@ -364,6 +355,24 @@ public class BuildUI {
 				} catch(Exception ex) {
 					AppLogger.logException(getClass(), ex, "");
 				}
+			}
+			
+			private void runRELOAD(List<DetectorOutput[]> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
+				long partialTime = System.currentTimeMillis();
+				AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + index + "/" + tot + "]: '" + detManager.getTag() + "'");
+				DetectorOutput[] newOut = DetectorMain.runMADneSs(detManager, iManager);
+				final String loggedErrors = AppLogger.getErrorsSince(partialTime);
+				if(loggedErrors != null){
+					Thread t = new Thread(new Runnable(){
+				        public void run(){
+				        	JOptionPane.showMessageDialog(frame, loggedErrors, "Errors while running RELOAD", JOptionPane.ERROR_MESSAGE);
+				        }
+				    });
+					t.start();
+				}	
+				if(newOut != null)
+					outList.add(newOut);
+				pBar.moveNext();
 			}
 		}).start();
 	}

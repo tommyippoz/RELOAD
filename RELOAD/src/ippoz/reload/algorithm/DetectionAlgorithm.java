@@ -8,6 +8,7 @@ import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFKMeansDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.SDODetectionAlgorithm;
+import ippoz.reload.algorithm.custom.SOMDetectionAlgorithm;
 import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
@@ -52,7 +53,7 @@ import java.util.Map;
  * @author Tommy
  */
 public abstract class DetectionAlgorithm {
-	
+
 	/** The configuration. */
 	protected AlgorithmConfiguration conf;
 	
@@ -201,7 +202,10 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_KNN:
 				return new KNNSlidingELKI(dataSeries, conf);
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return new IsolationForestSlidingWEKA(dataSeries, conf);		
+				return new IsolationForestSlidingWEKA(dataSeries, conf);
+			case SOM:
+				return new SOMDetectionAlgorithm(dataSeries, conf);
+				
 		}
 		return null;
 	}
@@ -263,6 +267,12 @@ public abstract class DetectionAlgorithm {
 			case WEKA_ISOLATIONFOREST:
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				afl.add(AlgorithmFamily.CLASSIFICATION);
+			default:
+				break;
+		}
+		switch(algType){
+			case SOM:
+				afl.add(AlgorithmFamily.NEURAL_NETWORK);
 			default:
 				break;
 		}
@@ -468,57 +478,51 @@ public abstract class DetectionAlgorithm {
 		return algType.toString().contains("SLIDING");
 	}
 
-	public static String explainParameters(AlgorithmType algType) {
-		String base = "Parameters: ";
+	public static String getFullName(AlgorithmType algType) {
 		switch(algType){
 			case ELKI_ABOD:
+				return "ABOD: Angle-Based Outlier Factor (ELKI)";
 			case SLIDING_ELKI_ABOD:
-				return base;
+				return "ABOD: Angle-Based Outlier Factor (ELKI - Sliding)";
 			case ELKI_LOF:
+				return "LOF: Local Outlier Factor (ELKI)";
 			case ELKI_COF:
+				return "COF: Connectivity-based Outlier Factor (ELKI)";
 			case SLIDING_ELKI_COF:
-				return base + "(k) the number of neighbours.";
+				return "COF: Connectivity-based Outlier Factor (ELKI - Sliding)";
 			case ELKI_FASTABOD:
-				return base + "(k) the number of neighbours.";
+				return "FastABOD: Fast Angle-Based Outlier Factor (ELKI)";
 			case ELKI_KMEANS:
+				return "K-Means (ELKI)";
 			case SLIDING_ELKI_CLUSTERING:
-				return base + "(k) the number of clusters.";
+				return "K-Means (ELKI - Sliding)";
 			case LDCOF_KMEANS:
-				return base + "(k) the number of clusters, <br>"
-						+ "(gamma) the LDCOF parameter to separate small/large clusters";
+				return "LDCOF: Local Density-based Connectivity Outlier Factor (embeds KMeans)";
 			case ELKI_SVM:
-				return base + "(kernel) the type of kernel, <br>"
-						+ "(nu) an upper bound on the fraction of margin errors and a lower bound <br>"
-						+ " of the fraction of support vectors relative to training set <br>"
-						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified <br>"
-						+ " and at least 5% of training examples being support vectors.";
+				return "SVM: One-Class Support Vector Machines (ELKI)";
 			case HBOS:
-				return base + "(k) the number of histograms to generate for each indicator.";
+				return "HBOS: Histogram-based Outlier Score";
 			case ELKI_ODIN:
+				return "ODIN: outlier Detection using Indegree Number (ELKI)";
 			case SLIDING_ELKI_KNN:
-				return base + "(k) the number of neighbours.";
+				return "KNN: kk-th Nearest Neighbour (ELKI - Sliding)";
 			case SLIDING_SPS:
-				return "";
+				return "SPS: Statistical Predictor and Safety Margin (Sliding)";
 			case WEKA_ISOLATIONFOREST:
+				return "iForest: Isolation Forest (WEKA)";
 			case SLIDING_WEKA_ISOLATIONFOREST:
-				return "Parameters: (ntrees) number of trees in the forest, <br>"
-						+ "(sample_size) instances to be sampled to train each tree.";
+				return "iForest: Isolation Forest (WEKA - Sliding)";
 			case DBSCAN:
-				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
-						+ "(pts) is the minimum number of neighbors within 'eps' radius";
+				return "DBSCAN: Density-Based";
 			case LDCOF_DBSCAN:
-				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
-						+ "(pts) is the minimum number of neighbors within 'eps' radius, <br>"
-						+ "(gamma) the LDCOF parameter to separate small/large clusters";
+				return "LDCOF: Local Density-based Connectivity Outlier Factor (embeds DBSCAN)";
 			case SDO:
-				return base + "(k) the amount of observers <br>"
-						+ "(q) the 'observation threshold' to derive observers (% of training set size), <br>"
-						+ "(x) the amount of 'closest' observers";
+				return "SDO: Stochastic Density Outlier";
 			default:
-				return "Parameters are shown in the table.";
+				return algType.toString();
 		}
 	}
-
+	
 	public static String explainAlgorithm(AlgorithmType algType) {
 		switch(algType){
 			case ELKI_ABOD:
@@ -596,6 +600,57 @@ public abstract class DetectionAlgorithm {
 		}
 	}
 	
+	public static String explainParameters(AlgorithmType algType) {
+		String base = "Parameters: ";
+		switch(algType){
+			case ELKI_ABOD:
+			case SLIDING_ELKI_ABOD:
+				return base;
+			case ELKI_LOF:
+			case ELKI_COF:
+			case SLIDING_ELKI_COF:
+				return base + "(k) the number of neighbours.";
+			case ELKI_FASTABOD:
+				return base + "(k) the number of neighbours.";
+			case ELKI_KMEANS:
+			case SLIDING_ELKI_CLUSTERING:
+				return base + "(k) the number of clusters.";
+			case LDCOF_KMEANS:
+				return base + "(k) the number of clusters, <br>"
+						+ "(gamma) the LDCOF parameter to separate small/large clusters";
+			case ELKI_SVM:
+				return base + "(kernel) the type of kernel, <br>"
+						+ "(nu) an upper bound on the fraction of margin errors and a lower bound <br>"
+						+ " of the fraction of support vectors relative to training set <br>"
+						+ "e.g., nu=0.05 guarantees at most 5% of training examples being misclassified <br>"
+						+ " and at least 5% of training examples being support vectors.";
+			case HBOS:
+				return base + "(k) the number of histograms to generate for each indicator.";
+			case ELKI_ODIN:
+			case SLIDING_ELKI_KNN:
+				return base + "(k) the number of neighbours.";
+			case SLIDING_SPS:
+				return "";
+			case WEKA_ISOLATIONFOREST:
+			case SLIDING_WEKA_ISOLATIONFOREST:
+				return "Parameters: (ntrees) number of trees in the forest, <br>"
+						+ "(sample_size) instances to be sampled to train each tree.";
+			case DBSCAN:
+				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
+						+ "(pts) is the minimum number of neighbors within 'eps' radius";
+			case LDCOF_DBSCAN:
+				return base + "(eps) defines the radius of neighborhood around a data point, <br>"
+						+ "(pts) is the minimum number of neighbors within 'eps' radius, <br>"
+						+ "(gamma) the LDCOF parameter to separate small/large clusters";
+			case SDO:
+				return base + "(k) the amount of observers <br>"
+						+ "(q) the 'observation threshold' to derive observers (% of training set size), <br>"
+						+ "(x) the amount of 'closest' observers";
+			default:
+				return "Parameters are shown in the table.";
+		}
+	}
+	
 	private static AlgorithmType[] temporaryAlgorithms(){
 		return new AlgorithmType[]{AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST};
 	}
@@ -624,6 +679,10 @@ public abstract class DetectionAlgorithm {
 			}
 		}
 		return anomalyLabels;
+	}
+
+	public ValueSeries getLoggedScores() {
+		return loggedScores;
 	}
 
 }

@@ -21,6 +21,8 @@ public enum AlgorithmFamily {
 	
 	NEIGHBOUR, 
 	
-	MIXED
+	MIXED, 
+	
+	NEURAL_NETWORK
 
 }

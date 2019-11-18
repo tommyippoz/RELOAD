@@ -92,11 +92,11 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 
 	@Override
 	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
-		Object trainOut;
+		boolean trainOut;
 		if(createOutput && !new File(getDefaultTmpFolder()).exists())
 			new File(getDefaultTmpFolder()).mkdirs();
 		trainOut = automaticInnerTraining(kList, createOutput);
-		if(trainOut != null){
+		if(trainOut){
 			
 			setDecisionFunction("IQR", new ValueSeries(getTrainScores()), false);
 			
@@ -116,7 +116,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		    storeAdditionalPreferences();
 		    
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
-		return trainOut != null;
+		return trainOut;
 	}
 
 	/**

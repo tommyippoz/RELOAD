@@ -420,6 +420,22 @@ public class DetectorOutput {
 	public List<DataSeries> getSelectedSeries() {
 		return selectedSeries;
 	}
+	
+	public String getBestSeriesString() {
+		double bestScore = Double.NEGATIVE_INFINITY;
+		DataSeries toReturn = null;
+		if(voterList!= null && voterList.size() > 0){
+			for(AlgorithmVoter voter : voterList){
+				if(voter.getMetricScore() > bestScore){
+					bestScore = voter.getMetricScore();
+					toReturn = voter.getDataSeries();
+				}
+			}
+			if(toReturn != null)
+				return toReturn.getName();
+			else return "";
+		} else return "";
+	}
 
 	public String getFeatureAggregationPolicy() {
 		return iManager.getDataSeriesDomain();
@@ -448,5 +464,7 @@ public class DetectorOutput {
 			return fsInfo;
 		else return new FeatureSelectionInfo();
 	}
+
+	
 
 }

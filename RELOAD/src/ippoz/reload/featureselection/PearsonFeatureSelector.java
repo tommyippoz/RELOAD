@@ -44,6 +44,8 @@ public class PearsonFeatureSelector extends FeatureRanker {
 		List<Snapshot> snapList = null;
 		Map<DataSeries, Double> outMap = new HashMap<DataSeries, Double>();
 		for(DataSeries ds : seriesList){
+			values.clear();
+			labels.clear();
 			if(ds.size() == 1){
 				corr = 0;
 				for(Knowledge know : kList){

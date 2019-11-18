@@ -87,7 +87,7 @@ public class FeaturesFrame {
 		else
 			fFrame.setBounds(0, 0, 300, 450);
 		fFrame.setBackground(Color.WHITE);
-		fFrame.setResizable(false);
+		fFrame.setResizable(true);
 	}
 
 	private JPanel buildMainPanel() {
@@ -198,7 +198,7 @@ public class FeaturesFrame {
 
 		public Object getValueAt(int row, int col) {
 			if (col == 0) {
-				return rows.get(row).getName();
+				return rows.get(row).getName() + "(" + rows.get(row).getDataCategory().toString().substring(0, 1) + ")";
 			} else if(col == columns.size() + 1) {
 				return DataSeries.isIn(dOut.getUsedFeatures(), rows.get(row));
 			} else {

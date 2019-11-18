@@ -119,6 +119,7 @@ public class ExperimentVoter extends Thread {
 		failures = new LinkedList<TimedResult>();
 		if(algList.size() > 0) {
 			for(int i=0;i<currentKnowledge.size();i++){
+				//System.out.println(i);
 				snapVoting = new HashMap<AlgorithmVoter, AlgorithmResult>();
 				double firstScore = Double.NaN;
 				for(AlgorithmVoter aVoter : algList){

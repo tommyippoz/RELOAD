@@ -197,6 +197,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 					return true;
 			}
 		}
+		AppLogger.logError(getClass(), "UnapplicableDataSeries", "DataSeries has only " + differentValues.size() + " different values, not enough to compute variance of angles");
 		return false;
 		
 	}
@@ -259,7 +260,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		// publication uses the naive variance.
 		double var = s.getNaiveVariance();
 		if(var == 0.0)
-			return new double[]{0.0, };
+			return new double[]{0.0, 0.0};
 		else return new double[]{s.getNaiveVariance(), Double.NaN};
 		
 	}
@@ -402,6 +403,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		private Vector data;
 
 		private double abof;
+		
+		private double knn;
 
 		public ABODResult(SingleObjectBundle bundle, double abof) {
 			this.abof = abof;

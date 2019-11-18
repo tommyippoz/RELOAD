@@ -6,8 +6,8 @@ package ippoz.reload.featureselection;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +21,7 @@ public abstract class FeatureRanker extends FeatureSelector {
 	
 	private boolean considerAbsolute;
 	
-	private ArrayList<Double> sortedScores;
+	private List<Double> sortedScores;
 
 	public FeatureRanker(FeatureSelectorType fsType, double selectorThreshold, boolean rankThresholdFlag, boolean higherIsBetter, boolean considerAbsolute) {
 		super(fsType, selectorThreshold, rankThresholdFlag);
@@ -41,7 +41,7 @@ public abstract class FeatureRanker extends FeatureSelector {
 			return false;
 		} else {
 			if(!Double.isFinite(toCheck))
-				return true;
+				return false;
 			else if(higherIsBetter){
 				if(considerAbsolute)
 					return Math.abs(toCheck) >= threshold;
@@ -59,7 +59,11 @@ public abstract class FeatureRanker extends FeatureSelector {
 		super.applyFeatureSelection(seriesList, kList);
 		Map<DataSeries, Double> map = getScoresMap();
 		if(map != null && map.size() > 0){
-			sortedScores = new ArrayList<Double>(map.values());
+			sortedScores = new LinkedList<Double>();
+			for(Double d : map.values()){
+				if(!Double.isNaN(d) && Double.isFinite(d))
+					sortedScores.add(d);
+			}
 			Collections.sort(sortedScores);
 			if(higherIsBetter)
 				Collections.reverse(sortedScores);
