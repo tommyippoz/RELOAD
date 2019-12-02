@@ -16,10 +16,10 @@ import java.util.Map;
  * @author Tommy
  *
  */
-public class OverlapDetail_Metric extends BetterMinMetric {
+public class NoPredictionArea_Metric extends BetterMinMetric {
 
-	public OverlapDetail_Metric(boolean validAfter) {
-		super(MetricType.OVERLAP_DETAIL, validAfter);
+	public NoPredictionArea_Metric(boolean validAfter) {
+		super(MetricType.NO_PREDICTION, validAfter);
 	}
 
 	@Override
@@ -36,12 +36,12 @@ public class OverlapDetail_Metric extends BetterMinMetric {
 
 	@Override
 	public String getMetricName() {
-		return "OVERLAP_DETAIL";
+		return "NO_PREDICTION";
 	}
 
 	@Override
 	public String getMetricShortName() {
-		return "OVERLAP_DETAIL";
+		return "NO_PREDICTION";
 	}
 	
 	public static double calculateOverlapDetail(List<Double> normalList, List<Double> faultyList){

@@ -322,15 +322,14 @@ public class BuildUI {
 				int tot = 0;
 				int index = 1;
 				try {
-					for(PreferencesManager loaderPref : iManager.readLoaders()){
-						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
-							if(DetectorMain.hasSliding(aList)){
-								tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
-							} else {
-								tot++;
-							}
+					for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+						if(DetectorMain.hasSliding(aList)){
+							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
+						} else {
+							tot++;
 						}
 					}
+					tot = tot*iManager.readLoaders().size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
 					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
 					long startTime = System.currentTimeMillis();
@@ -975,9 +974,9 @@ public class BuildUI {
 			    public void actionPerformed(ActionEvent e) {
 			        if(!isUpdating){
 			        	String newValue = comboBox.getSelectedItem().toString();
-			        	if(comboBox.getSelectedItem().toString().equals("FSCORE")){
+			        	if(comboBox.getSelectedItem().toString().equals("FSCORE") || comboBox.getSelectedItem().toString().equals("SAFESCORE")){
 			        		String s = (String)JOptionPane.showInputDialog(
-				                    frame, "Set parameter beta for F-Score (beta > 0)", "FSCORE beta",
+				                    frame, "Set parameter beta for F-Score or Safe-Score (beta > 0)", "FSCORE / SAFESCORE beta",
 				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 								newValue = newValue + "(" + s + ")";

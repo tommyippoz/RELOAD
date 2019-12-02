@@ -5,10 +5,8 @@ package ippoz.reload.voter;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.evaluation.AlgorithmModel;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * @author Tommy

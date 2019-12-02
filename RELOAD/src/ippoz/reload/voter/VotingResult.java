@@ -3,12 +3,7 @@
  */
 package ippoz.reload.voter;
 
-import java.util.List;
-
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.decisionfunction.AnomalyResult;
-import ippoz.reload.decisionfunction.DecisionFunction;
 
 /**
  * @author Tommy
