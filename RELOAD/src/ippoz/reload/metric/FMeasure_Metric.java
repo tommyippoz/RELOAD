@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		if (p + r > 0)

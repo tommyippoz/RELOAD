@@ -13,10 +13,11 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.evaluation.ExperimentVoter;
 import ippoz.reload.metric.Metric;
-import ippoz.reload.voter.AlgorithmVoter;
-import ippoz.reload.voter.ExperimentVoter;
+import ippoz.reload.voter.ScoresVoter;
+import ippoz.reload.voter.VotingResult;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,21 +50,17 @@ public class EvaluatorManager extends DataManager {
 	/** The scores file. */
 	private String scoresFile;
 	
+	private ScoresVoter voter;
+	
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
 	private List<Map<Metric, Double>> expMetricEvaluations;
 	
-	private List<Map<Date, Map<AlgorithmVoter, AlgorithmResult>>> detailedEvaluations;
-	
-	/** The anomaly threshold. Votings over that threshold raise alarms. */
-	private double anomalyTreshold;
+	private List<Map<Date, Map<AlgorithmModel, AlgorithmResult>>> detailedEvaluations;
 	
 	/** The algorithm convergence time. */
 	private double algConvergence;
-	
-	/** The detector score threshold. Used to filter the available anomaly checkers by score. */
-	private double detectorScoreTreshold;
 	
 	private boolean printOutput;
 	
@@ -78,34 +75,20 @@ public class EvaluatorManager extends DataManager {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(String oFolder, String outputFormat, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, String anTresholdString, double algConvergence, String voterTreshold, boolean printOutput) {
+	public EvaluatorManager(ScoresVoter voter, String oFolder, String outputFormat, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
 		super(map);
 		this.scoresFile = scoresFile;
 		this.outputFormat = outputFormat;
 		this.validationMetrics = validationMetrics;
 		this.algConvergence = algConvergence;
 		this.printOutput = printOutput;
-		detectorScoreTreshold = getVoterTreshold(voterTreshold);
-		anomalyTreshold = getAnomalyVoterTreshold(anTresholdString, loadTrainScores().size());
-		outputFolder = oFolder + voterTreshold + "_" + anTresholdString;
-		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voterTreshold + " | " + anTresholdString + "]");
+		this.voter = voter;
+		outputFolder = oFolder + voter.toString().replace(" ", "_");
+		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voter.toString() + "]");
 	}
 	
 	public double getAnomalyThreshold(){
-		return anomalyTreshold;
-	}
-	
-	private double getVoterTreshold(String voterTreshold) {
-		if(voterTreshold != null){
-			if(AppUtility.isNumber(voterTreshold))
-				return Double.parseDouble(voterTreshold);
-			else if(voterTreshold.contains("BEST")){
-				return Double.parseDouble(voterTreshold.substring(voterTreshold.indexOf("T")+1).trim());
-			} else if(voterTreshold.contains("FILTERED")){
-				return -1.0*Double.parseDouble(voterTreshold.substring(voterTreshold.indexOf("D")+1).trim());
-			}
-		}
-		return Double.NaN;
+		return voter.getThreshold();
 	}
 
 	/**
@@ -127,38 +110,16 @@ public class EvaluatorManager extends DataManager {
 		return getThreadList().size() > 0;
 	}
 	
-	/**
-	 * Gets the anomaly voter threshold.
-	 *
-	 * @param anTresholdString the anomaly threshold string read from preferences
-	 * @param checkers the number of selected checkers
-	 * @return the anomaly voter threshold
-	 */
-	private double getAnomalyVoterTreshold(String anTresholdString, int checkers){
-		switch(anTresholdString){
-			case "ALL":
-				return checkers;
-			case "HALF":
-				return Math.ceil(checkers/2.0);
-			case "THIRD":
-				return Math.ceil(checkers/3.0);
-			case "QUARTER":
-				return Math.ceil(checkers/4.0);
-			default:
-				return Double.parseDouble(anTresholdString);
-		}
-	}
-	
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
 	 */
 	@Override
 	protected void initRun() {
-		List<AlgorithmVoter> algVoters = loadTrainScores();
+		List<AlgorithmModel> algVoters = loadTrainScores();
 		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(experimentsSize());
 		Map<KnowledgeType, Knowledge> redKMap;
 		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
-		detailedEvaluations = new ArrayList<Map<Date, Map<AlgorithmVoter, AlgorithmResult>>>(voterList.size());
+		detailedEvaluations = new ArrayList<Map<Date, Map<AlgorithmModel, AlgorithmResult>>>(voterList.size());
 		if(printOutput){
 			setupResultsFile();
 		}
@@ -168,7 +129,7 @@ public class EvaluatorManager extends DataManager {
 				for(KnowledgeType kType : getKnowledgeTypes()){
 					redKMap.put(kType, getKnowledge(kType).get(expN));
 				}
-				voterList.add(new ExperimentVoter(algVoters, redKMap));
+				voterList.add(new ExperimentVoter(algVoters, redKMap, voter));
 			}
 		}
 		setThreadList(voterList);
@@ -189,7 +150,7 @@ public class EvaluatorManager extends DataManager {
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentVoter ev = (ExperimentVoter)t;
 		if(ev.getFailuresNumber() > 0){
-			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, anomalyTreshold, algConvergence, printOutput));
+			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, algConvergence, printOutput));
 			detailedEvaluations.add(ev.getSingleAlgorithmScores());
 		} else {
 			expMetricEvaluations.add(null);
@@ -203,12 +164,12 @@ public class EvaluatorManager extends DataManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	private LinkedList<AlgorithmVoter> loadTrainScores() {
+	private List<AlgorithmModel> loadTrainScores() {
 		File asFile = new File(scoresFile);
 		BufferedReader reader;
 		AlgorithmConfiguration conf;
 		String[] splitted;
-		LinkedList<AlgorithmVoter> voterList = new LinkedList<AlgorithmVoter>();
+		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
 		String readed;
 		String seriesString;
 		try {
@@ -221,7 +182,7 @@ public class EvaluatorManager extends DataManager {
 						readed = readed.trim();
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = AppUtility.splitAndPurify(readed, "§");
-							if(splitted.length > 4 && checkAnomalyTreshold(Double.valueOf(splitted[3]), voterList.size())){
+							if(splitted.length > 4 && voter.checkAnomalyTreshold(Double.valueOf(splitted[3]))){
 								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 								seriesString = splitted[0];
 								if(conf != null){
@@ -230,7 +191,9 @@ public class EvaluatorManager extends DataManager {
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
-								addVoter(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])), voterList);
+								AlgorithmModel am = new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+								if(voter.checkModel(am, modelList))
+									modelList.add(am);
 							}
 						}
 					}
@@ -240,29 +203,7 @@ public class EvaluatorManager extends DataManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}
-		return voterList;
-	}
-	
-	private void addVoter(AlgorithmVoter newVoter, LinkedList<AlgorithmVoter> voterList){
-		boolean found = false;
-		if(detectorScoreTreshold >= 0)
-			voterList.add(newVoter);
-		else {
-			for(AlgorithmVoter aVoter : voterList){
-				if(aVoter.usesSeries(newVoter.getDataSeries())){
-					found = true;
-					break;
-				}
-			}
-			if(!found)
-				voterList.add(newVoter);
-		}
-	}
-	
-	private boolean checkAnomalyTreshold(Double newMetricValue, int nVoters) {
-		if(Math.abs(detectorScoreTreshold) >= 1)
-			return nVoters < Math.abs(detectorScoreTreshold);
-		else return newMetricValue >= detectorScoreTreshold;
+		return modelList;
 	}
 
 	/**
@@ -288,8 +229,8 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}
 	
-	public Map<String, List<TimedResult>> getTimedEvaluations() {
-		Map<String, List<TimedResult>> outMap = new TreeMap<String, List<TimedResult>>();
+	public Map<String, List<VotingResult>> getVotingEvaluations() {
+		Map<String, List<VotingResult>> outMap = new TreeMap<String, List<VotingResult>>();
 		for(Thread t : getThreadList()){
 			ExperimentVoter ev = (ExperimentVoter)t;
 			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());
@@ -301,14 +242,14 @@ public class EvaluatorManager extends DataManager {
 		return expMetricEvaluations;
 	}
 	
-	public Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> getDetailedEvaluations() {
-		Map<String, List<Map<AlgorithmVoter, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmVoter, AlgorithmResult>>>();
+	public Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
+		Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmModel, AlgorithmResult>>>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
-				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmVoter, AlgorithmResult>>());
+				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
 				if(i < detailedEvaluations.size()){
-					Map<Date,Map<AlgorithmVoter,AlgorithmResult>> map = detailedEvaluations.get(i);
+					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
 					if(map != null){
 						for(Date mapEntry : map.keySet()){
 							outMap.get(ev.getExperimentName()).add(map.get(mapEntry));

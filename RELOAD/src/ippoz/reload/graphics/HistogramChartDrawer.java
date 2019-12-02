@@ -3,7 +3,7 @@
  */
 package ippoz.reload.graphics;
 
-import ippoz.reload.voter.ExperimentVoter;
+import ippoz.reload.evaluation.ExperimentVoter;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

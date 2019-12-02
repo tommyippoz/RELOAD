@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,13 +23,13 @@ public class OverlapDetail_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
-		for(TimedResult tr : anomalyEvaluations){
-			if(tr.getInjectedElement() != null)
-				faultyList.add(tr.getAlgorithmScore());
-			else normalList.add(tr.getAlgorithmScore());
+		for(AlgorithmResult tr : anomalyEvaluations){
+			if(tr.getInjection() != null)
+				faultyList.add(tr.getScore());
+			else normalList.add(tr.getScore());
 		}
 		return calculateOverlapDetail(normalList, faultyList);
 	}

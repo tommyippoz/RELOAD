@@ -776,9 +776,13 @@ public class OutputDetailFrame {
 		
 		// Setting x axis range
 		NumberAxis domain = (NumberAxis) ((XYPlot) chart.getPlot()).getDomainAxis();
-	    if(!norm)
-	    	domain.setRange(minValue > 0 ? minValue*0.99 : minValue*1.01, infiniteFlag ? maxValue + maxValue/(numIntervals > 1 ? numIntervals-1.0 : 0.9) : maxValue);
-		
+	    if(!norm){
+	    	if(minValue == maxValue){
+	    		if(minValue != 0)
+	    			domain.setRange(minValue*0.99, minValue*1.01);
+	    		else domain.setRange((minValue-0.1)*0.99, (minValue+0.1)*1.01);
+	    	} else domain.setRange(minValue > 0 ? minValue*0.99 : minValue*1.01, infiniteFlag ? maxValue + maxValue/(numIntervals > 1 ? numIntervals-1.0 : 0.9) : maxValue);
+	    }	
 		// Set bar size
 		double scaling = 1.0 - domain.getRange().getLength() / numIntervals;
 		XYPlot categoryPlot = (XYPlot) chart.getPlot();
@@ -851,7 +855,7 @@ public class OutputDetailFrame {
 		XYSeries trueSeries = new XYSeries(norm ? "Anomaly Series (Normalized)" : "Anomaly Series");
 		XYSeries falseSeries = new XYSeries(norm ? "Normal Series (Normalized)" : "Normal Series");
 		
-		double intervalSize = (maxValue - minValue) / numIntervals;
+		double intervalSize = maxValue != minValue ? (maxValue - minValue) / numIntervals : 0.2 / numIntervals;
 		
 		for(int i=0;i<numIntervals;i++){
 			if(normalCount[i] > 0)

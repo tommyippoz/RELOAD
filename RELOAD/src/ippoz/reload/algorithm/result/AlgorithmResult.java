@@ -69,6 +69,15 @@ public class AlgorithmResult {
 	public double getScore() {
 		return score;
 	}
+	
+	/**
+	 * Gets the evaluation score.
+	 *
+	 * @return the score
+	 */
+	public List<Double> getData() {
+		return dataValues;
+	}
 
 	/**
 	 * Gets the score evaluation in terms of AnomalyResult.
@@ -163,6 +172,10 @@ public class AlgorithmResult {
 	 */
 	public void setScore(double value) {
 		score = value;		
+	}
+
+	public InjectedElement getInjection() {
+		return injection;
 	}
 
 }

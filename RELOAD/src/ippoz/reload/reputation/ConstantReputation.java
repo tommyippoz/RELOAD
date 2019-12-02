@@ -3,7 +3,7 @@
  */
 package ippoz.reload.reputation;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.List;
 
@@ -28,11 +28,8 @@ public class ConstantReputation extends Reputation {
 		repValue = value;
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.multilayer.detector.reputation.Reputation#evaluateExperimentReputation(ippoz.multilayer.detector.data.ExperimentData, java.util.HashMap)
-	 */
 	@Override
-	protected double evaluateExperimentReputation(List<TimedResult> anomalyEvaluations) {
+	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
 		return repValue;
 	}
 

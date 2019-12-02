@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class AUC_Metric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		double tpr = new TruePositiveRate_Metric(isValidAfter())
 				.evaluateAnomalyResults(anomalyEvaluations);
 		double fpr = new FalsePositiveRate_Metric(isValidAfter())

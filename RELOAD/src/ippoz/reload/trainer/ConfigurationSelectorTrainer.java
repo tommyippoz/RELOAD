@@ -19,6 +19,7 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,7 +138,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						for(String decFunctString : DECISION_FUNCTIONS){
 							if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
 								algorithm.setDecisionFunction(decFunctString);
-								List<TimedResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
+								List<AlgorithmResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
 								double val = getMetric().evaluateAnomalyResults(updatedList);
 								//System.out.println(decFunctString + " ADD " + val);
 								currentMetricValue.get(decFunctString).addValue(val);
@@ -185,7 +186,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			} else {
 				for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
 					//algorithm.setDecisionFunction(dFunctionString);
-					getMetric().evaluateMetric(algorithm, knowledge);
+					getMetric().evaluateMetric(algorithm, knowledge, ScoresVoter.generateVoter("BEST 1", "1"));
 				}
 			}
 			trainScore = algorithm.getTrainScore();
@@ -200,7 +201,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		//System.out.println("IT: " + iteration + " - " + threshold);
-		List<TimedResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
+		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
 		double mScore = getMetric().evaluateAnomalyResults(updatedList);
 		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
 			String[] leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
@@ -211,12 +212,12 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		} else return new String[]{threshold, "" + mScore};
 	}
 	
-	private static List<TimedResult> updateResultWithDecision(DecisionFunction dFunction, Map<TimedResult, AlgorithmResult> resMap){
-		List<TimedResult> newList = new LinkedList<TimedResult>();
+	private static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, Map<TimedResult, AlgorithmResult> resMap){
+		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
 		for(TimedResult tr : resMap.keySet()){
+			AlgorithmResult alr = resMap.get(tr);
 			AnomalyResult ar = dFunction.classify(resMap.get(tr));
-			tr.updateEvaluationScore(DetectionAlgorithm.convertResultIntoDouble(ar));
-			newList.add(tr);
+			newList.add(new AlgorithmResult(alr.getData(), alr.getInjection(), DetectionAlgorithm.convertResultIntoDouble(ar), ar, dFunction));
 		}
 		return newList;
 	}

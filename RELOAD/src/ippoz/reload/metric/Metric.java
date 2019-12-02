@@ -8,8 +8,8 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,20 +39,20 @@ public abstract class Metric implements Comparable<Metric> {
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std
 	 *         algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know) {
+	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know, ScoresVoter voter) {
 		double average = 0;
 		double std = 0;
 		double snapValue;
 		int undetectable = 0;
 		Knowledge knowledge = know.cloneKnowledge();
-		List<TimedResult> anomalyEvaluations = new ArrayList<TimedResult>(knowledge.size());
+		List<AlgorithmResult> anomalyEvaluations = new ArrayList<AlgorithmResult>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
 			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
 			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
-			anomalyEvaluations.add(new TimedResult(knowledge.getTimestamp(i), snapValue, ar.getScore(), knowledge.getInjection(i)));
+			anomalyEvaluations.add(ar);
 			if (snapValue >= 0.0) {
-				average = average + anomalyEvaluations.get(i).getValue();
-				std = std + Math.pow(anomalyEvaluations.get(i).getValue(), 2);
+				average = average + snapValue;
+				std = std + Math.pow(snapValue, 2);
 			} else
 				undetectable++;
 			if (knowledge instanceof SlidingKnowledge) {
@@ -86,26 +86,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations);
-
-	/**
-	 * Returns the anomaly evaluation for the given input data.
-	 *
-	 * @param expData
-	 *            the experiment data
-	 * @param voting
-	 *            the voting results for each snapshot
-	 * @param anomalyTreshold
-	 *            the anomaly threshold
-	 * @return the global anomaly evaluation
-	 */
-	public double evaluateAnomalyResults(List<TimedResult> voting, double anomalyTreshold) {
-		List<TimedResult> votingWithTreshold = new ArrayList<TimedResult>(voting.size());
-		for (TimedResult vResult : voting) {
-			votingWithTreshold.add(new TimedResult(vResult.getDate(), vResult.getValue() / anomalyTreshold * 1.0, vResult.getAlgorithmScore(), vResult.getInjectedElement()));
-		}
-		return evaluateAnomalyResults(votingWithTreshold);
-	}
+	public abstract double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations);
 
 	/**
 	 * Compares metric results.
@@ -116,8 +97,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the best metric value
 	 * @return the comparison result
 	 */
-	public abstract int compareResults(double currentMetricValue,
-			double bestMetricValue);
+	public abstract int compareResults(double currentMetricValue, double bestMetricValue);
 
 	/**
 	 * Converts numeric into boolean anomaly evaluation.
