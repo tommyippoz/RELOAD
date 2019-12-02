@@ -6,8 +6,8 @@ package ippoz.reload.ui;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.output.DetectorOutput;
-import ippoz.reload.voter.AlgorithmVoter;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -43,7 +43,7 @@ public class TrainingDetailFrame {
 
 	private DetectorOutput dOut;
 	
-	private List<AlgorithmVoter> voterList;
+	private List<AlgorithmModel> voterList;
 
 	public TrainingDetailFrame(DetectorOutput dOut) {
 		this.dOut = dOut;
@@ -190,7 +190,7 @@ public class TrainingDetailFrame {
 		}
 
 		public Object getValueAt(int row, int col) {
-			AlgorithmVoter av = voterList.get(row);
+			AlgorithmModel av = voterList.get(row);
 			switch(col){
 				case 0:
 					return av.getDataSeries().getSanitizedName();

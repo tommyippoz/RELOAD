@@ -3,8 +3,8 @@
  */
 package ippoz.reload.metric;
 
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.support.TimedResult;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,12 +32,15 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		this.absolute = absolute;
 	}
 	
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	
+	
+	@Override
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
-			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
-				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
+			if (anomalyEvaluations.get(i).getInjection() != null) {
+				overallInj.add(anomalyEvaluations.get(i).getInjection());
 			}
 			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
 			int d = classifyMetric(anomalyEvaluations.get(i));
@@ -50,6 +53,9 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 			} else return detectionHits;
 		} else return 0.0;
 	}
+
+
+
 
 	/*@Override
 	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
@@ -100,6 +106,6 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		return undetectable;
 	}*/
 
-	protected abstract int classifyMetric(TimedResult tResult);
+	protected abstract int classifyMetric(AlgorithmResult tResult);
 
 }

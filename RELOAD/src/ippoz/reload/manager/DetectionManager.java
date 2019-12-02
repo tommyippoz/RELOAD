@@ -20,6 +20,7 @@ import ippoz.reload.loader.Loader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -316,38 +317,33 @@ public class DetectionManager {
 		List<Knowledge> expKnowledge = null;
 		EvaluatorManager bestEManager = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
-		String[] anomalyTresholds = iManager.parseAnomalyTresholds();
-		String[] voterTresholds = iManager.parseVoterTresholds();
-		Map<String, Integer> nVoters = new HashMap<String, Integer>();
-		Map<String, Map<String, List<Map<Metric, Double>>>> evaluations = new HashMap<String, Map<String, List<Map<Metric,Double>>>>();
+		List<ScoresVoter> voterList = iManager.getScoresVoters();
+		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
+		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
 		if(iManager.countAvailableVoters(scoresFileString) > 0){
-			for(String voterTreshold : voterTresholds){
-				evaluations.put(voterTreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
-				for(String anomalyTreshold : anomalyTresholds){
-					EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(scoresFileString), map, metList, anomalyTreshold.trim(), iManager.getConvergenceTime(), voterTreshold.trim(), printOutput);
-					if(expKnowledge == null)
-						expKnowledge = eManager.getKnowledge();
-					if(eManager.detectAnomalies()) {
-						evaluations.get(voterTreshold.trim()).put(anomalyTreshold.trim(), eManager.getMetricsEvaluations());
-					}
-					nVoters.put(voterTreshold.trim(), eManager.getCheckersNumber());
-					String a = Metric.getAverageMetricValue(evaluations.get(voterTreshold.trim()).get(anomalyTreshold.trim()), metric);
-					double score = Double.parseDouble(a);
-					if(score > bestScore) {
-						bestScore = score;
-						if(bestEManager != null){
-							bestEManager.flush();
-						} 
-						bestEManager = eManager;
-					} else eManager.flush();
-				}
+			for(ScoresVoter voter : voterList){
+				EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(scoresFileString), map, metList, 10, printOutput);
+				if(expKnowledge == null)
+					expKnowledge = eManager.getKnowledge();
+				if(eManager.detectAnomalies()) {
+					evaluations.put(voter, eManager.getMetricsEvaluations());
+				} else evaluations.put(voter, new LinkedList<Map<Metric,Double>>());
+				nVoters.put(voter, eManager.getCheckersNumber());
+				double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
+				if(score > bestScore) {
+					bestScore = score;
+					if(bestEManager != null){
+						bestEManager.flush();
+					} 
+					bestEManager = eManager;
+				} else eManager.flush();
 			}
-			bestScore = getBestScore(evaluations, metList, anomalyTresholds);
+			bestScore = getBestScore(evaluations, metList, voterList);
 			return new DetectorOutput(iManager, expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
-					getBestSetup(evaluations, metList, anomalyTresholds), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-					getMetricScores(evaluations, metList, anomalyTresholds), anomalyTresholds,
-					nVoters, bestEManager != null ? bestEManager.getTimedEvaluations() : null, l,
+					getBestSetup(evaluations, metList, voterList), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+					getMetricScores(evaluations, metList, voterList), voterList,
+					nVoters, bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
 					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
 					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
 					bestEManager != null ? bestEManager.getFailures() : null, 
@@ -362,46 +358,44 @@ public class DetectionManager {
 		}
 	}
 	
-	private String getMetricScores(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds){
+	private String getMetricScores(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, ScoresVoter voter){
+		List<ScoresVoter> list = new LinkedList<ScoresVoter>();
+		list.add(voter);
+		return getMetricScores(evaluations, metList, list);
+	}
+	
+	private String getMetricScores(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, List<ScoresVoter> voterList){
 		double score;
 		double bestScore = Double.NEGATIVE_INFINITY;
-		String bVoter = null;
-		String bAnT = null;
+		ScoresVoter bVoter = null;
 		String out = "";
-		for(String voterTreshold : evaluations.keySet()){
-			for(String anomalyTreshold : anomalyTresholds){
-				for(Metric met : metList){
-					score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
-					if(met.equals(metric)){
-						if(score > bestScore) {
-							bestScore = score;
-							bVoter = voterTreshold;
-							bAnT = anomalyTreshold;
-						}
+		for(ScoresVoter voter : voterList){
+			for(Metric met : metList){
+				score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), met));
+				if(met.equals(metric)){
+					if(score > bestScore) {
+						bestScore = score;
+						bVoter = voter;
 					}
 				}
 			}
 		}
 		for(Metric met : metList){
-			if(bestScore >= 0)
-				score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(bVoter).get(bAnT.trim()), met));
-			else score = Double.NaN;
+			score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(bVoter), met));
 			out = out + score + ",";
 		}
 		return out.substring(0, out.length()-1);
 	}
 	
-	private double getBestScore(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
+	private double getBestScore(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, List<ScoresVoter> voterList) {
 		double score;
 		double bestScore = Double.NEGATIVE_INFINITY;
-		for(String voterTreshold : evaluations.keySet()){
-			for(String anomalyTreshold : anomalyTresholds){
-				for(Metric met : metList){
-					score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
-					if(met.equals(metric)){
-						if(score > bestScore) {
-							bestScore = score;
-						}
+		for(ScoresVoter voter : voterList){
+			for(Metric met : metList){
+				score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), met));
+				if(met.equals(metric)){
+					if(score > bestScore) {
+						bestScore = score;
 					}
 				}
 			}
@@ -409,21 +403,25 @@ public class DetectionManager {
 		return bestScore;
 	}
 	
-	private String getBestSetup(Map<String, Map<String, List<Map<Metric, Double>>>> evaluations, Metric[] metList, String[] anomalyTresholds) {
+	private ScoresVoter getBestSetup(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, ScoresVoter voter){
+		List<ScoresVoter> list = new LinkedList<ScoresVoter>();
+		list.add(voter);
+		return getBestSetup(evaluations, metList, list);
+	}
+	
+	private ScoresVoter getBestSetup(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, List<ScoresVoter> voterList) {
 		double score;
 		double bestScore = Double.NEGATIVE_INFINITY;
-		String bSetup = null;
-		for(String voterTreshold : evaluations.keySet()){
-			for(String anomalyTreshold : anomalyTresholds){
-				for(Metric met : metList){
-					score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voterTreshold).get(anomalyTreshold.trim()), met));
-					if(met.equals(metric)){
-						if(score > bestScore) {
-							bestScore = score;
-							bSetup = voterTreshold + " - " + anomalyTreshold;
-						}
+		ScoresVoter bSetup = null;
+		for(ScoresVoter voter : voterList){
+			for(Metric met : metList){
+				score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), met));
+				if(met.equals(metric)){
+					if(score > bestScore) {
+						bestScore = score;
+						bSetup = voter;
 					}
-				}
+				}				
 			}
 		}
 		return bSetup;
@@ -447,46 +445,46 @@ public class DetectionManager {
 		}
 	}
 	
-	private DetectorOutput optimizedEvaluation(String bestSetup){
+	private DetectorOutput optimizedEvaluation(ScoresVoter bestVoter){
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		List<Loader> lList = buildLoader("validation");
 		List<MonitoredData> expList;
 		DetectorOutput dOut = null;
 		try {
-			if(bestSetup != null && bestSetup.length() > 0 && bestSetup.contains("-")) {
+			if(bestVoter != null) {
 				if(lList.size() > 1)
 					AppLogger.logError(getClass(), "TooManyLoaders", "Too many validation loaders. Evaluating just the first.");
 				Loader l = lList.iterator().next();
 				expList = l.fetch();
 				if(expList != null && expList.size() > 0){
-					dOut = singleEvaluation(l, metList, generateKnowledge(expList), bestSetup.split("-")[1].trim(), bestSetup.split("-")[0].trim(), printOutput);
+					dOut = singleEvaluation(l, metList, generateKnowledge(expList), bestVoter, printOutput);
 					dOut.setBestRuns(l.getRuns());	
 					dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
 					AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validatioon data");
-			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to decode '" + bestSetup + "' threhsolds");
+			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to apply '" + bestVoter + "' results voter");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
 		}
 		return dOut;
 	}
 	
-	public DetectorOutput singleEvaluation(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, String anomalyThreshold, String voterThreshold, boolean printOutput){
-		Map<String, Integer> nVoters = new HashMap<String, Integer>();
-		Map<String, Map<String, List<Map<Metric, Double>>>> evaluations = new HashMap<String, Map<String, List<Map<Metric,Double>>>>();
-		EvaluatorManager eManager = new EvaluatorManager(iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, anomalyThreshold.trim(), iManager.getConvergenceTime(), voterThreshold.trim(), printOutput);
-		evaluations.put(voterThreshold.trim(), new HashMap<String, List<Map<Metric,Double>>>());
+	public DetectorOutput singleEvaluation(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, ScoresVoter voter, boolean printOutput){
+		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
+		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
+		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
+		EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, 10, printOutput);
 		if(eManager.detectAnomalies()) {
-			evaluations.get(voterThreshold.trim()).put(anomalyThreshold.trim(), eManager.getMetricsEvaluations());
-		}
-		nVoters.put(voterThreshold.trim(), eManager.getCheckersNumber());
-		String a = Metric.getAverageMetricValue(evaluations.get(voterThreshold.trim()).get(anomalyThreshold.trim()), metric);
-		double score = Double.parseDouble(a);
+			evaluations.put(voter, eManager.getMetricsEvaluations());
+		} else evaluations.put(voter, new LinkedList<Map<Metric,Double>>());
+		nVoters.put(voter, eManager.getCheckersNumber());
+		voterList.add(voter);
+		double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
 		return new DetectorOutput(iManager, eManager.getKnowledge(), Double.isFinite(score) ? score : 0.0,
-			getBestSetup(evaluations, metList, new String[]{anomalyThreshold}), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-			getMetricScores(evaluations, metList, new String[]{anomalyThreshold}), new String[]{anomalyThreshold},
-			nVoters, eManager.getTimedEvaluations(), l, 
+			getBestSetup(evaluations, metList, voter), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+			getMetricScores(evaluations, metList, voter), voterList,
+			nVoters, eManager.getVotingEvaluations(), l, 
 			evaluations, eManager.getDetailedEvaluations(),
 			eManager.getAnomalyThreshold(), eManager.getFailures(),	
 			iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	

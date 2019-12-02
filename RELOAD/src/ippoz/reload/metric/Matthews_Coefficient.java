@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
  * @author Tommy
  *
  */
-public class Matthews_Coefficient extends BetterMaxMetric {
+public class Matthews_Coefficient extends BetterBigMetric {
 
 	public Matthews_Coefficient(boolean validAfter) {
 		super(MetricType.MATTHEWS, validAfter);
@@ -25,7 +25,7 @@ public class Matthews_Coefficient extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);

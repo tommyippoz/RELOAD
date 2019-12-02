@@ -46,11 +46,13 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					readed = reader.readLine();
 					if(readed != null && !readed.startsWith("*") && readed.contains(";")){
 						readed = readed.trim();
-						boolean flag = Boolean.valueOf(readed.split(";")[1]);
-						double score = Double.parseDouble(readed.split(";")[0]);
-						if(flag)
-							loggedAnomalyScores.addValue(score);
-						else loggedScores.addValue(score);
+						if(readed.contains(";")){
+							boolean flag = Boolean.valueOf(readed.split(";")[1]);
+							double score = Double.parseDouble(readed.split(";")[0]);
+							if(flag)
+								loggedAnomalyScores.addValue(score);
+							else loggedScores.addValue(score);
+						} else loggedScores.addValue(Double.parseDouble(readed));
 					}
 				}
 				reader.close();
@@ -90,11 +92,11 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 
 	@Override
 	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
-		Object trainOut;
+		boolean trainOut;
 		if(createOutput && !new File(getDefaultTmpFolder()).exists())
 			new File(getDefaultTmpFolder()).mkdirs();
 		trainOut = automaticInnerTraining(kList, createOutput);
-		if(trainOut != null){
+		if(trainOut){
 			
 			setDecisionFunction("IQR", new ValueSeries(getTrainScores()), false);
 			
@@ -114,7 +116,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		    storeAdditionalPreferences();
 		    
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
-		return trainOut != null;
+		return trainOut;
 	}
 
 	/**

@@ -49,5 +49,11 @@ public enum DecisionFunctionType {
 	
 	/** The cluster. */
 	CLUSTER, 
+	
+	/** Mode Interval Function */
+	MODE_INTERVAL, MODE,
+	
+	/** Median Interval Function */
+	MEDIAN_INTERVAL, MEDIAN
 
 }

@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,32 +16,32 @@ import java.util.Map;
  * @author Tommy
  *
  */
-public class OverlapDetail_Metric extends BetterMinMetric {
+public class NoPredictionArea_Metric extends BetterMinMetric {
 
-	public OverlapDetail_Metric(boolean validAfter) {
-		super(MetricType.OVERLAP_DETAIL, validAfter);
+	public NoPredictionArea_Metric(boolean validAfter) {
+		super(MetricType.NO_PREDICTION, validAfter);
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
-		for(TimedResult tr : anomalyEvaluations){
-			if(tr.getInjectedElement() != null)
-				faultyList.add(tr.getAlgorithmScore());
-			else normalList.add(tr.getAlgorithmScore());
+		for(AlgorithmResult tr : anomalyEvaluations){
+			if(tr.getInjection() != null)
+				faultyList.add(tr.getScore());
+			else normalList.add(tr.getScore());
 		}
 		return calculateOverlapDetail(normalList, faultyList);
 	}
 
 	@Override
 	public String getMetricName() {
-		return "OVERLAP_DETAIL";
+		return "NO_PREDICTION";
 	}
 
 	@Override
 	public String getMetricShortName() {
-		return "OVERLAP_DETAIL";
+		return "NO_PREDICTION";
 	}
 	
 	public static double calculateOverlapDetail(List<Double> normalList, List<Double> faultyList){

@@ -18,6 +18,7 @@ import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
+import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
@@ -38,17 +39,19 @@ import ippoz.reload.metric.FalsePositiveRate_Metric;
 import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
-import ippoz.reload.metric.OverlapDetail_Metric;
+import ippoz.reload.metric.NoPredictionArea_Metric;
 import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.metric.Precision_Metric;
 import ippoz.reload.metric.Recall_Metric;
+import ippoz.reload.metric.SafeScore_Metric;
 import ippoz.reload.metric.TN_Metric;
 import ippoz.reload.metric.TP_Metric;
+import ippoz.reload.metric.ThresholdAmount_Metric;
 import ippoz.reload.reputation.BetaReputation;
 import ippoz.reload.reputation.ConstantReputation;
 import ippoz.reload.reputation.MetricReputation;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.AlgorithmVoter;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -139,15 +142,6 @@ public class InputManager {
 	
 	/** The Constant DETECTION_PREFERENCES_FILE. */
 	public static final String DETECTION_PREFERENCES_FILE = "DETECTION_PREFERENCES_FILE";
-	
-	/** The Constant DM_ANOMALY_TRESHOLD. */
-	private static final String DM_ANOMALY_TRESHOLD = "ANOMALY_TRESHOLD";
-	
-	/** The Constant DM_SCORE_TRESHOLD. */
-	private static final String DM_SCORE_TRESHOLD = "INDICATOR_SCORE_TRESHOLD";
-	
-	/** The Constant DM_CONVERGENCE_TIME. */
-	private static final String DM_CONVERGENCE_TIME = "CONVERGENCE_TIME";
 
 	public static final String PEARSON_SIMPLE_THRESHOLD = "PEARSON_TOLERANCE";
 	
@@ -164,19 +158,11 @@ public class InputManager {
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
 	
-	/** The detection preference manager. */
-	private PreferencesManager detectionManager;
-	
 	public InputManager(PreferencesManager prefManager) {
 		this.prefManager = prefManager;
 		try {
 			if(prefManager == null || !prefManager.isValidFile())
 				this.prefManager = generateDefaultRELOADPreferences();
-			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
-				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
-			else {
-				detectionManager = generateDefaultScoringPreferences();
-			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while reading preferences");
 		}
@@ -186,11 +172,6 @@ public class InputManager {
 		try {
 			if(prefManager == null || !prefManager.isValidFile())
 				this.prefManager = generateDefaultRELOADPreferences();
-			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
-				detectionManager = new PreferencesManager(prefManager.getPreference(DETECTION_PREFERENCES_FILE));
-			else {
-				detectionManager = generateDefaultScoringPreferences();
-			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while reading preferences");
 		}
@@ -433,6 +414,11 @@ public class InputManager {
 				return new AUC_Metric(validAfter);
 			case "ACCURACY":
 				return new Accuracy_Metric(validAfter);
+			case "SAFESCORE":
+			case "SAFE_SCORE":
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new SafeScore_Metric(Double.valueOf(param), validAfter);
+				else return new SafeScore_Metric(2.0, validAfter);
 			case "CUSTOM":
 				return new Custom_Metric(validAfter);
 			case "OVERLAP":
@@ -440,7 +426,12 @@ public class InputManager {
 			case "OVERLAPD":
 			case "OVERLAPDETAIL":
 			case "OVERLAP_DETAIL":
-				return new OverlapDetail_Metric(validAfter);
+			case "NOPREDICTION":
+				return new NoPredictionArea_Metric(validAfter);
+			case "THRESHOLD":
+			case "THRESHOLDS":
+			case "THRESHOLDS_AMOUNT":
+				return new ThresholdAmount_Metric(validAfter);
 			default:
 				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
 				return null;
@@ -476,42 +467,52 @@ public class InputManager {
 		}
 	}
 	
-	public String getAnomalyTreshold(){
-		if(detectionManager.hasPreference(DM_ANOMALY_TRESHOLD))
-			return detectionManager.getPreference(DM_ANOMALY_TRESHOLD);
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DM_ANOMALY_TRESHOLD + " not found. Using default value of 'HALF'");
-			return "HALF";
+	public String getDetectionPreferencesFile() {
+		try {
+			if(prefManager.hasPreference(DETECTION_PREFERENCES_FILE) && new File(getInputFolder() + prefManager.getPreference(DETECTION_PREFERENCES_FILE)).exists())
+				return prefManager.getPreference(DETECTION_PREFERENCES_FILE);
+			else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+						DETECTION_PREFERENCES_FILE + " not found. Using default value of '" + DEFAULT_SCORING_PREF_FILE + "'");
+				if(!new File(DEFAULT_SCORING_PREF_FILE).exists())
+					generateDefaultScoringPreferences();
+				return DEFAULT_SCORING_PREF_FILE;
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "");
 		}
+		return "";
 	}
 	
-	public String[] parseAnomalyTresholds() {
-		String prefString = getAnomalyTreshold();
-		if(prefString != null) {
-			if(prefString.contains(","))
-				return prefString.split(",");
-			else return new String[]{prefString};
-		} else return null;
-	}
-	
-	public String getVoterTreshold(){
-		if(detectionManager.hasPreference(DM_SCORE_TRESHOLD))
-			return detectionManager.getPreference(DM_SCORE_TRESHOLD);
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DM_SCORE_TRESHOLD + " not found. Using default value of 'FILTERED 10'");
-			return "FILTERED 10";
+	public List<ScoresVoter> getScoresVoters() {
+		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
+		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
+		BufferedReader reader;
+		String readed;
+		try {
+			if(voterFile.exists()){
+				reader = new BufferedReader(new FileReader(voterFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
+							ScoresVoter voter = ScoresVoter.generateVoter(readed.split(",")[0], readed.split(",")[1]);
+							if(voter != null)
+								voterList.add(voter);
+						}
+					}
+				}
+				reader.close();
+			} else {
+				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
+						voterFile.getPath() + " not found. Using default value of 'BEST 1 - 1'");
+				voterList.add(ScoresVoter.generateVoter("BEST  1", "1"));
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
 		}
-	}
-
-	public String[] parseVoterTresholds(){
-		String prefString = getVoterTreshold();
-		if(prefString != null){
-			if(prefString.contains(","))
-				return prefString.split(",");
-			else return new String[]{prefString};
-		} else return null;
+		return voterList;
 	}
 	
 	/**
@@ -793,16 +794,6 @@ public class InputManager {
 			return false;
 		}
 	}
-
-	public double getConvergenceTime() {
-		if(detectionManager.hasPreference(DM_CONVERGENCE_TIME) && AppUtility.isNumber(detectionManager.getPreference(DM_CONVERGENCE_TIME)))
-			return Double.parseDouble(detectionManager.getPreference(DM_CONVERGENCE_TIME));
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DM_CONVERGENCE_TIME + " not found. Using default value of '0.0'");
-			return 0.0;
-		}
-	}
 	
 	public int getKFoldCounter() {
 		if(prefManager.hasPreference(KFOLD_COUNTER) && AppUtility.isNumber(prefManager.getPreference(KFOLD_COUNTER)))
@@ -858,14 +849,14 @@ public class InputManager {
 			prefFile = new File(DEFAULT_GLOBAL_PREF_FILE);
 			if(!prefFile.exists()){
 				writer = new BufferedWriter(new FileWriter(prefFile));
-				writer.write("* Default preferences file for 'MADneSs'. Comments with '*'.\n");
+				writer.write("* Default preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("\n\n* Data Source - Loaders.\n" + 
 						"LOADER_FOLDER = input" + File.separatorChar + "loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
 						"LOADERS = iscx\n");
 				writer.write("\n* Datasets folder.\n" +
 						"DATASETS_FOLDER = datasets\n");
-				writer.write("\n* MADneSs Execution.\n\n");
+				writer.write("\n* RELOAD Execution.\n\n");
 				writer.write("\n* Perform Feature Selection (0 = NO, 1 = YES).\n" + 
 						"FEATURE_SELECTION_FLAG = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
@@ -894,7 +885,7 @@ public class InputManager {
 						"SLIDING_POLICY = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
 						"SLIDING_WINDOW_SIZE = 20\n");
-				writer.write("\n* Type of output produced by MADneSs. Accepted values are null, IMAGE, TEXT\n" + 
+				writer.write("\n* Type of output produced by RELOAD. Accepted values are null, IMAGE, TEXT\n" + 
 						"OUTPUT_TYPE = null\n");
 				writer.write("\n* Path Setup.\n\n");
 				writer.write("\n* Input folder\n" + 
@@ -934,13 +925,10 @@ public class InputManager {
 			prefFile = new File(checkFolder(getInputFolder(), true) + DEFAULT_SCORING_PREF_FILE);
 			if(!prefFile.exists()){
 				writer = new BufferedWriter(new FileWriter(prefFile));
-				writer.write("* Default scoring preferences file for 'MADneSs'. Comments with '*'.\n");
-				writer.write("\n* Time needed for convergence (excluded by metric evaluations).\n" + 
-						"CONVERGENCE_TIME = 10.0\n");
-				writer.write("\n* Set of possible anomaly thresholds. Accepted values are ALL, HALF, THIRD, 'n'.\n" + 
-						"ANOMALY_TRESHOLD = ALL, 1\n");
-				writer.write("\n* Strategy to select anomaly checkers. Accepted values are 'min metric score', BEST 'n', FILTERED 'n'.\n" + 
-						"INDICATOR_SCORE_TRESHOLD = BEST 1, BEST 3, FILTERED 10\n");
+				writer.write("* Default scoring preferences file for 'RELOAD'. Comments with '*'.\n");
+				writer.write("\nchecker_selection,voting_strategy");
+				writer.write("BEST 1, 1");
+				writer.write("FILTERED 10, HALF");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -981,7 +969,7 @@ public class InputManager {
 			prefFile = new File(checkFolder(getSetupFolder(), true) + DEFAULT_ALGORITHM_PREF_FILE);
 			if(!prefFile.exists()){
 				writer = new BufferedWriter(new FileWriter(prefFile));
-				writer.write("* Default algorithm preferences file for 'MADneSs'. Comments with '*'.\n");
+				writer.write("* Default algorithm preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("* Uncomment the algorithms you want to use. Filtering uses ELKI_KMEANS by default.\n");
 				for(AlgorithmType at : AlgorithmType.values()){
 					if(at.equals(AlgorithmType.ELKI_KMEANS))
@@ -990,7 +978,7 @@ public class InputManager {
 				}
 			}
 		} catch(IOException ex){
-			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs algorithm preferences");
+			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD algorithm preferences");
 			throw ex;
 		} finally {
 			if(writer != null)
@@ -1014,9 +1002,12 @@ public class InputManager {
 				writer.write("\n FMeasure\n");
 				writer.write("\n FScore(2)\n");
 				writer.write("\n MATTHEWS\n");
+				writer.write("\n NoPrediction\n");
+				writer.write("\n Thresholds\n");
+				writer.write("\n SScore(3)\n");
 			}
 		} catch(IOException ex){
-			AppLogger.logException(InputManager.class, ex, "Error while generating MADneSs algorithm preferences");
+			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD algorithm preferences");
 			throw ex;
 		} finally {
 			if(writer != null)
@@ -1068,10 +1059,6 @@ public class InputManager {
 					SLIDING_WINDOW_SIZE + " not found. Using default value of '20'");
 			return "20";
 		}
-	}
-
-	public String getDetectionPreferencesFile() {
-		return detectionManager.getFilename();
 	}
 
 	public boolean filteringResultExists(String datasetName) {
@@ -1397,7 +1384,7 @@ public class InputManager {
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
 	public int countAvailableVoters(String scoresFileString) {
-		List<AlgorithmVoter> vList = loadVoters(scoresFileString);
+		List<AlgorithmModel> vList = loadVoters(scoresFileString);
 		if(vList != null)
 			return vList.size();
 		else return 0;
@@ -1409,13 +1396,13 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public List<AlgorithmVoter> loadVoters(String scoresFileString) {
+	public List<AlgorithmModel> loadVoters(String scoresFileString) {
 		String scoresFile = getScoresFile(scoresFileString);
 		File asFile = new File(scoresFile);
 		BufferedReader reader;
 		AlgorithmConfiguration conf;
 		String[] splitted;
-		LinkedList<AlgorithmVoter> voterList = new LinkedList<AlgorithmVoter>();
+		LinkedList<AlgorithmModel> voterList = new LinkedList<AlgorithmModel>();
 		String readed;
 		String seriesString;
 		try {
@@ -1437,7 +1424,7 @@ public class InputManager {
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
-								voterList.add(new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
+								voterList.add(new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
 							}
 						}
 					}
@@ -1670,6 +1657,6 @@ public class InputManager {
 
 	public TrainInfo loadTrainInfo(String outFilePrequel) {
 		return new TrainInfo(new File(outFilePrequel));
-	}
+	}	
 	
 }

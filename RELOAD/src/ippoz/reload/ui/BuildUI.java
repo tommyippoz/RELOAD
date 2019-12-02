@@ -319,42 +319,32 @@ public class BuildUI {
 		}).start();
 		new Thread(new Runnable() {
 			public void run() {
-				List<DetectionManager> dmList;
+				int tot = 0;
+				int index = 1;
 				try {
-					dmList = new LinkedList<DetectionManager>();
+					for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+						if(DetectorMain.hasSliding(aList)){
+							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
+						} else {
+							tot++;
+						}
+					}
+					tot = tot*iManager.readLoaders().size();
+					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
+					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
+					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
 						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										dmList.add(new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy));
+										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy), pBar, index++, tot);
 									}
 								}
 							} else {
-								dmList.add(new DetectionManager(iManager, aList, loaderPref));
+								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref), pBar, index++, tot);
 							}
 						}
-					}
-					AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
-					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(dmList.size());
-					DetectorOutput[] newOut;
-					long partialTime, startTime = System.currentTimeMillis();
-					for(int i=0;i<dmList.size();i++){
-						AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-						partialTime = System.currentTimeMillis();
-						newOut = DetectorMain.runMADneSs(dmList.get(i), iManager);
-						final String loggedErrors = AppLogger.getErrorsSince(partialTime);
-						if(loggedErrors != null){
-							Thread t = new Thread(new Runnable(){
-						        public void run(){
-						        	JOptionPane.showMessageDialog(frame, loggedErrors, "Errors while running RELOAD", JOptionPane.ERROR_MESSAGE);
-						        }
-						    });
-							t.start();
-						}	
-						if(newOut != null)
-							outList.add(newOut);
-						pBar.moveNext();
 					}
 					pBar.deleteFrame();
 					AppLogger.logInfo(getClass(), "RELOAD Execution time: " + (System.currentTimeMillis() - startTime) + " ms");
@@ -364,6 +354,24 @@ public class BuildUI {
 				} catch(Exception ex) {
 					AppLogger.logException(getClass(), ex, "");
 				}
+			}
+			
+			private void runRELOAD(List<DetectorOutput[]> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
+				long partialTime = System.currentTimeMillis();
+				AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + index + "/" + tot + "]: '" + detManager.getTag() + "'");
+				DetectorOutput[] newOut = DetectorMain.runMADneSs(detManager, iManager);
+				final String loggedErrors = AppLogger.getErrorsSince(partialTime);
+				if(loggedErrors != null){
+					Thread t = new Thread(new Runnable(){
+				        public void run(){
+				        	JOptionPane.showMessageDialog(frame, loggedErrors, "Errors while running RELOAD", JOptionPane.ERROR_MESSAGE);
+				        }
+				    });
+					t.start();
+				}	
+				if(newOut != null)
+					outList.add(newOut);
+				pBar.moveNext();
 			}
 		}).start();
 	}
@@ -714,11 +722,9 @@ public class BuildUI {
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(12, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_OUTPUT, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, 2*optionSpacing, new String[]{"null", "TEXT", "IMAGE"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "<html><p>Format of output: <br> 'null' is the more compact option, <br> 'TEXT' prints all the intermediate scores through CSV files, while <br> 'IMAGE' prints plots for each run in the evaluation set. <br> Default (and suggested) is 'null'</p></html>"), setupMap);
-		addToPanel(setupPanel, SETUP_IND_SELECTION, createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>"), setupMap);
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
@@ -743,9 +749,13 @@ public class BuildUI {
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed."), setupMap);
 		setupPanel.add(seePrefPanel);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>");
+		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed."), setupMap);
+		addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
+		
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>");
+		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
 		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>");
@@ -964,9 +974,9 @@ public class BuildUI {
 			    public void actionPerformed(ActionEvent e) {
 			        if(!isUpdating){
 			        	String newValue = comboBox.getSelectedItem().toString();
-			        	if(comboBox.getSelectedItem().toString().equals("FSCORE")){
+			        	if(comboBox.getSelectedItem().toString().equals("FSCORE") || comboBox.getSelectedItem().toString().equals("SAFESCORE")){
 			        		String s = (String)JOptionPane.showInputDialog(
-				                    frame, "Set parameter beta for F-Score (beta > 0)", "FSCORE beta",
+				                    frame, "Set parameter beta for F-Score or Safe-Score (beta > 0)", "FSCORE / SAFESCORE beta",
 				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 								newValue = newValue + "(" + s + ")";

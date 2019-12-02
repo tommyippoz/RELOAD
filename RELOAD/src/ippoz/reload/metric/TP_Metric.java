@@ -3,7 +3,7 @@
  */
 package ippoz.reload.metric;
 
-import ippoz.reload.commons.support.TimedResult;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 
 /**
  * The Class TP_Metric. Implements a metric based on true positives.
@@ -38,8 +38,8 @@ public class TP_Metric extends ClassificationMetric {
 	}
 
 	@Override
-	protected int classifyMetric(TimedResult tResult) {
-		if (tResult.getInjectedElement() != null && Metric.anomalyTrueFalse(tResult.getValue())) {
+	protected int classifyMetric(AlgorithmResult tResult) {
+		if (tResult.getInjection() != null && Metric.anomalyTrueFalse(tResult.getScore())) {
 			return 1;
 		} else return 0;
 	}

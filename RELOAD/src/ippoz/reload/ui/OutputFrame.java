@@ -238,7 +238,7 @@ public class OutputFrame {
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 
-		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getBestSetup() : oOut.getBestSetup(), "Setup used to aggregate different anomaly checkers, if more than one"));
+		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getBestSetup().toString() : oOut.getBestSetup().toString(), "Setup used to aggregate different anomaly checkers, if more than one"));
 		miscPanel.add(createLPanel(true, "Evaluation Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getBestRuns() : oOut.getBestRuns(), "Runs used for Evaluation"));
 		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, dOut != null ? String.valueOf(dOut.getBestScore()) : String.valueOf(oOut.getBestScore()), "Metric Score on Evaluation Runs"));			
 		
@@ -251,13 +251,12 @@ public class OutputFrame {
 		centerPanel.setLayout(new GridLayout(2, 1, 0, 20));
 		centerPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 		   
-        String[] columnNames = new String[(dOut != null ? dOut.getEvaluationMetrics().length : oOut.getEvaluationMetrics().length) + 3];
+        String[] columnNames = new String[(dOut != null ? dOut.getEvaluationMetrics().length : oOut.getEvaluationMetrics().length) + 2];
         columnNames[0] = "Voter";
-        columnNames[1] = "Anomaly";
-        columnNames[2] = "Checkers";
-		int i = 3;
+        columnNames[1] = "# Checkers";
+		int i = 2;
         for(Metric met : (dOut != null ? dOut.getEvaluationMetrics() : oOut.getEvaluationMetrics())){
-			columnNames[i++] = met.getMetricType() != null ? met.getMetricShortName() : "AUC";
+			columnNames[i++] = met.getMetricShortName();
 		}	 
         
         int yDist = miscPanel.getHeight() + labelSpacing/2;

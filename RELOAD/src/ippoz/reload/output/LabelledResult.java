@@ -26,6 +26,13 @@ public class LabelledResult {
 	
 	public AlgorithmResult getValue() {
 		return value;
+	}
+
+	@Override
+	public String toString() {
+		return "LabelledResult [label=" + label + ", value=" + value.getScore() + "]";
 	}	
+	
+	
 
 }

@@ -14,6 +14,7 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -186,7 +187,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		List<Double> algResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
-			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
+			metricEvaluation = metric.evaluateMetric(algorithm, knowledge, ScoresVoter.generateVoter("BEST 1", "1"));
 			metricResults.addValue(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}

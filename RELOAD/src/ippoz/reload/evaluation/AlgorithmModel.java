@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.voter;
+package ippoz.reload.evaluation;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -17,7 +17,7 @@ import ippoz.reload.commons.layers.LayerType;
  *
  * @author Tommy
  */
-public class AlgorithmVoter implements Cloneable, Comparable<AlgorithmVoter> {
+public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	
 	/** The algorithm. */
 	private DetectionAlgorithm alg;
@@ -35,7 +35,7 @@ public class AlgorithmVoter implements Cloneable, Comparable<AlgorithmVoter> {
 	 * @param metricScore the metric score
 	 * @param reputationScore the reputation score
 	 */
-	public AlgorithmVoter(DetectionAlgorithm alg, double metricScore, double reputationScore) {
+	public AlgorithmModel(DetectionAlgorithm alg, double metricScore, double reputationScore) {
 		this.alg = alg;
 		this.metricScore = metricScore;
 		this.reputationScore = reputationScore;
@@ -45,8 +45,8 @@ public class AlgorithmVoter implements Cloneable, Comparable<AlgorithmVoter> {
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
-	protected AlgorithmVoter clone() throws CloneNotSupportedException {
-		return new AlgorithmVoter(DetectionAlgorithm.buildAlgorithm(alg.getAlgorithmType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
+	protected AlgorithmModel clone() throws CloneNotSupportedException {
+		return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(alg.getAlgorithmType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class AlgorithmVoter implements Cloneable, Comparable<AlgorithmVoter> {
 	}
 
 	@Override
-	public int compareTo(AlgorithmVoter other) {
+	public int compareTo(AlgorithmModel other) {
 		if(getAlgorithmType().equals(other.getAlgorithmType()) && getDataSeries().equals(other.getDataSeries()))
 			return 0;
 		else return -1;

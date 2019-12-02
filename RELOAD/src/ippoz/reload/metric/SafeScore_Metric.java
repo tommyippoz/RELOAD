@@ -8,14 +8,23 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import java.util.List;
 
 /**
- * The Class FMeasure_Metric. Implements the F-Measure (= F-Score(1))
- *
  * @author Tommy
+ *
  */
-public class FMeasure_Metric extends BetterMaxMetric {
+public class SafeScore_Metric extends BetterMaxMetric {
 
-	public FMeasure_Metric(boolean validAfter) {
-		super(MetricType.FMEASURE, validAfter);
+	/** The beta parameter. */
+	private double beta;
+
+	/**
+	 * Instantiates a new fscore_metric.
+	 *
+	 * @param beta
+	 *            the beta parameter of f-score
+	 */
+	public SafeScore_Metric(double beta, boolean validAfter) {
+		super(MetricType.SAFESCORE, validAfter);
+		this.beta = beta;
 	}
 
 	/*
@@ -27,10 +36,11 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
-		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		if (p + r > 0)
-			return 2.0 * p * r / (p + r);
+		fpr = Math.pow(1 - fpr, 3);
+		if (fpr + r > 0)
+			return (1 + beta * beta) * fpr * r / (beta * beta * fpr + r);
 		else
 			return 0.0;
 	}
@@ -42,12 +52,12 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public String getMetricName() {
-		return "F-Measure";
+		return "SScore(" + beta + ")";
 	}
 
 	@Override
 	public String getMetricShortName() {
-		return "F1";
+		return "S" + (int) beta;
 	}
 
 }

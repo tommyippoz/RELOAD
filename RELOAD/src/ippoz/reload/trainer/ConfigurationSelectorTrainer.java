@@ -12,12 +12,14 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +36,19 @@ import java.util.Map;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	public static String[] DECISION_FUNCTIONS = {"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", "CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", "LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", "CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"};
+	private static int LINEAR_SEARCH_MAX_ITERATIONS = 6;
+	
+	public static String[] DECISION_FUNCTIONS = {
+		"MODE(0.5)", "MODE(0.2)", "MODE(0.05)", 
+		"MEDIAN(0.5)", "MEDIAN(0.2)", "MEDIAN(0.05)", 
+		"MEDIAN_INTERVAL(0.1)", "MEDIAN_INTERVAL(0.05)", "MEDIAN_INTERVAL(0)", 
+		"MODE_INTERVAL(0.1)", "MODE_INTERVAL(0.05)", "MODE_INTERVAL(0)", 
+		"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", 
+		"CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", 
+		"LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", 
+		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)", 
+		"CLUSTER(STD)", "CLUSTER(0.1STD)", 
+		"CLUSTER(0.5STD)", "CLUSTER(VAR)"};
 
 	/** The possible configurations. */
 	private List<AlgorithmConfiguration> configurations;
@@ -76,10 +90,11 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	@Override
 	protected AlgorithmConfiguration lookForBestConfiguration() {
 		Map<String, ValueSeries> currentMetricValue = null;
-		//List<Double> metricResults;
+		ValueSeries vs = null;
 		DetectionAlgorithm algorithm;
 		AlgorithmConfiguration bestConf = null;
 		AlgorithmConfiguration currentConf = null;
+		Map<TimedResult, AlgorithmResult> resultList = null;
 		boolean trainingResult = true;
 		try {
 			metricScore = null;
@@ -104,11 +119,13 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"), false);
 					}
 					
+					vs = algorithm.getLoggedScores();
+					
 					/* If training succeeded */
 					if(!(algorithm instanceof AutomaticTrainingAlgorithm) || trainingResult){
 						
 						/* Calculates Algorithm Scores (just numbers, no threshold applied) */
-						Map<TimedResult, AlgorithmResult> resultList = new HashMap<TimedResult, AlgorithmResult>();
+						resultList = new HashMap<TimedResult, AlgorithmResult>();
 						for(Knowledge know : knMap.get("TEST")){
 							for(int i=0;i<know.size();i++){
 								Snapshot snap = know.buildSnapshotFor(i, getDataSeries());
@@ -120,19 +137,25 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						/* Tries all the possible decision functions */
 						for(String decFunctString : DECISION_FUNCTIONS){
 							if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
-								List<TimedResult> updatedList = updateResultWithDecision(algorithm, resultList, decFunctString);
-								currentMetricValue.get(decFunctString).addValue(getMetric().evaluateAnomalyResults(updatedList));
+								algorithm.setDecisionFunction(decFunctString);
+								List<AlgorithmResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
+								double val = getMetric().evaluateAnomalyResults(updatedList);
+								//System.out.println(decFunctString + " ADD " + val);
+								currentMetricValue.get(decFunctString).addValue(val);
 							}
 						}
 						
-					}	
+					}						
+					
 				}
 				
 				/* Chooses the best decision function out of the available ones */
 				for(String decFunctString : DECISION_FUNCTIONS){
 					if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
+						//System.out.println(decFunctString + " - " + currentMetricValue.get(decFunctString).getAvg());
 						if(metricScore == null || getMetric().compareResults(currentMetricValue.get(decFunctString), metricScore) == 1){	
 							metricScore = currentMetricValue.get(decFunctString);
+							//System.out.println("UPDATE " + decFunctString + " - " + metricScore);
 							bestConf = (AlgorithmConfiguration) conf.clone();
 							bestConf.addItem(AlgorithmConfiguration.THRESHOLD, decFunctString);
 						}
@@ -141,13 +164,29 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				
 			}
 			
+			/* Searches for the best static threshold, if any */
+			if(resultList != null && vs != null){
+				String[] value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
+					metricScore.clear();
+					metricScore.addValue(Double.valueOf(value[1]));
+					bestConf.addItem(AlgorithmConfiguration.THRESHOLD, value[0]);
+				}
+				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
+					metricScore.clear();
+					metricScore.addValue(Double.valueOf(value[1]));
+					bestConf.addItem(AlgorithmConfiguration.THRESHOLD, value[0]);
+				}
+			}
+						
 			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
 				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
 			} else {
 				for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
 					//algorithm.setDecisionFunction(dFunctionString);
-					getMetric().evaluateMetric(algorithm, knowledge);
+					getMetric().evaluateMetric(algorithm, knowledge, ScoresVoter.generateVoter("BEST 1", "1"));
 				}
 			}
 			trainScore = algorithm.getTrainScore();
@@ -157,12 +196,28 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		return bestConf;
 	}
 	
-	private static List<TimedResult> updateResultWithDecision(DetectionAlgorithm algorithm, Map<TimedResult, AlgorithmResult> resMap, String decisionString){
-		List<TimedResult> newList = new LinkedList<TimedResult>();
-		algorithm.setDecisionFunction(decisionString);
+	private String[] linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, Map<TimedResult, AlgorithmResult> resultList){
+		double thrValue = (thrRight + thrLeft)/2;
+		
+		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
+		//System.out.println("IT: " + iteration + " - " + threshold);
+		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
+		double mScore = getMetric().evaluateAnomalyResults(updatedList);
+		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
+			String[] leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
+			String[] rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
+			return (getMetric().compareResults(mScore, Double.valueOf(leftBest[1])) > 0  && 
+						getMetric().compareResults(mScore, Double.valueOf(rightBest[1])) > 0) ? new String[]{threshold, "" + mScore} : 
+							(getMetric().compareResults(Double.valueOf(leftBest[1]), Double.valueOf(rightBest[1])) > 0 ? leftBest : rightBest); 
+		} else return new String[]{threshold, "" + mScore};
+	}
+	
+	private static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, Map<TimedResult, AlgorithmResult> resMap){
+		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
 		for(TimedResult tr : resMap.keySet()){
-			AnomalyResult ar = algorithm.getDecisionFunction().classify(resMap.get(tr));
-			tr.updateEvaluationScore(DetectionAlgorithm.convertResultIntoDouble(ar));
+			AlgorithmResult alr = resMap.get(tr);
+			AnomalyResult ar = dFunction.classify(resMap.get(tr));
+			newList.add(new AlgorithmResult(alr.getData(), alr.getInjection(), DetectionAlgorithm.convertResultIntoDouble(ar), ar, dFunction));
 		}
 		return newList;
 	}
