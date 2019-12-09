@@ -3,10 +3,8 @@
  */
 package ippoz.reload.voter;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-
-import java.util.Collection;
+import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 
 /**
  * @author Tommy
@@ -20,11 +18,10 @@ public class MajorityVoter extends ScoresVoter {
 	}
 	
 	@Override
-	public double voteResults(Collection<AlgorithmResult> individualScores) {
+	public double voteResults(double[] individualScores) {
 		double snapScore = 0.0;
 		boolean undetectable = true;
-		for(AlgorithmResult ar : individualScores){
-			double algScore = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
+		for(double algScore : individualScores){
 			if(algScore >= 0.0){				
 				undetectable = false;
 				snapScore = snapScore + 1.0*algScore;
@@ -36,24 +33,35 @@ public class MajorityVoter extends ScoresVoter {
 	}	
 
 	@Override
-	public double getThreshold() {
+	public double[] getThresholds() {
+		double val = 0;
 		switch(getVotingStrategy()){
 			case "ALL":
-				return getNVoters();
+				val = getNVoters();
+				break;
 			case "HALF":
-				return Math.ceil(getNVoters()/2.0);
+				val = Math.ceil(getNVoters()/2.0);
+				break;
 			case "THIRD":
-				return Math.ceil(getNVoters()/3.0);
+				val = Math.ceil(getNVoters()/3.0);
+				break;
 			case "QUARTER":
-				return Math.ceil(getNVoters()/4.0);
+				val = Math.ceil(getNVoters()/4.0);
+				break;
 			default:
-				return Double.parseDouble(getVotingStrategy());
+				val = Double.parseDouble(getVotingStrategy());
 		}
+		return new double[]{val};
 	}
 
 	@Override
 	public double applyThreshold(double value) {
-		return value / getThreshold();
+		return value / getThresholds()[0];
+	}
+
+	@Override
+	public DecisionFunction getDecisionFunction() {
+		return new StaticThresholdGreaterThanDecision(getThresholds()[0]);
 	}
 
 }

@@ -4,6 +4,7 @@
 package ippoz.reload.voter;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.Metric;
 
 /**
  * @author Tommy
@@ -28,15 +29,18 @@ public class VotingResult extends AlgorithmResult {
 	@Override
 	public double getScore() {
 		if(voter.getNVoters() > 1)
-			return voter.applyThreshold(votingResult);
+			return votingResult;
 		else return super.getScore();
+	}
+	
+	@Override
+	public boolean getBooleanScore() {
+		return Metric.anomalyTrueFalse(voter.applyThreshold(votingResult));
 	}
 
 	@Override
 	public String toString() {
 		return "[" + getScore() + "]";
-	}	
-	
-	
+	}
 
 }

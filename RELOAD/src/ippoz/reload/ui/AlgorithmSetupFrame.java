@@ -65,10 +65,13 @@ public class AlgorithmSetupFrame {
 	
 	private String[] algParams;
 	
-	public AlgorithmSetupFrame( InputManager iManager, AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+	public AlgorithmSetupFrame(InputManager iManager, AlgorithmType algType, List<AlgorithmConfiguration> confList) {
 		this.iManager = iManager;
 		this.algType = algType;
 		this.confList = confList;
+		if(confList == null){
+			//iManager.
+		}
 		if(confList != null && confList.size() > 0){
 			algParams = confList.get(0).listLabels().toArray(new String[confList.get(0).listLabels().size()]);
 		}

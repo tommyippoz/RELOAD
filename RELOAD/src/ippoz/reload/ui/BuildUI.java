@@ -359,7 +359,7 @@ public class BuildUI {
 			private void runRELOAD(List<DetectorOutput[]> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
 				long partialTime = System.currentTimeMillis();
 				AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + index + "/" + tot + "]: '" + detManager.getTag() + "'");
-				DetectorOutput[] newOut = DetectorMain.runMADneSs(detManager, iManager);
+				DetectorOutput[] newOut = DetectorMain.runRELOAD(detManager, iManager);
 				final String loggedErrors = AppLogger.getErrorsSince(partialTime);
 				if(loggedErrors != null){
 					Thread t = new Thread(new Runnable(){

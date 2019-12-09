@@ -67,7 +67,7 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 				for(int i=0;i<dmList.size();i++){
 					AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-					runMADneSs(dmList.get(i), iManager);
+					runRELOAD(dmList.get(i), iManager);
 				}
 			} else {
 				AppLogger.logError(DetectorMain.class, "PreferencesError", "Unable to properly load '" + DEFAULT_PREF_FILE + "' preferences.");
@@ -196,20 +196,20 @@ public class DetectorMain {
 		return false;
 	}
 
-	public static DetectorOutput[] runMADneSs(DetectionManager dManager, InputManager iManager){
+	public static DetectorOutput[] runRELOAD(DetectionManager dManager, InputManager iManager){
 		DetectorOutput oOut = null, dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
-				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
-				dManager.filterIndicators();
+				AppLogger.logInfo(DetectorMain.class, "Starting Feature Selection Process");
+				dManager.featureSelection();
 			}
 			if(dManager.needTraining()) {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 
 			if(dManager.needOptimization()){
-				AppLogger.logInfo(DetectorMain.class, "Starting Optimization Process");
-				oOut = dManager.optimize();
+				AppLogger.logInfo(DetectorMain.class, "Starting Voting/Optimization Process");
+				oOut = dManager.optimizeVoting();
 			}
 			if(dManager.needEvaluation()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
@@ -249,7 +249,7 @@ public class DetectorMain {
 				}
 				writer.write(fsInfo.toFileString() + ",");
 				writer.write(tInfo.toFileString() + ",");
-				writer.write(dOut.getBestSeriesString() + "," + dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
+				writer.write(dOut.getBestSeriesString() + "," + dOut.getWritableTag() + "," + dOut.getVoter() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 				writer.close();
 			}
 		} catch(IOException ex){

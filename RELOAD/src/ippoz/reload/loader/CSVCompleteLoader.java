@@ -128,7 +128,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 									} 
 									i++;
 								}
-								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
+								if(labelCol >= 0 && labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										obList.add(current);
 										if(readLine.split(",")[labelCol] != null && hasFault(readLine.split(",")[labelCol]))

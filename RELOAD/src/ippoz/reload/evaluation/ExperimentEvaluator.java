@@ -38,7 +38,7 @@ import java.util.TreeMap;
  *
  * @author Tommy
  */
-public class ExperimentVoter extends Thread {
+public class ExperimentEvaluator extends Thread {
 	
 	/** The Constant IMG_WIDTH for printing. */
 	private static final int IMG_WIDTH = 1000;
@@ -78,7 +78,7 @@ public class ExperimentVoter extends Thread {
 	 * @param voter 
 	 * @param pManager 
 	 */
-	public ExperimentVoter(List<AlgorithmModel> algVoters, Map<KnowledgeType, Knowledge> knowMap, ScoresVoter voter) {
+	public ExperimentEvaluator(List<AlgorithmModel> algVoters, Map<KnowledgeType, Knowledge> knowMap, ScoresVoter voter) {
 		super();
 		this.algList = deepClone(algVoters);
 		this.voter = voter;

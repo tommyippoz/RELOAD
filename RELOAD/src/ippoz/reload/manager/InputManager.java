@@ -552,7 +552,7 @@ public class InputManager {
 	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(at);
-		return loadConfigurations(list, windowSize, sPolicy, false);
+		return loadConfigurations(list, windowSize, sPolicy, true);
 	}
 
 	/**
@@ -927,8 +927,8 @@ public class InputManager {
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default scoring preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("\nchecker_selection,voting_strategy");
-				writer.write("BEST 1, 1");
-				writer.write("FILTERED 10, HALF");
+				writer.write("\nBEST 1, 1");
+				writer.write("\nFILTERED 10, HALF");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -1383,8 +1383,8 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public int countAvailableVoters(String scoresFileString) {
-		List<AlgorithmModel> vList = loadVoters(scoresFileString);
+	public int countAvailableModels(String scoresFileString) {
+		List<AlgorithmModel> vList = loadAlgorithmModels(scoresFileString);
 		if(vList != null)
 			return vList.size();
 		else return 0;
@@ -1396,13 +1396,13 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public List<AlgorithmModel> loadVoters(String scoresFileString) {
+	public List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
 		String scoresFile = getScoresFile(scoresFileString);
 		File asFile = new File(scoresFile);
 		BufferedReader reader;
 		AlgorithmConfiguration conf;
 		String[] splitted;
-		LinkedList<AlgorithmModel> voterList = new LinkedList<AlgorithmModel>();
+		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
 		String readed;
 		String seriesString;
 		try {
@@ -1424,7 +1424,7 @@ public class InputManager {
 									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
 									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
 								}
-								voterList.add(new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
+								modelList.add(new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
 							}
 						}
 					}
@@ -1434,7 +1434,7 @@ public class InputManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}
-		return voterList;
+		return modelList;
 	}
 
 	public String[] loadSelectedDataSeriesString(String filePrequel) {

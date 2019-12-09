@@ -133,8 +133,10 @@ public class OutputDetailFrame {
 		if(anomalyScores != null && anomalyScores.size() > 0)
 			anomalyNormalFlag = true;
 		else anomalyNormalFlag = false;
-		
-		dFunction = createDefaultDecisionFunction();
+
+		if(dOut.getVoter() != null && dOut.getVoter().getNVoters() > 1){
+			dFunction = dOut.getVoter().getDecisionFunction();
+		} else dFunction = createDefaultDecisionFunction();
 		
 		setMinMaxValues();
 		minValue = minRefValue;
@@ -745,7 +747,8 @@ public class OutputDetailFrame {
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
+				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "'" + (dOut.getVoter() != null && dOut.getVoter().getNVoters() > 1 ? (" (voting: " + dOut.getVoter().toString() + ")") : "") +
+				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   

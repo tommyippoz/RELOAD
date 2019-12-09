@@ -14,7 +14,7 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
-import ippoz.reload.evaluation.ExperimentVoter;
+import ippoz.reload.evaluation.ExperimentEvaluator;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.ScoresVoter;
 import ippoz.reload.voter.VotingResult;
@@ -87,8 +87,8 @@ public class EvaluatorManager extends DataManager {
 		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voter.toString() + "]");
 	}
 	
-	public double getAnomalyThreshold(){
-		return voter.getThreshold();
+	public double[] getAnomalyThresholds(){
+		return voter.getThresholds();
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class EvaluatorManager extends DataManager {
 	@Override
 	protected void initRun() {
 		List<AlgorithmModel> algVoters = loadTrainScores();
-		List<ExperimentVoter> voterList = new ArrayList<ExperimentVoter>(experimentsSize());
+		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
 		Map<KnowledgeType, Knowledge> redKMap;
 		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
 		detailedEvaluations = new ArrayList<Map<Date, Map<AlgorithmModel, AlgorithmResult>>>(voterList.size());
@@ -129,7 +129,7 @@ public class EvaluatorManager extends DataManager {
 				for(KnowledgeType kType : getKnowledgeTypes()){
 					redKMap.put(kType, getKnowledge(kType).get(expN));
 				}
-				voterList.add(new ExperimentVoter(algVoters, redKMap, voter));
+				voterList.add(new ExperimentEvaluator(algVoters, redKMap, voter));
 			}
 		}
 		setThreadList(voterList);
@@ -148,7 +148,7 @@ public class EvaluatorManager extends DataManager {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		ExperimentVoter ev = (ExperimentVoter)t;
+		ExperimentEvaluator ev = (ExperimentEvaluator)t;
 		if(ev.getFailuresNumber() > 0){
 			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, algConvergence, printOutput));
 			detailedEvaluations.add(ev.getSingleAlgorithmScores());
@@ -232,7 +232,7 @@ public class EvaluatorManager extends DataManager {
 	public Map<String, List<VotingResult>> getVotingEvaluations() {
 		Map<String, List<VotingResult>> outMap = new TreeMap<String, List<VotingResult>>();
 		for(Thread t : getThreadList()){
-			ExperimentVoter ev = (ExperimentVoter)t;
+			ExperimentEvaluator ev = (ExperimentEvaluator)t;
 			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());
 		}
 		return outMap;
@@ -246,7 +246,7 @@ public class EvaluatorManager extends DataManager {
 		Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmModel, AlgorithmResult>>>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
-				ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
+				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
 				if(i < detailedEvaluations.size()){
 					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
@@ -264,7 +264,7 @@ public class EvaluatorManager extends DataManager {
 	public Map<String, List<InjectedElement>> getFailures(){
 		Map<String, List<InjectedElement>> outMap = new TreeMap<String, List<InjectedElement>>();
 		for(int i=0;i<getThreadList().size();i++){
-			ExperimentVoter ev = (ExperimentVoter)getThreadList().get(i);
+			ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 			outMap.put(ev.getExperimentName(), ev.getFailuresList());
 		}
 		return outMap;

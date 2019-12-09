@@ -533,11 +533,11 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_ELKI_ABOD:
 				return "Sliding version of ABOD.";
 			case ELKI_SOS:
-				return "Statistical algorithm. <br>"
+				return "Stochastic Outlier Selection (SOS), a Statistical algorithm. <br>"
 						+ "It takes as input either a feature matrix or a dissimilarity matrix and outputs for each data point an outlier probability. <br>"
 						+ "Intuitively, a data point is considered to be an outlier when the other data points have insufficient affinity with it.";
 			case ELKI_ISOS:
-				return "Fast version of SOS (Intrinsic SOS), calculating dissimilarity with the kNN of the data point.";
+				return "Fast version of SOS (Intrinsic Stochastic Outlier Selection), calculating dissimilarity with the kNN of the data point.";
 			case ELKI_LOF:
 				return "Local Outlier Factor algorithm. <br>"
 						+ "LOF is based on a concept of a local density, where locality is given by kNN, <br>"
@@ -567,6 +567,9 @@ public abstract class DetectionAlgorithm {
 			case HBOS:
 				return "Generates histograms for each feature that describes the frequence of occurrence of specific values. <br> "
 						+ "Then, a data point is scored with an high HBOS is falls in an area of the histogram with short bars.";		
+			case ELKI_KNN:	
+				return "Unsupervised k-th Nearest Neighbour Algorithm. <br>"
+						+ "Calculates the knn score as the distance to its k-th neighbour";
 			case ELKI_ODIN:	
 				return "Outlier Detection using Indegree Number. <br>"
 						+ "Calculates the odin according to the KNN graph. <br>"
@@ -595,6 +598,9 @@ public abstract class DetectionAlgorithm {
 						+ "SDO builds a low density data model formed by observers. <br> "
 						+ "An observer is a data object placed within the data mass and ideally equidistant to other observers within the same cluster. <br>"
 						+ "The outlierness of a data object is evaluated based on the distance to its x-closest observers.";
+			case SOM:
+				return "Self-Organizing Maps (SOM). <br>"
+						+ "Single-hidden layer SOM, able to perform binary classification and training its hidden layer through subsequent refinements.";
 			default:
 				return "Algorithms' details not available.";
 		}
@@ -626,6 +632,7 @@ public abstract class DetectionAlgorithm {
 						+ " and at least 5% of training examples being support vectors.";
 			case HBOS:
 				return base + "(k) the number of histograms to generate for each indicator.";
+			case ELKI_KNN:
 			case ELKI_ODIN:
 			case SLIDING_ELKI_KNN:
 				return base + "(k) the number of neighbours.";
@@ -646,6 +653,15 @@ public abstract class DetectionAlgorithm {
 				return base + "(k) the amount of observers <br>"
 						+ "(q) the 'observation threshold' to derive observers (% of training set size), <br>"
 						+ "(x) the amount of 'closest' observers";
+			case ELKI_SOS:
+				return base + "(h) the minimum number of 'affine' data points";
+			case ELKI_ISOS:
+				return base + "(k) the number of neighbours <br>"
+						+ "(phi) the ratio of items wrt the size of the training set to consider 'affine' data points.";
+			case SOM:
+				return base + "(min_alpha) minimum acceptable value for alpha <br>"
+						+ "(decay) the decay speed of alpha until it reaches min_alpha <br>"
+						+ "(alpha) the learning coefficient (0 <= alpha <= 1).";
 			default:
 				return "Parameters are shown in the table.";
 		}
@@ -683,6 +699,14 @@ public abstract class DetectionAlgorithm {
 
 	public ValueSeries getLoggedScores() {
 		return loggedScores;
+	}
+	
+	public static AlgorithmType isAlgorithm(String value){
+		try {
+			return AlgorithmType.valueOf(value.trim());
+		} catch(Exception ex){
+			return null;
+		}
 	}
 
 }

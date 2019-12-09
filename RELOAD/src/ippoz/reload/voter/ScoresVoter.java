@@ -3,11 +3,12 @@
  */
 package ippoz.reload.voter;
 
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.evaluation.AlgorithmModel;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -52,12 +53,20 @@ public abstract class ScoresVoter {
 	}*/
 
 	public double voteResults(Map<AlgorithmModel, AlgorithmResult> snapVoting){
-		return voteResults(snapVoting.values());
+		int index = 0;
+		double[] individualScores = null;
+		if(snapVoting != null){
+			individualScores = new double[snapVoting.size()];
+			for(AlgorithmModel model : snapVoting.keySet()){
+				individualScores[index++] = DetectionAlgorithm.convertResultIntoDouble(snapVoting.get(model).getScoreEvaluation());
+			}
+			return voteResults(individualScores);
+		} else return Double.NaN;
 	}
 	
-	public abstract double voteResults(Collection<AlgorithmResult> individualResults);
+	public abstract double voteResults(double[] individualScores);
 	
-	public abstract double getThreshold();
+	public abstract double[] getThresholds();
 	
 	public abstract double applyThreshold(double value);
 	
@@ -75,9 +84,11 @@ public abstract class ScoresVoter {
 	}
 
 	public static ScoresVoter generateVoter(String checkerSelection, String votingStrategy) {
-		if(checkerSelection != null && !checkerSelection.contains("_"))
-			return new MajorityVoter(checkerSelection, votingStrategy);
-		else {
+		if(checkerSelection != null && !checkerSelection.contains("_")){
+			if(votingStrategy != null && DetectionAlgorithm.isAlgorithm(votingStrategy) != null)
+				return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy));
+			else return new MajorityVoter(checkerSelection, votingStrategy);
+		} else {
 			return null;
 		}
 	} 
@@ -143,5 +154,7 @@ public abstract class ScoresVoter {
 	public int getNVoters(){
 		return nVoters;
 	}
+
+	public abstract DecisionFunction getDecisionFunction();
 	
 }

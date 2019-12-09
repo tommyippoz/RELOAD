@@ -39,7 +39,7 @@ public class FP_Metric extends ClassificationMetric {
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (tResult.getInjection() == null && Metric.anomalyTrueFalse(tResult.getScore())) {
+		if (tResult.getInjection() == null && tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

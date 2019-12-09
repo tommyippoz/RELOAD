@@ -6,6 +6,7 @@ package ippoz.reload.algorithm.result;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.metric.Metric;
 
 import java.util.List;
 
@@ -176,6 +177,10 @@ public class AlgorithmResult {
 
 	public InjectedElement getInjection() {
 		return injection;
+	}
+
+	public boolean getBooleanScore() {
+		return Metric.anomalyTrueFalse(getScore());
 	}
 
 }

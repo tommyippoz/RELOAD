@@ -140,7 +140,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 								algorithm.setDecisionFunction(decFunctString);
 								List<AlgorithmResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
 								double val = getMetric().evaluateAnomalyResults(updatedList);
-								//System.out.println(decFunctString + " ADD " + val);
 								currentMetricValue.get(decFunctString).addValue(val);
 							}
 						}
@@ -171,6 +170,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					metricScore.clear();
 					metricScore.addValue(Double.valueOf(value[1]));
 					bestConf.addItem(AlgorithmConfiguration.THRESHOLD, value[0]);
+					
 				}
 				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){

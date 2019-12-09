@@ -98,6 +98,11 @@ public class AlgorithmConfiguration implements Cloneable {
 		return newConf;
 	}
 	
+	public void removeItem(String tag) {
+		if(hasItem(tag))
+			confMap.remove(tag);
+	}
+	
 	public static AlgorithmConfiguration getConfiguration(AlgorithmType algType, AlgorithmConfiguration oldConf) {
 		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
 		return conf;

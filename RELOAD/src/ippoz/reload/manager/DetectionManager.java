@@ -20,6 +20,7 @@ import ippoz.reload.loader.Loader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.AlgorithmVoter;
 import ippoz.reload.voter.ScoresVoter;
 
 import java.io.File;
@@ -178,7 +179,7 @@ public class DetectionManager {
 	/**
 	 * Starts the train process.
 	 */
-	public void filterIndicators(){
+	public void featureSelection(){
 		List<Knowledge> kList;
 		FeatureSelectorManager fsm;
 		String scoresFolderName;
@@ -262,7 +263,7 @@ public class DetectionManager {
 	 * Starts the optimization process.
 	 * @return 
 	 */
-	public DetectorOutput optimize(){
+	public DetectorOutput optimizeVoting(){
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		List<Loader> lList = buildLoader("train");
@@ -276,7 +277,7 @@ public class DetectionManager {
 		int index = 0;
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
 		try {
-			if(iManager.countAvailableVoters(scoresFileString) > 0){
+			if(iManager.countAvailableModels(scoresFileString) > 0){
 				if(lList.size() > 1){
 					for(Loader l : lList){
 						expList = l.fetch();
@@ -301,8 +302,7 @@ public class DetectionManager {
 					dOut.setBestRuns(l.getRuns());
 				}	
 				dOut.summarizeCSV(iManager.getOutputFolder());
-				//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
-				AppLogger.logInfo(getClass(), "Final Optimized score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
+				AppLogger.logInfo(getClass(), "Voting score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 			} else {
 				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
 				return null;
@@ -321,8 +321,12 @@ public class DetectionManager {
 		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
 		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
-		if(iManager.countAvailableVoters(scoresFileString) > 0){
+		if(iManager.countAvailableModels(scoresFileString) > 0){
 			for(ScoresVoter voter : voterList){
+				if(voter instanceof AlgorithmVoter){
+					AlgorithmVoter av = (AlgorithmVoter)voter;
+					// TODO
+				}
 				EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(scoresFileString), map, metList, 10, printOutput);
 				if(expKnowledge == null)
 					expKnowledge = eManager.getKnowledge();
@@ -341,11 +345,11 @@ public class DetectionManager {
 			}
 			bestScore = getBestScore(evaluations, metList, voterList);
 			return new DetectorOutput(iManager, expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
-					getBestSetup(evaluations, metList, voterList), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+					getBestSetup(evaluations, metList, voterList), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
 					getMetricScores(evaluations, metList, voterList), voterList,
 					nVoters, bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
 					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
-					bestEManager != null ? bestEManager.getAnomalyThreshold() : null,
+					bestEManager != null ? bestEManager.getAnomalyThresholds() : null,
 					bestEManager != null ? bestEManager.getFailures() : null, 
 					iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),		
 					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN, 
@@ -433,11 +437,11 @@ public class DetectionManager {
 
 	public DetectorOutput evaluate(DetectorOutput optOut) {
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
-		if(iManager.countAvailableVoters(scoresFileString) > 0){
-			if(optOut == null || optOut.getBestSetup() == null){
+		if(iManager.countAvailableModels(scoresFileString) > 0){
+			if(optOut == null || optOut.getVoter() == null){
 				return evaluateAll();
 			} else {
-				return optimizedEvaluation(optOut.getBestSetup());
+				return optimizedEvaluation(optOut.getVoter());
 			}
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
@@ -482,11 +486,11 @@ public class DetectionManager {
 		voterList.add(voter);
 		double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
 		return new DetectorOutput(iManager, eManager.getKnowledge(), Double.isFinite(score) ? score : 0.0,
-			getBestSetup(evaluations, metList, voter), iManager.loadVoters(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+			getBestSetup(evaluations, metList, voter), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
 			getMetricScores(evaluations, metList, voter), voterList,
 			nVoters, eManager.getVotingEvaluations(), l, 
 			evaluations, eManager.getDetailedEvaluations(),
-			eManager.getAnomalyThreshold(), eManager.getFailures(),	
+			eManager.getAnomalyThresholds(), eManager.getFailures(),	
 			iManager.getSelectedSeries(buildOutFilePrequel()), iManager.extractSelectedFeatures(buildOutFilePrequel(), loaderPref.getFilename()),	
 			getWritableTag(), eManager.getInjectionsRatio(),
 			iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 

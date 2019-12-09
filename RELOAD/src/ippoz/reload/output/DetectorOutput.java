@@ -45,7 +45,7 @@ public class DetectorOutput {
 	
 	private List<Knowledge> knowledgeList;
 	
-	private ScoresVoter bestSetup;
+	private ScoresVoter bestVoter;
 	
 	private String bestRuns;
 	
@@ -69,7 +69,7 @@ public class DetectorOutput {
 	
 	private Map<String, List<InjectedElement>> injections;
 	
-	private double bestAnomalyThreshold;
+	private double[] bestAnomalyThresholds;
 	
 	private String writableTag;
 	
@@ -86,12 +86,12 @@ public class DetectorOutput {
 			Map<String, List<VotingResult>> votingScores,
 			Loader loader, Map<ScoresVoter, List<Map<Metric, Double>>> evaluations,
 			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores,
-			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
+			double[] bestAnomalyThresholds, Map<String, List<InjectedElement>> injections, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
 			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
-		this.bestSetup = bestSetup;
+		this.bestVoter = bestSetup;
 		this.modelList = modelList;
 		this.evaluationMetricsScores = evaluationMetricsScores;
 		this.voterList = voterList;
@@ -100,7 +100,7 @@ public class DetectorOutput {
 		this.loader = loader;
 		this.detailedMetricScores = evaluations;
 		this.detailedExperimentsScores = detailedExperimentsScores;
-		this.bestAnomalyThreshold = bestAnomalyThreshold;
+		this.bestAnomalyThresholds = bestAnomalyThresholds;
 		this.injections = injections;
 		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
@@ -158,7 +158,7 @@ public class DetectorOutput {
 							writer.write(expName + "," + 
 									i + "," + 
 									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
-									(votingScores.get(expName).get(i).getVotingResult() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
+									(votingScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
 									votingScores.get(expName).get(i).getVotingResult() + ",");
 							if(i < detailedExperimentsScores.get(expName).size()){
 								map = detailedExperimentsScores.get(expName).get(i);
@@ -250,8 +250,8 @@ public class DetectorOutput {
 		return new DecimalFormat("#.##").format(getBestScore());
 	}
 
-	public ScoresVoter getBestSetup() {
-		return bestSetup;
+	public ScoresVoter getVoter() {
+		return bestVoter;
 	}
 
 	public String getBestRuns() {
@@ -324,9 +324,9 @@ public class DetectorOutput {
 	
 	public String[][] getEvaluationGrid() {
 		String[][] result = new String[1][getEvaluationMetrics().length + 2];
-		if(bestSetup != null){
-			result[0][0] = bestSetup.toString();
-			result[0][1] = String.valueOf(nVoters.get(bestSetup));
+		if(bestVoter != null){
+			result[0][0] = bestVoter.toString();
+			result[0][1] = String.valueOf(nVoters.get(bestVoter));
 			
 			List<AlgorithmResult> allResults = new LinkedList<>();
 			for(String expName : votingScores.keySet()){
@@ -378,7 +378,7 @@ public class DetectorOutput {
 			for(String expName : votingScores.keySet()){
 				outMap.put(expName, new LinkedList<LabelledResult>());
 				for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
-					AlgorithmResult ar = votingScores.get(expName).get(i);
+					VotingResult ar = votingScores.get(expName).get(i);
 					if(i < detailedExperimentsScores.get(expName).size()){
 						outMap.get(expName).add(new LabelledResult(ar.getInjection() != null, ar));
 					}

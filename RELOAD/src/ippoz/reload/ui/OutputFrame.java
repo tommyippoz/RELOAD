@@ -238,7 +238,7 @@ public class OutputFrame {
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 
-		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getBestSetup().toString() : oOut.getBestSetup().toString(), "Setup used to aggregate different anomaly checkers, if more than one"));
+		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getVoter().toString() : oOut.getVoter().toString(), "Setup used to aggregate different anomaly checkers, if more than one"));
 		miscPanel.add(createLPanel(true, "Evaluation Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getBestRuns() : oOut.getBestRuns(), "Runs used for Evaluation"));
 		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, dOut != null ? String.valueOf(dOut.getBestScore()) : String.valueOf(oOut.getBestScore()), "Metric Score on Evaluation Runs"));			
 		
