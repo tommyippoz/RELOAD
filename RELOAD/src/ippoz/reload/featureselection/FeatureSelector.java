@@ -227,19 +227,25 @@ public abstract class FeatureSelector {
 	 */
 	public static String explainSelectors() {
 		return "<p style=\"text-align:center\"><b>" + FeatureSelectorType.VARIANCE + "</b>: used to cut out features that are too static. "
-				+ "<br>   Threshold represents the ratio that is used to check if the variance is big enough (var &gt threshold*avg) <br>" +
+				+ "   Threshold represents the ratio that is used to check if the variance is big enough (var &gt threshold*avg) <br>" +
 				"<b>" + FeatureSelectorType.PEARSON_CORRELATION + "</b>: used to cut out features that are not pearson-correlated with the label. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the correlation is strong enough <br>" +
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the correlation is strong enough <br>" +
 				"<b>" + FeatureSelectorType.RELIEF + "</b>: used to cut out features that are ranked low by ReliefF Algorithm. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the ReliefF score is high enough <br>" +
-				"<b>" + FeatureSelectorType.GAIN_RATIO + "</b>: used to cut out features that are ranked low by the GainRatio strategy, which measures information gain of features. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the GainRatio score is high enough <br>" +
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the ReliefF score is high enough <br>" +
+				"<b>" + FeatureSelectorType.GAIN_RATIO + "</b>: used to cut out features that are ranked low by the GainRatio strategy. "
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the GainRatio score is high enough <br>" +
 				"<b>" + FeatureSelectorType.PCA + "</b>: used to cut out features which are not identified as 'Principal Components'. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the PCA score is high enough <br>" +
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the PCA score is high enough <br>" +
 				"<b>" + FeatureSelectorType.ONER + "</b>: used to cut out features that are ranked low by the OneR Algorithm, adapted as Feature Ranker. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 100) that is used to check if the OneR score is high enough <br>" +
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 100) that is used to check if the OneR score is high enough <br>" +
+				"<b>" + FeatureSelectorType.J48 + "</b>: used to cut out features that do not take part to create the J48 (C4.5) tree. "
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the contribution is big enough <br>" +
+				"<b>" + FeatureSelectorType.CHI_SQUARED + "</b>: used to cut out features that contribute to reject chi-squared test. "
+				+ "   Threshold represents the absolute value that is used to check if the confidence is big enough <br>" +
+				"<b>" + FeatureSelectorType.RANDOM_FORESTS + "</b>: used to cut out features that do not take part to decisions in Random Forests. "
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if feature contribution is high enough <br>" +
 				"<b>" + FeatureSelectorType.INFORMATION_GAIN + "</b>: used to cut out features that embed too much entropy. "
-				+ "<br>   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the information gain is big enough <br>" + "</p>";
+				+ "   Threshold represents the absolute value (0 &lt threshold &lt= 1) that is used to check if the information gain is big enough <br>" + "</p>";
 	}
 
 	/**
@@ -268,6 +274,12 @@ public abstract class FeatureSelector {
 					return new PrincipalComponentRanker(threshold, isRankThreshold);
 				case GAIN_RATIO:
 					return new GainRatioFeatureRanker(threshold, isRankThreshold);
+				case CHI_SQUARED:
+					return new ChiSquaredFeatureRanker(threshold, isRankThreshold);
+				case RANDOM_FORESTS:
+					return new RandomForestFeatureRanker(threshold, isRankThreshold);
+				case J48:
+					return new J48Ranker(threshold, isRankThreshold);
 				default:
 					return null;
 			} 

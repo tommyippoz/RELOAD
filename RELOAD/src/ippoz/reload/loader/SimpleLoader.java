@@ -144,7 +144,7 @@ public abstract class SimpleLoader implements Loader {
 	public boolean hasFeature(String featureName){
 		if(featureName != null && getHeader() != null && header.size() > 0){
 			for(Indicator ind : header){
-				if(ind.getName().toUpperCase().equals(featureName.toUpperCase()))
+				if(ind != null && ind.getName().toUpperCase().equals(featureName.toUpperCase()))
 					return true;
 			}
 			return false;

@@ -15,9 +15,11 @@ import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,11 +33,15 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	private static final int COMPACT_STRING_SIZE_LIMIT = 60;
 
 	private String seriesName;
+	
 	private DataCategory dataCategory;
+	
+	private double dsRank;
 	
 	protected DataSeries(String seriesName, DataCategory dataCategory) {
 		this.seriesName = seriesName;
 		this.dataCategory = dataCategory;
+		this.dsRank = Double.NaN;
 	}
 
 	@Override
@@ -70,7 +76,13 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 
 	@Override
 	public int compareTo(DataSeries other) {
-		return seriesName.equals(other.getName()) && dataCategory.equals(other.getDataCategory()) ? 0 : 1;
+		if(seriesName.equals(other.getName()) && dataCategory.equals(other.getDataCategory()))
+			return 0;
+		else if(dsRank != Double.NaN && other.getRank() != Double.NaN){
+			return dsRank > other.getRank() ? -1 : 1;
+		} else if(dsRank != Double.NaN)
+			return -1;
+		else return 1;
 	}
 	
 	public SnapshotValue getSeriesValue(Observation obs){
@@ -185,6 +197,8 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return unionInd;
 	}
 	
+	
+	
 	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<List<String>> list) {
 		DataSeries firstDS, secondDS;
 		List<DataSeries> outList = new LinkedList<DataSeries>();
@@ -265,13 +279,51 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 
 	public static List<DataSeries> fromString(String[] sStrings, boolean show) {
 		DataSeries ds;
+		String dsString;
+		double dsRank;
 		List<DataSeries> outList = new LinkedList<DataSeries>();
 		for(String ss : sStrings){
-			ds = DataSeries.fromString(ss, show);
-			if(ds != null)
+			if(ss != null && ss.contains(",")){
+				dsString = ss.split(",")[0];
+				dsRank = calculateRank(ss);
+			} else {
+				dsString = ss;
+				dsRank = Double.NaN;
+			}	
+			ds = DataSeries.fromString(dsString, show);
+			if(ds != null){
+				ds.setRank(dsRank);
 				outList.add(ds);
+			} else AppLogger.logError(DataSeries.class, "UnrecognizedDataSeries", "Unable to recognize '" + dsString + "' dataseries");
 		}
 		return outList;
+	}
+
+	private static double calculateRank(String ss) {
+		double sum = 0;
+		int count = 0;
+		if(ss == null || !ss.contains(","))
+			return Double.NaN;
+		else {
+			String[] splitted = ss.split(",");
+			for(int i=1;i<splitted.length;i++){
+				if(AppUtility.isNumber(splitted[i])){
+					sum = sum + Double.valueOf(splitted[i]);
+					count++;
+				}
+			}
+			if(count > 0)
+				return sum / count;
+			else return Double.NaN;
+		}
+	}
+
+	private void setRank(double dsRank) {
+		this.dsRank = dsRank;
+	}
+	
+	public double getRank(){
+		return dsRank;
 	}
 
 	public String getSanitizedName() {
@@ -304,7 +356,24 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	
 	public static List<DataSeries> unionCombinations(List<DataSeries> selectedFeatures) {
 		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
-		combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
+		if(selectedFeatures != null){
+			if(selectedFeatures.size() == 1)
+				combinedFeatures.add(selectedFeatures.get(0));
+			else combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
+		}
+		return combinedFeatures;
+	}
+	
+	public static List<DataSeries> multipleUnionCombinations(List<DataSeries> selectedFeatures) {
+		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
+		if(selectedFeatures != null){
+			Collections.sort(selectedFeatures);
+			for(int i=1;i<=selectedFeatures.size();i++){
+				List<DataSeries> innerUnion = unionCombinations(selectedFeatures.subList(0, i));
+				if(innerUnion != null)
+					combinedFeatures.addAll(innerUnion);
+			}
+		}
 		return combinedFeatures;
 	}
 	

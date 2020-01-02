@@ -36,6 +36,7 @@ import ippoz.reload.metric.FN_Metric;
 import ippoz.reload.metric.FP_Metric;
 import ippoz.reload.metric.FScore_Metric;
 import ippoz.reload.metric.FalsePositiveRate_Metric;
+import ippoz.reload.metric.GMean_Metric;
 import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
@@ -312,8 +313,8 @@ public class InputManager {
 			return checkFolder(prefManager.getPreference(DATASETS_FOLDER));
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DATASETS_FOLDER + " not found. Using default value of ' datasets'");
-			return checkFolder("datasets", true);
+					DATASETS_FOLDER + " not found. Using default value of ' '");
+			return checkFolder("", true);
 		}
 	}
 	
@@ -373,7 +374,7 @@ public class InputManager {
 	 */
 	public Metric getMetric(String metricType){
 		String param = null;
-		String mType = prefManager.getPreference(METRIC_TYPE);
+		String mType = prefManager.getPreference(METRIC_TYPE).trim();
 		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
 		boolean validAfter = prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true;
 		if(metricType.contains("(")){
@@ -400,6 +401,10 @@ public class InputManager {
 			case "F-MEASURE":
 			case "FMEASURE":
 				return new FMeasure_Metric(validAfter);
+			case "G-MEAN":
+			case "GMEAN":
+			case "GMEANS":
+				return new GMean_Metric(validAfter);
 			case "F-SCORE":
 			case "FSCORE":
 				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
@@ -414,6 +419,7 @@ public class InputManager {
 				return new AUC_Metric(validAfter);
 			case "ACCURACY":
 				return new Accuracy_Metric(validAfter);
+			case "SSCORE":
 			case "SAFESCORE":
 			case "SAFE_SCORE":
 				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
@@ -433,7 +439,7 @@ public class InputManager {
 			case "THRESHOLDS_AMOUNT":
 				return new ThresholdAmount_Metric(validAfter);
 			default:
-				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
+				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric '" + mType + "'cannot be defined");
 				return null;
 		}
 	}
@@ -504,10 +510,12 @@ public class InputManager {
 					}
 				}
 				reader.close();
-			} else {
+			} 
+			if(!voterFile.exists() || (voterList != null && voterList.size() == 0)){
 				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
 						voterFile.getPath() + " not found. Using default value of 'BEST 1 - 1'");
 				voterList.add(ScoresVoter.generateVoter("BEST  1", "1"));
+				generateDefaultScoringPreferences();
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
@@ -855,7 +863,7 @@ public class InputManager {
 				writer.write("\n* Loaders folder.\n" + 
 						"LOADERS = iscx\n");
 				writer.write("\n* Datasets folder.\n" +
-						"DATASETS_FOLDER = datasets\n");
+						"DATASETS_FOLDER = \n");
 				writer.write("\n* RELOAD Execution.\n\n");
 				writer.write("\n* Perform Feature Selection (0 = NO, 1 = YES).\n" + 
 						"FEATURE_SELECTION_FLAG = 1\n");
@@ -868,9 +876,9 @@ public class InputManager {
 				writer.write("\n* K for the K-Fold Evaluation (Default is 2).\n" + 
 						"KFOLD_COUNTER = 2\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
-						"METRIC = MATTHEWS\n");
+						"METRIC = FMEASURE\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
-						"METRIC_TYPE = absolute\n");
+						"METRIC_TYPE = relative\n");
 				writer.write("\n* Expected duration of injected faults (observations).\n" + 
 						"ANOMALY_WINDOW = 0\n");
 				writer.write("\n* Sliding window policy.\n" + 
@@ -880,7 +888,7 @@ public class InputManager {
 				writer.write("\n* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS\n" + 
 						"REPUTATION = 1.0\n");
 				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
-						"INDICATOR_SELECTION = PEARSON(0.90)\n");
+						"INDICATOR_SELECTION = UNION\n");
 				writer.write("\n* Strategy to slide windows. Accepted Values are FIFO, \n" + 
 						"SLIDING_POLICY = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
@@ -950,7 +958,7 @@ public class InputManager {
 				writer.write("* Default feature selection preferences for 'RELOAD'. Comments with '*'.\n");
 				writer.write("* This file reports on the feature selection techniques to be applied. \n");
 				writer.write("\nfeature_selection_strategy,threshold,ranked_flag\n");
-				writer.write("\nVARIANCE,3.0,false\n");
+				writer.write("\nINFORMATION_GAIN,3.0,true\n");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -1316,7 +1324,7 @@ public class InputManager {
 	}
 	
 	public static String[] getIndicatorSelectionPolicies(){
-		return new String[]{"NONE", "ALL", "UNION", "PEARSON", "SIMPLE"};
+		return new String[]{"NONE", "ALL", "UNION", "MULTIPLE_UNION", "PEARSON", "SIMPLE"};
 	}
 
 	public List<FeatureSelector> getFeatureSelectors() {
@@ -1450,9 +1458,7 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						if(readed.contains(","))
-							sSeries.add(readed.trim().split(",")[0].trim());
-						else sSeries.add(readed.trim());
+						sSeries.add(readed.trim());
 					}
 				}
 			}

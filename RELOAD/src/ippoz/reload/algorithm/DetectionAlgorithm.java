@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
+import ippoz.reload.algorithm.custom.FastVOADetectionAlgorithm;
 import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFKMeansDetectionAlgorithm;
@@ -12,6 +13,7 @@ import ippoz.reload.algorithm.custom.SOMDetectionAlgorithm;
 import ippoz.reload.algorithm.elki.ABODELKI;
 import ippoz.reload.algorithm.elki.COFELKI;
 import ippoz.reload.algorithm.elki.FastABODELKI;
+import ippoz.reload.algorithm.elki.GMeansELKI;
 import ippoz.reload.algorithm.elki.ISOSELKI;
 import ippoz.reload.algorithm.elki.KMeansELKI;
 import ippoz.reload.algorithm.elki.KNNELKI;
@@ -175,6 +177,8 @@ public abstract class DetectionAlgorithm {
 				return new ISOSELKI(dataSeries, conf);
 			case ELKI_KMEANS:
 				return new KMeansELKI(dataSeries, conf);
+			case ELKI_GMEANS:
+				return new GMeansELKI(dataSeries, conf);
 			case ELKI_ABOD:
 				return new ABODELKI(dataSeries, conf);
 			case ELKI_FASTABOD:
@@ -205,7 +209,8 @@ public abstract class DetectionAlgorithm {
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			case SOM:
 				return new SOMDetectionAlgorithm(dataSeries, conf);
-				
+			case FASTVOA:
+				return new FastVOADetectionAlgorithm(dataSeries, conf);			
 		}
 		return null;
 	}
@@ -223,6 +228,7 @@ public abstract class DetectionAlgorithm {
 		}
 		switch(algType){
 			case ELKI_KMEANS:
+			case ELKI_GMEANS:
 			case SLIDING_ELKI_CLUSTERING:
 			case DBSCAN:
 			case LDCOF_KMEANS:
@@ -232,6 +238,7 @@ public abstract class DetectionAlgorithm {
 				break;
 		}
 		switch(algType){
+			case FASTVOA:
 			case ELKI_ABOD:
 			case ELKI_FASTABOD:
 			case SLIDING_ELKI_ABOD:
@@ -480,6 +487,8 @@ public abstract class DetectionAlgorithm {
 
 	public static String getFullName(AlgorithmType algType) {
 		switch(algType){
+			case FASTVOA:
+				return "Fast Variance of Angles (FastVOA) approximator";
 			case ELKI_ABOD:
 				return "ABOD: Angle-Based Outlier Factor (ELKI)";
 			case SLIDING_ELKI_ABOD:
@@ -494,6 +503,8 @@ public abstract class DetectionAlgorithm {
 				return "FastABOD: Fast Angle-Based Outlier Factor (ELKI)";
 			case ELKI_KMEANS:
 				return "K-Means (ELKI)";
+			case ELKI_GMEANS:
+				return "G-Means (builds on K-Means from ELKI)";
 			case SLIDING_ELKI_CLUSTERING:
 				return "K-Means (ELKI - Sliding)";
 			case LDCOF_KMEANS:
@@ -554,6 +565,10 @@ public abstract class DetectionAlgorithm {
 				return "Fast (Quadratic) version of ABOD, considering agnles with the kNN of the data point.";
 			case ELKI_KMEANS:
 				return "Classic clustering algorithm, given the K number of clusters. <br>"
+						+ "During training, clusters are created. Then, a new data point is scored as anomalous if it is too far <br>"
+						+ "from the nearest cluster, evaluated using Euclidean Distance.";
+			case ELKI_GMEANS:
+				return "Classic clustering algorithm, automatically finds the optimal K number of clusters. <br>"
 						+ "During training, clusters are created. Then, a new data point is scored as anomalous if it is too far <br>"
 						+ "from the nearest cluster, evaluated using Euclidean Distance.";
 			case SLIDING_ELKI_CLUSTERING:
@@ -618,6 +633,8 @@ public abstract class DetectionAlgorithm {
 				return base + "(k) the number of neighbours.";
 			case ELKI_FASTABOD:
 				return base + "(k) the number of neighbours.";
+			case ELKI_GMEANS:
+				return "no parameters.";
 			case ELKI_KMEANS:
 			case SLIDING_ELKI_CLUSTERING:
 				return base + "(k) the number of clusters.";

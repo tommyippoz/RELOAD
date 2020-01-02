@@ -114,6 +114,9 @@ public class TrainerManager extends TrainDataManager {
 		} else if(dsDomain.equals("UNION")){
 			combined = DataSeries.unionCombinations(selected);
 			finalList = combined;
+		} else if(dsDomain.equals("MULTIPLE_UNION")){
+			combined = DataSeries.multipleUnionCombinations(selected);
+			finalList = combined;
 		} else if(dsDomain.equals("SIMPLE")){
 			combined = DataSeries.unionCombinations(selected);
 			finalList.addAll(combined);

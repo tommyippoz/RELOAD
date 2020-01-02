@@ -60,6 +60,8 @@ public class WEKAUtils {
 		}
 	}
 	
+	private static int STRING_BATCHES = 100;
+	
 	/**
 	 * Gets an ARFF stream reader to create Instances object.
 	 *
@@ -70,13 +72,20 @@ public class WEKAUtils {
 	 */
 	private static Reader getTrainARFFReader(double[][] data, String[] label, DataSeries ds) {
 		String arff = getStreamHeader(ds, true);
+		String str = "";
+		String inner = "";
 		for(int i=0;i<label.length;i++){
+			str = "";
 			for(int j=0;j<data[i].length;j++){
-				arff = arff + data[i][j] + ",";
+				str = str + data[i][j] + ",";
 			}
-			arff = arff + label[i] + "\n";
+			inner = inner + str + label[i] + "\n";
+			if(i % STRING_BATCHES == 0){
+				arff = arff + inner;
+				inner = "";
+			}
 		}
-		return new StringReader(arff);
+		return new StringReader(arff + inner);
 	}
 	
 	/**
@@ -89,10 +98,12 @@ public class WEKAUtils {
 	public static String getStreamHeader(DataSeries ds, boolean training){
 		String header = "@relation " + ds.getCompactString() + "\n\n";
 		if(ds.size() == 1){
-			header = header + "@attribute " + ds.getName() + " numeric\n";
+			if(ds.getName() != null)
+				header = header + "@attribute " + ds.getName().trim().replace(" ", "_") + " numeric\n";
+			else header = header + "@attribute nullAttr numeric\n";
 		} else {
 			for(DataSeries sds : ((MultipleDataSeries)ds).getSeriesList()){
-				header = header + "@attribute " + sds.toString() + " numeric\n";
+				header = header + "@attribute " + sds.toString().replace(" ", "_") + " numeric\n";
 			}
 		}
 		if(training)

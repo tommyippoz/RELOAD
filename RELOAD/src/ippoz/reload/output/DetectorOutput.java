@@ -51,8 +51,6 @@ public class DetectorOutput {
 	
 	private List<AlgorithmModel> modelList;
 	
-	private String evaluationMetricsScores;
-	
 	private List<ScoresVoter> voterList;
 	
 	private Map<ScoresVoter, Integer> nVoters;
@@ -69,8 +67,6 @@ public class DetectorOutput {
 	
 	private Map<String, List<InjectedElement>> injections;
 	
-	private double[] bestAnomalyThresholds;
-	
 	private String writableTag;
 	
 	private double faultsRatio;
@@ -82,25 +78,22 @@ public class DetectorOutput {
 	private TrainInfo tInfo;
 	
 	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, ScoresVoter bestSetup, 
-			List<AlgorithmModel> modelList, String evaluationMetricsScores, List<ScoresVoter> voterList, Map<ScoresVoter, Integer> nVoters, 
+			List<AlgorithmModel> modelList, List<ScoresVoter> voterList, Map<ScoresVoter, Integer> nVoters, 
 			Map<String, List<VotingResult>> votingScores,
 			Loader loader, Map<ScoresVoter, List<Map<Metric, Double>>> evaluations,
-			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores,
-			double[] bestAnomalyThresholds, Map<String, List<InjectedElement>> injections, 
+			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, Map<String, List<InjectedElement>> injections, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
 			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo) {
 		this.iManager = iManager;
 		this.knowledgeList = knowledgeList;
 		this.bestVoter = bestSetup;
 		this.modelList = modelList;
-		this.evaluationMetricsScores = evaluationMetricsScores;
 		this.voterList = voterList;
 		this.nVoters = nVoters;
 		this.votingScores = votingScores;
 		this.loader = loader;
 		this.detailedMetricScores = evaluations;
 		this.detailedExperimentsScores = detailedExperimentsScores;
-		this.bestAnomalyThresholds = bestAnomalyThresholds;
 		this.injections = injections;
 		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
@@ -271,7 +264,22 @@ public class DetectorOutput {
 	}
 
 	public String getEvaluationMetricsScores() {
-		return evaluationMetricsScores;
+		String outString = "";
+		if(bestVoter != null){			
+			List<AlgorithmResult> allResults = new LinkedList<>();
+			for(String expName : votingScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+					allResults.addAll(votingScores.get(expName));
+			}
+			
+			for(Metric met : getEvaluationMetrics()){
+				double res = met.evaluateAnomalyResults(allResults);
+				if(Double.isNaN(res)){
+					outString = outString + "-,";
+				} else outString = outString + res + ",";
+			}
+		}
+		return outString;
 	}
 
 	public String getWritableTag() {

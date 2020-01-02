@@ -6,7 +6,10 @@ package ippoz.reload.algorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
@@ -117,6 +120,21 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		    
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
 		return trainOut;
+	}
+	
+	protected double[] getSnapValueArray(Snapshot snap){
+		double snapValue;
+		double[] result = new double[getDataSeries().size()];
+		if(getDataSeries().size() == 1){
+			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
+			result[0] = snapValue;
+		} else {
+			for(int j=0;j<getDataSeries().size();j++){
+				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
+				result[j] = snapValue;
+			}
+		}
+		return result;
 	}
 
 	/**

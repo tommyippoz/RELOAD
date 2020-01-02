@@ -104,21 +104,6 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
 	
-	private double[] getSnapValueArray(Snapshot snap){
-		double snapValue;
-		double[] result = new double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			result[0] = snapValue;
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				result[j] = snapValue;
-			}
-		}
-		return result;
-	}
-	
 	/**
 	 * Prints the file.
 	 *

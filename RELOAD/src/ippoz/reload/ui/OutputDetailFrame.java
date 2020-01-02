@@ -154,7 +154,7 @@ public class OutputDetailFrame {
 		maxRefValue = Double.NEGATIVE_INFINITY;
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore())){
 						if(lr.getValue().getScore() > maxRefValue)
@@ -164,7 +164,7 @@ public class OutputDetailFrame {
 					}
 						
 				}
-			}
+			//}
 		}
 	}
 	
@@ -187,12 +187,12 @@ public class OutputDetailFrame {
 		ValueSeries series = new ValueSeries();
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore()))
 						series.addValue(lr.getValue().getScore());
 				}
-			}
+			//}
 		}
 		return series;
 	}
@@ -201,23 +201,14 @@ public class OutputDetailFrame {
 		ValueSeries series = new ValueSeries();
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore()) && lr.getLabel())
 						series.addValue(lr.getValue().getScore());
 				}
-			}
+			//}
 		}
 		return series;
-	}
-	
-
-	private boolean containsPostiveLabel(List<LabelledResult> list){
-		for(LabelledResult lr : list){
-			if(lr.getLabel())
-				return true;
-		}
-		return false;
 	}
 
 	private void reload() {
@@ -543,7 +534,7 @@ public class OutputDetailFrame {
 					// TODO
 					for(String expName : dOut.getLabelledScores().keySet()){
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-						if(containsPostiveLabel(list)){
+						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
 								double score = lr.getValue().getScore(); 
 								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
@@ -558,7 +549,7 @@ public class OutputDetailFrame {
 									}
 								}
 							}
-						}
+						//}
 					}
 					List<Double> keys = new LinkedList<Double>(anList.keySet());
 					List<Double> temp = new LinkedList<Double>(okList.keySet());
@@ -673,7 +664,7 @@ public class OutputDetailFrame {
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -692,7 +683,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		DecimalFormat df = new DecimalFormat("#0.00"); 
@@ -720,7 +711,7 @@ public class OutputDetailFrame {
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
 					if(lr.getValue().getScore() >= minValue && (maxValue == maxRefValue || lr.getValue().getScore() <= maxValue)){
 						if(lr.getLabel()){
@@ -732,7 +723,7 @@ public class OutputDetailFrame {
 							countInf++;
 					} else countErr++;
 				}
-			} else countErr = countErr + list.size();
+			/*} else countErr = countErr + list.size();*/
 		}
 
 		if(numIntervals <= 0 || numIntervals > 100000){
@@ -808,13 +799,13 @@ public class OutputDetailFrame {
 		boolean infiniteFlag = false;
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
 					if(Double.isInfinite(lr.getValue().getScore()) || lr.getValue().getScore() > Double.MAX_VALUE - 10){
 						infiniteFlag = true;
 					}
 				}
-			}
+			//}
 		}
 		return infiniteFlag;
 	}
@@ -830,7 +821,7 @@ public class OutputDetailFrame {
 		//a
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -852,7 +843,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		XYSeries trueSeries = new XYSeries(norm ? "Anomaly Series (Normalized)" : "Anomaly Series");
@@ -888,7 +879,7 @@ public class OutputDetailFrame {
 		
 		for(String expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -915,7 +906,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		XYSeries tpSeries = new XYSeries(norm ? "TP Series (Normalized)" : "TP Series");

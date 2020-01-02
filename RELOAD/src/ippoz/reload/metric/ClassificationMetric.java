@@ -31,9 +31,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		super(mType, validAfter);
 		this.absolute = absolute;
 	}
-	
-	
-	
+		
 	@Override
 	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
@@ -49,7 +47,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 		if (anomalyEvaluations.size() > 0) {
 			if (!absolute){
 				// getUndetectable?
-				return 1.0 * detectionHits / anomalyEvaluations.size();
+				return 100.0 * detectionHits / anomalyEvaluations.size();
 			} else return detectionHits;
 		} else return 0.0;
 	}

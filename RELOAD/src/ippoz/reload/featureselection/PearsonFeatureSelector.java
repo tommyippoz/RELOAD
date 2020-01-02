@@ -66,7 +66,7 @@ public class PearsonFeatureSelector extends FeatureRanker {
 				corr = new PearsonsCorrelation().correlation(
 						AppUtility.toPrimitiveArray(values), 
 						AppUtility.toPrimitiveArray(labels));
-				outMap.put(ds, corr);
+				outMap.put(ds, Math.abs(corr));
 			}
 		}
 		return outMap;

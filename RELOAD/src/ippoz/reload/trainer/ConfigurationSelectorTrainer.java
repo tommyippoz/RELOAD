@@ -39,7 +39,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	private static int LINEAR_SEARCH_MAX_ITERATIONS = 6;
 	
 	public static String[] DECISION_FUNCTIONS = {
-		"MODE(0.5)", "MODE(0.2)", "MODE(0.05)", 
+		"MODE(3)", "MODE(0.5)", "MODE(0.2)", "MODE(0.05)", 
 		"MEDIAN(0.5)", "MEDIAN(0.2)", "MEDIAN(0.05)", 
 		"MEDIAN_INTERVAL(0.1)", "MEDIAN_INTERVAL(0.05)", "MEDIAN_INTERVAL(0)", 
 		"MODE_INTERVAL(0.1)", "MODE_INTERVAL(0.05)", "MODE_INTERVAL(0)", 
@@ -165,6 +165,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			
 			/* Searches for the best static threshold, if any */
 			if(resultList != null && vs != null){
+				//System.out.println(metricScore.getAvg());
 				String[] value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
 					metricScore.clear();

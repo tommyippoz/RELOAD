@@ -37,7 +37,7 @@ public class ARFFLoader extends FileLoader {
 	 *
 	 * @param runs the runs
 	 */
-	public ARFFLoader(List<Integer> runs, File file, String toSkip, String labelCol, int experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
+	public ARFFLoader(List<Integer> runs, File file, String toSkip, String labelCol, String experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
 		super(runs, file, toSkip, labelCol, experimentRows);
 		this.anomalyWindow = anomalyWindow;
 		parseFaultyTags(faultyTags);
@@ -159,9 +159,12 @@ public class ARFFLoader extends FileLoader {
 					if(readLine != null){
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !isComment(readLine)){
-							if((experimentRows > 0 && rowIndex % experimentRows == 0) || (experimentRows <= 0 && ((!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null) || (String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] == null)))){ 
+							if((AppUtility.isNumber(experimentRows) && rowIndex % Integer.parseInt(experimentRows) == 0) || 
+									(!AppUtility.isNumber(experimentRows) 
+										&& ((!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null) 
+												|| (String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] == null)))){ 
 								if(obList != null && obList.size() > 0){
-									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1, dataList.size()), obList, injList));
+									dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1, changes), obList, injList));
 								}
 								injList = new LinkedList<InjectedElement>();
 								obList = new LinkedList<Observation>();
@@ -195,9 +198,9 @@ public class ARFFLoader extends FileLoader {
 									}
 								}	
 							}
-							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
 								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
 								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
 									changes++;
 							}
@@ -253,9 +256,9 @@ public class ARFFLoader extends FileLoader {
 									}
 								}	
 							}
-							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
 								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
 								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
 									changes++;
 							}
@@ -310,9 +313,9 @@ public class ARFFLoader extends FileLoader {
 									}
 								}	
 							}
-							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
 								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
 								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
 									changes++;
 							}

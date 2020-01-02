@@ -79,9 +79,17 @@ public class FeatureSelectorManager {
 		try {
 			fsInfo.printFile(new File(setupFolder + File.separatorChar + "featureSelectionInfo.info"));
 			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
-			writer.write("data_series,type\n");
+			writer.write("data_series,");
+			for(FeatureSelector fs : selectorsList){
+				writer.write(fs.getSelectorName() + ",");
+			}
+			writer.write("\n");
 			for(DataSeries ds : selectedFeatures){
-				writer.write(ds.toString() + "\n");			
+				writer.write(ds.toString() + ",");
+				for(FeatureSelector fs : selectorsList){
+					writer.write((fs.getScoreFor(ds) != null ? fs.getScoreFor(ds) : "NaN") + ",");
+				}
+				writer.write("\n");
 			}
 			writer.close();
 		} catch(IOException ex){

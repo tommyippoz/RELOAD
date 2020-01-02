@@ -149,13 +149,8 @@ public class EvaluatorManager extends DataManager {
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentEvaluator ev = (ExperimentEvaluator)t;
-		if(ev.getFailuresNumber() > 0){
-			expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, algConvergence, printOutput));
-			detailedEvaluations.add(ev.getSingleAlgorithmScores());
-		} else {
-			expMetricEvaluations.add(null);
-			detailedEvaluations.add(null);
-		}
+		expMetricEvaluations.add(ev.printVoting(outputFormat, outputFolder, validationMetrics, algConvergence, printOutput));
+		detailedEvaluations.add(ev.getSingleAlgorithmScores());
 	}
 	
 	/**
@@ -248,13 +243,18 @@ public class EvaluatorManager extends DataManager {
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
+				//System.out.println(ev.getExperimentName());
 				if(i < detailedEvaluations.size()){
 					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
 					if(map != null){
 						for(Date mapEntry : map.keySet()){
 							outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
 						}
-					} 
+					} else {
+						System.out.println(ev.getExperimentName());
+					}
+				} else {
+					System.out.println(ev.getExperimentName());
 				}
 			}
 		}

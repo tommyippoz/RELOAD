@@ -30,7 +30,7 @@ public abstract class FileLoader extends SimpleLoader {
 	public static final String LABEL_COLUMN = "LABEL_COLUMN";
 
 	/** The Constant EXPERIMENT_ROWS. */
-	public static final String TRAIN_EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
+	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 
 	public static final String TRAIN_EXPERIMENT_SPLIT_ROWS = "EXPERIMENT_SPLIT_ROWS";
 	
@@ -45,8 +45,8 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The label column. */
 	protected int labelCol;
 	
-	/** The experiment rows. If <= 0, it indicates the column that indicates experiment rows to change */
-	protected int experimentRows;
+	/** The experiment rows. If String, it indicates the column that indicates experiment rows to change */
+	protected String experimentRows;
 	
 	/** The list of faulty tags. */
 	protected List<String> faultyTagList;
@@ -54,11 +54,11 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The list of tags to be avoided when reading. */
 	protected List<String> avoidTagList;
 
-	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, int experimentRows) {
+	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, String expRunsString) {
 		super(runs, null);
 		this.file = file;
 		this.labelCol = extractIndexOf(labelColString);
-		this.experimentRows = experimentRows;
+		this.experimentRows = expRunsString != null ? expRunsString.trim() : null;
 		filterHeader(parseSkipColumns(toSkip));
 	}
 	
@@ -76,10 +76,12 @@ public abstract class FileLoader extends SimpleLoader {
 				if(newSkip >= 0)
 					iList.add(newSkip);
 			}
-			if(labelCol >= 0)
-				iList.add(labelCol);
-			return iList.toArray(new Integer[iList.size()]);
-		} else return new Integer[]{labelCol};
+		} 
+		if(labelCol >= 0)
+			iList.add(labelCol);
+		/*if(!AppUtility.isNumber(experimentRows) && extractIndexOf(experimentRows) >= 0) 
+			iList.add(extractIndexOf(experimentRows));*/
+		return iList.toArray(new Integer[iList.size()]);
 	}
 	
 	protected int extractIndexOf(String labelColString) {
@@ -129,8 +131,8 @@ public abstract class FileLoader extends SimpleLoader {
 	 * @return the run
 	 */
 	protected int getRun(int rowIndex, int pastChanges){
-		if(experimentRows > 0)
-			return rowIndex / experimentRows;
+		if(AppUtility.isInteger(experimentRows))
+			return rowIndex / Integer.valueOf(experimentRows);
 		else return pastChanges;
 	}
 	
@@ -182,9 +184,10 @@ public abstract class FileLoader extends SimpleLoader {
 		}
 	}
 	
-	protected static int extractExperimentRows(PreferencesManager prefManager){
-		return prefManager.hasPreference(TRAIN_EXPERIMENT_ROWS) && Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) > 0  
-				? Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS)) : -Integer.parseInt(prefManager.getPreference(TRAIN_EXPERIMENT_ROWS));
+	protected static String extractExperimentRows(PreferencesManager prefManager){
+		if(prefManager.hasPreference(EXPERIMENT_ROWS))
+			return prefManager.getPreference(EXPERIMENT_ROWS);
+			else return null;
 	}
 
 	public abstract int getRowNumber();
@@ -201,7 +204,9 @@ public abstract class FileLoader extends SimpleLoader {
 
 	@Override
 	public int getDataPoints() {
-		return getRunsNumber()*experimentRows;
+		if(AppUtility.isInteger(experimentRows))
+			return getRunsNumber()*Integer.parseInt(experimentRows);
+		else return getRunsNumber();
 	}	
 	
 	public abstract boolean isComment(String readedString);

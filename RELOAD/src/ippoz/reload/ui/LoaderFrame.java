@@ -221,15 +221,11 @@ public class LoaderFrame {
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Common Data Setup ", 
 				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
 		dataPanel.setBorder(tb);
-		dataPanel.setLayout(new GridLayout(4, 1, 20, 0));
+		dataPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
-		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS), 
-				"Specify an integer that defines the amount of dataset rows to be considered as single experiment.", null);
-		
-		showCheckPreferenceLabels(dataPanel, 2*bigLabelSpacing, CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS), false, 
-				"Specify the index (starting from 0) of the column that changes when experiments change", null);
+		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
+				"Specify an integer that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", null);
 		
 		int featureNumber = 0;
 		if(tLoader != null && tLoader.canFetch())
@@ -268,8 +264,11 @@ public class LoaderFrame {
 		trainPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
 		JLabel trainDataPointsLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch())
-			trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
+		if(tLoader != null && tLoader.canFetch()){
+			if(AppUtility.isNumber(loaderPref.getPreference(FileLoader.EXPERIMENT_ROWS)))
+				trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
+			else trainDataPointsLabel.setText(tLoader.getDataPoints() + " valid runs");
+		}
 		
 		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
@@ -302,8 +301,11 @@ public class LoaderFrame {
 		validationPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
 		JLabel validationDataPointsLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch())
-			validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
+		if(vLoader != null && vLoader.canFetch()){
+			if(AppUtility.isNumber(loaderPref.getPreference(FileLoader.EXPERIMENT_ROWS)))
+				validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
+			else validationDataPointsLabel.setText(vLoader.getDataPoints() + " valid runs");
+		}
 		
 		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
 				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
@@ -413,16 +415,6 @@ public class LoaderFrame {
 		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE) || 
 				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
-		}
-		if(loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS) &&
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_ROWS))){
-			output = output + "Wrong EXPERIMENT_ROWS value: insert a positive integer number.\n";
-		}
-		if(loaderPref.hasPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS) &&
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS).length() > 0 && 
-					!AppUtility.isInteger(loaderPref.getPreference(CSVCompleteLoader.TRAIN_EXPERIMENT_SPLIT_ROWS))){
-			output = output + "Wrong EXPERIMENT_SPLIT_COLUMN value: insert a positive integer number.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
 	}

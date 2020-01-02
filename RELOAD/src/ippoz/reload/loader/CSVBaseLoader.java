@@ -29,10 +29,10 @@ public abstract class CSVBaseLoader extends FileLoader {
 	 * @param csvFile the CSV file
 	 * @param parseSkipColumns(colString)toSkip the skip columns
 	 * @param labelCol the label column
-	 * @param experimentRows the experiment rows
+	 * @param expRunsString the experiment rows
 	 */
-	protected CSVBaseLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, int experimentRows) {
-		super(runs, csvFile, toSkip, labelColString, experimentRows);
+	protected CSVBaseLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, String expRunsString) {
+		super(runs, csvFile, toSkip, labelColString, expRunsString);
 	}	
 
 	/**
@@ -152,9 +152,9 @@ public abstract class CSVBaseLoader extends FileLoader {
 									}
 								}	
 							}
-							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
 								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
 								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
 									changes++;
 							}
@@ -216,9 +216,9 @@ public abstract class CSVBaseLoader extends FileLoader {
 									}
 								}	
 							}
-							if(experimentRows <= 0 && readLine.split(",").length > -experimentRows){
+							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
 								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[-experimentRows];
+								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
 								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
 									changes++;
 							}

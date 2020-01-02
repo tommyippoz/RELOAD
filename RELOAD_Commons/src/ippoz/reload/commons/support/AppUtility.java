@@ -265,5 +265,68 @@ public class AppUtility {
 		}
 		return splitted;
 	}
+
+	public static double calcNorm(String stringArray, double value) {
+		if(stringArray != null){
+			stringArray.replace("[", "").replace("{", "").replace("]", "").replace("}", "");
+			stringArray.trim();
+			if(!stringArray.contains(",")){
+				if(AppUtility.isNumber(stringArray))
+					return Double.parseDouble(stringArray)*value;
+				else return Double.NaN;
+			} else {
+				double count = 0;
+				for(String s : stringArray.split(",")){
+					if(AppUtility.isNumber(s))
+						count = count + Math.pow(Double.parseDouble(s)*value, 2);
+				}
+				return Math.sqrt(count);
+			}
+		} else return Double.NaN;
+	}
+	
+	public static double calcNorm(Double[] data, double[] ds) {
+		if(data != null){
+			if(ds != null || data.length != ds.length){
+				double[] d = new double[data.length];
+				for(int i=0;i<data.length;i++){
+					d[i] = data[i]*ds[i];
+				}
+				return calcNorm(d);
+			} else return calcNorm(data);
+		} else return Double.NaN;
+	}
+
+	public static double calcNorm(double[] data, double[] ds) {
+		if(data != null){
+			if(ds != null || data.length != ds.length){
+				double[] d = new double[data.length];
+				for(int i=0;i<data.length;i++){
+					d[i] = data[i]*ds[i];
+				}
+				return calcNorm(d);
+			} else return calcNorm(data);
+		} else return Double.NaN;
+	}
+	
+	private static double calcNorm(Double[] data) {
+		double count = 0;
+		if(data == null)
+			return Double.NaN;
+		for(double d : data){
+			count = count + Math.pow(d, 2);
+		}
+		return Math.sqrt(count);
+	}
+
+	private static double calcNorm(double[] data) {
+		double count = 0;
+		if(data == null)
+			return Double.NaN;
+		for(double d : data){
+			count = count + Math.pow(d, 2);
+		}
+		return Math.sqrt(count);
+	}
 	
 }
