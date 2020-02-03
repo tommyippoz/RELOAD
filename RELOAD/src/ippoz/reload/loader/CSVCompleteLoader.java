@@ -115,7 +115,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 								for(String splitted : readLine.split(",")){
 									if(i < getHeader().size() && getHeader().get(i) != null){
 										HashMap<DataCategory, String> iD = new HashMap<DataCategory, String>();
-										if(splitted != null && splitted.length() > 0){
+										if(splitted != null){
 											splitted = splitted.replace("\"", "");
 											if(AppUtility.isNumber(splitted)){
 												iD.put(DataCategory.PLAIN, splitted);
@@ -146,6 +146,9 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 							rowIndex++;
 						}
 					}
+				}
+				if(obList != null && obList.size() > 0){
+					dataList.add(new MonitoredData("Run_" + getRun(rowIndex-1, changes-1), obList, injList));
 				}
 				AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 				reader.close();

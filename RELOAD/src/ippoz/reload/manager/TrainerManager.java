@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -236,7 +237,7 @@ public class TrainerManager extends TrainDataManager {
 			}
 		}
 		setThreadList(trainerList);
-		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting");
+		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());
 	}
 
 	/* (non-Javadoc)

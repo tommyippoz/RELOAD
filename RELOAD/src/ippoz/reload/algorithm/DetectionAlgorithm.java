@@ -208,9 +208,7 @@ public abstract class DetectionAlgorithm {
 			case SLIDING_WEKA_ISOLATIONFOREST:
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			case SOM:
-				return new SOMDetectionAlgorithm(dataSeries, conf);
-			case FASTVOA:
-				return new FastVOADetectionAlgorithm(dataSeries, conf);			
+				return new SOMDetectionAlgorithm(dataSeries, conf);		
 		}
 		return null;
 	}
@@ -238,7 +236,6 @@ public abstract class DetectionAlgorithm {
 				break;
 		}
 		switch(algType){
-			case FASTVOA:
 			case ELKI_ABOD:
 			case ELKI_FASTABOD:
 			case SLIDING_ELKI_ABOD:
@@ -360,7 +357,7 @@ public abstract class DetectionAlgorithm {
 			printTextResults(outFolderName, expTag);
 		else if(typeTag.equalsIgnoreCase("IMAGE"))
 			printImageResults(outFolderName, expTag);
-		else if(!typeTag.equalsIgnoreCase("NULL")){
+		else if(!typeTag.equalsIgnoreCase("BASIC") && !typeTag.equalsIgnoreCase("UI")){
 			AppLogger.logError(getClass(), "OutputTypeError", "Unable to recognize chosen output type");
 		}
 	}
@@ -487,8 +484,6 @@ public abstract class DetectionAlgorithm {
 
 	public static String getFullName(AlgorithmType algType) {
 		switch(algType){
-			case FASTVOA:
-				return "Fast Variance of Angles (FastVOA) approximator";
 			case ELKI_ABOD:
 				return "ABOD: Angle-Based Outlier Factor (ELKI)";
 			case SLIDING_ELKI_ABOD:

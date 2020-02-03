@@ -795,7 +795,7 @@ public class InputManager {
 
 	public boolean getOutputVisibility() {
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
-			return !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
+			return !prefManager.getPreference(OUTPUT_FORMAT).equals("basic");
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					OUTPUT_FORMAT + " not found. Using default value of 'not visible'");
@@ -1080,7 +1080,7 @@ public class InputManager {
 	}	
 	
 	public void removeAlgorithm(String option) {
-		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.split(" ")[0], false);
+		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.substring(0, option.indexOf('[')), false);
 	}
 	
 	private void removeFromFile(File file, String toRemove, boolean partialMatching){
@@ -1098,7 +1098,7 @@ public class InputManager {
 						readed = readed.trim();
 						fileLines.add(readed);
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							if(readed.equalsIgnoreCase(toRemove) || (partialMatching && readed.endsWith(toRemove))){
+							if(readed.equalsIgnoreCase(toRemove) || readed.replace(" ", "").equalsIgnoreCase(toRemove.replace(" ", "")) || (partialMatching && readed.endsWith(toRemove))){
 								readed = fileLines.remove(fileLines.size()-1);
 								readed = "* " + readed;
 								fileLines.add(readed);
@@ -1152,7 +1152,7 @@ public class InputManager {
 									fileLines.add(readed);
 									found = true;
 								}
-							} else if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
+							} else if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/")) || readed.equalsIgnoreCase(toAdd.replace(" ", ""))){
 								found = true;
 							}
 						}

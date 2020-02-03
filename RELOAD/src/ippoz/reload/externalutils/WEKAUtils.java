@@ -96,14 +96,14 @@ public class WEKAUtils {
 	 * @return the stream header
 	 */
 	public static String getStreamHeader(DataSeries ds, boolean training){
-		String header = "@relation " + ds.getCompactString() + "\n\n";
+		String header = "@relation " + ds.getCompactString().replace(" ", "_").replace("\\", "") + "\n\n";
 		if(ds.size() == 1){
 			if(ds.getName() != null)
-				header = header + "@attribute " + ds.getName().trim().replace(" ", "_") + " numeric\n";
+				header = header + "@attribute " + ds.getName().trim().replace(" ", "_").replace("\\", "").replace("/", "") + " numeric\n";
 			else header = header + "@attribute nullAttr numeric\n";
 		} else {
 			for(DataSeries sds : ((MultipleDataSeries)ds).getSeriesList()){
-				header = header + "@attribute " + sds.toString().replace(" ", "_") + " numeric\n";
+				header = header + "@attribute " + sds.toString().replace(" ", "_").replace("\\", "").replace("/", "") + " numeric\n";
 			}
 		}
 		if(training)

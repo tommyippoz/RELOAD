@@ -140,9 +140,11 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 	    DBIDArrayIter pA = ids.iter(), pB = ids.iter(), pC = ids.iter();
 	    for(; pA.valid(); pA.advance()) {
 	      final double abof = computeABOF(kernelMatrix, pA, pB, pC, s);
-	      resList.add(new ABODResult(db.getBundle(pA), abof));
-	      minmaxabod.put(abof);
-	      abodvalues.putDouble(pA, abof);
+	      if(Double.isFinite(abof)){
+		      resList.add(new ABODResult(db.getBundle(pA), abof));
+		      minmaxabod.put(abof);
+		      abodvalues.putDouble(pA, abof);
+	      }
 	    }
 
 	    Collections.sort(resList);
@@ -193,7 +195,9 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 	        double simBC = kernelMatrix.getSimilarity(pB, pC);
 	        double numerator = simBC - simAB - simAC + simAA;
 	        double div = 1. / (sqdAB * sqdAC);
-	        s.put(numerator * div, Math.sqrt(div));
+	        //System.out.println(numerator + " - " + div);
+	        if(Double.isFinite(numerator) && Double.isFinite(div))
+	        	s.put(numerator * div, Math.sqrt(div));
 	      }
 	    }
 	    // Sample variance probably would be better here, but the ABOD publication
@@ -242,7 +246,7 @@ public class CustomABOD<V extends NumberVector> extends AbstractAlgorithm<Outlie
 		        //System.out.println("sqdAB " + sqdAB + " sqdAC " + sqdAC);
 		        double div = 1. / (sqdAB * sqdAC);
 		        //System.out.println("numerator " + numerator + " div " + div);
-		        if(!Double.isFinite(numerator))
+		        if(Double.isFinite(numerator) && Double.isFinite(div))
 		        	s.put(numerator * div, Math.sqrt(div));
 		      }
 		    }

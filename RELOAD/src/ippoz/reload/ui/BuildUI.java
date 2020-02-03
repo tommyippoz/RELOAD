@@ -54,8 +54,10 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
@@ -369,7 +371,7 @@ public class BuildUI {
 				    });
 					t.start();
 				}	
-				if(newOut != null)
+				if(iManager.getOutputFormat().equalsIgnoreCase("ui") && newOut != null)
 					outList.add(newOut);
 				pBar.moveNext();
 			}
@@ -401,14 +403,16 @@ public class BuildUI {
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
 						if(!option.contains(".")) {
-							AlgorithmSetupFrame asf;
-							String algName = option.split(" ")[0];
-							try {
-								AlgorithmType at = AlgorithmType.valueOf(algName);
-								asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)).get(at));
-								asf.setVisible(true);
-							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
+							String cropOption = option.substring(0, option.indexOf('['));
+							String[] algorithms = cropOption.contains(",") ? cropOption.split(",") : new String[]{cropOption.trim()};
+							for(String algName : algorithms){
+								try {
+									AlgorithmType at = AlgorithmType.valueOf(algName.trim());
+									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)).get(at));
+									asf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
+								}
 							}
 						} else {
 							LoaderFrame lf;
@@ -599,18 +603,30 @@ public class BuildUI {
 		button = new JButton("Add Algorithm");
 		button.setVisible(true);
 		button.setFont(labelFont);
-		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().size()];
+				String[] algList = new String[DetectionAlgorithm.availableAlgorithms().size()];
 				int i = 0;
 				for(AlgorithmType at : DetectionAlgorithm.availableAlgorithms()){
 					if(!Arrays.asList(getAlgorithms()).contains(at.toString()))
-						possibilities[i++] = at.toString();
+						algList[i++] = at.toString();
 				}
-				String returnValue = (String)JOptionPane.showInputDialog(
-				                    frame, "Choose an Algorithm", "Add Algorithm",
-				                    JOptionPane.PLAIN_MESSAGE, null, possibilities, "");
+				
+				JPanel gui = new JPanel(new BorderLayout());
+				JList<String> possibilities = new JList<String>(algList);
+				gui.add(new JScrollPane(possibilities));
+                JOptionPane.showMessageDialog(
+                        null, 
+                        gui,
+                        "Choose Algorithm(s)",
+                        JOptionPane.QUESTION_MESSAGE);
+                List items = (List)possibilities.getSelectedValuesList();
+                
+                String returnValue = "";
+                for (Object item : items) {
+                    returnValue = returnValue + item + ", ";
+                }
+                returnValue = returnValue.length() > 0 ? returnValue.substring(0, returnValue.length()-2) : returnValue;
 				if (returnValue != null && returnValue.length() > 0) {
 				    iManager.addAlgorithm(returnValue);
 				    reload();
@@ -722,9 +738,11 @@ public class BuildUI {
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(12, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
+		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
