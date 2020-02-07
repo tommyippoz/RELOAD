@@ -330,6 +330,10 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "").replace("COMPOSITION", "");
 	}
 	
+	public String getCompactName() {
+		return toString().replace("#PLAIN#", "").replace("#DIFFERENCE#", "").replace("NO_LAYER", "").replace("COMPOSITION", "");
+	}
+	
 	public static boolean isIn(List<DataSeries> dsList, DataSeries newSeries){
 		if(dsList == null || dsList.size() == 0)
 			return false;
@@ -386,6 +390,25 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		combinedFeatures = pcManager.getPearsonCombinedSeries();
 		pcManager.flush();
 		return combinedFeatures;
+	}
+
+	public static List<DataSeries> uniqueCombinations(List<DataSeries> seriesList) {
+		List<DataSeries> unique = new LinkedList<>();
+		uniqueCombinations(seriesList, unique);
+		return unique;
+	}
+	
+	private static void uniqueCombinations(List<DataSeries> seriesList, List<DataSeries> unique) {
+		for(DataSeries ds : seriesList){
+			if(ds.size() == 1){
+				if(!isIn(unique, ds))
+					unique.add(ds);
+			} else if(ds instanceof ComplexDataSeries){
+				uniqueCombinations(ds.listSubSeries(), unique);
+			} else {
+				uniqueCombinations(((MultipleDataSeries)ds).getSeriesList(), unique);
+			}
+		}
 	}
 		
 }

@@ -187,10 +187,14 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			} else {
 				for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
 					//algorithm.setDecisionFunction(dFunctionString);
-					getMetric().evaluateMetric(algorithm, knowledge, ScoresVoter.generateVoter("BEST 1", "1"));
+					getMetric().evaluateMetric(algorithm, knowledge);
 				}
 			}
-			trainScore = algorithm.getTrainScore();
+			trainResult = new HashMap<>();
+			for(Knowledge know : kList){
+				trainResult.put(know, calculateResults(algorithm, know));
+			}
+			trainMetricScore = algorithm.getTrainScore();
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
@@ -201,7 +205,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		double thrValue = (thrRight + thrLeft)/2;
 		
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
-		//System.out.println("IT: " + iteration + " - " + threshold);
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
 		double mScore = getMetric().evaluateAnomalyResults(updatedList);
 		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){

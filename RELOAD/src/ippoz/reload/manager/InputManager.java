@@ -52,6 +52,7 @@ import ippoz.reload.reputation.BetaReputation;
 import ippoz.reload.reputation.ConstantReputation;
 import ippoz.reload.reputation.MetricReputation;
 import ippoz.reload.reputation.Reputation;
+import ippoz.reload.voter.AlgorithmVoter;
 import ippoz.reload.voter.ScoresVoter;
 
 import java.io.BufferedReader;
@@ -61,6 +62,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -490,7 +492,7 @@ public class InputManager {
 		return "";
 	}
 	
-	public List<ScoresVoter> getScoresVoters() {
+	public List<ScoresVoter> getScoresVoters(String datasetName) {
 		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
 		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
 		BufferedReader reader;
@@ -498,12 +500,19 @@ public class InputManager {
 		try {
 			if(voterFile.exists()){
 				reader = new BufferedReader(new FileReader(voterFile));
+				// Eats the header
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null && readed.trim().length() > 0 && !readed.trim().startsWith("*")){
+						break;
+					}
+				}
 				while(reader.ready()){
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							ScoresVoter voter = ScoresVoter.generateVoter(readed.split(",")[0], readed.split(",")[1]);
+							ScoresVoter voter = ScoresVoter.generateVoter(readed.split(",")[0].trim(), readed.split(",")[1].trim(), this, datasetName);
 							if(voter != null)
 								voterList.add(voter);
 						}
@@ -1404,6 +1413,54 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
+	public static List<AlgorithmModel> loadAlgorithmModelsFor(String scoresFileString, ScoresVoter voter) {
+		File asFile = new File(scoresFileString);
+		BufferedReader reader;
+		AlgorithmConfiguration conf;
+		String[] splitted;
+		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
+		String readed;
+		String seriesString;
+		try {
+			if(asFile.exists()){
+				reader = new BufferedReader(new FileReader(asFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && readed.indexOf("§") != -1){
+							splitted = AppUtility.splitAndPurify(readed, "§");
+							if(splitted.length > 4 && voter.checkAnomalyTreshold(Double.valueOf(splitted[3]))){
+								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+								seriesString = splitted[0];
+								if(conf != null){
+									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
+									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
+								}
+								AlgorithmModel am = new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+								if(voter.checkModel(am, modelList))
+									modelList.add(am);
+							}
+						}
+					}
+				}
+				reader.close();
+			} else AppLogger.logError(InputManager.class, "FileNotFound", "Unable to find '" + scoresFileString + "'");
+		} catch(Exception ex){
+			AppLogger.logException(InputManager.class, ex, "Unable to read scores");
+		}
+		return modelList;
+	}
+	
+	/**
+	 * Loads train scores.
+	 * This is the outcome of some previous training phases.
+	 *
+	 * @return the list of AlgorithmVoters resulting from the read scores
+	 */
 	public List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
 		String scoresFile = getScoresFile(scoresFileString);
 		File asFile = new File(scoresFile);
@@ -1442,14 +1499,16 @@ public class InputManager {
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read scores");
 		}
+		Collections.sort(modelList);
 		return modelList;
 	}
 
-	public String[] loadSelectedDataSeriesString(String filePrequel) {
+	public String[] loadSelectedDataSeriesString(String baseFolder, String filename) {
 		LinkedList<String> sSeries = new LinkedList<String>();
 		String readed;
 		BufferedReader reader = null;
-		File dsF = new File(getScoresFolder() + filePrequel + File.separatorChar + filePrequel + "_filtered.csv");
+		//File dsF = new File(getScoresFolder() + filePrequel + File.separatorChar + filePrequel + "_filtered.csv");
+		File dsF = new File(baseFolder + filename + "_filtered.csv");
 		try {
 			reader = new BufferedReader(new FileReader(dsF));
 			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
@@ -1469,20 +1528,20 @@ public class InputManager {
 		return sSeries.toArray(new String[sSeries.size()]);
 	}
 	
-	public List<DataSeries> getSelectedSeries(String filePrequel) {
-		String[] strings = loadSelectedDataSeriesString(filePrequel);
+	public List<DataSeries> getSelectedSeries(String baseFolder, String filename) {
+		String[] strings = loadSelectedDataSeriesString(baseFolder, filename);
 		if(strings != null && strings.length > 0){
 			return DataSeries.fromString(strings, false);
 		} else return new LinkedList<DataSeries>();
 	}
 	
-	public Map<DataSeries, Map<FeatureSelectorType, Double>> extractSelectedFeatures(String filePrequel, String datasetName) {
+	public Map<DataSeries, Map<FeatureSelectorType, Double>> extractSelectedFeatures(String baseFolder, String filename, String datasetName) {
 		BufferedReader reader;
 		String readed;
 		String[] header = null;
 		Map<DataSeries, Map<FeatureSelectorType, Double>> featureMap = new HashMap<>();
-		List<DataSeries> sList = getSelectedSeries(filePrequel);
-		File file = new File(getScoresFolder() + filePrequel + File.separatorChar + "featureScores_[" + datasetName + "].csv");
+		List<DataSeries> sList = getSelectedSeries(baseFolder, filename);
+		File file = new File(baseFolder + filename + "_featureScores_[" + datasetName + "].csv");
 		try {
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));
@@ -1526,16 +1585,22 @@ public class InputManager {
 		return featureMap;
 	}
 	
-	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String setupFolder, String filename) {
-		List<DataSeries> ds = createDataSeries(kMap);
-		saveFilteredSeries(ds, setupFolder, filename);
+	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats, String filename) {
+		List<DataSeries> ds = createDataSeries(kMap, cats);
+		saveFilteredSeries(ds, filename);
 		return ds;
 	}
 	
-	private void saveFilteredSeries(List<DataSeries> seriesList, String setupFolder, String filename) {
+	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String filename) {
+		List<DataSeries> ds = createDataSeries(kMap);
+		saveFilteredSeries(ds, filename);
+		return ds;
+	}
+	
+	private void saveFilteredSeries(List<DataSeries> seriesList, String filename) {
 		BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(filename)));
 			writer.write("data_series,type\n");
 			for(DataSeries ds : seriesList){
 				writer.write(ds.toString() + "\n");			
@@ -1550,112 +1615,9 @@ public class InputManager {
 		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), getDataTypes());
 	}
 	
-	/*public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
-		double pearsonSimple;
-		DataCategory[] dataTypes = getDataTypes(); 
-		String dsDomain = getDataSeriesDomain();
-		if(dsDomain.equals("ALL")){
-			return DataSeries.allCombinations(Knowledge.getIndicators(kMap), dataTypes);
-		} else if(dsDomain.equals("UNION")){
-			return DataSeries.unionCombinations(Knowledge.getIndicators(kMap));
-		} else if(dsDomain.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
-			pearsonCorrelation(kMap, DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes), pearsonSimple, getComplexPearsonThreshold());
-			return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPossibleIndCombinations());
-	}*/
-	
-	/*private void pearsonCorrelation(Map<KnowledgeType, List<Knowledge>> kMap, List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
-		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, kMap.get(kMap.keySet().iterator().next()));
-		pcManager.calculatePearsonIndexes(pearsonSimple);
-		pcManager.flush();
+	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats) {
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), cats);
 	}
-	
-	private List<List<String>> readPossibleIndCombinations(){
-		return readIndCombinations("indicatorCouples.csv");	
-	}
-	
-	private List<List<String>> readIndCombinations(String filename){
-		return readIndCombinations(new File(getSetupFolder() + filename));
-	}
-	
-	private List<List<String>> readIndCombinations(File indCoupleFile){
-		List<List<String>> comb = new LinkedList<List<String>>();
-		List<String> nList;
-		BufferedReader reader;
-		String readed;
-		try {
-			if(indCoupleFile.exists()){
-				reader = new BufferedReader(new FileReader(indCoupleFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
-							if(readed.split(",").length > 0){
-								if(readed.split(",")[0].contains("@")){
-									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
-									for(String sName : readed.split(",")[0].split("@")){
-										nList.add(sName.trim());
-									}
-								} else {
-									nList = new ArrayList<String>(1);
-									nList.add(readed.split(",")[0].trim());
-								}
-								comb.add(nList);
-							}
-						}
-					}
-				}
-				reader.close();
-			} 
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
-		}
-		return comb;
-	}
-	
-	private List<List<String>> readPearsonCombinations(double treshold){
-		List<List<String>> comb = new LinkedList<List<String>>();
-		File pFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		List<String> nList;
-		BufferedReader reader;
-		String readed;
-		try {
-			if(pFile.exists()){
-				reader = new BufferedReader(new FileReader(pFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							if(readed.split(",").length > 0 && Math.abs(Double.valueOf(readed.split(",")[1].trim())) >= treshold){
-								if(readed.split(",")[0].contains("@")){
-									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
-									for(String sName : readed.split(",")[0].split("@")){
-										nList.add(sName.trim());
-									}
-								} else {
-									nList = new ArrayList<String>(1);
-									nList.add(readed.split(",")[0].trim());
-								}
-								comb.add(nList);
-							}
-						}
-					}
-				}
-				reader.close();
-			} 
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
-		}
-		return comb;
-	}*/
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
 		return new FeatureSelectionInfo(new File(outFilePrequel));
@@ -1663,6 +1625,168 @@ public class InputManager {
 
 	public TrainInfo loadTrainInfo(String outFilePrequel) {
 		return new TrainInfo(new File(outFilePrequel));
+	}
+
+	public PreferencesManager getMetaLearningPreferences(AlgorithmVoter av, String amString, String csvFilename, String loaderName) {
+		File mll = createMetaLearningLoader(deriveExcludedModels(av, amString), csvFilename, loaderName);
+		return new PreferencesManager(mll);
+	}
+	
+	private String deriveExcludedModels(AlgorithmVoter av, String amString) {
+		String toSkip = "";
+		List<AlgorithmModel> okModels = new LinkedList<>(); 
+		for(AlgorithmModel am : loadAlgorithmModels(amString)){
+			if(av.checkModel(am, okModels))
+				okModels.add(am);
+			else toSkip = toSkip + am.getAlgorithmType() + "(" + am.getDataSeries().getCompactName() + "), ";
+		}
+		if(toSkip.length() > 1)
+			return toSkip.substring(0, toSkip.length()-2);
+		else return "";
+	}
+
+	private File createMetaLearningLoader(String toSkip, String csvFilename, String loaderName) {
+		BufferedWriter writer = null;
+		File lFolder = new File(getLoaderFolder() + "meta" + File.separatorChar);
+		File lFile = new File(lFolder.getPath() + File.separatorChar + "meta_" + loaderName + ".loader");
+		try {
+			if(!lFolder.exists())
+				lFolder.mkdirs();
+			writer = new BufferedWriter(new FileWriter(lFile));
+				
+			writer.write("* Loader file for meta-learning. Comments with '*'.\n");
+				
+			writer.write("\n\n* Loader type (CSV, ARFF).\n" + 
+					"LOADER_TYPE = CSV\n");
+			writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
+					"CONSIDERED_LAYERS = NO_LAYER\n");
+			
+			writer.write("\n* Data Partitioning.\n\n");
+			
+			writer.write("\n* File Used for Training\n" +
+					"TRAIN_FILE = " + csvFilename + "\n");
+			writer.write("\n* Train Runs.\n" + 
+					"TRAIN_RUN_IDS = 1 - 50\n");
+			writer.write("\n* Train Faulty Tags.\n" + 
+					"TRAIN_FAULTY_TAGS = Attack\n");
+			writer.write("\n* Train Runs.\n" + 
+					"TRAIN_SKIP_ROWS = \n");
+			writer.write("\n* File Used for Validation\n" +
+					"VALIDATION_FILE = " + csvFilename + "\n");
+			writer.write("\n* Validation Runs.\n" + 
+					"VALIDATION_RUN_IDS = 1 - 100\n");
+			writer.write("\n* Train Faulty Tags.\n" + 
+					"VALIDATION_FAULTY_TAGS = Attack\n");
+			writer.write("\n* Train Runs.\n" + 
+					"VALIDATION_SKIP_ROWS = \n");
+			
+			writer.write("\n* Parsing Dataset.\n\n");
+			
+			writer.write("\n* Features to Skip\n" + 
+					"SKIP_COLUMNS = " + toSkip.replace("@", "-") + "\n");
+			writer.write("\n* Column Containing the 'Label' Feature\n" + 
+					"LABEL_COLUMN = label\n");
+			writer.write("\n* Size of Each Experiment.\n" + 
+					"EXPERIMENT_ROWS = 100\n");	
+			
+			writer.close();
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to create loader for meta-learning");
+		}
+		return lFile;
+	}
+
+	public List<AlgorithmVoter> getMetaLearners(String datasetName) {
+		List<AlgorithmVoter> ml = new LinkedList<>();
+		List<ScoresVoter> svs = getScoresVoters(datasetName);
+		if(svs != null && svs.size() > 0){
+			for(ScoresVoter sv : svs){
+				if(sv.isMetaLearner())
+					ml.add((AlgorithmVoter)sv);
+			}
+		} 
+		return ml;
+	}
+
+	public String getMetaFolder() {
+		return "meta" + File.separatorChar;
+	}
+
+	public AlgorithmConfiguration getMetaConfigurationFor(String datasetName, String mlName) {
+		String readed;
+		String[] header = null;
+		AlgorithmConfiguration acOut = null;
+		BufferedReader reader = null;
+		File mcFile = new File(getMetaFolder() + "meta_" + datasetName.trim() + "_" + mlName.trim() + "_scores.csv");
+		try {
+			if(mcFile.exists()){
+				reader = new BufferedReader(new FileReader(mcFile));
+				// Eats the header
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null && readed.trim().length() > 0 && !readed.trim().startsWith("*")){
+						header = readed.split(",");
+						break;
+					}
+				}
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						
+						/*conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+						seriesString = splitted[0];
+						if(conf != null){
+							conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
+							conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+							conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+							conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
+						}*/
+						
+						
+						if(readed.length() > 0 && !readed.startsWith("*")){
+							int i = 0;
+							acOut = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(mlName.trim()), readed.split("§")[6]);
+							for(String element : readed.split("§")){
+								acOut.addItem(header[i++].trim(), element.trim());
+							}
+							break;
+						}
+					}
+				}
+				reader.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read Meta-Configuration");
+		} 
+		return acOut;
+	}
+
+	public boolean hasMetaLearning() {
+		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
+		BufferedReader reader;
+		String readed;
+		try {
+			if(voterFile.exists()){
+				reader = new BufferedReader(new FileReader(voterFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
+							try {
+								AlgorithmType.valueOf(readed.split(",")[1].trim());
+								return true;
+							} catch(Exception ex){ }
+						}
+					}
+				}
+				reader.close();
+			} 
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read voting preferences");
+		}
+		return false;
 	}	
 	
 }

@@ -1,0 +1,2 @@
+algorithm,knowledge,#checkers,avg_time(ms),avg_MatthewsCorrelationCoefficient,#top10,#top50,#top100,avg_MatthewsCorrelationCoefficient_top10,avg_MatthewsCorrelationCoefficient_top50,avg_MatthewsCorrelationCoefficient_top100,#conf
+SOM,SINGLE,6.0,11569.5,-0.04153505955059978,6.0,6.0,6.0,-0.04153505955059978,-0.04153505955059978,-0.04153505955059978,8.0,

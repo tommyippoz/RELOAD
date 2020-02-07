@@ -116,7 +116,6 @@ public class CustomGMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	    
 	    finalClusters = runKMeans(database, relation, k);
 	    actualK = k;
-	    System.out.println(k);
 	    
 	    // Calculating Distances
 	    scoresList = new LinkedList<KMeansScore>();

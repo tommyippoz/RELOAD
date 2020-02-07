@@ -1,0 +1,4 @@
+* This file reports on the scores of each feature selection technique applied to the initial set of features
+
+feature_selection_strategy,threshold,destinationPort#PLAIN#NO_LAYER,totalDestinationBytes#PLAIN#NO_LAYER,LDCOF_KMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER,HBOS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER,ELKI_GMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER,totalSourceBytes#PLAIN#NO_LAYER,
+INFORMATION_GAIN,100.0,0.8380870899801727,0.7643600993449498,0.7497942267735672,0.0815901215586674,0.7836141516687646,0.7415051167161228

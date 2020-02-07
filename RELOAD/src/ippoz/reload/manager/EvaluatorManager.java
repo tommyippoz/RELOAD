@@ -115,7 +115,7 @@ public class EvaluatorManager extends DataManager {
 	 */
 	@Override
 	protected void initRun() {
-		List<AlgorithmModel> algVoters = loadTrainScores();
+		List<AlgorithmModel> algVoters = InputManager.loadAlgorithmModelsFor(scoresFile, voter);
 		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
 		Map<KnowledgeType, Knowledge> redKMap;
 		expMetricEvaluations = new ArrayList<Map<Metric,Double>>(voterList.size());
@@ -153,53 +153,7 @@ public class EvaluatorManager extends DataManager {
 		detailedEvaluations.add(ev.getSingleAlgorithmScores());
 	}
 	
-	/**
-	 * Loads train scores.
-	 * This is the outcome of some previous training phases.
-	 *
-	 * @return the list of AlgorithmVoters resulting from the read scores
-	 */
-	private List<AlgorithmModel> loadTrainScores() {
-		File asFile = new File(scoresFile);
-		BufferedReader reader;
-		AlgorithmConfiguration conf;
-		String[] splitted;
-		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
-		String readed;
-		String seriesString;
-		try {
-			if(asFile.exists()){
-				reader = new BufferedReader(new FileReader(asFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = AppUtility.splitAndPurify(readed, "§");
-							if(splitted.length > 4 && voter.checkAnomalyTreshold(Double.valueOf(splitted[3]))){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-								seriesString = splitted[0];
-								if(conf != null){
-									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
-								}
-								AlgorithmModel am = new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
-								if(voter.checkModel(am, modelList))
-									modelList.add(am);
-							}
-						}
-					}
-				}
-				reader.close();
-			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + scoresFile + "'");
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read scores");
-		}
-		return modelList;
-	}
+	
 
 	/**
 	 * Setup results file.
@@ -271,7 +225,7 @@ public class EvaluatorManager extends DataManager {
 	}
 	
 	public Integer getCheckersNumber() {
-		return loadTrainScores().size();
+		return InputManager.loadAlgorithmModelsFor(scoresFile, voter).size();
 	}	
 
 }

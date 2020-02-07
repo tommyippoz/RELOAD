@@ -5,9 +5,11 @@ package ippoz.reload.voter;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.manager.InputManager;
 
 import java.util.List;
 import java.util.Map;
@@ -52,7 +54,7 @@ public abstract class ScoresVoter {
 		return voteResults(list);
 	}*/
 
-	public double voteResults(Map<AlgorithmModel, AlgorithmResult> snapVoting){
+	public double voteResults(Knowledge know, int knowIndex, Map<AlgorithmModel, AlgorithmResult> snapVoting){
 		int index = 0;
 		double[] individualScores = null;
 		if(snapVoting != null){
@@ -60,15 +62,16 @@ public abstract class ScoresVoter {
 			for(AlgorithmModel model : snapVoting.keySet()){
 				individualScores[index++] = DetectionAlgorithm.convertResultIntoDouble(snapVoting.get(model).getScoreEvaluation());
 			}
-			return voteResults(individualScores);
+			return voteResults(know, knowIndex, individualScores);
 		} else return Double.NaN;
 	}
 	
-	public abstract double voteResults(double[] individualScores);
+	public abstract double voteResults(Knowledge know, int knowIndex, double[] individualScores);
 	
 	public abstract double[] getThresholds();
 	
-	public abstract double applyThreshold(double value);
+	/** Bigger than 1 if anomaly */
+	public abstract double applyThreshold(double value, VotingResult vr);
 	
 	@Override
 	public String toString(){
@@ -82,12 +85,18 @@ public abstract class ScoresVoter {
 	public String getCheckerSelection(){
 		return checkerSelection;
 	}
-
+	
 	public static ScoresVoter generateVoter(String checkerSelection, String votingStrategy) {
-		if(checkerSelection != null && !checkerSelection.contains("_")){
-			if(votingStrategy != null && DetectionAlgorithm.isAlgorithm(votingStrategy) != null)
-				return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy));
-			else return new MajorityVoter(checkerSelection, votingStrategy);
+		return generateVoter(checkerSelection, votingStrategy, null, null);
+	}
+
+	public static ScoresVoter generateVoter(String checkerSelection, String votingStrategy, InputManager iManager, String datasetName) {
+		if(checkerSelection != null){
+			if(votingStrategy != null && DetectionAlgorithm.isAlgorithm(votingStrategy.trim()) != null){
+				if(iManager != null)
+					return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy.trim()), iManager.getMetaConfigurationFor(datasetName, votingStrategy));
+				else return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy.trim()), null);
+			} else return new MajorityVoter(checkerSelection, votingStrategy.trim());
 		} else {
 			return null;
 		}
@@ -156,5 +165,7 @@ public abstract class ScoresVoter {
 	}
 
 	public abstract DecisionFunction getDecisionFunction();
+
+	public abstract boolean isMetaLearner();
 	
 }

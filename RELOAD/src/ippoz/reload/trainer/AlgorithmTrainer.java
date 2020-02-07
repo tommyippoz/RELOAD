@@ -4,11 +4,13 @@
 package ippoz.reload.trainer;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.metric.BetterMaxMetric;
@@ -43,7 +45,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private Reputation reputation;
 	
 	/** The algorithm knowledge. */
-	private List<Knowledge> kList;
+	protected List<Knowledge> kList;
 	
 	/** The best configuration. */
 	private AlgorithmConfiguration bestConf;
@@ -52,10 +54,13 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	protected ValueSeries metricScore;
 	
 	/** The metric score. */
-	protected ValueSeries trainScore;
+	protected ValueSeries trainMetricScore;
 	
 	/** The metric score. */
 	protected ValueSeries anomalyTrainScore;
+	
+	/** Scores assigned to the training set. */
+	protected Map<Knowledge, List<AlgorithmResult>> trainResult;
 	
 	/** The reputation score. */
 	private double reputationScore;
@@ -114,6 +119,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public String getDatasetName(){
 		return datasetName;
 	}
+	
+	public Map<Knowledge, List<AlgorithmResult>> getTrainResult(){
+		return trainResult;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
@@ -123,7 +132,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
-		if(metricScore.size() > 0 && trainScore.size() > 0){
+		if(metricScore.size() > 0 && trainMetricScore.size() > 0){
 			metricScore = evaluateMetricScore();
 			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
@@ -131,18 +140,22 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
 			bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
 			bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainScore.getAvg());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainScore.getStd());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainScore.getMin());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainScore.getQ1());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainScore.getMedian());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainScore.getQ3());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainScore.getMax());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainMetricScore.getStd());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainMetricScore.getMin());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
+			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainMetricScore.getMax());
 			bestConf.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
 			bestConf.addItem(AlgorithmConfiguration.ANOMALY_AVG, getAnomalyAvg());
 			bestConf.addItem(AlgorithmConfiguration.ANOMALY_STD, getAnomalyStd());
 			bestConf.addItem(AlgorithmConfiguration.ANOMALY_MED, getAnomalyMed());
 		}
+	}
+	
+	public String getDecisionFunctionString(){
+		return bestConf.getItem(AlgorithmConfiguration.THRESHOLD);
 	}
 	
 	private double getAnomalyMed() {
@@ -187,11 +200,29 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		List<Double> algResults = new ArrayList<Double>(kList.size());
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
-			metricEvaluation = metric.evaluateMetric(algorithm, knowledge, ScoresVoter.generateVoter("BEST 1", "1"));
+			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
 			metricResults.addValue(metricEvaluation[0]);
 			algResults.add(metricEvaluation[1]);
 		}
 		return metricResults;
+	}
+	
+	protected List<AlgorithmResult> calculateResults(DetectionAlgorithm alg, Knowledge know) {
+		double snapValue;
+		Knowledge knowledge = know.cloneKnowledge();
+		List<AlgorithmResult> anomalyEvaluations = new ArrayList<AlgorithmResult>(knowledge.size());
+		for (int i = 0; i < knowledge.size(); i++) {
+			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
+			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
+			anomalyEvaluations.add(ar);
+			if (knowledge instanceof SlidingKnowledge) {
+				((SlidingKnowledge) knowledge).slide(i, snapValue);
+			}
+		}
+		if (knowledge instanceof SlidingKnowledge) {
+			((SlidingKnowledge) knowledge).reset();
+		}
+		return anomalyEvaluations;
 	}
 
 	/**

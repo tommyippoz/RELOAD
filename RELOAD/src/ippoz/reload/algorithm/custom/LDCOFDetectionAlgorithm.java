@@ -363,18 +363,18 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 			 * euclideanDistance(data, centroid)/centroid.getAvgDistance()	
 			 */
 			
-			double score = 0;
+			double score = 0, distanceFrom;
 			GenericCluster centroid = getClusterFor(data);
 			if(centroid == null)
 				return Double.NaN;
-			else if(centroid.isLarge() || findNearestLargeClusterFor(data) == null) {
-				//it is a large cluster
-				score = (centroid.distanceFrom(data))/centroid.getAvgDistanceFromCenter();
-			} else {
-				//it is a small cluster
-				GenericCluster nearestLargeCluster = findNearestLargeClusterFor(data);
-				score = (nearestLargeCluster.distanceFrom(data))/nearestLargeCluster.getAvgDistanceFromCenter();
-			}
+			else {
+				if(!centroid.isLarge() && findNearestLargeClusterFor(data) != null)
+					centroid = findNearestLargeClusterFor(data);
+				distanceFrom = centroid.distanceFrom(data);
+				if(centroid.getAvgDistanceFromCenter() != 0)
+					score = (centroid.distanceFrom(data))/centroid.getAvgDistanceFromCenter();
+				else score = distanceFrom;
+			} 
 			return score;
 		}
 		

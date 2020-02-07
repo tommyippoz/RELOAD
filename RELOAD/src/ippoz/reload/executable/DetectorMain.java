@@ -13,8 +13,10 @@ import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
+import ippoz.reload.manager.MetaLearningManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
+import ippoz.reload.voter.AlgorithmVoter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,6 +24,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,6 +213,7 @@ public class DetectorMain {
 			} 
 			if(dManager.needOptimization()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Voting/Optimization Process");
+				checkMetaLearning(dManager, iManager);
 				oOut = dManager.optimizeVoting();
 			}
 			if(dManager.needEvaluation()){
@@ -223,6 +228,18 @@ public class DetectorMain {
 		if(oOut != null || dOut != null)
 			return new DetectorOutput[]{oOut, dOut};
 		else return null;
+	}
+
+	private static void checkMetaLearning(DetectionManager dManager, InputManager iManager) {
+		MetaLearningManager mlm;
+		if(dManager.hasMetaLearning()){
+			AppLogger.logInfo(DetectorMain.class, "Starting Meta-Learning...");
+			for(AlgorithmVoter av : iManager.getMetaLearners(dManager.buildOutFilePrequel())){
+				AppLogger.logInfo(DetectorMain.class, "Meta-Learning for " + av.getAlgorithmType() + "(" + av.getCheckerSelection() + ")");
+				mlm = new MetaLearningManager(iManager, Arrays.asList(av.getAlgorithmType()), iManager.getMetaLearningPreferences(av, dManager.getModelsPath(), dManager.getMetaLearningCSV(), dManager.buildOutFilePrequel()));
+				mlm.metaLearning();
+			}
+		} else AppLogger.logInfo(DetectorMain.class, "No Meta-Learning is required");
 	}
 
 	private static void report(DetectorOutput dOut, InputManager iManager){

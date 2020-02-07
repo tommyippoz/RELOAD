@@ -5,6 +5,7 @@ package ippoz.reload.commons.knowledge.data;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
@@ -100,6 +101,14 @@ public class Observation {
 		return null;
 	}
 	
+	public boolean hasIndicator(String indicatorName, DataCategory categoryTag) {
+		for(Indicator ind : getIndicators()){
+			if(ind.getName().equals(indicatorName.trim()))
+				return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * Gets the number of observed indicators.
 	 *
@@ -107,6 +116,12 @@ public class Observation {
 	 */
 	public int getIndicatorNumber(){
 		return observedIndicators.size();
+	}
+	
+	public void addIndicatorData(String indName, String indData, DataCategory dataTag){
+		if(indName != null && !hasIndicator(indName, dataTag)){
+			observedIndicators.put(new Indicator(indName, LayerType.NO_LAYER, String.class), new IndicatorData(indData, dataTag));
+		} else AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to add indicator '" + indName + "'");
 	}
 
 }

@@ -232,11 +232,13 @@ public class DetectorOutput {
 
 	public double getBestScore() {
 		List<AlgorithmResult> allResults = new LinkedList<>();
-		for(String expName : votingScores.keySet()){
-			if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
-				allResults.addAll(votingScores.get(expName));
-		}
-		return getReferenceMetric().evaluateAnomalyResults(allResults);
+		if(votingScores != null){
+			for(String expName : votingScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+					allResults.addAll(votingScores.get(expName));
+			}
+			return getReferenceMetric().evaluateAnomalyResults(allResults);
+		} else return Double.NaN;
 	}
 	
 	public String getFormattedBestScore() {

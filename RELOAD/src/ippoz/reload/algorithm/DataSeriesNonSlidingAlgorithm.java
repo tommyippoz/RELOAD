@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
@@ -41,7 +42,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		String readed;
 		try {
 			loggedScores = new ValueSeries();		
-			loggedAnomalyScores = new ValueSeries();		
+			loggedAnomalyScores = new ValueSeries();	
 			if(new File(getScoresFilename()).exists()){
 				reader = new BufferedReader(new FileReader(new File(getScoresFilename())));
 				reader.readLine();
@@ -59,7 +60,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					}
 				}
 				reader.close();
-			}
+			} else AppLogger.logError(getClass(), "NoLoggedScoresError", "Unable to find logged scores in '" + getScoresFilename() + "'");
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read logged scores file");
 		} 
@@ -100,8 +101,10 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 			new File(getDefaultTmpFolder()).mkdirs();
 		trainOut = automaticInnerTraining(kList, createOutput);
 		if(trainOut){
-			
-			setDecisionFunction("IQR", new ValueSeries(getTrainScores()), false);
+			ValueSeries vs = new ValueSeries(getTrainScores());
+			if(vs.size() > 0)
+				setDecisionFunction("IQR", vs, false);
+			else setDecisionFunction("STATIC_THRESHOLD_GREATERTHAN(1)", vs, false);
 			
 			clearLoggedScores();
 			for(Knowledge know : kList){

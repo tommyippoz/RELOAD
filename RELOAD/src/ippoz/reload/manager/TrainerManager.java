@@ -4,12 +4,14 @@
 package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.Loader;
@@ -41,6 +43,8 @@ import java.util.Map.Entry;
 public class TrainerManager extends TrainDataManager {
 	
 	private TrainInfo trainInfo;
+	
+	private String datasetsFolder;
 	
 	/**
 	 * Instantiates a new trainer manager.
@@ -87,8 +91,9 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
+	public TrainerManager(String setupFolder, String datasetsFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
 		this(setupFolder, dsDomain, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
+		this.datasetsFolder = datasetsFolder;
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes, dsDomain);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -134,9 +139,10 @@ public class TrainerManager extends TrainDataManager {
 	/**
 	 * Starts the train process. 
 	 * The scores are saved in a file specified in the preferences.
+	 * @param metaFile 
 	 */
 	@SuppressWarnings("unchecked")
-	public void train(String outFilename){
+	public void train(String outFilename, String metaFile){
 		long start = System.currentTimeMillis();
 		try {
 			if(trainInfo == null)
@@ -151,7 +157,8 @@ public class TrainerManager extends TrainDataManager {
 				Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
-				saveScores(getThreadList(), outFilename + "_scores.csv");
+				saveModels(getThreadList(), outFilename + "_scores.csv");
+				saveTrainScores((List<AlgorithmTrainer>)getThreadList(), datasetsFolder + File.separatorChar + metaFile);
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
 				trainInfo.printFile(new File(outFilename + "_trainInfo.info"));
@@ -260,27 +267,60 @@ public class TrainerManager extends TrainDataManager {
 		at.flush();
 	}
 	
-	/*private void saveTrainingTimes(List<? extends Thread> list) {
-		BufferedWriter writer;
+	/**
+	 * Saves scores related to the executed AlgorithmTrainers.
+	 *
+	 * @param list the list of algorithm trainers
+	 * @param metaFile 
+	 */
+	private void saveTrainScores(List<AlgorithmTrainer> list, String metaFile) {
+		List<DataSeries> uniqueDs;
+		BufferedWriter scoreWriter;
+		File metaDatasetsFolder = new File(datasetsFolder + "meta");
 		try {
-			tTiming.addAlgorithmScores(list);
-			writer = new BufferedWriter(new FileWriter(new File(outputFolder + "/trainingTimings.csv")));
-			writer.write(tTiming.getHeader() + "\n");
-			for(AlgorithmType algType : algTypes){
-				writer.write(tTiming.toFileRow(algType) + "\n");
+			if(!metaDatasetsFolder.exists())
+				metaDatasetsFolder.mkdirs();
+			scoreWriter = new BufferedWriter(new FileWriter(new File(metaFile)));
+			scoreWriter.write("*This file contains the scores each model obtained during training. Used Algorithms: \n");
+			if(seriesList != null && seriesList.size() > 0 && list != null && list.size() > 0){
+				for(AlgorithmTrainer trainer : list){
+					scoreWriter.write("* " + trainer.getAlgType() + "(" + trainer.getDataSeries().getName().replace("@", "-") + ") - Decision: " + trainer.getDecisionFunctionString() + "\n");
+				}
+				uniqueDs = DataSeries.uniqueCombinations(seriesList);
+				for(DataSeries ds : uniqueDs){
+					scoreWriter.write(ds.getName().replace("@", "-") + ",");
+				}
+				for(AlgorithmTrainer trainer : list){
+					scoreWriter.write(trainer.getAlgType() + "(" + trainer.getDataSeries().getCompactName().replace("@", "-") + "),");
+				}
+				scoreWriter.write("label\n");
+				for(Knowledge know : getKnowledge()){
+					for(int i=0;i<know.size();i++){
+						for(DataSeries ds : uniqueDs){
+							scoreWriter.write(know.getDataSeriesValue(ds, i).getFirst() + ",");
+						}					
+						for(AlgorithmTrainer trainer : list){
+							AlgorithmResult ar = trainer.getTrainResult().get(know).get(i);
+							scoreWriter.write(ar.getScore() + ",");
+						}
+						scoreWriter.write(know.getInjection(i) != null ? "Attack" : "Normal");
+						scoreWriter.write("\n");
+					}
+				}
 			}
-			writer.close();
+			// TODO
+			scoreWriter.close();			
 		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to write scores");
+			AppLogger.logException(getClass(), ex, "Unable to write train scores");
 		}
-	}*/
+	}
 	
 	/**
 	 * Saves scores related to the executed AlgorithmTrainers.
 	 *
 	 * @param list the list of algorithm trainers
 	 */
-	private void saveScores(List<? extends Thread> list, String filename) {
+	private void saveModels(List<? extends Thread> list, String filename) {
 		BufferedWriter scoreWriter, statWriter;
 		AlgorithmTrainer trainer;
 		int count = 0;

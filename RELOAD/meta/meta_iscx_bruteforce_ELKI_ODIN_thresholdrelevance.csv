@@ -1,0 +1,3 @@
+threshold,optimal_configurations
+STATIC_THRESHOLD_GREATER(0.72),5
+STATIC_THRESHOLD_GREATER(0.58),1

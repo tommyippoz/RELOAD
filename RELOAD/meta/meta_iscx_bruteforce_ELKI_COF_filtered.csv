@@ -1,0 +1,7 @@
+data_series,type
+totalDestinationBytes#PLAIN#NO_LAYER
+LDCOF_KMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER
+ELKI_GMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER
+totalSourceBytes#PLAIN#NO_LAYER
+destinationPort#PLAIN#NO_LAYER
+HBOS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER

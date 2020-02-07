@@ -3,6 +3,7 @@
  */
 package ippoz.reload.voter;
 
+import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 
@@ -14,11 +15,10 @@ public class MajorityVoter extends ScoresVoter {
 
 	public MajorityVoter(String checkerSelection, String votingStrategy) {
 		super(checkerSelection, votingStrategy);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
-	public double voteResults(double[] individualScores) {
+	public double voteResults(Knowledge know, int knowIndex, double[] individualScores) {
 		double snapScore = 0.0;
 		boolean undetectable = true;
 		for(double algScore : individualScores){
@@ -55,13 +55,18 @@ public class MajorityVoter extends ScoresVoter {
 	}
 
 	@Override
-	public double applyThreshold(double value) {
+	public double applyThreshold(double value, VotingResult vr) {
 		return value / getThresholds()[0];
 	}
 
 	@Override
 	public DecisionFunction getDecisionFunction() {
 		return new StaticThresholdGreaterThanDecision(getThresholds()[0]);
+	}
+
+	@Override
+	public boolean isMetaLearner() {
+		return false;
 	}
 
 }

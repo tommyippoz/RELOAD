@@ -4,6 +4,7 @@
 package ippoz.reload.commons.knowledge;
 
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
@@ -89,9 +90,15 @@ public abstract class Knowledge implements Cloneable {
 	}
 	
 	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries){
+		if(dataSeries == null)
+			return null;
 		if(dataSeries.size() == 1)
 			return baseData.generateDataSeriesSnapshot(dataSeries, index);
 		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
+	}
+	
+	public SnapshotValue getDataSeriesValue(DataSeries ds, int i){
+		return ds.getSeriesValue(baseData.get(i));
 	}
 
 	public List<SnapshotValue> getDataSeriesValues(DataSeries ds){
@@ -274,6 +281,14 @@ public abstract class Knowledge implements Cloneable {
 			} else return null;
 		} else return null;
 
+	}
+	
+	public void addIndicatorData(int obId, String indName, String indData, DataCategory dataTag){
+		baseData.get(obId).addIndicatorData(indName, indData, dataTag);
+	}
+
+	public boolean hasIndicatorData(int obId, String indicatorName, DataCategory categoryTag) {
+		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
 	}
 
 }

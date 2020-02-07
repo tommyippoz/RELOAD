@@ -29,6 +29,8 @@ public abstract class Metric implements Comparable<Metric> {
 		this.mType = mType;
 	}
 
+	
+	
 	/**
 	 * Evaluates the experiment using the chosen metric.
 	 *
@@ -39,7 +41,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std
 	 *         algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know, ScoresVoter voter) {
+	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know) {
 		double average = 0;
 		double std = 0;
 		double snapValue;
@@ -113,7 +115,7 @@ public abstract class Metric implements Comparable<Metric> {
 	/**
 	 * Gets the metric name.
 	 *
-	 * @return the metric name
+	 * @return the metric name 
 	 */
 	public abstract String getMetricName();
 

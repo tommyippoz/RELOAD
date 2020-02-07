@@ -6,6 +6,7 @@ package ippoz.reload.evaluation;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -129,10 +130,12 @@ public class ExperimentEvaluator extends Thread {
 				AlgorithmResult firstResult = null;
 				for(AlgorithmModel aVoter : algList){
 					firstResult = aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i);
+					if(!currentKnowledge.hasIndicatorData(i, aVoter.getAlgorithmType() + "(" + aVoter.getDataSeries().getCompactName().replace("@",  "-") + ")", DataCategory.PLAIN))
+						currentKnowledge.addIndicatorData(i, aVoter.getAlgorithmType() + "(" + aVoter.getDataSeries().getCompactName().replace("@",  "-") + ")",  String.valueOf(firstResult.getScore()), DataCategory.PLAIN);
 					snapVoting.put(aVoter, firstResult);
 				}
 				modelResults.put(currentKnowledge.getTimestamp(i), snapVoting);
-				votingResult = voter.voteResults(snapVoting);
+				votingResult = voter.voteResults(currentKnowledge, i, snapVoting);
 				voting.add(new VotingResult(firstResult, votingResult, voter));
 				
 				if(currentKnowledge.getInjection(i) != null){

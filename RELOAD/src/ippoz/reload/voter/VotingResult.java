@@ -35,7 +35,7 @@ public class VotingResult extends AlgorithmResult {
 	
 	@Override
 	public boolean getBooleanScore() {
-		return Metric.anomalyTrueFalse(voter.applyThreshold(votingResult));
+		return Metric.anomalyTrueFalse(voter.applyThreshold(votingResult, this));
 	}
 
 	@Override
