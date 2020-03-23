@@ -61,12 +61,17 @@ public class MajorityVoter extends ScoresVoter {
 
 	@Override
 	public DecisionFunction getDecisionFunction() {
-		return new StaticThresholdGreaterThanDecision(getThresholds()[0]);
+		return new StaticThresholdGreaterThanDecision(getThresholds()[0], null);
 	}
 
 	@Override
 	public boolean isMetaLearner() {
 		return false;
+	}
+
+	@Override
+	public double getConfidence(double value) {
+		return Math.abs(getThresholds()[0] - value) / getThresholds()[0];
 	}
 
 }

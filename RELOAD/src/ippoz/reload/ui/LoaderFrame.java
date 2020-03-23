@@ -223,8 +223,8 @@ public class LoaderFrame {
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
-		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), loaderPref.hasPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
+		showPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
+				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
 				"Specify an integer that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", null);
 		
 		int featureNumber = 0;

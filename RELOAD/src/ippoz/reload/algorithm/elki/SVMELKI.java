@@ -5,10 +5,8 @@ package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.elki.support.CustomSVM;
 import ippoz.reload.algorithm.elki.support.CustomSVM.SVMKernel;
-import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,19 +80,15 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 			} else return null;
 		} else return null;
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomSVM)getAlgorithm()).calculateSVM(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public double getELKIScore(Vector v) {
+		return ((CustomSVM)getAlgorithm()).calculateSVM(v);
+	}
+
+	@Override
+	public boolean getELKIEvaluationFlag(Vector v) {
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0));
 	}
 
 	/* (non-Javadoc)

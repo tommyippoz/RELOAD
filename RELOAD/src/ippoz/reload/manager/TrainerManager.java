@@ -11,7 +11,6 @@ import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.loader.Loader;

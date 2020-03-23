@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class ConfidenceIntervalFunction. Describes the decision using 
@@ -30,10 +31,10 @@ public class ConfidenceIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public ConfidenceIntervalFunction(double ratio, double avg, double std, boolean revertFlag) {
-		super("confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag);
-		this.avg = avg;
-		this.std = std;
+	public ConfidenceIntervalFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag, algorithmScores);
+		this.avg = algorithmScores.getAvg();
+		this.std = algorithmScores.getStd();
 		this.ratio = ratio;
 	}
 

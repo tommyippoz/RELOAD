@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * @author Tommy
@@ -25,9 +26,9 @@ public class ModeFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public ModeFunction(double ratio, double mode, boolean revertFlag) {
-		super("mode_function", DecisionFunctionType.MODE, revertFlag);
-		this.mode = mode;
+	public ModeFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("mode_function", DecisionFunctionType.MODE, revertFlag, algorithmScores);
+		this.mode = algorithmScores.getMode();
 		this.ratio = ratio;
 	}
 

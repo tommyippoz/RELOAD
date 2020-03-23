@@ -4,10 +4,8 @@
 package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.elki.support.CustomSOS;
-import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,19 +44,15 @@ public class SOSELKI extends DataSeriesELKIAlgorithm {
 		return new CustomSOS(SquaredEuclideanDistanceFunction.STATIC, 
 	    		conf.hasItem(H) ? Integer.parseInt(conf.getItem(H)) : DEFAULT_H);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar = null;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomSOS)getAlgorithm()).calculateSingleSOS(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public double getELKIScore(Vector v) {
+		return ((CustomSOS)getAlgorithm()).calculateSingleSOS(v);
+	}
+
+	@Override
+	public boolean getELKIEvaluationFlag(Vector v) {
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null;
 	}
 
 	/* (non-Javadoc)

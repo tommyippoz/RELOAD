@@ -16,7 +16,6 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -107,14 +107,14 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		double d0 = snapValue.calculateDistance(thresholds[0]);
 		double dt = thresholds[0].calculateDistance(thresholds[1]);
 		if(Double.isFinite(dt)){
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), d1 + d0 - dt);
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), d1 + d0 - dt, getConfidence(d1 + d0 - dt));
 			if(snapValue.compareTo(thresholds[1]) <= 0 && snapValue.compareTo(thresholds[0]) >= 0)
 				ar.setScoreEvaluation(AnomalyResult.NORMAL);
 			else {
 				ar.setScoreEvaluation(AnomalyResult.ANOMALY);
 			}
 		} else {
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), Double.NaN);
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), Double.NaN, 1);
 			ar.setScoreEvaluation(AnomalyResult.NORMAL);
 		}
 		return ar;

@@ -31,6 +31,9 @@ public class AlgorithmResult {
 	
 	/** The decision function used. */
 	private DecisionFunction dFunction;
+	
+	/** The confidence on the result. */
+	private double confidence;
 
 	/**
 	 * Instantiates a new algorithm result.
@@ -39,10 +42,11 @@ public class AlgorithmResult {
 	 * @param injection the injection
 	 * @param score the score
 	 */
-	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score) {
+	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score, double confidence) {
 		this.dataValues = dataValues;
 		this.injection = injection;
 		this.score = score;
+		this.confidence = confidence;
 	}
 
 	/**
@@ -54,12 +58,13 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction) {
+	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
 		this.dataValues = dataValues;
 		this.injection = injection;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
 		this.dFunction = dFunction;
+		this.confidence = confidence;
 	}
 
 	/**
@@ -124,7 +129,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult error(List<Double> dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.ERROR, null);
+		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.ERROR, null, 1);
 	}
 
 	/**
@@ -135,7 +140,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult unknown(List<Double> dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.UNKNOWN, null);
+		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
 	}	
 	
 	/**
@@ -181,6 +186,10 @@ public class AlgorithmResult {
 
 	public boolean getBooleanScore() {
 		return Metric.anomalyTrueFalse(getScore());
+	}
+	
+	public double getConfidence() {
+		return confidence;
 	}
 
 }

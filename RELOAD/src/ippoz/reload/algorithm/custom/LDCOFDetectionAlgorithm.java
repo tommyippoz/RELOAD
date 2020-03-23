@@ -9,10 +9,7 @@ import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 
@@ -97,8 +94,10 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
+		double score;
 		if(clSnaps != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateLDCOF(sysSnapshot));
+			score = calculateLDCOF(sysSnapshot);
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
@@ -126,7 +125,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("cluster_avg,cluster_std\n");
+				writer.write("cluster_avg;cluster_std;distance_center;size;isLarge\n");
 				for(GenericCluster uc : clSnaps){
 					writer.write(uc.toConfiguration().replace("@", ";") + "\n");
 				}

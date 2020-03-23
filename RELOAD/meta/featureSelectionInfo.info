@@ -1,13 +1,13 @@
-* INFO file generated at Fri Feb 07 10:55:02 CET 2020 that reports on feature selection details
+* INFO file generated at Fri Mar 06 14:27:22 CET 2020 that reports on feature selection details
 
 * Feature selection strategies used
 FS Selection Strategies = [InformationGain(100.0-RANK)]
 
 * Selected Features
-FS Selected Features = [HBOS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER, LDCOF_KMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER, totalSourceBytes#PLAIN#NO_LAYER, totalDestinationBytes#PLAIN#NO_LAYER, ELKI_GMEANS(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER, destinationPort#PLAIN#NO_LAYER]
+FS Selected Features = [destinationPort#PLAIN#NO_LAYER, ELKI_SVM(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER, totalDestinationBytes#PLAIN#NO_LAYER, totalSourceBytes#PLAIN#NO_LAYER]
 
 * Number of Selected Features
-FS N Selected Features = 6
+FS N Selected Features = 4
 
 * Feature Aggregation Strategy (NONE, SIMPLE, PEARSON, UNION, ALL)
 FS Aggregation Strategy = 

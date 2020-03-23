@@ -3,6 +3,15 @@
  */
 package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,15 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
-import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
 
 /**
  * @author Tommy
@@ -178,7 +178,7 @@ public class FastVOADetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar = null;
 		if(randoms != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateFastVOA(getSnapValueArray(sysSnapshot)));
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateFastVOA(getSnapValueArray(sysSnapshot)), 0);
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

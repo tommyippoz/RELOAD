@@ -15,8 +15,8 @@ public class DBSCANResult extends ClusteringResult {
 	
 	private double clusterVariance;
 
-	public DBSCANResult(List<Double> dataValues, InjectedElement injection, double score, double clusterVariance) {
-		super(dataValues, injection, score);
+	public DBSCANResult(List<Double> dataValues, InjectedElement injection, double score, double clusterVariance, double confidence) {
+		super(dataValues, injection, score, confidence);
 		this.clusterVariance = clusterVariance;
 	}
 

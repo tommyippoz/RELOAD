@@ -3,6 +3,13 @@
  */
 package ippoz.reload.featureselection.support;
 
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
+
 import weka.attributeSelection.ASEvaluation;
 import weka.attributeSelection.SubsetEvaluator;
 import weka.classifiers.AbstractClassifier;
@@ -10,12 +17,7 @@ import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.AbstractEvaluationMetric;
 import weka.classifiers.evaluation.InformationRetrievalEvaluationMetric;
-import weka.classifiers.functions.LinearRegression;
-import weka.classifiers.rules.OneR;
-import weka.classifiers.rules.ZeroR;
 import weka.classifiers.trees.J48;
-import weka.classifiers.trees.RandomForest;
-import weka.classifiers.trees.RandomTree;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
 import weka.core.Instances;
@@ -31,15 +33,6 @@ import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
-
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Random;
-import java.util.Vector;
-
-import de.lmu.ifi.dbs.elki.algorithm.outlier.distance.ODIN;
 
 /**
  <!-- globalinfo-start -->

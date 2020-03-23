@@ -112,16 +112,16 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 */
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		return evaluateElkiSnapshot(sysSnapshot);
+		AlgorithmResult ar;
+		double score;
+		Vector v = convertSnapToVector(sysSnapshot);
+		if(getELKIEvaluationFlag(v)){
+			score = getELKIScore(v);
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
+			getDecisionFunction().assignScore(ar, true);
+			return ar;
+		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
 	}
-	
-	/**
-	 * Evaluates the ELKI snapshot using the trained model.
-	 *
-	 * @param sysSnapshot the system snapshot
-	 * @return the algorithm result
-	 */
-	protected abstract AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot);
 	
 	/**
 	 * Translates the knowledge list into an ELKI Database object.
@@ -158,6 +158,12 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 			}
 		}
 		return vec;
+	}
+	
+	public abstract double getELKIScore(Vector v);
+	
+	public boolean getELKIEvaluationFlag(Vector v){
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null;
 	}
 
 }

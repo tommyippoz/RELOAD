@@ -9,12 +9,9 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.externalutils.WEKAUtils;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import weka.attributeSelection.ASEvaluation;
-import weka.attributeSelection.AttributeEvaluator;
 import weka.classifiers.Classifier;
 import weka.core.Instances;
 

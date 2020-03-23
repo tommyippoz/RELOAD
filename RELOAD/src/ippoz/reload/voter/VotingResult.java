@@ -17,7 +17,7 @@ public class VotingResult extends AlgorithmResult {
 	private ScoresVoter voter;
 
 	public VotingResult(AlgorithmResult ar, double votingResult, ScoresVoter voter) {
-		super(ar.getData(), ar.getInjection(), ar.getScore(), ar.getScoreEvaluation(), ar.getDecisionFunction());
+		super(ar.getData(), ar.getInjection(), ar.getScore(), ar.getScoreEvaluation(), ar.getDecisionFunction(), ar.getConfidence());
 		this.votingResult = votingResult;
 		this.voter = voter;
 	}
@@ -43,4 +43,11 @@ public class VotingResult extends AlgorithmResult {
 		return "[" + getScore() + "]";
 	}
 
+	@Override
+	public double getConfidence() {
+		if(voter.getNVoters() > 1)
+			return voter.getConfidence(getScore());
+		else return super.getConfidence();	
+	}
+	
 }

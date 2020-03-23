@@ -191,8 +191,10 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
+		double score;
 		if(weights != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateSOM(snapToDouble(sysSnapshot)));
+			score = calculateSOM(snapToDouble(sysSnapshot));
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

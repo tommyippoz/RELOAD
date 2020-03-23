@@ -167,5 +167,7 @@ public abstract class ScoresVoter {
 	public abstract DecisionFunction getDecisionFunction();
 
 	public abstract boolean isMetaLearner();
+
+	public abstract double getConfidence(double value);
 	
 }

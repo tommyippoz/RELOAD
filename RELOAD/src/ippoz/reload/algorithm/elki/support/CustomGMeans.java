@@ -362,7 +362,7 @@ public class CustomGMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("cluster\n");
+				writer.write("variance_contribution#cluster#avg_distance_from_center#n_data_points#is_Large\n");
 				for(GenericCluster km : finalClusters){
 					KMeansModel kmm = km.generateKMeansModel();
 					String outString = kmm.getVarianceContribution() + "#";

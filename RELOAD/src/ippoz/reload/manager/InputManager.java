@@ -30,6 +30,7 @@ import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.AUC_Metric;
 import ippoz.reload.metric.Accuracy_Metric;
+import ippoz.reload.metric.ConfidenceErrorMetric;
 import ippoz.reload.metric.Custom_Metric;
 import ippoz.reload.metric.FMeasure_Metric;
 import ippoz.reload.metric.FN_Metric;
@@ -440,6 +441,11 @@ public class InputManager {
 			case "THRESHOLDS":
 			case "THRESHOLDS_AMOUNT":
 				return new ThresholdAmount_Metric(validAfter);
+			case "CONFIDENCE_ERROR":
+			case "CONFERROR":
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new ConfidenceErrorMetric(validAfter, Double.valueOf(param));
+				else return new ConfidenceErrorMetric(validAfter, 1.0);
 			default:
 				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric '" + mType + "'cannot be defined");
 				return null;
@@ -1539,9 +1545,10 @@ public class InputManager {
 		BufferedReader reader;
 		String readed;
 		String[] header = null;
+		String croppedDN = datasetName.substring(0, datasetName.indexOf("."));
 		Map<DataSeries, Map<FeatureSelectorType, Double>> featureMap = new HashMap<>();
 		List<DataSeries> sList = getSelectedSeries(baseFolder, filename);
-		File file = new File(baseFolder + filename + "_featureScores_[" + datasetName + "].csv");
+		File file = new File(baseFolder + croppedDN + File.separatorChar + "featureScores_[" + datasetName + "].csv");
 		try {
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));

@@ -4,7 +4,6 @@
 package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
-import ippoz.reload.algorithm.custom.FastVOADetectionAlgorithm;
 import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFKMeansDetectionAlgorithm;
@@ -691,6 +690,12 @@ public abstract class DetectionAlgorithm {
 	}
 
 	public abstract Map<String, String[]> getDefaultParameterValues();
+	
+	public double getConfidence(double algorithmScore){
+		if(decisionFunction != null)
+			return decisionFunction.calculateConfidence(algorithmScore);
+		else return Double.NaN;
+	}
 	
 	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
 		int insertIndex = 0;

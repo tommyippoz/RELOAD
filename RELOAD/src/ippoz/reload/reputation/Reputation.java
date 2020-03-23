@@ -51,7 +51,7 @@ public abstract class Reputation {
 		for(int i=0;i<knowledge.size();i++){
 			AlgorithmResult aRes = alg.snapshotAnomalyRate(knowledge, i);
 			double algScore = DetectionAlgorithm.convertResultIntoDouble(aRes.getScoreEvaluation());
-			anomalyEvaluations.add(new AlgorithmResult(aRes.getData(), knowledge.getInjection(i), algScore, aRes.getScoreEvaluation(), aRes.getDecisionFunction()));
+			anomalyEvaluations.add(new AlgorithmResult(aRes.getData(), knowledge.getInjection(i), algScore, aRes.getScoreEvaluation(), aRes.getDecisionFunction(), alg.getConfidence(algScore)));
 		}
 		return evaluateExperimentReputation(anomalyEvaluations);
 	}

@@ -20,7 +20,6 @@ import ippoz.reload.loader.Loader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.AlgorithmVoter;
 import ippoz.reload.voter.ScoresVoter;
 
 import java.io.File;

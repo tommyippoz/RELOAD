@@ -4,6 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class DoubleThresholdIntern. Sets two thresholds, evaluates data point as anomalous
@@ -25,8 +26,8 @@ public class DoubleThresholdIntern extends DecisionFunction {
 	 * @param lowerThreshold the lower threshold
 	 * @param upperThreshold the upper threshold
 	 */
-	protected DoubleThresholdIntern(double lowerThreshold, double upperThreshold) {
-		super("DoubleThresholdIntern", DecisionFunctionType.DOUBLE_THRESHOLD_INTERN, false);
+	protected DoubleThresholdIntern(double lowerThreshold, double upperThreshold, ValueSeries algorithmScores) {
+		super("DoubleThresholdIntern", DecisionFunctionType.DOUBLE_THRESHOLD_INTERN, false, algorithmScores);
 		this.lowerThreshold = lowerThreshold;
 		this.upperThreshold = upperThreshold;
 	}

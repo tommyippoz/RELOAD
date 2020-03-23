@@ -9,7 +9,6 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.List;

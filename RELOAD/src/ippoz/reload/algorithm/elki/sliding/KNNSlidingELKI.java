@@ -57,8 +57,10 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	@Override
 	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
 		AlgorithmResult ar;
+		double score;
 		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb));
+			score = ((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb);
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), score, getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());

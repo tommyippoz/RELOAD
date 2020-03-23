@@ -26,16 +26,19 @@ public abstract class DecisionFunction {
 	/** Specifies if anomalies are extern or intern */
 	private boolean revertFlag;
 	
+	private ValueSeries refScores;
+	
 	/**
 	 * Instantiates a new decision function.
 	 *
 	 * @param classifierName the classifier name
 	 * @param classifierType the classifier type
 	 */
-	protected DecisionFunction(String classifierName, DecisionFunctionType classifierType, boolean revertFlag) {
+	protected DecisionFunction(String classifierName, DecisionFunctionType classifierType, boolean revertFlag, ValueSeries refScores) {
 		this.decisionFunctionName = classifierName;
 		this.functionType = classifierType;
 		this.revertFlag = revertFlag;
+		this.refScores = refScores;
 	}
 	
 	protected boolean getRevertFlag(){
@@ -64,16 +67,16 @@ public abstract class DecisionFunction {
 						String upper = partial.split(",")[1].trim();
 						if(AppUtility.isNumber(lower) && AppUtility.isNumber(upper)){
 							if(thresholdTag.contains("EXTERN"))
-								return new DoubleThresholdExtern(Double.valueOf(lower), Double.valueOf(upper));
-							else return new DoubleThresholdIntern(Double.valueOf(lower), Double.valueOf(upper));
+								return new DoubleThresholdExtern(Double.valueOf(lower), Double.valueOf(upper), algorithmScores);
+							else return new DoubleThresholdIntern(Double.valueOf(lower), Double.valueOf(upper), algorithmScores);
 						}
 					}
 				} else if(thresholdTag.contains("THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
 					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 					if(thresholdTag.contains("STATIC")){
 						if(thresholdTag.contains("GREATER"))
-							return new StaticThresholdGreaterThanDecision(Double.valueOf(partial.trim()));
-						else return new StaticThresholdLowerThanDecision(Double.valueOf(partial.trim()));
+							return new StaticThresholdGreaterThanDecision(Double.valueOf(partial.trim()), algorithmScores);
+						else return new StaticThresholdLowerThanDecision(Double.valueOf(partial.trim()), algorithmScores);
 					} else return new ThresholdDecision(Double.valueOf(partial.trim()), algorithmScores);
 				} else if(thresholdTag.endsWith("%")) {
 					partial = thresholdTag.replace("%", "");
@@ -81,23 +84,23 @@ public abstract class DecisionFunction {
 				} else if(thresholdTag.contains("IQR")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("IQR"))
-							return new IQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+							return new IQRFunction(1.5, algorithmScores, flag);
 						else if(thresholdTag.equals("LEFT_IQR"))
-							return new LeftIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+							return new LeftIQRFunction(1.5, algorithmScores, flag);
 						else if(thresholdTag.equals("LEFT_POSITIVE_IQR"))
-							return new LeftPositiveIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+							return new LeftPositiveIQRFunction(1.5, algorithmScores, flag);
 						else if(thresholdTag.equals("RIGHT_IQR"))
-							return new RightIQRFunction(1.5, algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+							return new RightIQRFunction(1.5, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_IQR"))
-									return new LeftIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+									return new LeftIQRFunction(Double.parseDouble(partial), algorithmScores, flag);
 								else if(thresholdTag.contains("LEFT_POSITIVE_IQR"))
-									return new LeftPositiveIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+									return new LeftPositiveIQRFunction(Double.parseDouble(partial), algorithmScores, flag);
 								else if(thresholdTag.contains("RIGHT_IQR"))
-									return new RightIQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
-								else return new IQRFunction(Double.parseDouble(partial), algorithmScores.getQ1(), algorithmScores.getQ3(), flag);
+									return new RightIQRFunction(Double.parseDouble(partial), algorithmScores, flag);
+								else return new IQRFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of IQR '" + thresholdTag + "' cannot be parsed");
 					} else 
@@ -105,74 +108,74 @@ public abstract class DecisionFunction {
 				} else if(thresholdTag.contains("CONFIDENCE_INTERVAL")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("CONFIDENCE_INTERVAL"))
-							return new ConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+							return new ConfidenceIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.equals("LEFT_CONFIDENCE_INTERVAL"))
-							return new LeftConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+							return new LeftConfidenceIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.equals("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
-							return new LeftPositiveConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+							return new LeftPositiveConfidenceIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.equals("RIGHT_CONFIDENCE_INTERVAL"))
-							return new RightConfidenceIntervalFunction(1.0, algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+							return new RightConfidenceIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
 								if(thresholdTag.contains("LEFT_CONFIDENCE_INTERVAL"))
-									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+									return new LeftConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
 								else if(thresholdTag.contains("LEFT_POSITIVE_CONFIDENCE_INTERVAL"))
-									return new LeftPositiveConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+									return new LeftPositiveConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
 								else if(thresholdTag.contains("RIGHT_CONFIDENCE_INTERVAL"))
-									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
-								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores.getAvg(), algorithmScores.getStd(), flag);
+									return new RightConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
+								else return new ConfidenceIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of CONF '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create CONF decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.contains("MODE_INTERVAL")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("MODE_INTERVAL"))
-							return new ModeIntervalFunction(1.0, algorithmScores.getMode(), algorithmScores.getStd(), flag);
+							return new ModeIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
-								return new ModeIntervalFunction(Double.parseDouble(partial), algorithmScores.getMode(), algorithmScores.getStd(), flag);
+								return new ModeIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MCONF '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MCONF decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.contains("MODE")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("MODE"))
-							return new ModeFunction(1.0, algorithmScores.getMode(), flag);
+							return new ModeFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
-								return new ModeFunction(Double.parseDouble(partial), algorithmScores.getMode(), flag);
+								return new ModeFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MODE '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MODE decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.contains("MEDIAN_INTERVAL")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("MEDIAN_INTERVAL"))
-							return new MedianIntervalFunction(1.0, algorithmScores.getMedian(), algorithmScores.getStd(), flag);
+							return new MedianIntervalFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
-								return new MedianIntervalFunction(Double.parseDouble(partial), algorithmScores.getMedian(), algorithmScores.getStd(), flag);
+								return new MedianIntervalFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDCONF '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MEDCONF decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.contains("MEDIAN")) {
 					if(algorithmScores != null && algorithmScores.size() > 0){
 						if(thresholdTag.equals("MEDIAN"))
-							return new MedianFunction(1.0, algorithmScores.getMedian(), flag);
+							return new MedianFunction(1.0, algorithmScores, flag);
 						else if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 							partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 							if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
-								return new MedianFunction(Double.parseDouble(partial), algorithmScores.getMedian(), flag);
+								return new MedianFunction(Double.parseDouble(partial), algorithmScores, flag);
 							} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
 						} else AppLogger.logInfo(DecisionFunction.class, "Parameters of MEDIAN '" + thresholdTag + "' cannot be parsed");
 					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create MEDIAN decision function '" + thresholdTag + "'");
 				} else if (thresholdTag.contains("CLUSTER")){
 					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
-						return new ClusterDecision(partial, flag);
+						return new ClusterDecision(partial, flag, algorithmScores);
 					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
 				} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create decision function '" + thresholdTag + "'");
 			} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "null tag for decision function");
@@ -404,6 +407,45 @@ public abstract class DecisionFunction {
 		else if(decFunctString.contains("CLUSTER"))
 			return algType.equals(AlgorithmType.DBSCAN) || algType.equals(AlgorithmType.ELKI_KMEANS);
 		else return true;
+	}
+	
+	protected ValueSeries getRefScores(){
+		return refScores;
+	}
+	
+	/* Calculates confidence of the Decision Function wrt a given score provided by the algorithm */
+	public double calculateConfidence(double algorithmScore){
+		double[] allThr = getThresholds();
+		if(allThr != null && allThr.length > 0){
+			if(allThr.length == 2 && allThr[0] == allThr[1] && allThr[0] == algorithmScore)
+				return 1.0;
+			else if(allThr.length == 1 || (allThr.length == 2 && allThr[0] == allThr[1])){
+				return computeConfidence(refScores.getMin(), refScores.getMax(), allThr[0], algorithmScore);
+			} else {
+				if(allThr[0] <= allThr[1]){
+					if(Math.abs(algorithmScore - allThr[0]) < Math.abs(algorithmScore - allThr[1]))
+						return computeConfidence(refScores.getMin(), (allThr[0] + allThr[1]) / 2, allThr[0], algorithmScore);
+					else return computeConfidence((allThr[0] + allThr[1]) / 2, refScores.getMax(), allThr[1], algorithmScore);
+				} else {
+					if(Math.abs(algorithmScore - allThr[0]) < Math.abs(algorithmScore - allThr[1]))
+						return computeConfidence((allThr[0] + allThr[1]) / 2, refScores.getMax(), allThr[0], algorithmScore);
+					else return computeConfidence(refScores.getMin(), (allThr[0] + allThr[1]) / 2, allThr[1], algorithmScore);
+				}
+			}
+		} else return Double.NaN;
+	}
+	
+	private double computeConfidence(double min, double max, double threshold, double value){
+		double conf = 0;
+		if(Double.isFinite(value)){
+			if(value == threshold)
+				conf = 0;
+			else if(value < threshold)
+				conf = Math.abs(value - threshold) / Math.abs(min - threshold);
+			else 
+				conf = Math.abs(value - threshold) / Math.abs(max - threshold);
+			return conf*0.98 + 0.01;
+		} else return Double.NaN;	
 	}
 
 }

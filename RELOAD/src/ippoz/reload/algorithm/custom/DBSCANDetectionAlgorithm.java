@@ -10,10 +10,7 @@ import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
@@ -115,10 +112,12 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
 		GenericCluster uc;
+		double score;
 		double[] snapsArray = getSnapValueArray(sysSnapshot);
 		if(clSnaps != null){
 			uc = calculateCluster(snapsArray);
-			ar = new DBSCANResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), uc.distanceFrom(snapsArray), uc.getVar());
+			score = uc.distanceFrom(snapsArray);
+			ar = new DBSCANResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, uc.getVar(), getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

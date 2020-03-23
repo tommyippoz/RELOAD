@@ -113,8 +113,8 @@ public class DetectorOutput {
 			if(votingScores != null && votingScores.size() > 0 &&
 					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
-				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
-				header2 = ",,,,,";
+				header1 = "exp,index,fault/attack,reload_eval,reload_score,reload_confidence,";
+				header2 = ",,,,,,";
 				
 				Iterator<String> it = detailedExperimentsScores.keySet().iterator();
 				String tag = it.next();
@@ -125,8 +125,8 @@ public class DetectorOutput {
 				map = detailedExperimentsScores.get(tag).get(0);
 				voterList = map.keySet();
 				for(AlgorithmModel av : voterList){
-					header1 = header1 + "," + av.getAlgorithmType() + ",,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
-					header2 = header2 + ",score,decision_function,eval,";
+					header1 = header1 + "," + av.getAlgorithmType() + ",,,,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
+					header2 = header2 + ",score,decision_function,eval,confidence,,";
 					if(av.getDataSeries().size() == 1){
 						header2 = header2 + av.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
 					} else {
@@ -152,7 +152,8 @@ public class DetectorOutput {
 									i + "," + 
 									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
 									(votingScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
-									votingScores.get(expName).get(i).getVotingResult() + ",");
+									votingScores.get(expName).get(i).getVotingResult() + "," + 
+									votingScores.get(expName).get(i).getConfidence() + ",");
 							if(i < detailedExperimentsScores.get(expName).size()){
 								map = detailedExperimentsScores.get(expName).get(i);
 								for(AlgorithmModel av : voterList){
@@ -164,7 +165,7 @@ public class DetectorOutput {
 									}
 									writer.write("," + map.get(av).getScore() + "," + 
 											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
-											map.get(av).getScoreEvaluation() + ",");
+											map.get(av).getScoreEvaluation() + "," + map.get(av).getConfidence() + ",,");
 									if(knowledge != null){
 										Snapshot snap = knowledge.buildSnapshotFor(i, av.getDataSeries());
 										if(av.getDataSeries().size() == 1){

@@ -1,2 +1,5 @@
 threshold,optimal_configurations
-MODE_INTERVAL(0),6
+STATIC_THRESHOLD_GREATER(3.37),1
+LEFT_POSITIVE_IQR(0),1
+IQR(0.5),1
+MODE(0.05),1

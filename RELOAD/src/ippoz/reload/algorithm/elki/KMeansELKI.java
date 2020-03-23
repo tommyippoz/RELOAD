@@ -9,6 +9,7 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
@@ -68,12 +69,12 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
 			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
+			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of, getConfidence(of.getDistance()));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
@@ -85,6 +86,12 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 		//defPar.put("threshold", new String[]{"CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"});
 		defPar.put("k", new String[]{"2", "5", "10"});
 		return defPar;
+	}
+
+	@Override
+	public double getELKIScore(Vector v) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 }

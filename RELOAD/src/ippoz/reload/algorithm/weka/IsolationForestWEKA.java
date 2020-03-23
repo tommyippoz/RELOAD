@@ -157,9 +157,11 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	@Override
 	protected AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
 		AlgorithmResult ar;
+		double score;
 		try {
 			if(iForest != null){
-				ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), iForest.classifyInstance(snapshotToInstance(sysSnapshot)));
+				score = iForest.classifyInstance(snapshotToInstance(sysSnapshot));
+				ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
 				getDecisionFunction().assignScore(ar, true);
 				return ar;
 			} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

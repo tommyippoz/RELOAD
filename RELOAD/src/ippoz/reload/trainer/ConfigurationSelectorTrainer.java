@@ -19,7 +19,6 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -221,7 +220,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		for(TimedResult tr : resMap.keySet()){
 			AlgorithmResult alr = resMap.get(tr);
 			AnomalyResult ar = dFunction.classify(resMap.get(tr));
-			newList.add(new AlgorithmResult(alr.getData(), alr.getInjection(), DetectionAlgorithm.convertResultIntoDouble(ar), ar, dFunction));
+			newList.add(new AlgorithmResult(alr.getData(), alr.getInjection(), DetectionAlgorithm.convertResultIntoDouble(ar), ar, dFunction, alr.getConfidence()));
 		}
 		return newList;
 	}

@@ -57,13 +57,14 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	protected AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
 		CustomIsolationForest iForest;
 		AlgorithmResult ar;
+		double score;
 		try {
 			if(windowInstances.size() > sampleSize)
 				iForest = new CustomIsolationForest(nTrees, sampleSize);
 			else iForest = new CustomIsolationForest(1, windowInstances.size());
 			iForest.buildClassifier(windowInstances);
-			ar = new AlgorithmResult(
-					dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), iForest.classifyInstance(newInstance));
+			score = iForest.classifyInstance(newInstance);
+			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), score, getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} catch (Exception ex) {

@@ -4,10 +4,8 @@
 package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.elki.support.CustomISOS;
-import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,19 +53,10 @@ public class ISOSELKI extends DataSeriesELKIAlgorithm {
 	    				conf.hasItem(PHI) ? Double.parseDouble(conf.getItem(PHI)) : DEFAULT_PHI,
 	    						HillEstimator.STATIC);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar = null;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomISOS)getAlgorithm()).calculateSingleISOS(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public double getELKIScore(Vector v) {
+		return ((CustomISOS)getAlgorithm()).calculateSingleISOS(v);
 	}
 
 	/* (non-Javadoc)

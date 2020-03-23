@@ -15,9 +15,6 @@ public class ThresholdDecision extends DecisionFunction {
 	
 	/** The threshold. */
 	private double threshold;
-	
-	/** The scores. */
-	private ValueSeries scores;
 
 	/**
 	 * Instantiates a new threshold decision.
@@ -26,9 +23,8 @@ public class ThresholdDecision extends DecisionFunction {
 	 * @param scores the scores
 	 */
 	public ThresholdDecision(double threshold, ValueSeries scores) {
-		super("threshold", DecisionFunctionType.THRESHOLD, false);
+		super("threshold", DecisionFunctionType.THRESHOLD, false, scores);
 		this.threshold = threshold;
-		this.scores = scores;
 	}
 
 	/* (non-Javadoc)
@@ -36,12 +32,12 @@ public class ThresholdDecision extends DecisionFunction {
 	 */
 	@Override
 	public AnomalyResult classify(AlgorithmResult value) {
-		int index = (int)(threshold*scores.size())-1;
+		int index = (int)(threshold*getRefScores().size())-1;
 		if(index < 0)
 			index = 0;
-		if(index < scores.size())
-			return value.getScore() >= scores.get(index) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
-		else return value.getScore() >= scores.get(scores.size()-1) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		if(index < getRefScores().size())
+			return value.getScore() >= getRefScores().get(index) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		else return value.getScore() >= getRefScores().get(getRefScores().size()-1) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
 
 	/* (non-Javadoc)
@@ -49,12 +45,12 @@ public class ThresholdDecision extends DecisionFunction {
 	 */
 	@Override
 	public String toCompactString() {
-		int index = (int)(threshold*scores.size())-1;
+		int index = (int)(threshold*getRefScores().size())-1;
 		if(index < 0)
 			index = 0;
-		else if(index == scores.size())
+		else if(index == getRefScores().size())
 			index--;
-		return "THRESHOLD(" + threshold + ") - {ANOMALY: value >= " + scores.get(index) + "}";
+		return "THRESHOLD(" + threshold + ") - {ANOMALY: value >= " + getRefScores().get(index) + "}";
 	}
 
 	/* (non-Javadoc)
@@ -71,12 +67,12 @@ public class ThresholdDecision extends DecisionFunction {
 	@Override
 	public double[] getThresholds() {
 		double toReturn;
-		int index = (int)(threshold*scores.size())-1;
+		int index = (int)(threshold*getRefScores().size())-1;
 		if(index < 0)
 			index = 0;
-		if(index < scores.size())
-			toReturn = scores.get(index);
-		else toReturn = scores.get(scores.size()-1);
+		if(index < getRefScores().size())
+			toReturn = getRefScores().get(index);
+		else toReturn = getRefScores().get(getRefScores().size()-1);
 		return new double[]{toReturn};
 	}
 

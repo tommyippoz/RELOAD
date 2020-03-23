@@ -65,5 +65,12 @@ public class AlgorithmVoter extends ScoresVoter {
 	public boolean isMetaLearner() {
 		return true;
 	}
+
+	@Override
+	public double getConfidence(double value) {
+		if(alg != null)
+			return alg.getConfidence(value);
+		else return Double.NaN;
+	}
 	
 }

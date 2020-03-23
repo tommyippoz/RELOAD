@@ -14,8 +14,8 @@ import java.util.List;
  */
 public abstract class ClusteringResult extends AlgorithmResult {
 
-	public ClusteringResult(List<Double> dataValues, InjectedElement injection, double score) {
-		super(dataValues, injection, score);
+	public ClusteringResult(List<Double> dataValues, InjectedElement injection, double score, double confidence) {
+		super(dataValues, injection, score, confidence);
 		// TODO Auto-generated constructor stub
 	}
 

@@ -27,8 +27,8 @@ public class KMeansResult extends ClusteringResult{
 	 * @param of the of
 	 */
 	@SuppressWarnings("rawtypes")
-	public KMeansResult(List<Double> dataValues, InjectedElement injection, KMeansScore of) {
-		super(dataValues, injection, of.getDistance());
+	public KMeansResult(List<Double> dataValues, InjectedElement injection, KMeansScore of, double confidence) {
+		super(dataValues, injection, of.getDistance(), confidence);
 		kmm = of.getCluster();
 	}
 

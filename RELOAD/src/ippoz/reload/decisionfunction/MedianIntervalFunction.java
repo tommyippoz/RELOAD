@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * @author Tommy
@@ -28,10 +29,10 @@ public class MedianIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public MedianIntervalFunction(double ratio, double mode, double std, boolean revertFlag) {
-		super("median_interval", DecisionFunctionType.MEDIAN_INTERVAL, revertFlag);
-		this.median = mode;
-		this.std = std;
+	public MedianIntervalFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("median_interval", DecisionFunctionType.MEDIAN_INTERVAL, revertFlag, algorithmScores);
+		this.median = algorithmScores.getMedian();
+		this.std = algorithmScores.getStd();
 		this.ratio = ratio;
 	}
 

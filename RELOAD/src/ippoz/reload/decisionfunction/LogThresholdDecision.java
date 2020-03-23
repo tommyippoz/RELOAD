@@ -4,6 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.ValueSeries;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -25,8 +26,8 @@ public class LogThresholdDecision extends DecisionFunction {
 	 * @param perc the perc
 	 * @param size the size
 	 */
-	public LogThresholdDecision(double perc, double size, boolean revertFlag) {
-		super("logthreshold", DecisionFunctionType.LOG_THRESHOLD, revertFlag);
+	public LogThresholdDecision(double perc, double size, boolean revertFlag, ValueSeries algorithmScores) {
+		super("logthreshold", DecisionFunctionType.LOG_THRESHOLD, revertFlag, algorithmScores);
 		this.perc = perc;
 		this.size = size;
 	}

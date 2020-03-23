@@ -93,7 +93,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 					perc = Double.parseDouble(conf.getItem(THRESHOLD).replace("LOG(", "").replace(")",""));
 				} else perc = DEFAULT_THRESHOLD;
 			} else perc = DEFAULT_THRESHOLD;
-			return new LogThresholdDecision(perc, histograms.size(), flag);
+			return new LogThresholdDecision(perc, histograms.size(), flag, vs);
 		}
 	}
 
@@ -228,8 +228,10 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	@Override
 	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
+		double score;
 		if(histograms != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateHBOS(sysSnapshot));
+			score = calculateHBOS(sysSnapshot);
+			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());

@@ -4,10 +4,12 @@
 package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.elki.support.CustomGMeans;
+import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
@@ -61,15 +63,27 @@ public class GMeansELKI extends DataSeriesELKIAlgorithm {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
+	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
 		AlgorithmResult ar;
 		Vector v = convertSnapToVector(sysSnapshot);
 		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore of = ((CustomGMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
+			KMeansScore of = ((CustomGMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
+			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of, getConfidence(of.getDistance()));
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	}
+	
+	@Override
+	public double getELKIScore(Vector v) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean getELKIEvaluationFlag(Vector v) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 	@Override

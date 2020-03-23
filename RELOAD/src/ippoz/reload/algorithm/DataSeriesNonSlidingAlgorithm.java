@@ -4,7 +4,6 @@
 package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
