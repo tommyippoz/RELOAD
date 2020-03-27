@@ -10,6 +10,7 @@ import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.support.AppUtility;
 
 /**
  * The Class AlgorithmVoter.
@@ -133,6 +134,23 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		if(getAlgorithmType().equals(other.getAlgorithmType()) && getDataSeries().equals(other.getDataSeries()))
 			return 0;
 		else return -1;
+	}
+
+	public static AlgorithmModel fromString(String amString) {
+		if(amString != null && amString.length() > 0 && amString.indexOf("§") != -1){
+			String[] splitted = AppUtility.splitAndPurify(amString, "§");
+			if(splitted.length > 4){
+				AlgorithmConfiguration conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+				if(conf != null){
+					conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
+					conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
+					conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
+					conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
+				}
+				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(splitted[0], true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+			}
+		}
+		return null;
 	}
 
 }

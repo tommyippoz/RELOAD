@@ -354,7 +354,6 @@ public class DetectionManager {
 				bestScore = 0;
 			return new DetectorOutput(iManager, expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
 					getBestSetup(evaluations, metList, voterList), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-					voterList,
 					nVoters, bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
 					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
 					bestEManager != null ? bestEManager.getFailures() : null, 
@@ -473,7 +472,7 @@ public class DetectionManager {
 					dOut.setBestRuns(l.getRuns());	
 					dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
 					AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
-				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validatioon data");
+				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validation data");
 			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to apply '" + bestVoter + "' results voter");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
@@ -482,7 +481,6 @@ public class DetectionManager {
 	}
 	
 	public DetectorOutput singleEvaluation(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, ScoresVoter voter, boolean printOutput){
-		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
 		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
 		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
 		EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, 10, printOutput);
@@ -490,17 +488,24 @@ public class DetectionManager {
 			evaluations.put(voter, eManager.getMetricsEvaluations());
 		} else evaluations.put(voter, new LinkedList<Map<Metric,Double>>());
 		nVoters.put(voter, eManager.getCheckersNumber());
-		voterList.add(voter);
 		double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
-		return new DetectorOutput(iManager, eManager.getKnowledge(), Double.isFinite(score) ? score : 0.0,
-			getBestSetup(evaluations, metList, voter), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-			voterList,
-			nVoters, eManager.getVotingEvaluations(), l, 
-			evaluations, eManager.getDetailedEvaluations(), eManager.getFailures(),	
-			iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),	
-			getWritableTag(), eManager.getInjectionsRatio(),
-			iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
-			iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
+		return new DetectorOutput(
+				iManager, eManager.getKnowledge(), 
+				Double.isFinite(score) ? score : 0.0,
+				getBestSetup(evaluations, metList, voter), 
+				iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+				nVoters, 
+				eManager.getVotingEvaluations(), 
+				l, 
+				evaluations, 
+				eManager.getDetailedEvaluations(), 
+				eManager.getFailures(),	
+				iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
+				iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),	
+				getWritableTag(), 
+				eManager.getInjectionsRatio(),
+				iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
+				iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
 	}
 
 	public DetectorOutput evaluateAll(){

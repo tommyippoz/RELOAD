@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	private static int LINEAR_SEARCH_MAX_ITERATIONS = 6;
+	private static int LINEAR_SEARCH_MAX_ITERATIONS = 8;
 	
 	public static String[] DECISION_FUNCTIONS = {
 		"MODE(3)", "MODE(0.5)", "MODE(0.2)", "MODE(0.05)", 
@@ -202,10 +202,10 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
 	private String[] linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, Map<TimedResult, AlgorithmResult> resultList){
 		double thrValue = (thrRight + thrLeft)/2;
-		
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
 		double mScore = getMetric().evaluateAnomalyResults(updatedList);
+		
 		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
 			String[] leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
 			String[] rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);

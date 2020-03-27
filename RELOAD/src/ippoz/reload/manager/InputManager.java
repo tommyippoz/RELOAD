@@ -1471,11 +1471,8 @@ public class InputManager {
 		String scoresFile = getScoresFile(scoresFileString);
 		File asFile = new File(scoresFile);
 		BufferedReader reader;
-		AlgorithmConfiguration conf;
-		String[] splitted;
 		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
 		String readed;
-		String seriesString;
 		try {
 			if(asFile.exists()){
 				reader = new BufferedReader(new FileReader(asFile));
@@ -1484,20 +1481,9 @@ public class InputManager {
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = AppUtility.splitAndPurify(readed, "§");
-							if(splitted.length > 4){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-								seriesString = splitted[0];
-								if(conf != null){
-									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
-								}
-								modelList.add(new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
-							}
-						}
+						AlgorithmModel am = AlgorithmModel.fromString(readed);
+						if(am != null)
+							modelList.add(am);
 					}
 				}
 				reader.close();

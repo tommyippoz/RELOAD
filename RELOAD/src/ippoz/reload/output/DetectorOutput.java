@@ -51,8 +51,6 @@ public class DetectorOutput {
 	
 	private List<AlgorithmModel> modelList;
 	
-	private List<ScoresVoter> voterList;
-	
 	private Map<ScoresVoter, Integer> nVoters;
 	
 	private Map<String, List<VotingResult>> votingScores;
@@ -78,7 +76,7 @@ public class DetectorOutput {
 	private TrainInfo tInfo;
 	
 	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, ScoresVoter bestSetup, 
-			List<AlgorithmModel> modelList, List<ScoresVoter> voterList, Map<ScoresVoter, Integer> nVoters, 
+			List<AlgorithmModel> modelList, Map<ScoresVoter, Integer> nVoters, 
 			Map<String, List<VotingResult>> votingScores,
 			Loader loader, Map<ScoresVoter, List<Map<Metric, Double>>> evaluations,
 			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, Map<String, List<InjectedElement>> injections, 
@@ -88,7 +86,6 @@ public class DetectorOutput {
 		this.knowledgeList = knowledgeList;
 		this.bestVoter = bestSetup;
 		this.modelList = modelList;
-		this.voterList = voterList;
 		this.nVoters = nVoters;
 		this.votingScores = votingScores;
 		this.loader = loader;
@@ -289,10 +286,6 @@ public class DetectorOutput {
 		return writableTag;
 	}
 	
-	public double getFaultsRatio(){
-		return faultsRatio;
-	}
-	
 	public String getFaultsRatioString(){
 		NumberFormat formatter = new DecimalFormat("#0.0");     
 		return formatter.format(faultsRatio) + "%";
@@ -317,7 +310,7 @@ public class DetectorOutput {
 
 	public String[][] getEvaluationGridAveraged() {
 		int row = 0;
-		String[][] result = new String[voterList.size()][getEvaluationMetrics().length + 2];
+		String[][] result = new String[detailedMetricScores.keySet().size()][getEvaluationMetrics().length + 2];
 		for(ScoresVoter voter : detailedMetricScores.keySet()){
 			result[row][0] = voter.toString();
 			result[row][1] = nVoters.get(voter).toString();
