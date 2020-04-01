@@ -1,5 +1,0 @@
-threshold,optimal_configurations
-IQR(0.5),1
-MODE(3),1
-STATIC_THRESHOLD_GREATER(0.96),1
-MEDIAN_INTERVAL(0.1),1

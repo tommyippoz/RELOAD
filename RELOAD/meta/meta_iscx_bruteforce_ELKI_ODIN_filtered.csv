@@ -1,5 +1,0 @@
-data_series,type
-ELKI_SVM(totalDestinationBytes-destinationPort-totalSourceBytes)#PLAIN#NO_LAYER
-destinationPort#PLAIN#NO_LAYER
-totalDestinationBytes#PLAIN#NO_LAYER
-totalSourceBytes#PLAIN#NO_LAYER
