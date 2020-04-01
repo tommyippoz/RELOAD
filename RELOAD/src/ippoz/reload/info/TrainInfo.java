@@ -7,6 +7,7 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.metric.Metric;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -129,7 +130,7 @@ public class TrainInfo {
 	public void setSeries(List<DataSeries> seriesList) {
 		this.seriesList = seriesList;
 	}
-
+	
 	public void setKFold(int kFold) {
 		this.kFold = kFold;
 	}

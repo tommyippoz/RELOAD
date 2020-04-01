@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.manager;
+package ippoz.reload.manager.train;
 
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.configuration.AlgorithmConfiguration;
@@ -9,6 +9,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.manager.DataManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 

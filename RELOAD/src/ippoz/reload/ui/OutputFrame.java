@@ -281,7 +281,7 @@ public class OutputFrame {
     		
     		yDist = yDist + bigLabelSpacing;
     		
-	        table = new JTable(oOut.getEvaluationGridAveraged(), columnNames);
+	        table = new JTable(oOut.getOptimizationGrid(oOut.buildPath(iManager.getOutputFolder())), columnNames);
 	        table.setFillsViewportHeight(true);
 	        for(int x=0;x<table.getColumnCount();x++){
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
@@ -312,7 +312,7 @@ public class OutputFrame {
     		
     		yDist = yDist + bigLabelSpacing;
     		
-	        table = new JTable(dOut.getEvaluationGrid(), columnNames);
+	        table = new JTable(dOut.getEvaluationGrid(dOut.buildPath(iManager.getOutputFolder())), columnNames);
 	        table.setFillsViewportHeight(true);
 	        for(int x=0;x<table.getColumnCount();x++){
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
@@ -343,11 +343,11 @@ public class OutputFrame {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				Desktop desktop = Desktop.getDesktop();
-		        File dirToOpen = new File(dOut.buildPath(iManager.getOutputFolder()));
+		        File dirToOpen = new File(dOut != null ? dOut.buildPath(iManager.getOutputFolder()) : oOut.buildPath(iManager.getOutputFolder()));
 		        try {
 		            desktop.open(dirToOpen);
 		        } catch (IOException ex) {
-		        	JOptionPane.showMessageDialog(outFrame, "ERROR: Unable to open '" + dOut.buildPath(iManager.getOutputFolder()) + "'");
+		        	JOptionPane.showMessageDialog(outFrame, "ERROR: Unable to open '" + (dOut != null ? dOut.buildPath(iManager.getOutputFolder()) : oOut.buildPath(iManager.getOutputFolder())) + "'");
 				}
 			} } );	
 		fPanel.add(button);

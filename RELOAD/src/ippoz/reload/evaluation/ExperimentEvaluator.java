@@ -163,11 +163,11 @@ public class ExperimentEvaluator extends Thread {
 	 * @return 
 	 */
 	public Map<Metric, Double> printVoting(String outFormat, String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
-		if(printOutput){
+		/*if(printOutput){
 			for(AlgorithmModel aVoter : algList){
 				aVoter.printResults(outFormat, outFolderName, expName);
 			}
-		}
+		}*/
 		return printExperimentVoting(outFolderName, validationMetrics, algConvergence, printOutput);
 	}
 
@@ -181,12 +181,22 @@ public class ExperimentEvaluator extends Thread {
 	 * @param printOutput 
 	 */
 	private Map<Metric, Double> printExperimentVoting(String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
-		if(printOutput){
+		/*if(printOutput){
 			printGraphics(outFolderName, algConvergence);
 			printText(outFolderName);
-		}
+		}*/
 		return printMetrics(outFolderName, validationMetrics, printOutput);
 	}
+	
+	public synchronized Map<Metric, Double> calculateMetricScores(Metric[] validationMetrics) {
+		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
+		for(Metric met : validationMetrics){
+			metResults.put(met, met.evaluateAnomalyResults(voting));
+		}
+		return metResults;
+	}
+	
+	
 	
 	/**
 	 * Prints the metrics.

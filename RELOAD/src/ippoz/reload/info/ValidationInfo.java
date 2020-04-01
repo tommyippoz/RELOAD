@@ -3,6 +3,7 @@
  */
 package ippoz.reload.info;
 
+import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
@@ -42,6 +43,22 @@ public class ValidationInfo {
 	private static final String VALIDATION_TIME = "VALIDATION Time(ms)";
 	
 	private Long valTimeMs;
+	
+	private static final String VALIDATION_BESTSCORE = "VALIDATION Best Score";
+	
+	private double bestScore;
+	
+	private static final String VALIDATION_BESTVOTER = "VALIDATION Best Voter";
+	
+	private String voterString;
+	
+	private static final String VALIDATION_SERIESSTRING = "VALIDATION SelectedSeries";
+	
+	private String seriesString;
+	
+	private static final String VALIDATION_METRICS = "VALIDATION Metrics";
+	
+	private String metricsString;
 	
 	public ValidationInfo(){
 		models = null;
@@ -87,9 +104,50 @@ public class ValidationInfo {
 				if(preferences.containsKey(VALIDATION_TIME) && preferences.get(VALIDATION_TIME) != null && AppUtility.isInteger(preferences.get(VALIDATION_TIME).trim())){
 					valTimeMs = Long.parseLong(preferences.get(VALIDATION_TIME).trim());
 				}
+				if(preferences.containsKey(VALIDATION_BESTSCORE) && preferences.get(VALIDATION_BESTSCORE) != null){
+					bestScore = Double.parseDouble(preferences.get(VALIDATION_BESTSCORE).trim());
+				}
+				if(preferences.containsKey(VALIDATION_BESTVOTER) && preferences.get(VALIDATION_BESTVOTER) != null){
+					voterString = preferences.get(VALIDATION_BESTVOTER).trim();
+				}
+				if(preferences.containsKey(VALIDATION_SERIESSTRING) && preferences.get(VALIDATION_SERIESSTRING) != null){
+					seriesString = preferences.get(VALIDATION_SERIESSTRING).trim();
+				}
+				if(preferences.containsKey(VALIDATION_METRICS) && preferences.get(VALIDATION_METRICS) != null){
+					metricsString = preferences.get(VALIDATION_METRICS).trim();
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading train info");
+		}
+	}
+	
+	public double getBestScore() {
+		return bestScore;
+	}
+
+	public void setBestScore(double bestScore) {
+		this.bestScore = bestScore;
+	}
+
+	public String getVoter() {
+		return voterString;
+	}
+
+	public void setVoter(String voterString) {
+		this.voterString = voterString;
+	}
+
+	public String getSeriesString() {
+		return seriesString;
+	}
+
+	public void setSeriesString(List<DataSeries> list) {
+		seriesString = "";
+		if(list!= null && list.size() > 0){
+			for(DataSeries ds : list){
+				seriesString = seriesString + ds.getCompactName() + "; ";
+			}
 		}
 	}
 
@@ -125,6 +183,14 @@ public class ValidationInfo {
 		return valTimeMs;
 	}
 
+	public String getMetricsString() {
+		return metricsString;
+	}
+
+	public void setMetricsString(String metricsString) {
+		this.metricsString = metricsString;
+	}
+
 	public void printFile(File file) {
 		BufferedWriter writer = null;
 		try {
@@ -135,6 +201,11 @@ public class ValidationInfo {
 			writer.write("\n* Number of Data Points used for training\n" + VALIDATION_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
 			writer.write("\n* % of Faults/attacks in validation set\n" + VALIDATION_FAULT_RATIO + " = " + (faultRatio != null ? faultRatio : "") + "\n");
 			writer.write("\n* Validation time in ms\n" + VALIDATION_TIME + " = " + (valTimeMs != null ? valTimeMs : "") + "\n");
+			writer.write("\n* Best 'target metric' score obtained\n" + VALIDATION_BESTSCORE + " = " + bestScore + "\n");
+			writer.write("\n* Optimal voter used during validation\n" + VALIDATION_BESTVOTER + " = " + (voterString != null ? voterString : "") + "\n");
+			writer.write("\n* Series used for validation\n" + VALIDATION_SERIESSTRING + " = " + (seriesString != null ? seriesString : "") + "\n");
+			writer.write("\n* Metric values for validation\n" + VALIDATION_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
+			
 			writer.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write validation INFO");

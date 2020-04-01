@@ -53,6 +53,13 @@ public interface Loader {
 	public abstract String getLoaderName();
 	
 	/**
+	 * Gets the name of the Loader.
+	 *
+	 * @return the name
+	 */
+	public abstract String getCompactName();
+	
+	/**
 	 * Gets the names of the features.
 	 *
 	 * @return the name

@@ -239,7 +239,7 @@ public abstract class CSVBaseLoader extends FileLoader {
 	 */
 	@Override
 	public String getLoaderName() {
-		return "CSV - " + file.getName().split(".")[0];
+		return "CSV - " + file.getName().substring(0, file.getName().indexOf("."));
 	}
 	
 	@Override

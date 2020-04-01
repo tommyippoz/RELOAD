@@ -290,5 +290,13 @@ public abstract class Knowledge implements Cloneable {
 	public boolean hasIndicatorData(int obId, String indicatorName, DataCategory categoryTag) {
 		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
 	}
+	
+	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, String expName) {
+		for(Knowledge know : knowledgeList){
+			if(know.getTag().equals(expName))
+				return know;
+		}
+		return null;
+	}
 
 }

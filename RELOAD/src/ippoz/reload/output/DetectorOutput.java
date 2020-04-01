@@ -4,14 +4,11 @@
 package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
@@ -22,18 +19,15 @@ import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.ScoresVoter;
 import ippoz.reload.voter.VotingResult;
 
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Tommy
@@ -43,7 +37,7 @@ public class DetectorOutput {
 	
 	private InputManager iManager;
 	
-	private List<Knowledge> knowledgeList;
+	private double bestScore;
 	
 	private ScoresVoter bestVoter;
 	
@@ -51,56 +45,43 @@ public class DetectorOutput {
 	
 	private List<AlgorithmModel> modelList;
 	
-	private Map<ScoresVoter, Integer> nVoters;
-	
 	private Map<String, List<VotingResult>> votingScores;
 	
 	private Loader loader;
 	
 	private List<DataSeries> selectedSeries;
 	
-	private Map<ScoresVoter, List<Map<Metric, Double>>> detailedMetricScores;
-	
-	private Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores;
-	
-	private Map<String, List<InjectedElement>> injections;
-	
 	private String writableTag;
+	
+	private List<AlgorithmType> algorithms;
 	
 	private double faultsRatio;
 	
-	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;
+	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;	
 	
-	private FeatureSelectionInfo fsInfo;
+	private Map<String, List<LabelledResult>> labelledScores;
 	
-	private TrainInfo tInfo;
-	
-	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, ScoresVoter bestSetup, 
-			List<AlgorithmModel> modelList, Map<ScoresVoter, Integer> nVoters, 
+	public DetectorOutput(InputManager iManager, List<AlgorithmType> algorithms, double bestScore, ScoresVoter bestSetup, 
+			List<AlgorithmModel> modelList,
 			Map<String, List<VotingResult>> votingScores,
-			Loader loader, Map<ScoresVoter, List<Map<Metric, Double>>> evaluations,
-			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, Map<String, List<InjectedElement>> injections, 
+			Loader loader, Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
-			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo) {
+			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
-		this.knowledgeList = knowledgeList;
+		this.algorithms = algorithms;
+		this.bestScore = bestScore;
 		this.bestVoter = bestSetup;
 		this.modelList = modelList;
-		this.nVoters = nVoters;
 		this.votingScores = votingScores;
 		this.loader = loader;
-		this.detailedMetricScores = evaluations;
-		this.detailedExperimentsScores = detailedExperimentsScores;
-		this.injections = injections;
 		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
-		this.fsInfo = fsInfo;
-		this.tInfo = tInfo;
+		labelledScores = buildLabelledScores(detailedExperimentsScores);
 	}
 	
-	public void printDetailedKnowledgeScores(String outputFolder){
+	/*public void printDetailedKnowledgeScores(String outputFolder){
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
@@ -143,7 +124,7 @@ public class DetectorOutput {
 				for(String expName : votingScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
-						Knowledge knowledge = findKnowledge(expName);
+						Knowledge knowledge = Knowledge.findKnowledge(knowledgeList, expName);
 						for(int i=0;i<votingScores.get(expName).size();i++){
 							writer.write(expName + "," + 
 									i + "," + 
@@ -184,15 +165,7 @@ public class DetectorOutput {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
-	}
-
-	private Knowledge findKnowledge(String expName) {
-		for(Knowledge know : knowledgeList){
-			if(know.getTag().equals(expName))
-				return know;
-		}
-		return null;
-	}
+	}*/
 
 	public String buildPath(String basePath){
 		String path = basePath + getDataset() + getAlgorithm() + File.separatorChar;
@@ -201,13 +174,13 @@ public class DetectorOutput {
 		return path;
 	}
 	
-	public void summarizeCSV(String outputFolder) {
+	/*public void summarizeCSV(String outputFolder) {
 		BufferedWriter writer;
 		double score;
 		try {
 			if(detailedMetricScores != null){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "summary.csv")));
-				writer.write("voter,anomaly,checkers,");
+				writer.write("voter,anomaly_checkers,");
 				for(Metric met : getEvaluationMetrics()){
 					writer.write(met.getMetricName() + ",");
 				}
@@ -226,9 +199,18 @@ public class DetectorOutput {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
-	}
+	}*/
 
 	public double getBestScore() {
+		return bestScore;
+	}
+		
+		/*
+		String[][] grid = getEvaluationGrid(outFolder);
+		int i = 0;
+		for(Metric m : getEvaluationMetrics()){
+			if()
+		}
 		List<AlgorithmResult> allResults = new LinkedList<>();
 		if(votingScores != null){
 			for(String expName : votingScores.keySet()){
@@ -237,7 +219,7 @@ public class DetectorOutput {
 			}
 			return getReferenceMetric().evaluateAnomalyResults(allResults);
 		} else return Double.NaN;
-	}
+	}*/
 	
 	public String getFormattedBestScore() {
 		return new DecimalFormat("#.##").format(getBestScore());
@@ -262,7 +244,7 @@ public class DetectorOutput {
 	public Metric[] getEvaluationMetrics() {
 		return iManager.loadValidationMetrics();
 	}
-
+/*
 	public String getEvaluationMetricsScores() {
 		String outString = "";
 		if(bestVoter != null){			
@@ -284,7 +266,7 @@ public class DetectorOutput {
 
 	public String getWritableTag() {
 		return writableTag;
-	}
+	}*/
 	
 	public String getFaultsRatioString(){
 		NumberFormat formatter = new DecimalFormat("#0.0");     
@@ -298,17 +280,48 @@ public class DetectorOutput {
 	}
 	
 	public String getAlgorithm(){
-		String[] splitted;
-		if(writableTag != null){
-			splitted = writableTag.split(",");
-			if(splitted.length > 3)
-				return splitted[2] + " (" + splitted[4] + " - " + splitted[3] + ")";
-			else return splitted[2];
-		}
-		else return null;
+		return algorithms.toString().replace(",", "");
 	}
 
-	public String[][] getEvaluationGridAveraged() {
+	private String[][] getGrid(String basePath, String tag) {
+		BufferedReader reader = null;
+		List<String> gridRows = new LinkedList<>();
+		try {
+			reader = new BufferedReader(new FileReader(new File(basePath + tag + "Summary.csv")));
+			boolean header = true;
+			while(reader.ready()){
+				String readline = reader.readLine();
+				if(readline != null){
+					readline = readline.trim();
+					if(!readline.startsWith("*")){
+						if(header)
+							header = !header;
+						else {
+							gridRows.add(readline);
+						}
+					}
+				}
+			}
+			reader.close();
+			int i = 0;
+			String[][] grid = new String[gridRows.size()][];
+			for(String row : gridRows){
+				grid[i] = row.split(",");
+				for(int j=0;j<grid[i].length;j++){
+					if(grid[i][j].contains(".") && AppUtility.isNumber(grid[i][j])){
+						double val = Double.parseDouble(grid[i][j]);
+						grid[i][j] = String.valueOf(new DecimalFormat("#.##").format(val));
+					}
+				}
+				i++;
+			}
+			return grid;
+		} catch (Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read " + tag + " summary file");
+		}
+		return null;
+	}
+		/*
 		int row = 0;
 		String[][] result = new String[detailedMetricScores.keySet().size()][getEvaluationMetrics().length + 2];
 		for(ScoresVoter voter : detailedMetricScores.keySet()){
@@ -324,59 +337,21 @@ public class DetectorOutput {
 			row++;
 		}
 		return result;
-	}
-	
-	public String[][] getEvaluationGrid() {
-		String[][] result = new String[1][getEvaluationMetrics().length + 2];
-		if(bestVoter != null){
-			result[0][0] = bestVoter.toString();
-			result[0][1] = String.valueOf(nVoters.get(bestVoter));
-			
-			List<AlgorithmResult> allResults = new LinkedList<>();
-			for(String expName : votingScores.keySet()){
-				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
-					allResults.addAll(votingScores.get(expName));
-			}
-			
-			int col = 2;
-			for(Metric met : getEvaluationMetrics()){
-				double res = met.evaluateAnomalyResults(allResults);
-				if(Double.isNaN(res)){
-					result[0][col++] = "-";
-				} else result[0][col++] = String.valueOf(new DecimalFormat("#.##").format(res));
-			}
-		}
-		return result;
-	}
-	
-	/*public Map<String, List<LabelledResult>> getLabelledScores(){
-		Map<AlgorithmModel, AlgorithmResult> map;
-		Map<String, List<LabelledResult>> outMap = new HashMap<>();
-		AlgorithmModel bestVoter = null;
-		if(votingScores != null && votingScores.size() > 0 && detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
-			for(String expName : votingScores.keySet()){
-				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
-					map = detailedExperimentsScores.get(expName).get(0);
-					bestVoter = null;
-					for(AlgorithmModel av : map.keySet()){
-						if(bestVoter == null || getReferenceMetric().compareResults(bestVoter.getMetricScore(), av.getMetricScore()) > 0)
-							bestVoter = av;
-					}
-					outMap.put(expName, new LinkedList<LabelledResult>());
-					for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
-						boolean tag = injections.get(expName).get(i) != null;
-						if(i < detailedExperimentsScores.get(expName).size()){
-							if(detailedExperimentsScores.get(expName).get(i).get(bestVoter) != null)
-								outMap.get(expName).add(new LabelledResult(tag, detailedExperimentsScores.get(expName).get(i).get(bestVoter)));
-						}
-					}
-				}
-			}
-		}
-		return outMap;
 	}*/
 	
+	public String[][] getOptimizationGrid(String basePath) {
+		return getGrid(basePath, "optimization"); 
+	}
+	
+	public String[][] getEvaluationGrid(String basePath) {
+		return getGrid(basePath, "validation"); 
+	}
+	
 	public Map<String, List<LabelledResult>> getLabelledScores(){
+		return labelledScores;
+	}
+	
+	public Map<String, List<LabelledResult>> buildLabelledScores(Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores){
 		Map<String, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
 			for(String expName : votingScores.keySet()){
@@ -451,7 +426,7 @@ public class DetectorOutput {
 		return loader.getRuns();
 	}
 
-	public TrainInfo getTrainInfo() {
+	/*public TrainInfo getTrainInfo() {
 		if(tInfo != null)
 			return tInfo;
 		else return new TrainInfo();
@@ -461,7 +436,7 @@ public class DetectorOutput {
 		if(fsInfo != null)
 			return fsInfo;
 		else return new FeatureSelectionInfo();
-	}
+	}*/
 
 	
 

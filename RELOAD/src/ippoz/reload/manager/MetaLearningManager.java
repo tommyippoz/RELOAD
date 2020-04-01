@@ -12,6 +12,7 @@ import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.loader.Loader;
+import ippoz.reload.manager.train.TrainerManager;
 
 import java.io.File;
 import java.util.Arrays;

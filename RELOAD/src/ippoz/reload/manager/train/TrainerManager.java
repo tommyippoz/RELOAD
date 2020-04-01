@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.manager;
+package ippoz.reload.manager.train;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;

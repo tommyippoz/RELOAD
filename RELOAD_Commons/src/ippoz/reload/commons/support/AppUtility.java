@@ -3,10 +3,16 @@
  */
 package ippoz.reload.commons.support;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -25,6 +31,25 @@ import java.util.TreeMap;
  *
  */
 public class AppUtility {
+	
+	public static boolean copyFile(File from, File to) {		  
+	    try (
+	      InputStream in = new BufferedInputStream(
+	        new FileInputStream(from));
+	      OutputStream out = new BufferedOutputStream(
+	        new FileOutputStream(to))) {
+	  
+	        byte[] buffer = new byte[1024];
+	        int lengthRead;
+	        while ((lengthRead = in.read(buffer)) > 0) {
+	            out.write(buffer, 0, lengthRead);
+	            out.flush();
+	        }
+	    } catch(Exception ex){
+	    	return false;
+	    }
+	    return true;
+	}
 	
 	public static String formatDouble(double value, int digits){
 		DecimalFormat formatter;

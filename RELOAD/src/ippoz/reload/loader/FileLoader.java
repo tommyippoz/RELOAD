@@ -62,6 +62,15 @@ public abstract class FileLoader extends SimpleLoader {
 		filterHeader(parseSkipColumns(toSkip));
 	}
 	
+	@Override
+	public String getCompactName() {
+		if(file != null && file.getName().contains("."))
+			return file.getName().substring(0, file.getName().indexOf("."));
+		else if (file != null)
+			return file.getName();
+		return "";
+	}
+
 	/**
 	 * Parses the columns to be considered.
 	 *

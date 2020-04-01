@@ -16,16 +16,28 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
+import ippoz.reload.executable.DetectorMain;
+import ippoz.reload.info.FeatureSelectionInfo;
+import ippoz.reload.info.TrainInfo;
+import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.loader.Loader;
+import ippoz.reload.manager.evaluate.EvaluatorManager;
+import ippoz.reload.manager.evaluate.OptimizatorManager;
+import ippoz.reload.manager.evaluate.ValidationManager;
+import ippoz.reload.manager.train.TrainerManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
 import ippoz.reload.voter.ScoresVoter;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,6 +91,16 @@ public class DetectionManager {
 		metric = iManager.getTargetMetric();
 		reputation = iManager.getReputation(metric);
 		dataTypes = iManager.getDataTypes();
+		if(new File(getDetectorOutputFolder()).exists()){
+			for(File f : new File(getDetectorOutputFolder()).listFiles()){
+				if(f.isFile())
+					f.delete();
+			}
+		}
+	}
+	
+	public String getDetectorOutputFolder(){
+		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + algTypes.toString().replace(",", "");
 	}
 	
 	public Metric[] getMetrics() {
@@ -293,7 +315,7 @@ public class DetectionManager {
 						expList = l.fetch();
 						if(expList != null && expList.size() > 0){
 							AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-							score = singleOptimization(l, metList, generateKnowledge(expList), printOutput).getBestScore();
+							score = singleOptimization(l, metList, generateKnowledge(expList), printOutput, false).getBestScore();
 							if(metric.compareResults(score, bestScore) > 0){
 								bestRuns = l.getRuns();
 								bestExpList = expList;
@@ -303,15 +325,14 @@ public class DetectionManager {
 							AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 						} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 					}
-					dOut = singleOptimization(bestLoader, metList, generateKnowledge(bestExpList), printOutput);
+					dOut = singleOptimization(bestLoader, metList, generateKnowledge(bestExpList), printOutput, false);
 					dOut.setBestRuns(bestRuns);
 				} else {
 					Loader l = lList.iterator().next();
 					bestExpList = l.fetch();
-					dOut = singleOptimization(l, metList, generateKnowledge(bestExpList), printOutput);
+					dOut = singleOptimization(l, metList, generateKnowledge(bestExpList), printOutput, false);
 					dOut.setBestRuns(l.getRuns());
 				}	
-				dOut.summarizeCSV(iManager.getOutputFolder());
 				AppLogger.logInfo(getClass(), "Voting score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 			} else {
 				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
@@ -323,7 +344,7 @@ public class DetectionManager {
 		return dOut;
 	}
 	
-	private DetectorOutput singleOptimization(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput){
+	private DetectorOutput singleOptimization(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, boolean printOutput, boolean generateValidationInfo){
 		List<Knowledge> expKnowledge = null;
 		EvaluatorManager bestEManager = null;
 		double bestScore = Double.NaN;
@@ -333,11 +354,14 @@ public class DetectionManager {
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			for(ScoresVoter voter : voterList){
-				EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(scoresFileString), map, metList, 10, printOutput);
+				EvaluatorManager eManager;
+				if(generateValidationInfo)
+					eManager = new ValidationManager(voter, getDetectorOutputFolder(), iManager.getScoresFile(scoresFileString), map, metList, printOutput);
+				else eManager = new OptimizatorManager(voter, getDetectorOutputFolder(), iManager.getScoresFile(scoresFileString), map, metList, printOutput);
 				if(expKnowledge == null)
 					expKnowledge = eManager.getKnowledge();
 				if(eManager.detectAnomalies()) {
-					evaluations.put(voter, eManager.getMetricsEvaluations());
+					evaluations.put(voter, eManager.getMetricsValues());
 				} else evaluations.put(voter, new LinkedList<Map<Metric,Double>>());
 				nVoters.put(voter, eManager.getCheckersNumber());
 				double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
@@ -352,15 +376,25 @@ public class DetectionManager {
 			bestScore = getBestScore(evaluations, metList, voterList);
 			if(voterList == null || voterList.size() == 0)
 				bestScore = 0;
-			return new DetectorOutput(iManager, expKnowledge, Double.isFinite(bestScore) ? bestScore : 0.0,
+			if(generateValidationInfo && bestEManager != null){
+				ValidationInfo vInfo = new ValidationInfo();
+				vInfo.setRuns(l.getRuns());
+				vInfo.setVoter(bestEManager.getVoter().toString());
+				vInfo.setFaultRatio(bestEManager.getInjectionsRatio());
+				vInfo.setModels(bestEManager.getModels());
+				vInfo.setBestScore(bestScore);
+				vInfo.setMetricsString(bestEManager.getMetricsString());
+				vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()));
+				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
+			}
+			return new DetectorOutput(iManager, algTypes, Double.isFinite(bestScore) ? bestScore : 0.0,
 					getBestSetup(evaluations, metList, voterList), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-					nVoters, bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
-					evaluations, bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
-					bestEManager != null ? bestEManager.getFailures() : null, 
-					iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),		
-					getWritableTag(), bestEManager != null ? bestEManager.getInjectionsRatio() : Double.NaN, 
-					iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
-					iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
+					bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
+					bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
+					iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
+					iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),		
+					getWritableTag(),
+					bestEManager.getInjectionsRatio());
 					
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
@@ -470,7 +504,7 @@ public class DetectionManager {
 				if(expList != null && expList.size() > 0){
 					dOut = singleEvaluation(l, metList, generateKnowledge(expList), bestVoter, printOutput);
 					dOut.setBestRuns(l.getRuns());	
-					dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+					//dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
 					AppLogger.logInfo(getClass(), "Final Evaluated score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch validation data");
 			} else AppLogger.logError(getClass(), "WrongEvaluationSetup", "Unable to apply '" + bestVoter + "' results voter");
@@ -481,31 +515,37 @@ public class DetectionManager {
 	}
 	
 	public DetectorOutput singleEvaluation(Loader l, Metric[] metList, Map<KnowledgeType, List<Knowledge>> map, ScoresVoter voter, boolean printOutput){
+		ValidationInfo vInfo = new ValidationInfo();
 		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
 		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
-		EvaluatorManager eManager = new EvaluatorManager(voter, iManager.getOutputFolder(), iManager.getOutputFormat(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, 10, printOutput);
+		vInfo.setRuns(l.getRuns());
+		vInfo.setVoter(voter.toString());
+		EvaluatorManager eManager = new ValidationManager(voter, getDetectorOutputFolder(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, printOutput);
+		vInfo.setFaultRatio(eManager.getInjectionsRatio());
+		vInfo.setModels(eManager.getModels());
 		if(eManager.detectAnomalies()) {
-			evaluations.put(voter, eManager.getMetricsEvaluations());
+			evaluations.put(voter, eManager.getMetricsValues());
 		} else evaluations.put(voter, new LinkedList<Map<Metric,Double>>());
 		nVoters.put(voter, eManager.getCheckersNumber());
 		double score = Double.parseDouble(Metric.getAverageMetricValue(evaluations.get(voter), metric));
+		vInfo.setBestScore(score);
+		vInfo.setMetricsString(eManager.getMetricsString());
+		vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()));
+		if(printOutput){
+			vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
+		}
 		return new DetectorOutput(
-				iManager, eManager.getKnowledge(), 
+				iManager, algTypes,
 				Double.isFinite(score) ? score : 0.0,
 				getBestSetup(evaluations, metList, voter), 
 				iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
-				nVoters, 
 				eManager.getVotingEvaluations(), 
 				l, 
-				evaluations, 
 				eManager.getDetailedEvaluations(), 
-				eManager.getFailures(),	
 				iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
 				iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),	
 				getWritableTag(), 
-				eManager.getInjectionsRatio(),
-				iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info"), 
-				iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info"));
+				eManager.getInjectionsRatio());
 	}
 
 	public DetectorOutput evaluateAll(){
@@ -525,7 +565,7 @@ public class DetectionManager {
 				for(Loader l : lList){
 					expList = l.fetch();
 					AppLogger.logInfo(getClass(), "[" + (++index) + "/" + lList.size() + "] Evaluating " + expList.size() + " runs (" + l.getRuns() + ")");
-					score = singleOptimization(l, metList, generateKnowledge(expList), printOutput).getBestScore();
+					score = singleOptimization(l, metList, generateKnowledge(expList), printOutput, false).getBestScore();
 					if(metric.compareResults(score, bestScore) > 0){
 						bestRuns = l.getRuns();
 						bestExpList = expList;
@@ -534,16 +574,14 @@ public class DetectionManager {
 					}
 					AppLogger.logInfo(getClass(), "Score is " + new DecimalFormat("#.##").format(score) + ", best is " + new DecimalFormat("#.##").format(bestScore));
 				}
-				dOut = singleOptimization(bestLoader, metList, generateKnowledge(bestExpList), printOutput);
+				dOut = singleOptimization(bestLoader, metList, generateKnowledge(bestExpList), printOutput, true);
 				dOut.setBestRuns(bestRuns);
 			} else {
 				Loader l = lList.iterator().next();
 				bestExpList = l.fetch();
-				dOut = singleOptimization(l, metList, generateKnowledge(bestExpList), printOutput);
+				dOut = singleOptimization(l, metList, generateKnowledge(bestExpList), printOutput, true);
 				dOut.setBestRuns(l.getRuns());
-			}	
-			//dOut.summarizeCSV(iManager.getOutputFolder());
-			dOut.printDetailedKnowledgeScores(iManager.getOutputFolder());
+			}				
 			AppLogger.logInfo(getClass(), "Final Validation score is " + new DecimalFormat("#.##").format(dOut.getBestScore()) + ", runs (" + dOut.getBestRuns() + ")");
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to evaluate detector");
@@ -561,6 +599,43 @@ public class DetectionManager {
 
 	public String getModelsPath() {
 		return buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+	}
+	
+	public void report(){
+		File drFile = new File(DetectorMain.DEFAULT_REPORT_FILE);
+		FeatureSelectionInfo fsInfo;
+		TrainInfo tInfo;
+		ValidationInfo vInfo;
+		BufferedWriter writer;
+		try {
+			fsInfo = iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info");
+			tInfo = iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info");
+			vInfo = iManager.loadValidationInfo(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info");
+			if(!drFile.exists()){
+				writer = new BufferedWriter(new FileWriter(drFile, false));
+				writer.write("* Report for RELOAD activity on " + new Date(System.currentTimeMillis()) + "\n");
+				writer.write(FeatureSelectionInfo.getFileHeader() + ",");
+				writer.write(TrainInfo.getFileHeader() + ",");
+				writer.write("best_dataseries,dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+				for(Metric met : iManager.loadValidationMetrics()){
+					writer.write("," + met.getMetricName());
+				}
+				writer.write("\n");
+			} else {
+				writer = new BufferedWriter(new FileWriter(drFile, true));
+			}
+			writer.write(fsInfo.toFileString() + ",");
+			writer.write(tInfo.toFileString() + ",");
+			writer.write(
+					vInfo.getSeriesString() + "," +
+					getWritableTag() + "," + 
+					vInfo.getVoter() + "," + 
+					vInfo.getBestScore() + "," + 
+					vInfo.getMetricsString() + "\n");
+			writer.close();
+		} catch(IOException ex){
+			AppLogger.logException(DetectorMain.class, ex, "Unable to report");
+		}
 	}
 		
 }

@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class DetectorMain { 
 	
-	private static final String DEFAULT_REPORT_FILE = "reloadreport.csv";
+	public static final String DEFAULT_REPORT_FILE = "reloadreport.csv";
 	
 	public static final String DEFAULT_PREF_FILE = "reload.preferences";
 	
@@ -218,8 +218,9 @@ public class DetectorMain {
 			if(dManager.needEvaluation()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
 				dOut = dManager.evaluate(oOut);
+				dManager.report();
 			}
-			report(dOut, iManager);
+			//report(dOut, iManager);
 			AppLogger.logInfo(DetectorMain.class, "Done.");
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
@@ -241,7 +242,7 @@ public class DetectorMain {
 		} else AppLogger.logInfo(DetectorMain.class, "No Meta-Learning is required");
 	}
 
-	private static void report(DetectorOutput dOut, InputManager iManager){
+	/*private static void report(DetectorOutput dOut, InputManager iManager){
 		File drFile = new File(DEFAULT_REPORT_FILE);
 		FeatureSelectionInfo fsInfo;
 		TrainInfo tInfo;
@@ -271,6 +272,6 @@ public class DetectorMain {
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");
 		}
-	}
+	}*/
 	
 }

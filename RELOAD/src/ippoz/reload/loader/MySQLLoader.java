@@ -234,4 +234,10 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 		return 0;
 	}
 
+	@Override
+	public String getCompactName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

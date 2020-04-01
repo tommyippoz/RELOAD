@@ -23,6 +23,7 @@ import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
+import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.loader.ARFFLoader;
 import ippoz.reload.loader.CSVCompleteLoader;
 import ippoz.reload.loader.Loader;
@@ -1618,6 +1619,10 @@ public class InputManager {
 
 	public TrainInfo loadTrainInfo(String outFilePrequel) {
 		return new TrainInfo(new File(outFilePrequel));
+	}
+	
+	public ValidationInfo loadValidationInfo(String outFilePrequel) {
+		return new ValidationInfo(new File(outFilePrequel));
 	}
 
 	public PreferencesManager getMetaLearningPreferences(AlgorithmVoter av, String amString, String csvFilename, String loaderName) {
