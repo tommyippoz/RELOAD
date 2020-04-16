@@ -109,14 +109,6 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public Map<String, ServiceStat> getStats(){
-		return baseData.getStats();
-	}
-	
-	public ServiceStat getStat(String serviceName){
-		return baseData.getStats().get(serviceName);
-	}
-	
 	public int size(){
 		return baseData.size();
 	}
@@ -135,24 +127,6 @@ public abstract class Knowledge implements Cloneable {
 
 	public InjectedElement getInjection(int obIndex) {
 		return baseData.getInjection(obIndex);
-	}
-	
-	/**
-	 * Gets the service obs stat.
-	 *
-	 * @return the service obs stat
-	 */
-	public StatPair getServiceObsStat(String serviceName){
-		return getStats().get(serviceName).getObsStat();
-	}
-	
-	/**
-	 * Gets the service timing stat.
-	 *
-	 * @return the service timing stat
-	 */
-	public StatPair getServiceTimingStat(String serviceName){
-		return getStats().get(serviceName).getTimeStat();
 	}
 	
 	public static int goldenPointsSize(List<Snapshot> knowledgeSnapshots) {

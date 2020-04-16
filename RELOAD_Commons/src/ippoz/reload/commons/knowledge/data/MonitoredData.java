@@ -30,29 +30,11 @@ public class MonitoredData {
 	/** The experiment name. */
 	private String expName; 
 	
-	/** The service call list. */
-	private List<ServiceCall> callList;
-	
 	/** The injections list. */
 	private Map<Date, InjectedElement> injMap;
 	
-	/** The service statistics list. */
-	private Map<String, ServiceStat> ssList;
-	
 	/** The observations list. */
 	private List<Observation> obsList;
-	
-	/**
-	 * Instantiates a new experiment data without stats.
-	 *
-	 * @param expID the experiment id
-	 * @param obsList the observation list
-	 * @param injList the injections list
-	 * @param timings the timings
-	 */
-	public MonitoredData(String expID, List<Observation> obsList, List<InjectedElement> injList){
-		this(expID, obsList, null, injList, null);
-	}
 	
 	/**
 	 * Instantiates a new experiment data.
@@ -64,9 +46,7 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(String expID, List<Observation> obsList, List<ServiceCall> callList, List<InjectedElement> injList, Map<String, ServiceStat> ssList){
-		this.callList = callList;
-		this.ssList = ssList;
+	public MonitoredData(String expID, List<Observation> obsList, List<InjectedElement> injList){
 		this.obsList = obsList;
 		expName = "exp" + expID;
 		if(obsList != null && obsList.size() > 0)
@@ -118,15 +98,6 @@ public class MonitoredData {
 	}*/
 
 	/**
-	 * Gets the service stats.
-	 *
-	 * @return the service stats
-	 */
-	public Map<String, ServiceStat> getServiceStats(){
-		return ssList;
-	}
-
-	/**
 	 * Gets the injections for this experiment.
 	 *
 	 * @return the injections
@@ -159,21 +130,17 @@ public class MonitoredData {
 	public String getDataTag() {
 		return expName;
 	}
-
-	public Map<String, ServiceStat> getStats() {
-		return ssList;
-	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
+		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(List<DataSeries> dss, int index) {
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dss);
+		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dss);
 	}
 
 	public DataSeriesSnapshot generateDataSeriesSnapshot(DataSeries dataSeries, int index) {
-		return new DataSeriesSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
+		return new DataSeriesSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
 	}
 
 	public Observation get(int i) {

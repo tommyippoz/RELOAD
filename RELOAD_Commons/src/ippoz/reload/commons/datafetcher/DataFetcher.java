@@ -40,7 +40,7 @@ public abstract class DataFetcher extends Thread {
 	public void run() {
 		List<Observation> obList = getObservations();
 		if(obList != null && !obList.isEmpty())
-			mData = new MonitoredData(getID(), obList, getServiceCalls(), getInjections(), getServiceStats());
+			mData = new MonitoredData(getID(), obList, getInjections());
 		else mData = null;
 	}
 
@@ -57,13 +57,6 @@ public abstract class DataFetcher extends Thread {
 	 * @return the observations
 	 */
 	protected abstract List<Observation> getObservations();
-
-	/**
-	 * Gets the experiment service calls.
-	 *
-	 * @return the service calls
-	 */
-	protected abstract List<ServiceCall> getServiceCalls();
 
 	/**
 	 * Gets the experiment service stats.

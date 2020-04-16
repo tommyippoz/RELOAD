@@ -7,7 +7,7 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVCompleteLoader;
+import ippoz.reload.loader.CSVLoader;
 import ippoz.reload.loader.FileLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.LoaderType;
@@ -113,7 +113,7 @@ public class LoaderFrame {
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
 			return new MySQLLoader(null, loaderPref, loaderTag, "NO_LAYER", null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
-			return new CSVCompleteLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
+			return new CSVLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
 		} else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
 		else {
@@ -223,9 +223,10 @@ public class LoaderFrame {
 		dataPanel.setBorder(tb);
 		dataPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
-		showPreferenceLabels(dataPanel, bigLabelSpacing, CSVCompleteLoader.EXPERIMENT_ROWS, 
-				loaderPref.getPreference(CSVCompleteLoader.EXPERIMENT_ROWS), 
-				"Specify an integer that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", null);
+		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, FileLoader.BATCH_COLUMN, 
+				loaderPref.getPreference(FileLoader.BATCH_COLUMN), tLoader.hasBatches(loaderPref.getPreference(FileLoader.BATCH_COLUMN)),
+				"Specify an integer (> 0) that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", 
+				null, "Enable if your file is organized in Batches");
 		
 		int featureNumber = 0;
 		if(tLoader != null && tLoader.canFetch())
@@ -237,16 +238,16 @@ public class LoaderFrame {
 		if(featureNumber > 0)
 			labelColumnLabel.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
 		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, CSVCompleteLoader.LABEL_COLUMN, 
-				loaderPref.getPreference(CSVCompleteLoader.LABEL_COLUMN), 
+		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, FileLoader.LABEL_COLUMN, 
+				loaderPref.getPreference(FileLoader.LABEL_COLUMN), 
 				"Specify the index (starting from 0) of the column that contains the label, if any.", labelColumnLabel);
 		
 		JLabel labelColumnLabel2 = initLabel("Not Defined");
 		if(featureNumber > 0)
 			labelColumnLabel2.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
 		
-		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, CSVCompleteLoader.SKIP_COLUMNS, 
-				loaderPref.getPreference(CSVCompleteLoader.SKIP_COLUMNS), 
+		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, FileLoader.SKIP_COLUMNS, 
+				loaderPref.getPreference(FileLoader.SKIP_COLUMNS), 
 				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.", labelColumnLabel2);
 		
 		containerPanel.add(dataPanel, BorderLayout.CENTER);
@@ -278,16 +279,16 @@ public class LoaderFrame {
 		if(tLoader != null && tLoader.canFetch())
 			trainAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(tLoader.getAnomalyRate()) + "%");
 		
-		showPreferenceLabels(trainPanel, 2*bigLabelSpacing, CSVCompleteLoader.TRAIN_FAULTY_TAGS, 
-				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
+		showPreferenceLabels(trainPanel, 2*bigLabelSpacing, FileLoader.TRAIN_FAULTY_TAGS, 
+				loaderPref.hasPreference(FileLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training", trainAnomalyRateLabel);
 		
 		JLabel trainSkipRateLabel = initLabel("Not Defined");
 		if(tLoader != null && tLoader.canFetch())
 			trainSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(tLoader.getSkipRate()) + "%");
 		
-		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, CSVCompleteLoader.TRAIN_SKIP_ROWS, 
-				loaderPref.hasPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, FileLoader.TRAIN_SKIP_ROWS, 
+				loaderPref.hasPreference(FileLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", trainSkipRateLabel);
 			
 		threeRowPanel.add(trainPanel);
@@ -315,16 +316,16 @@ public class LoaderFrame {
 		if(vLoader != null && vLoader.canFetch())
 			validationAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(vLoader.getAnomalyRate()) + "%");
 		
-		showPreferenceLabels(validationPanel, 2*bigLabelSpacing, CSVCompleteLoader.VALIDATION_FAULTY_TAGS, 
-				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
+		showPreferenceLabels(validationPanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FAULTY_TAGS, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation", validationAnomalyRateLabel);
 		
 		JLabel validationSkipRateLabel = initLabel("Not Defined");
 		if(vLoader != null && vLoader.canFetch())
 			validationSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(vLoader.getSkipRate()) + "%");
 		
-		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, CSVCompleteLoader.VALIDATION_SKIP_ROWS, 
-				loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(CSVCompleteLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, FileLoader.VALIDATION_SKIP_ROWS, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
 				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", validationSkipRateLabel);
 		
 		threeRowPanel.add(validationPanel);
@@ -408,12 +409,12 @@ public class LoaderFrame {
 		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)).exists()){
 			output = output + "VALIDATION_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE) || 
-				loaderPref.getPreference(CSVCompleteLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(FileLoader.TRAIN_RUN_PREFERENCE) || 
+				loaderPref.getPreference(FileLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong TRAIN_RUN_PREFERENCE value: remember to specify runs for training.\n";
 		}
-		if(!loaderPref.hasPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE) || 
-				loaderPref.getPreference(CSVCompleteLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(FileLoader.VALIDATION_RUN_PREFERENCE) || 
+				loaderPref.getPreference(FileLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
@@ -470,12 +471,12 @@ public class LoaderFrame {
 		
 	}
 	
-	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo){
+	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo, String checkboxText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, additionalInfo != null ? 4 : 3));
 		
-		JCheckBox cb = new JCheckBox("Enable");
+		JCheckBox cb = new JCheckBox(checkboxText);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
 		//cb.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
 		cb.setSelected(activated);
@@ -520,7 +521,10 @@ public class LoaderFrame {
 		    @Override
 		    public void actionPerformed(ActionEvent event) {
 		        JCheckBox cb = (JCheckBox) event.getSource();
-		        textField.setEnabled(cb.isSelected());		        	
+		        textField.setEnabled(cb.isSelected());		
+		        if (!cb.isSelected() && textField.getText() != null){
+	        		loaderPref.updatePreference(prefName, "no batches", true, false);
+	        	}
 		    }
 		});
 		

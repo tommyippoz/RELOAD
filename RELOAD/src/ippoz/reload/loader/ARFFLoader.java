@@ -28,9 +28,6 @@ import java.util.List;
  * @author Tommy
  */
 public class ARFFLoader extends FileLoader {
-	
-	/** The anomaly window. */
-	private int anomalyWindow;
 
 	/**
 	 * Instantiates a new ARFF loader.
@@ -38,15 +35,11 @@ public class ARFFLoader extends FileLoader {
 	 * @param runs the runs
 	 */
 	public ARFFLoader(List<Integer> runs, File file, String toSkip, String labelCol, String experimentRows, String faultyTags, String avoidTags, int anomalyWindow) {
-		super(runs, file, toSkip, labelCol, experimentRows);
-		this.anomalyWindow = anomalyWindow;
-		parseFaultyTags(faultyTags);
-		parseAvoidTags(avoidTags);
-		readARFF();
+		super(runs, file, toSkip, labelCol, experimentRows, faultyTags, avoidTags, anomalyWindow);
 	}
 	
 	/**
-	 * Instantiates a new CSV pre-loader.
+	 * Instantiates a new ARFF loader.
 	 *
 	 * @param list the list
 	 * @param prefManager the preferences manager
@@ -73,12 +66,6 @@ public class ARFFLoader extends FileLoader {
 	@Override
 	public String getLoaderName() {
 		return "ARFF - " + file.getName().split(".")[0];
-	}
-
-	@Override
-	public Object[] getSampleValuesFor(String featureName) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -127,7 +114,8 @@ public class ARFFLoader extends FileLoader {
 		return arffHeader;
 	}
 	
-	private void readARFF(){
+	@Override
+	protected void initialize(){
 		BufferedReader reader = null;
 		String readLine = null;
 		LinkedList<Observation> obList = null;
@@ -136,6 +124,9 @@ public class ARFFLoader extends FileLoader {
 		String[] expRowsColumns = new String[]{null, null};
 		int rowIndex = 0, i;
 		int changes = 0;
+		double skipCount = 0;
+		double itemCount = 0;
+		double anomalyCount = 0;
 		try {
 			dataList = new LinkedList<MonitoredData>();
 			AppLogger.logInfo(getClass(), "Loading " + file.getPath());
@@ -191,11 +182,14 @@ public class ARFFLoader extends FileLoader {
 									i++;
 								}
 								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
+									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										obList.add(current);
-										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
-											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
-									}
+										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol])){
+											anomalyCount++;
+											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], getAnomalyWindow()));
+										}
+									} else skipCount++;
 								}	
 							}
 							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
@@ -210,170 +204,20 @@ public class ARFFLoader extends FileLoader {
 				}
 				AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 				reader.close();
+				
+				// Setting up key variables
+				setTotalDataPoints(rowIndex);
+				setSkipRatio(100.0*skipCount/itemCount);
+				setAnomalyRatio(100.0*anomalyCount/itemCount);
 			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + file.getPath() + "' not found");
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}
-	}
-
-	@Override
-	public double getAnomalyRate() {
-		BufferedReader reader = null;
-		String readLine = null;
-		double anomalyCount = 0;
-		double itemCount = 0;
-		int rowIndex = 0;
-		int changes = 0;
-		String[] expRowsColumns = new String[]{null, null};
-		try {
-			if(file != null && !file.isDirectory() && file.exists() && labelCol >= 0 && faultyTagList != null && faultyTagList.size() > 0) {
-				reader = new BufferedReader(new FileReader(file));
-
-				// Skips Header
-				boolean flag = true;
-				while(reader.ready() && flag){
-					readLine = reader.readLine();
-					if(readLine != null && !isComment(readLine)){
-						readLine = readLine.trim();
-						if(readLine.startsWith("@data"))
-							flag = false;
-					}
-				}
-				
-				// anomaly rate
-				while(reader.ready()){
-					readLine = reader.readLine();
-					if(readLine != null){
-						readLine = readLine.trim();
-						if(readLine.length() > 0 && !isComment(readLine)){
-							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadFile(rowIndex, changes)){
-								if(labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
-									itemCount++;
-									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
-										if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol]))
-											anomalyCount++;
-									}
-								}	
-							}
-							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
-								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
-								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
-									changes++;
-							}
-							rowIndex++;
-						}
-					}
-				}
-				reader.close();
-			} else return 0.0;
-		} catch (IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to parse header");
-		}
-		return 100.0*anomalyCount/itemCount;
-	}
-	
-	@Override
-	public double getSkipRate() {
-		BufferedReader reader = null;
-		String readLine = null;
-		double skipCount = 0;
-		double itemCount = 0;
-		int rowIndex = 0;
-		int changes = 0;
-		String[] expRowsColumns = new String[]{null, null};
-		try {
-			if(file != null && file.exists() && labelCol >= 0 && avoidTagList != null && avoidTagList.size() > 0) {
-				reader = new BufferedReader(new FileReader(file));
-
-				// Skips Header
-				boolean flag = true;
-				while(reader.ready() && flag){
-					readLine = reader.readLine();
-					if(readLine != null && !isComment(readLine)){
-						readLine = readLine.trim();
-						if(readLine.startsWith("@data"))
-							flag = false;
-					}
-				}
-				
-				// skip rate
-				while(reader.ready()){
-					readLine = reader.readLine();
-					if(readLine != null){
-						readLine = readLine.trim();
-						if(readLine.length() > 0 && !isComment(readLine)){
-							readLine = AppUtility.filterInnerCommas(readLine);
-							if(canReadFile(rowIndex, changes)){
-								if(readLine.split(",")[labelCol] != null) { 
-									itemCount++;
-									if(avoidTagList.contains(readLine.split(",")[labelCol])){
-										skipCount++;
-									}
-								}	
-							}
-							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
-								expRowsColumns[0] = expRowsColumns[1];
-								expRowsColumns[1] = readLine.split(",")[getFeatureIndex(experimentRows)];
-								if(!String.valueOf(expRowsColumns[0]).equals(String.valueOf(expRowsColumns[1])) && expRowsColumns[0] != null && expRowsColumns[1] != null)
-									changes++;
-							}
-							rowIndex++;
-						}
-					}
-				}
-				reader.close();
-			} else return 0.0;
-		} catch (IOException ex){
-			AppLogger.logException(getClass(), ex, "unable to parse header");
-		}
-		return 100.0*skipCount/itemCount;
 	}
 	
 	@Override
 	public boolean isComment(String readedString){
 		return readedString != null && readedString.length() > 0 && readedString.startsWith("%");
-	}
-
-	@Override
-	public int getRowNumber() {
-		BufferedReader reader = null;
-		String readLine = null;
-		int rowIndex = 0;
-		try {
-			dataList = new LinkedList<MonitoredData>();
-			AppLogger.logInfo(getClass(), "Loading " + file.getPath());
-			if(file != null && !file.isDirectory() && file.exists()){
-				reader = new BufferedReader(new FileReader(file));
-				
-				// Skips Header
-				boolean flag = true;
-				while(reader.ready() && flag){
-					readLine = reader.readLine();
-					if(readLine != null && !isComment(readLine)){
-						readLine = readLine.trim();
-						if(readLine.startsWith("@data"))
-							flag = false;
-					}
-				}
-				
-				// Reads file
-				while(reader.ready()){
-					readLine = reader.readLine();
-					if(readLine != null){
-						readLine = readLine.trim();
-						if(readLine.length() > 0 && !isComment(readLine)){
-							rowIndex++;
-						}
-					}
-				}
-				reader.close();
-			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + file.getPath() + "' not found");
-		} catch (IOException ex){
-			AppLogger.logException(getClass(), ex, "unable to parse file");
-		}
-		return rowIndex;
 	}
 
 }

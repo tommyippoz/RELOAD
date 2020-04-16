@@ -187,12 +187,6 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	}
 
 	@Override
-	public Object[] getSampleValuesFor(String featureName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public int getRowNumber() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -238,6 +232,12 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	public String getCompactName() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean hasBatches(String preferenceString) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

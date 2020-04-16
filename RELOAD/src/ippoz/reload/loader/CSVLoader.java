@@ -5,9 +5,11 @@ package ippoz.reload.loader;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.IndicatorData;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -21,45 +23,26 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * The Class CSVPreLoader. Class That allows loading MonitoredData from CSV files.
+ * The Class CSVLoader. Embeds some of the functionalities to read CSV files.
  *
  * @author Tommy
  */
-public class CSVCompleteLoader extends CSVBaseLoader {
-	
-	/** The anomaly window. */
-	private int anomalyWindow;
-	
+public class CSVLoader extends FileLoader {
+
 	/**
-	 * Instantiates a new CSV pre loader.
+	 * Instantiates a new CSV loader.
 	 *
 	 * @param runs the runs
-	 * @param csvFile the CSV file targeted
-	 * @param skip the skip
+	 * @param csvFile the CSV file
+	 * @param parseSkipColumns(colString)toSkip the skip columns
 	 * @param labelCol the label column
 	 * @param expRunsString the experiment rows
-	 * @param faultyTags the faulty tags
-	 * @param avoidTags the avoid tags
-	 * @param anomalyWindow the anomaly window
 	 */
-	public CSVCompleteLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, String expRunsString, String faultyTags, String avoidTags, int anomalyWindow) {
-		super(runs, csvFile, toSkip, labelColString, expRunsString);
-		this.anomalyWindow = anomalyWindow;
-		parseFaultyTags(faultyTags);
-		parseAvoidTags(avoidTags);
-		readCsv();
-	}
+	public CSVLoader(List<Integer> runs, File csvFile, String toSkip, String labelColString, String expRunsString, String faultyTags, String avoidTags, int anomalyWindow) {
+		super(runs, csvFile, toSkip, labelColString, expRunsString, faultyTags, avoidTags, anomalyWindow);
+	}	
 	
-	/**
-	 * Instantiates a new CSV pre-loader.
-	 *
-	 * @param list the list
-	 * @param prefManager the preferences manager
-	 * @param tag the tag
-	 * @param anomalyWindow the anomaly window
-	 * @param datasetsFolder the datasets folder
-	 */
-	public CSVCompleteLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
+	public CSVLoader(List<Integer> list, PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder) {
 		this(list, 
 				extractFile(prefManager, datasetsFolder, tag), 
 				prefManager.getPreference(SKIP_COLUMNS), 
@@ -71,9 +54,108 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 	}	
 
 	/**
+	 * Loads the header of the file.
+	 *
+	 */
+	@Override
+	public List<Indicator> loadHeader(){
+		BufferedReader reader = null;
+		String readLine = null;
+		List<Indicator> csvHeader = null;
+		try {
+			csvHeader = new LinkedList<Indicator>();
+			if(file != null && file.exists() && !file.isDirectory()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || isComment(readLine))
+							readLine = null;
+					}
+				}
+				readLine = AppUtility.filterInnerCommas(readLine);
+				for(String splitted : readLine.split(",")){
+					csvHeader.add(new Indicator(splitted.trim().replace("\"", ""), LayerType.NO_LAYER, String.class));
+				}
+				reader.close();
+			}
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		
+		return csvHeader;
+		
+	}	
+	
+	/*@Override
+	public Object[] getSampleValuesFor(String featureName) {
+		BufferedReader reader = null;
+		String readLine = null;
+		Object[] values = new Object[Loader.SAMPLE_VALUES_COUNT];
+		try {
+			if(file != null && file.exists() && hasFeature(featureName)){
+				
+				reader = new BufferedReader(new FileReader(file));
+				
+				//skip header
+				while(reader.ready() && readLine == null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+							readLine = null;
+					}
+				}
+				
+				// read data
+				int rowCount = 0;
+				int columnIndex = getFeatureIndex(featureName);
+				while(reader.ready() && readLine == null && rowCount < Loader.SAMPLE_VALUES_COUNT){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !readLine.startsWith("*")){
+							String[] splitted = readLine.split(",");
+							if(splitted.length > columnIndex)
+								values[rowCount] = splitted[columnIndex];
+							rowCount++;
+						}
+					}
+				}
+				
+				reader.close();
+			}
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		
+		return values;
+	}*/
+	
+	protected boolean hasFault(String string){
+		if(faultyTagList == null)
+			return false;
+		for(String fault : faultyTagList){
+			if(fault.toUpperCase().trim().compareTo(string.trim().toUpperCase()) == 0)
+				return true;
+		}
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see ippoz.reload.loader.Loader#getName()
+	 */
+	@Override
+	public String getLoaderName() {
+		return "CSV - " + file.getName().substring(0, file.getName().indexOf("."));
+	}
+	
+	/**
 	 * Reads the CSV files.
 	 */
-	private void readCsv() {
+	@Override
+	protected void initialize() {
 		BufferedReader reader = null;
 		String readLine = null;
 		LinkedList<Observation> obList = null;
@@ -82,6 +164,9 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 		String[] expRowsColumns = new String[]{null, null};
 		int rowIndex = 0, i;
 		int changes = 0;
+		double skipCount = 0;
+		double itemCount = 0;
+		double anomalyCount = 0;
 		try {
 			dataList = new LinkedList<MonitoredData>();
 			AppLogger.logInfo(getClass(), "Loading " + file.getPath());
@@ -91,7 +176,7 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
-						if(readLine.replace(",", "").length() == 0 || readLine.startsWith("*"))
+						if(readLine.replace(",", "").length() == 0 || isComment(readLine))
 							readLine = null;
 					}
 				}
@@ -130,11 +215,14 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 									i++;
 								}
 								if(labelCol >= 0 && labelCol < readLine.split(",").length && readLine.split(",")[labelCol] != null) { 
+									itemCount++;
 									if(avoidTagList == null || !avoidTagList.contains(readLine.split(",")[labelCol])){
 										obList.add(current);
-										if(readLine.split(",")[labelCol] != null && hasFault(readLine.split(",")[labelCol]))
-											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], anomalyWindow));
-									}
+										if(readLine.split(",")[labelCol] != null && hasFault(readLine.split(",")[labelCol])){
+											anomalyCount++;
+											injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], getAnomalyWindow()));
+										}
+									} else skipCount++;
 								}	
 							}
 							if(!AppUtility.isNumber(experimentRows) && hasFeature(experimentRows)){
@@ -152,22 +240,20 @@ public class CSVCompleteLoader extends CSVBaseLoader {
 				}
 				AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 				reader.close();
+				
+				// Setting up key variables
+				setTotalDataPoints(rowIndex);
+				setSkipRatio(100.0*skipCount/itemCount);
+				setAnomalyRatio(100.0*anomalyCount/itemCount);
 			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + file.getPath() + "' not found");
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}
 	}
-	
 
 	@Override
 	public LoaderType getLoaderType() {
 		return LoaderType.CSV;
-	}
-
-	@Override
-	public boolean isComment(String readedString) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 }

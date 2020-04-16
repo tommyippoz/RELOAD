@@ -25,7 +25,7 @@ import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVCompleteLoader;
+import ippoz.reload.loader.CSVLoader;
 import ippoz.reload.loader.Loader;
 import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
@@ -1241,7 +1241,7 @@ public class InputManager {
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
 			return new MySQLLoader(list, lPref, loaderTag, getConsideredLayers(), null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
-			return new CSVCompleteLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+			return new CSVLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
 		else {

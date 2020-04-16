@@ -65,14 +65,6 @@ public class DatabaseFetcher extends DataFetcher {
 	}
 
 	/* (non-Javadoc)
-	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getServiceCalls()
-	 */
-	@Override
-	protected List<ServiceCall> getServiceCalls() {
-		return dbManager.getServiceCalls();
-	}
-
-	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getServiceStats()
 	 */
 	@Override

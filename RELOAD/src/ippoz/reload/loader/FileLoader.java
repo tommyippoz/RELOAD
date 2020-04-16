@@ -31,13 +31,9 @@ public abstract class FileLoader extends SimpleLoader {
 
 	/** The Constant EXPERIMENT_ROWS. */
 	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
-
-	public static final String TRAIN_EXPERIMENT_SPLIT_ROWS = "EXPERIMENT_SPLIT_ROWS";
 	
-	/** The Constant EXPERIMENT_ROWS. */
-	public static final String VALIDATION_EXPERIMENT_ROWS = "VALIDATION_EXPERIMENT_ROWS";
-
-	public static final String VALIDATION_EXPERIMENT_SPLIT_ROWS = "VALIDATION_EXPERIMENT_SPLIT_ROWS";
+	/** The Constant BATCH_COLUMN. */
+	public static final String BATCH_COLUMN = "BATCH_COLUMN";
 	
 	/** The file. */
 	protected File file;
@@ -53,14 +49,32 @@ public abstract class FileLoader extends SimpleLoader {
 	
 	/** The list of tags to be avoided when reading. */
 	protected List<String> avoidTagList;
+	
+	/** The anomaly window. */
+	private int anomalyWindow;
+	
+	/** The amount of data points. */
+	private int totalDataPoints;
+	
+	/** The anomaly ratio. */
+	private double anomalyRatio;
+	
+	/** The skip ratio. */
+	private double skipRatio;
 
-	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, String expRunsString) {
+	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, String expRunsString, String faultyTags, String avoidTags, int anomalyWindow) {
 		super(runs, null);
 		this.file = file;
 		this.labelCol = extractIndexOf(labelColString);
 		this.experimentRows = expRunsString != null ? expRunsString.trim() : null;
+		this.anomalyWindow = anomalyWindow;
 		filterHeader(parseSkipColumns(toSkip));
+		parseFaultyTags(faultyTags);
+		parseAvoidTags(avoidTags);
+		initialize();
 	}
+	
+	protected abstract void initialize();
 	
 	@Override
 	public String getCompactName() {
@@ -194,12 +208,10 @@ public abstract class FileLoader extends SimpleLoader {
 	}
 	
 	protected static String extractExperimentRows(PreferencesManager prefManager){
-		if(prefManager.hasPreference(EXPERIMENT_ROWS))
+		if(prefManager.hasPreference(BATCH_COLUMN))
 			return prefManager.getPreference(EXPERIMENT_ROWS);
 			else return null;
 	}
-
-	public abstract int getRowNumber();
 
 	@Override
 	public double getMBSize() {
@@ -218,6 +230,51 @@ public abstract class FileLoader extends SimpleLoader {
 		else return getRunsNumber();
 	}	
 	
-	public abstract boolean isComment(String readedString);
+	@Override
+	public boolean hasBatches(String preferenceString) {
+		if(preferenceString != null && preferenceString.trim().length() > 0){
+			preferenceString = preferenceString.trim();
+			if(AppUtility.isNumber(preferenceString)){
+				if(Double.valueOf(preferenceString) > 0)
+					return true;
+				else return false;
+			} else return this.hasFeature(preferenceString);
+		} else return false;
+	}
+	
+	protected int getAnomalyWindow() {
+		return anomalyWindow;
+	}
+	
+	public void setTotalDataPoints(int totalDataPoints) {
+		this.totalDataPoints = totalDataPoints;
+	}
+
+	public void setAnomalyRatio(double anomalyRatio) {
+		this.anomalyRatio = anomalyRatio;
+	}
+	
+	public void setSkipRatio(double skipRatio) {
+		this.skipRatio = skipRatio;
+	}
+
+	@Override
+	public double getAnomalyRate() {
+		return anomalyRatio;
+	}
+
+	@Override
+	public double getSkipRate() {
+		return skipRatio;
+	}
+	
+	@Override
+	public int getRowNumber() {
+		return totalDataPoints;
+	}
+	
+	public boolean isComment(String readedString) {
+		return readedString != null && readedString.startsWith("*");
+	}
 	
 }

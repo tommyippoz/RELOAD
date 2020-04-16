@@ -22,15 +22,15 @@ public class MultipleSnapshot extends Snapshot {
 
 	private Map<DataSeries, DataSeriesSnapshot> dsMap;
 	
-	public MultipleSnapshot(Observation obs, List<ServiceCall> callList, InjectedElement injEl, List<DataSeries> seriesList) {
-		super(obs.getTimestamp(), callList, injEl);
+	public MultipleSnapshot(Observation obs, InjectedElement injEl, List<DataSeries> seriesList) {
+		super(obs.getTimestamp(), injEl);
 		dsMap = generateMultipleSnapshots(obs, seriesList);
 	}
 
 	private Map<DataSeries, DataSeriesSnapshot> generateMultipleSnapshots(Observation obs, List<DataSeries> seriesList) {
 		Map<DataSeries, DataSeriesSnapshot> outMap = new HashMap<DataSeries, DataSeriesSnapshot>();
 		for(DataSeries ds : seriesList){
-			outMap.put(ds, new DataSeriesSnapshot(obs, getServiceCalls(), getInjectedElement(), ds));
+			outMap.put(ds, new DataSeriesSnapshot(obs, getInjectedElement(), ds));
 		}
 		return outMap;
 	}

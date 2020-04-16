@@ -66,13 +66,6 @@ public interface Loader {
 	 */
 	public abstract String[] getFeatureNames();
 	
-	/**
-	 * Gets the first values of a given feature.
-	 *
-	 * @return the name
-	 */
-	public abstract Object[] getSampleValuesFor(String featureName);
-	
 	public abstract int getRowNumber();
 	
 	public abstract double getMBSize();
@@ -86,5 +79,7 @@ public interface Loader {
 	public abstract int getDataPoints();
 	
 	public abstract List<Integer> getLoaderRuns();
+	
+	public abstract boolean hasBatches(String preferenceString);
 	
 }

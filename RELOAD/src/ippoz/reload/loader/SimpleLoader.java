@@ -163,28 +163,6 @@ public abstract class SimpleLoader implements Loader {
 		return -1;
 	}
 	
-	/**
-	 * Returns a flag to indicate if the feature is numeric.
-	 *
-	 * @return the name
-	 */
-	public Boolean isFeatureNumeric(String featureName){
-		String strVal = "";
-		Object[] values = getSampleValuesFor(featureName);
-		if(values == null || values.length == 0)
-			return null;
-		else {
-			for(Object val : values){
-				if(val != null){
-					strVal = val.toString();
-					if(!AppUtility.isNumber(strVal))
-						return false;
-				}
-			}	
-			return true;
-		}
-	}
-	
 	/* (non-Javadoc)
 	 * @see ippoz.reload.loader.Loader#fetch()
 	 */
