@@ -117,8 +117,8 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.getInjections().size();
 	}
 	
-	public String getTag(){
-		return baseData.getDataTag();
+	public Integer getID(){
+		return baseData.getDataID();
 	}
 	
 	public abstract List<Snapshot> toArray(DataSeries dataSeries);
@@ -265,9 +265,9 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
 	}
 	
-	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, String expName) {
+	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Integer expName) {
 		for(Knowledge know : knowledgeList){
-			if(know.getTag().equals(expName))
+			if(know.getID().equals(expName))
 				return know;
 		}
 		return null;

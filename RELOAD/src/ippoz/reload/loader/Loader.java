@@ -16,16 +16,13 @@ import java.util.List;
 public interface Loader {
 	
 	/** The Constant TRAIN_RUN_PREFERENCE. */
-	public static final String TRAIN_RUN_PREFERENCE = "TRAIN_RUN_IDS";
+	public static final String TRAIN_PARTITION = "TRAIN_RUN_IDS";
 	
 	/** The Constant VALIDATION_RUN_PREFERENCE. */
-	public static final String VALIDATION_RUN_PREFERENCE = "VALIDATION_RUN_IDS";
+	public static final String VALIDATION_PARTITION = "VALIDATION_RUN_IDS";
 
 	/** The Constant LOADER_TYPE. */
 	public static final String LOADER_TYPE = "LOADER_TYPE";
-
-	/** The Constant CONSIDERED_LAYERS. */
-	public static final String CONSIDERED_LAYERS = "CONSIDERED_LAYERS";
 	
 	public static final int SAMPLE_VALUES_COUNT = 200;
 
@@ -78,7 +75,7 @@ public interface Loader {
 	
 	public abstract int getDataPoints();
 	
-	public abstract List<Integer> getLoaderRuns();
+	public abstract List<LoaderBatch> getLoaderRuns();
 	
 	public abstract boolean hasBatches(String preferenceString);
 	

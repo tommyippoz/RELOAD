@@ -182,11 +182,11 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}*/
 	
-	public Map<String, List<VotingResult>> getVotingEvaluations() {
-		Map<String, List<VotingResult>> outMap = new TreeMap<String, List<VotingResult>>();
+	public Map<Integer, List<VotingResult>> getVotingEvaluations() {
+		Map<Integer, List<VotingResult>> outMap = new TreeMap<Integer, List<VotingResult>>();
 		for(Thread t : getThreadList()){
 			ExperimentEvaluator ev = (ExperimentEvaluator)t;
-			outMap.put(ev.getExperimentName(), ev.getExperimentVoting());
+			outMap.put(ev.getExperimentID(), ev.getExperimentVoting());
 		}
 		return outMap;
 	}
@@ -195,35 +195,35 @@ public class EvaluatorManager extends DataManager {
 		return metricValues;
 	}
 	
-	public Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
-		Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<String, List<Map<AlgorithmModel, AlgorithmResult>>>();
+	public Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
+		Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<Integer, List<Map<AlgorithmModel, AlgorithmResult>>>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
-				outMap.put(ev.getExperimentName(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
+				outMap.put(ev.getExperimentID(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
 				//System.out.println(ev.getExperimentName());
 				if(i < detailedEvaluations.size()){
 					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
 					if(map != null){
 						for(Date mapEntry : map.keySet()){
-							outMap.get(ev.getExperimentName()).add(map.get(mapEntry));
+							outMap.get(ev.getExperimentID()).add(map.get(mapEntry));
 						}
 					} else {
-						System.out.println(ev.getExperimentName());
+						System.out.println(ev.getExperimentID());
 					}
 				} else {
-					System.out.println(ev.getExperimentName());
+					System.out.println(ev.getExperimentID());
 				}
 			}
 		}
 		return outMap;
 	}
 	
-	public Map<String, List<InjectedElement>> getFailures(){
-		Map<String, List<InjectedElement>> outMap = new TreeMap<String, List<InjectedElement>>();
+	public Map<Integer, List<InjectedElement>> getFailures(){
+		Map<Integer, List<InjectedElement>> outMap = new TreeMap<Integer, List<InjectedElement>>();
 		for(int i=0;i<getThreadList().size();i++){
 			ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
-			outMap.put(ev.getExperimentName(), ev.getFailuresList());
+			outMap.put(ev.getExperimentID(), ev.getFailuresList());
 		}
 		return outMap;
 	}
@@ -239,16 +239,16 @@ public class EvaluatorManager extends DataManager {
 		Map<AlgorithmModel, AlgorithmResult> map;
 		Set<AlgorithmModel> voterList;
 		try {
-			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores = getDetailedEvaluations();
-			Map<String, List<VotingResult>> votingScores = getVotingEvaluations();
+			Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores = getDetailedEvaluations();
+			Map<Integer, List<VotingResult>> votingScores = getVotingEvaluations();
 			if(votingScores != null && votingScores.size() > 0 &&
 					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + "algorithmscores_" + voter.toString().replace(" ", "_") + ".csv")));
 				header1 = "exp,index,fault/attack,reload_eval,reload_score,reload_confidence,";
 				header2 = ",,,,,,";
 				
-				Iterator<String> it = detailedExperimentsScores.keySet().iterator();
-				String tag = it.next();
+				Iterator<Integer> it = detailedExperimentsScores.keySet().iterator();
+				Integer tag = it.next();
 				while(it.hasNext() && (detailedExperimentsScores.get(tag) == null || detailedExperimentsScores.get(tag).size() == 0)){
 					tag = it.next();
 				}
@@ -274,8 +274,8 @@ public class EvaluatorManager extends DataManager {
 						+ "In addition, for each anomaly checker we report a triple <score, decision function, evaluation> where the evaluation is calculated by applying such decision function to the score.\n");
 				writer.write(header1 + "\n" + header2 + "\n");
 				
-				Map<String, List<InjectedElement>> injections = getFailures();
-				for(String expName : votingScores.keySet()){
+				Map<Integer, List<InjectedElement>> injections = getFailures();
+				for(Integer expName : votingScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);

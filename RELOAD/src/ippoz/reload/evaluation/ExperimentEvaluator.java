@@ -54,7 +54,7 @@ public class ExperimentEvaluator extends Thread {
 	public static final String FAILURE_LABEL = "Failure";
 	
 	/** The experiment name. */
-	private String expName;
+	private Integer expID;
 	
 	/** The algorithm list. */
 	private List<AlgorithmModel> algList;
@@ -87,11 +87,11 @@ public class ExperimentEvaluator extends Thread {
 		for(KnowledgeType kType : knowMap.keySet()){
 			kMap.put(kType, knowMap.get(kType).cloneKnowledge());
 		}
-		expName = kMap.get(kMap.keySet().iterator().next()).getTag();
+		expID = kMap.get(kMap.keySet().iterator().next()).getID();
 	}
 	
-	public String getExperimentName(){
-		return expName;
+	public Integer getExperimentID(){
+		return expID;
 	}
 	
 	/**
@@ -214,7 +214,7 @@ public class ExperimentEvaluator extends Thread {
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expName + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
+				pw.append(expID + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
 				for(Metric met : validationMetrics){
 					pw.append(String.valueOf(metResults.get(met)) + ",");
 				}
@@ -239,7 +239,7 @@ public class ExperimentEvaluator extends Thread {
 		voterMap.put(ANOMALY_SCORE_LABEL, voting);
 		voterMap.put(FAILURE_LABEL, failures);
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, 10);
-		hist.saveToFile(outFolderName + "/voter/graphic/" + expName + ".png", IMG_WIDTH, IMG_HEIGHT);
+		hist.saveToFile(outFolderName + "/voter/graphic/" + expID + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
 	
 	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<? extends AlgorithmResult>> voterMap) {
@@ -278,7 +278,7 @@ public class ExperimentEvaluator extends Thread {
 		int count;
 		try {
 			countMap = buildMap();
-			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expName + ".csv")));
+			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expID + ".csv")));
 			writer.write("timestamp,anomaly_alerts,");
 			for(LayerType currentLayer : countMap.keySet()){
 				for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){

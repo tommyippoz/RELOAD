@@ -33,16 +33,13 @@ public abstract class FileLoader extends SimpleLoader {
 	public static final String EXPERIMENT_ROWS = "EXPERIMENT_ROWS";
 	
 	/** The Constant BATCH_COLUMN. */
-	public static final String BATCH_COLUMN = "BATCH_COLUMN";
+	public static final String BATCH_COLUMN = "BATCH_INFO";
 	
 	/** The file. */
 	protected File file;
 	
 	/** The label column. */
 	protected int labelCol;
-	
-	/** The experiment rows. If String, it indicates the column that indicates experiment rows to change */
-	protected String experimentRows;
 	
 	/** The list of faulty tags. */
 	protected List<String> faultyTagList;
@@ -62,16 +59,80 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The skip ratio. */
 	private double skipRatio;
 
-	public FileLoader(List<Integer> runs, File file, String toSkip, String labelColString, String expRunsString, String faultyTags, String avoidTags, int anomalyWindow) {
-		super(runs, null);
+	public FileLoader(File file, String toSkip, String labelColString, String faultyTags, String avoidTags, int anomalyWindow, String batchString, String runsString) {
+		super();
 		this.file = file;
 		this.labelCol = extractIndexOf(labelColString);
-		this.experimentRows = expRunsString != null ? expRunsString.trim() : null;
 		this.anomalyWindow = anomalyWindow;
 		filterHeader(parseSkipColumns(toSkip));
 		parseFaultyTags(faultyTags);
 		parseAvoidTags(avoidTags);
+		setBatches(deriveBatches(batchString, runsString));
 		initialize();
+	}
+
+	private List<LoaderBatch> deriveBatches(String batchString, String runsString){
+		String[] bList;
+		List<LoaderBatch> fileBatchesFeature = null;
+		List<LoaderBatch> outList = new LinkedList<LoaderBatch>();
+		if(runsString != null && runsString.trim().length() > 0){
+			if(runsString.contains(","))
+				bList = runsString.split(",");
+			else bList = new String[]{runsString};
+			if(batchString != null && hasFeature(batchString.trim())){
+				fileBatchesFeature = getFeatureBatches(batchString.trim());
+			}
+			for(String s : bList){
+				s = s.trim();
+				if(AppUtility.isNumber(s)){
+					int n = Integer.parseInt(s);
+					if(batchString == null || batchString.trim().length() == 0){
+						outList.add(new LoaderBatch(n, n));
+					} else if(AppUtility.isNumber(batchString.trim())){
+						int expRows = Integer.parseInt(batchString.trim());
+						outList.add(new LoaderBatch(n*expRows, (n+1)*expRows));
+					} else if(hasFeature(batchString.trim())){
+						outList.add(fileBatchesFeature.get(n));
+					}
+				} else if(s.contains("-") && AppUtility.isNumber(s.split("-")[0].trim()) && AppUtility.isNumber(s.split("-")[1].trim())){
+					int n1 = Integer.parseInt(s.split("-")[0].trim());
+					int n2 = Integer.parseInt(s.split("-")[1].trim());
+					if(batchString == null || batchString.trim().length() == 0){
+						outList.add(new LoaderBatch(n1, n2));
+					} else if(AppUtility.isNumber(batchString.trim())){
+						int expRows = Integer.parseInt(batchString.trim());
+						for(int i=n1;i<=n2;i++){
+							outList.add(new LoaderBatch(i*expRows, (i+1)*expRows));
+						}
+					} else if(hasFeature(batchString.trim())){
+						for(int i=n1;i<=n2;i++){
+							outList.add(fileBatchesFeature.get(i));
+						}
+					}
+				} 
+			}
+		} 
+		outList = LoaderBatch.compactBatches(outList);
+		return outList;
+	}
+	
+	protected abstract List<LoaderBatch> getFeatureBatches(String featureName);
+
+	public List<Integer> readRunIds(String idPref){
+		String from, to;
+		LinkedList<Integer> idList = new LinkedList<Integer>();
+		if(idPref != null && idPref.length() > 0){
+			for(String id : idPref.split(",")){
+				if(id.contains("-")){
+					from = id.split("-")[0].trim();
+					to = id.split("-")[1].trim();
+					for(int i=Integer.parseInt(from);i<=Integer.parseInt(to);i++){
+						idList.add(i);
+					}
+				} else idList.add(Integer.parseInt(id.trim()));
+			}
+		}
+		return idList;
 	}
 	
 	protected abstract void initialize();
@@ -102,8 +163,6 @@ public abstract class FileLoader extends SimpleLoader {
 		} 
 		if(labelCol >= 0)
 			iList.add(labelCol);
-		/*if(!AppUtility.isNumber(experimentRows) && extractIndexOf(experimentRows) >= 0) 
-			iList.add(extractIndexOf(experimentRows));*/
 		return iList.toArray(new Integer[iList.size()]);
 	}
 	
@@ -146,25 +205,6 @@ public abstract class FileLoader extends SimpleLoader {
 		}
 		return new File(filename);
 	}
-	
-	/**
-	 * Gets the runs to be used to load the CSV file.
-	 *
-	 * @param rowIndex the row index
-	 * @return the run
-	 */
-	protected int getRun(int rowIndex, int pastChanges){
-		if(AppUtility.isInteger(experimentRows))
-			return rowIndex / Integer.valueOf(experimentRows);
-		else return pastChanges;
-	}
-	
-	/* (non-Javadoc)
-	 * @see ippoz.reload.loader.SimpleLoader#canRead(int)
-	 */
-	public boolean canReadFile(int index, int pastChanges) {
-		return canRead(getRun(index, pastChanges));
-	}
 
 	/**
 	 * Extracts tags to avoid reading some rows of the CSV file.
@@ -206,12 +246,6 @@ public abstract class FileLoader extends SimpleLoader {
 			}
 		}
 	}
-	
-	protected static String extractExperimentRows(PreferencesManager prefManager){
-		if(prefManager.hasPreference(BATCH_COLUMN))
-			return prefManager.getPreference(EXPERIMENT_ROWS);
-			else return null;
-	}
 
 	@Override
 	public double getMBSize() {
@@ -222,13 +256,6 @@ public abstract class FileLoader extends SimpleLoader {
 	public boolean canFetch() {
 		return file != null && file.exists();
 	}
-
-	@Override
-	public int getDataPoints() {
-		if(AppUtility.isInteger(experimentRows))
-			return getRunsNumber()*Integer.parseInt(experimentRows);
-		else return getRunsNumber();
-	}	
 	
 	@Override
 	public boolean hasBatches(String preferenceString) {
@@ -275,6 +302,16 @@ public abstract class FileLoader extends SimpleLoader {
 	
 	public boolean isComment(String readedString) {
 		return readedString != null && readedString.startsWith("*");
+	}
+	
+	public static String getBatchPreference(PreferencesManager pManager){
+		if (pManager != null){
+			if(pManager.hasPreference(BATCH_COLUMN))
+				return pManager.getPreference(BATCH_COLUMN);
+			else if(pManager.hasPreference(FileLoader.EXPERIMENT_ROWS))
+				return pManager.getPreference(FileLoader.EXPERIMENT_ROWS);
+		}
+		return null;
 	}
 	
 }

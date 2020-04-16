@@ -45,7 +45,7 @@ public class DetectorOutput {
 	
 	private List<AlgorithmModel> modelList;
 	
-	private Map<String, List<VotingResult>> votingScores;
+	private Map<Integer, List<VotingResult>> votingScores;
 	
 	private Loader loader;
 	
@@ -59,12 +59,12 @@ public class DetectorOutput {
 	
 	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;	
 	
-	private Map<String, List<LabelledResult>> labelledScores;
+	private Map<Integer, List<LabelledResult>> labelledScores;
 	
 	public DetectorOutput(InputManager iManager, List<AlgorithmType> algorithms, double bestScore, ScoresVoter bestSetup, 
 			List<AlgorithmModel> modelList,
-			Map<String, List<VotingResult>> votingScores,
-			Loader loader, Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 
+			Map<Integer, List<VotingResult>> votingScores,
+			Loader loader, Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
 			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
@@ -347,14 +347,14 @@ public class DetectorOutput {
 		return getGrid(basePath, "validation"); 
 	}
 	
-	public Map<String, List<LabelledResult>> getLabelledScores(){
+	public Map<Integer, List<LabelledResult>> getLabelledScores(){
 		return labelledScores;
 	}
 	
-	public Map<String, List<LabelledResult>> buildLabelledScores(Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores){
-		Map<String, List<LabelledResult>> outMap = new HashMap<>();
+	public Map<Integer, List<LabelledResult>> buildLabelledScores(Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores){
+		Map<Integer, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
-			for(String expName : votingScores.keySet()){
+			for(Integer expName : votingScores.keySet()){
 				outMap.put(expName, new LinkedList<LabelledResult>());
 				for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 					VotingResult ar = votingScores.get(expName).get(i);

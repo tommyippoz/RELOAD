@@ -117,7 +117,7 @@ public class DetectionManager {
 			tag = tag + loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'));
 		tag = tag + ",";
 		if(loaderPref != null)
-			tag = tag + loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE).replace(",", "");
+			tag = tag + loaderPref.getPreference(Loader.VALIDATION_PARTITION).replace(",", "");
 		tag = tag + ",";
 		if(algTypes != null)
 			tag = tag + Arrays.toString(algTypes.toArray()).replace(",", "");
@@ -141,19 +141,19 @@ public class DetectionManager {
 		Loader newLoader;
 		List<Integer> runs;
 		int nRuns;
-		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_RUN_PREFERENCE : Loader.TRAIN_RUN_PREFERENCE);
+		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
 		if(runsString != null && runsString.length() > 0){
 			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
 				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));
 				runs = iManager.readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
 				for(int i=0;i<runs.size();i=i+nRuns){
-					newLoader = iManager.buildSingleLoader(loaderPref, new LinkedList<Integer>(runs.subList(i, i+nRuns > runs.size() ? runs.size() : i+nRuns)), loaderTag, anomalyWindow);
+					newLoader = iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
 					if(newLoader != null){
 						lList.add(newLoader);
 					}
 				}
 			} else {
-				newLoader = iManager.buildSingleLoader(loaderPref, iManager.readRunIds(runsString), loaderTag, anomalyWindow);
+				newLoader = iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
 				if(newLoader != null)
 					lList.add(newLoader);
 			}

@@ -29,7 +29,7 @@ public class ExperimentPerformance {
 	private static final String DAT_SERIES = "dat";
 	
 	/** The experiment name. */
-	private String expName;
+	private Integer expName;
 	
 	/** The experiment observations. */
 	private int expObs;
@@ -54,7 +54,7 @@ public class ExperimentPerformance {
 	 * @param timeSeries the time series
 	 */
 	public ExperimentPerformance(MonitoredData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries) {
-		expName = expData.getDataTag();
+		expName = expData.getDataID();
 		expObs = expData.size();
 		//layerIndicators = expData.getLayerIndicators();
 		//monitorTimeSeries = expData.getMonitorPerformanceIndexes();

@@ -1236,14 +1236,14 @@ public class InputManager {
 		return lList;	
 	}
 	
-	public Loader buildSingleLoader(PreferencesManager lPref, List<Integer> list, String loaderTag, int anomalyWindow){
+	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag, int anomalyWindow, String runIdsString){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(list, lPref, loaderTag, getConsideredLayers(), null);
+			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
-			return new CSVLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+			return new CSVLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
-			return new ARFFLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+			return new ARFFLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;

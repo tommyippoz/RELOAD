@@ -152,7 +152,7 @@ public class OutputDetailFrame {
 	private void setMinMaxValues() {
 		minRefValue = Double.POSITIVE_INFINITY;
 		maxRefValue = Double.NEGATIVE_INFINITY;
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -169,7 +169,7 @@ public class OutputDetailFrame {
 	}
 	
 	private DecisionFunction createDefaultDecisionFunction() {
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
 				for(int i=0;i<list.size();i++){
@@ -185,7 +185,7 @@ public class OutputDetailFrame {
 
 	private ValueSeries createScoresValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -199,7 +199,7 @@ public class OutputDetailFrame {
 	
 	private ValueSeries createAnomalyValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -532,7 +532,7 @@ public class OutputDetailFrame {
 				Map<Double, Integer> anList = new TreeMap<>();
 				try {
 					// TODO
-					for(String expName : dOut.getLabelledScores().keySet()){
+					for(Integer expName : dOut.getLabelledScores().keySet()){
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
@@ -662,7 +662,7 @@ public class OutputDetailFrame {
 		if(containsInfiniteValues())
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
@@ -709,7 +709,7 @@ public class OutputDetailFrame {
 		List<Double> okList = new LinkedList<>();
 		List<Double> anList = new LinkedList<>();
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
@@ -797,7 +797,7 @@ public class OutputDetailFrame {
 	
 	private boolean containsInfiniteValues(){
 		boolean infiniteFlag = false;
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
@@ -819,7 +819,7 @@ public class OutputDetailFrame {
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		// infiniti si vedono anche se tronchi la rappresentazione
 		//a
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
@@ -877,7 +877,7 @@ public class OutputDetailFrame {
 		if(infiniteFlag)
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(Integer expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){

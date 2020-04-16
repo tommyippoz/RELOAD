@@ -106,16 +106,16 @@ public class LoaderFrame {
 
 	private Loader buildLoader(String loaderTag) {
 		String loaderType = loaderPref.getPreference(Loader.LOADER_TYPE);
-		List<Integer> runIds = null;
+		String runIds = null;
 		if(loaderTag.equals("train"))
-			runIds = iManager.readRunIds(loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE));
-		else runIds = iManager.readRunIds(loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE));
+			runIds = loaderPref.getPreference(Loader.TRAIN_PARTITION);
+		else runIds = loaderPref.getPreference(Loader.VALIDATION_PARTITION);
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
 			return new MySQLLoader(null, loaderPref, loaderTag, "NO_LAYER", null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
-			return new CSVLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
+			return new CSVLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);
 		} else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
-			return new ARFFLoader(runIds, loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder());
+			return new ARFFLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;
@@ -224,7 +224,7 @@ public class LoaderFrame {
 		dataPanel.setLayout(new GridLayout(3, 1, 20, 0));
 		
 		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, FileLoader.BATCH_COLUMN, 
-				loaderPref.getPreference(FileLoader.BATCH_COLUMN), tLoader.hasBatches(loaderPref.getPreference(FileLoader.BATCH_COLUMN)),
+				FileLoader.getBatchPreference(loaderPref), tLoader.hasBatches(FileLoader.getBatchPreference(loaderPref)),
 				"Specify an integer (> 0) that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", 
 				null, "Enable if your file is organized in Batches");
 		
@@ -266,13 +266,13 @@ public class LoaderFrame {
 		
 		JLabel trainDataPointsLabel = initLabel("Not Defined");
 		if(tLoader != null && tLoader.canFetch()){
-			if(AppUtility.isNumber(loaderPref.getPreference(FileLoader.EXPERIMENT_ROWS)))
+			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
 				trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
 			else trainDataPointsLabel.setText(tLoader.getDataPoints() + " valid runs");
 		}
 		
-		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_RUN_PREFERENCE, 
-				loaderPref.getPreference(Loader.TRAIN_RUN_PREFERENCE), 
+		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_PARTITION, 
+				loaderPref.getPreference(Loader.TRAIN_PARTITION), 
 				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", trainDataPointsLabel);
 		
 		JLabel trainAnomalyRateLabel = initLabel("Not Defined");
@@ -303,13 +303,13 @@ public class LoaderFrame {
 		
 		JLabel validationDataPointsLabel = initLabel("Not Defined");
 		if(vLoader != null && vLoader.canFetch()){
-			if(AppUtility.isNumber(loaderPref.getPreference(FileLoader.EXPERIMENT_ROWS)))
+			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
 				validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
 			else validationDataPointsLabel.setText(vLoader.getDataPoints() + " valid runs");
 		}
 		
-		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_RUN_PREFERENCE, 
-				loaderPref.getPreference(Loader.VALIDATION_RUN_PREFERENCE), 
+		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_PARTITION, 
+				loaderPref.getPreference(Loader.VALIDATION_PARTITION), 
 				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", validationDataPointsLabel);
 		
 		JLabel validationAnomalyRateLabel = initLabel("Not Defined");
@@ -391,10 +391,6 @@ public class LoaderFrame {
 	protected String checkParameters() {
 		String output = "";
 		String prefString;
-		if(loaderPref.hasPreference(Loader.CONSIDERED_LAYERS) && 
-				!loaderPref.getPreference(Loader.CONSIDERED_LAYERS).equals("NO_LAYER")){
-			output = output + "Wrong CONSIDERED_LAYERS value: consider trying with 'NO_LAYER'.\n";
-		}
 		prefString = loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? FileLoader.TRAIN_FILE : "TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE";
 		if(!loaderPref.hasPreference(prefString) || 
 				loaderPref.getPreference(prefString).trim().length() == 0){
@@ -409,12 +405,12 @@ public class LoaderFrame {
 		} else if(!new File(iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)).exists()){
 			output = output + "VALIDATION_FILE (" + (iManager.getDatasetsFolder() + loaderPref.getPreference(prefString)) +  ") does not exist.\n";
 		}
-		if(!loaderPref.hasPreference(FileLoader.TRAIN_RUN_PREFERENCE) || 
-				loaderPref.getPreference(FileLoader.TRAIN_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(FileLoader.TRAIN_PARTITION) || 
+				loaderPref.getPreference(FileLoader.TRAIN_PARTITION).trim().length() == 0){
 			output = output + "Wrong TRAIN_RUN_PREFERENCE value: remember to specify runs for training.\n";
 		}
-		if(!loaderPref.hasPreference(FileLoader.VALIDATION_RUN_PREFERENCE) || 
-				loaderPref.getPreference(FileLoader.VALIDATION_RUN_PREFERENCE).trim().length() == 0){
+		if(!loaderPref.hasPreference(FileLoader.VALIDATION_PARTITION) || 
+				loaderPref.getPreference(FileLoader.VALIDATION_PARTITION).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
@@ -513,6 +509,8 @@ public class LoaderFrame {
 			public void workOnUpdate() {
 				if (textField.getText() != null && textField.getText().length() > 0){
 	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
+	        		if(prefName.equals(FileLoader.BATCH_COLUMN))
+	        			loaderPref.updatePreference(FileLoader.EXPERIMENT_ROWS, textField.getText(), true, false);
 	        	}
 			}
 		});
@@ -523,7 +521,9 @@ public class LoaderFrame {
 		        JCheckBox cb = (JCheckBox) event.getSource();
 		        textField.setEnabled(cb.isSelected());		
 		        if (!cb.isSelected() && textField.getText() != null){
-	        		loaderPref.updatePreference(prefName, "no batches", true, false);
+	        		loaderPref.updatePreference(prefName, "", true, false);
+	        		if(prefName.equals(FileLoader.BATCH_COLUMN))
+	        			loaderPref.updatePreference(FileLoader.EXPERIMENT_ROWS, "", true, false);
 	        	}
 		    }
 		});

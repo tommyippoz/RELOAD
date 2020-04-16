@@ -35,7 +35,7 @@ public class DatabaseManager {
 	private DatabaseConnector connector;
 	
 	/** The runID. */
-	private String runId;
+	private Integer runId;
 	
 	/** The map of the layers. */
 	private HashMap<String, LayerType> layers;
@@ -48,7 +48,7 @@ public class DatabaseManager {
 	 * @param password the database password
 	 * @param runId the runID
 	 */
-	public DatabaseManager(String dbName, String username, String password, String runId, List<LayerType> selectedLayers){
+	public DatabaseManager(String dbName, String username, String password, Integer runId, List<LayerType> selectedLayers){
 		try {
 			this.runId = runId;
 			connector = new DatabaseConnector(dbName, username, password, false);
@@ -195,7 +195,7 @@ public class DatabaseManager {
 	 *
 	 * @return the runID
 	 */
-	public String getRunID() {
+	public Integer getRunID() {
 		return runId;
 	}
 

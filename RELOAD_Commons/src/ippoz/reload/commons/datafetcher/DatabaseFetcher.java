@@ -26,7 +26,7 @@ public class DatabaseFetcher extends DataFetcher {
 	/** The database manager. */
 	private DatabaseManager dbManager;
 	
-	private String runId;
+	private Integer runId;
 	
 	private String dbName;
 	
@@ -44,7 +44,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @param password the database password
 	 * @param dbPassword 
 	 */
-	public DatabaseFetcher(String runId, String dbName, String username, String password, List<LayerType> selectedLayers){
+	public DatabaseFetcher(Integer runId, String dbName, String username, String password, List<LayerType> selectedLayers){
 		this.runId = runId;
 		this.dbName = dbName;
 		this.username = username;
@@ -97,7 +97,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getID()
 	 */
 	@Override
-	protected String getID() {
+	protected Integer getID() {
 		return dbManager.getRunID();
 	}
 

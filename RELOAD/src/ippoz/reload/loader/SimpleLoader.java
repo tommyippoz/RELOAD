@@ -36,24 +36,43 @@ public abstract class SimpleLoader implements Loader {
 	protected List<MonitoredData> dataList;
 	
 	/** The runs. */
-	private List<Integer> runs;
+	private List<LoaderBatch> batches;
 	
 	/** The Relevant Features. */
 	private List<Indicator> relevantFeatures;
 	
 	/** The header. */
 	private List<Indicator> header;
+	
+	/**
+	 * Instantiates a new simple loader.
+	 *
+	 * @param batches the runs
+	 */
+	public SimpleLoader(){
+		dataList = new LinkedList<MonitoredData>();
+	}
 
 	/**
 	 * Instantiates a new simple loader.
 	 *
 	 * @param runs the runs
 	 */
-	public SimpleLoader(List<Integer> runs, List<Indicator> relevantFeatures){
+	public SimpleLoader(List<LoaderBatch> runs, List<Indicator> relevantFeatures){
 		Collections.sort(runs);
-		this.runs = runs;
+		this.batches = runs;
 		this.relevantFeatures = relevantFeatures;
 		dataList = new LinkedList<MonitoredData>();
+	}
+	
+	public int getBatchesNumber() {
+		if(batches != null)
+			return batches.size();
+		else return 0;
+	}
+	
+	protected void setBatches(List<LoaderBatch> runs) {
+		this.batches = runs;
 	}
 	
 	protected List<Indicator> getHeader(){
@@ -63,8 +82,8 @@ public abstract class SimpleLoader implements Loader {
 	}
 	
 	protected int getRunsNumber(){
-		if(runs != null)
-			return runs.size();
+		if(batches != null)
+			return batches.size();
 		else return 0;
 	}
 	
@@ -93,15 +112,6 @@ public abstract class SimpleLoader implements Loader {
 	}
 	
 	public abstract List<Indicator> loadHeader();
-
-	/**
-	 * Instantiates a new simple loader.
-	 *
-	 * @param runs the runs
-	 */
-	public SimpleLoader(List<Integer> runs){
-		this(runs, null);
-	}
 	
 	/**
 	 * True if a given row of the dataset should be read.
@@ -109,15 +119,44 @@ public abstract class SimpleLoader implements Loader {
 	 * @param index the index
 	 * @return true, if successful
 	 */
-	public synchronized boolean canRead(int index){
-		if(runs != null && runs.size() > 0){
-			for(Integer runItem : runs){
-				if(index == runItem)
+	public synchronized boolean canRead(int rowIndex){
+		if(batches != null && batches.size() > 0){
+			for(LoaderBatch runItem : batches){
+				if(runItem.includesRow(rowIndex))
 					return true;
 			}
 			return false;
 		} else return false;
 	}
+	
+	/**
+	 * Gets the runs to be used to load the CSV file.
+	 *
+	 * @param rowIndex the row index
+	 * @return the run
+	 */
+	protected int getBatch(int rowIndex){
+		if(batches != null && batches.size() > 0){
+			int i=0;
+			for(LoaderBatch runItem : batches){
+				if(runItem.includesRow(rowIndex))
+					return i;
+				i++;
+			}
+			return -1;
+		} else return -1;
+	}
+	
+	@Override
+	public int getDataPoints() {
+		int rNumb = 0;
+		if(batches != null && batches.size() > 0){
+			for(LoaderBatch runItem : batches){
+				rNumb = rNumb + runItem.getDataPoints();
+			}
+		} 
+		return rNumb;
+	}	
 
 	public List<Indicator> getRelevantFeatures() {
 		return relevantFeatures;
@@ -176,14 +215,14 @@ public abstract class SimpleLoader implements Loader {
 	 */
 	@Override
 	public String getRuns() {
-		String tag, endTag;
+		Integer tag, endTag;
 		if(dataList != null){
-			tag = dataList.get(0).getDataTag();
+			tag = dataList.get(0).getDataID();
 			if(dataList.size() == 1){
-				return "[" + tag.substring(tag.indexOf("_") + 1) + "]";
+				return "[" + tag + "]";
 			} else {
-				endTag = dataList.get(dataList.size()-1).getDataTag();				
-				return "[" + tag.substring(tag.indexOf("_") + 1) + "-" + endTag.substring(endTag.indexOf("_") + 1) + "]";
+				endTag = dataList.get(dataList.size()-1).getDataID();				
+				return "[" + tag + "-" + endTag + "]";
 			}
 		}
 		else return null;
@@ -205,8 +244,8 @@ public abstract class SimpleLoader implements Loader {
 	}
 	
 	@Override
-	public List<Integer> getLoaderRuns(){
-		return runs;
+	public List<LoaderBatch> getLoaderRuns(){
+		return batches;
 	}
 
 }

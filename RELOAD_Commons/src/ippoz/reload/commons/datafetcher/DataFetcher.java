@@ -49,7 +49,7 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the runID
 	 */
-	protected abstract String getID();
+	protected abstract Integer getID();
 	
 	/**
 	 * Gets the experiment observations.

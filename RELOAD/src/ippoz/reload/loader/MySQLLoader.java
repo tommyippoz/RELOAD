@@ -138,7 +138,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	protected void initRun() {
 		List<DataFetcher> fetchList = new ArrayList<DataFetcher>(expIDs.size());
 		for(Integer runId : expIDs){
-			fetchList.add(new DatabaseFetcher(runId.toString(), dbName, dbUsername, dbPassword, selectedLayers));
+			fetchList.add(new DatabaseFetcher(runId, dbName, dbUsername, dbPassword, selectedLayers));
 		}
 		setThreadList(fetchList);
 	}
@@ -211,7 +211,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	}
 
 	@Override
-	public List<Integer> getLoaderRuns() {
+	public List<LoaderBatch> getLoaderRuns() {
 		// TODO Auto-generated method stub
 		return null;
 	}

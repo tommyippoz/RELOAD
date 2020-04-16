@@ -37,7 +37,7 @@ public class PearsonCombinationManager {
 	
 	private List<Knowledge> kList;
 	
-	private Map<DataSeries, Map<String, List<Double>>> seriesExpData;
+	private Map<DataSeries, Map<Integer, List<Double>>> seriesExpData;
 	
 	private List<PearsonResult> pResults;
 	
@@ -49,15 +49,15 @@ public class PearsonCombinationManager {
 	}
 	
 	private void initExpData(){
-		seriesExpData = new HashMap<DataSeries, Map<String, List<Double>>>();
+		seriesExpData = new HashMap<DataSeries, Map<Integer, List<Double>>>();
 		for(DataSeries ds : seriesList){
 			if(ds instanceof IndicatorDataSeries) { 
-				Map<String, List<Double>> map = new HashMap<String, List<Double>>();
+				Map<Integer, List<Double>> map = new HashMap<Integer, List<Double>>();
 				for(Knowledge kItem : kList){
 					List<SnapshotValue> dsValue = kItem.getDataSeriesValues(ds);
-					map.put(kItem.getTag(), new ArrayList<Double>(dsValue.size()));
+					map.put(kItem.getID(), new ArrayList<Double>(dsValue.size()));
 					for(int i=0;i<dsValue.size();i++){
-						map.get(kItem.getTag()).add(dsValue.get(i).getFirst());
+						map.get(kItem.getID()).add(dsValue.get(i).getFirst());
 					}
 				}
 				seriesExpData.put(ds, map);
@@ -116,7 +116,7 @@ public class PearsonCombinationManager {
 						if(!ds1.equals(ds2) && ds2.getDataCategory() != DataCategory.DIFFERENCE){
 							pExp = new ArrayList<Double>(kList.size());
 							for(Knowledge kItem : kList){
-								pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getTag())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getTag()))));
+								pExp.add(new PearsonsCorrelation().correlation(AppUtility.toPrimitiveArray(seriesExpData.get(ds1).get(kItem.getID())), AppUtility.toPrimitiveArray(seriesExpData.get(ds2).get(kItem.getID()))));
 							}
 							dsList = new ArrayList<DataSeries>(2);
 							dsList.add(ds1);

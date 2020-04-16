@@ -28,7 +28,7 @@ import java.util.Map;
 public class MonitoredData {
 	
 	/** The experiment name. */
-	private String expName; 
+	private Integer expID; 
 	
 	/** The injections list. */
 	private Map<Date, InjectedElement> injMap;
@@ -46,9 +46,9 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(String expID, List<Observation> obsList, List<InjectedElement> injList){
+	public MonitoredData(Integer expID, List<Observation> obsList, List<InjectedElement> injList){
 		this.obsList = obsList;
-		expName = "exp" + expID;
+		this.expID = expID;
 		if(obsList != null && obsList.size() > 0)
 			injMap = generateInjMap(injList, obsList.get(0).getTimestamp());
 		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
@@ -127,8 +127,8 @@ public class MonitoredData {
 		return obsList.get(0).getIndicators();
 	}
 
-	public String getDataTag() {
-		return expName;
+	public Integer getDataID() {
+		return expID;
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {

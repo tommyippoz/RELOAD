@@ -3,6 +3,8 @@
  */
 package ippoz.reload.loader;
 
+import java.util.List;
+
 /**
  * @author Tommy
  *
@@ -49,8 +51,18 @@ public class LoaderBatch implements Comparable<LoaderBatch>{
 			return true;
 		else return false;
 	}
-	
-	
-	
+
+	public boolean includesRow(int rowIndex) {
+		return rowIndex >= from && rowIndex <= to;
+	}
+
+	public int getDataPoints() {
+		return Math.abs(to - from) + 1;
+	}
+
+	public static List<LoaderBatch> compactBatches(List<LoaderBatch> outList) {
+		// TODO Auto-generated method stub
+		return outList;
+	}
 
 }
