@@ -4,10 +4,7 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.support.TimedResult;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**

@@ -6,7 +6,6 @@ package ippoz.reload.commons.knowledge.snapshot;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.Observation;
-import ippoz.reload.commons.service.ServiceCall;
 
 import java.util.HashMap;
 import java.util.Iterator;

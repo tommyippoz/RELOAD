@@ -11,8 +11,6 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.loader.LoaderBatch;
-import ippoz.reload.commons.service.ServiceCall;
-import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.util.Date;

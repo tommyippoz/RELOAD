@@ -9,23 +9,16 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.info.FeatureSelectionInfo;
-import ippoz.reload.info.TrainInfo;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.manager.MetaLearningManager;
-import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.voter.AlgorithmVoter;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
