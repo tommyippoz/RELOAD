@@ -6,10 +6,10 @@ package ippoz.reload.manager;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.info.FeatureSelectionInfo;
-import ippoz.reload.loader.Loader;
 
 import java.io.BufferedWriter;
 import java.io.File;

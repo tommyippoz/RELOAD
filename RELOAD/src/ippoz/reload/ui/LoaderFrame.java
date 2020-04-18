@@ -3,14 +3,14 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.commons.loader.ARFFLoader;
+import ippoz.reload.commons.loader.CSVLoader;
+import ippoz.reload.commons.loader.FileLoader;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVLoader;
-import ippoz.reload.loader.FileLoader;
-import ippoz.reload.loader.Loader;
-import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.InputManager;
 

@@ -1,13 +1,14 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,6 +76,27 @@ public abstract class SimpleLoader implements Loader {
 		this.batches = runs;
 	}
 	
+	protected void updateBatches() {
+		int n = getRowNumber();
+		List<Integer> toRemove = new LinkedList<Integer>();
+		if(n > 0 && getBatchesNumber() > 0){
+			for(int i=0;i<getBatchesNumber();i++){
+				if(batches.get(i).getFrom() >= n)
+					toRemove.add(i);
+				else if(batches.get(i).getTo() >= n)
+					batches.get(i).setTo(n-1);
+			}
+			if(toRemove.size() > 0){
+				List<LoaderBatch> newList = new ArrayList<>(getBatchesNumber() - toRemove.size());
+				for(int i=0;i<getBatchesNumber();i++){
+					if(!toRemove.contains(i))
+						newList.add(batches.get(i));
+				}
+				setBatches(newList);
+			}
+		}
+	}
+	
 	protected List<Indicator> getHeader(){
 		if(header == null)
 			header = loadHeader();
@@ -135,7 +157,7 @@ public abstract class SimpleLoader implements Loader {
 	 * @param rowIndex the row index
 	 * @return the run
 	 */
-	protected int getBatch(int rowIndex){
+	protected int getBatchIndex(int rowIndex){
 		if(batches != null && batches.size() > 0){
 			int i=0;
 			for(LoaderBatch runItem : batches){
@@ -145,6 +167,31 @@ public abstract class SimpleLoader implements Loader {
 			}
 			return -1;
 		} else return -1;
+	}
+	
+	/**
+	 * Gets the runs to be used to load the file.
+	 *
+	 * @param rowIndex the row index
+	 * @return the run
+	 */
+	protected LoaderBatch getBatchFromRow(int rowIndex){
+		int index = getBatchIndex(rowIndex);
+		if(index >= 0 && index < batches.size())
+			return batches.get(index);
+		else return null;
+	}
+	
+	/**
+	 * Gets the runs to be used to load the file.
+	 *
+	 * @param rowIndex the row index
+	 * @return the run
+	 */
+	protected LoaderBatch getBatch(int index){
+		if(index >= 0 && index < batches.size())
+			return batches.get(index);
+		else return null;
 	}
 	
 	@Override
@@ -215,7 +262,7 @@ public abstract class SimpleLoader implements Loader {
 	 */
 	@Override
 	public String getRuns() {
-		Integer tag, endTag;
+		Object tag, endTag;
 		if(dataList != null){
 			tag = dataList.get(0).getDataID();
 			if(dataList.size() == 1){

@@ -7,12 +7,16 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
+import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 
 /**
@@ -20,6 +24,8 @@ import weka.core.Instances;
  *
  */
 public class WEKAUtils {
+	
+	private static final double MIN_VARIANCE_SMALL_BINS = 0.0001;
 	
 	/**
 	 * Translates knowledge list into an Instances object to be processed by WEKA.
@@ -51,6 +57,7 @@ public class WEKAUtils {
 	public static Instances createWEKADatabase(double[][] data, String[] label, DataSeries ds){ 
 		Instances wInst;
 		try {
+			data = checkForSmallBins(data);
 			wInst = new Instances(getTrainARFFReader(data, label, ds));
 			wInst.setClassIndex(ds.size());
 			return wInst;
@@ -60,6 +67,40 @@ public class WEKAUtils {
 		}
 	}
 	
+	/**
+	 * Checks for feature values that may result in smaller bins to be processed by WEKA Discretize.
+	 * In this case, it raises up values of feature values to increase variance.
+	 * 
+	 * @param data
+	 * @return data
+	 */
+	private static double[][] checkForSmallBins(double[][] data) {
+		double smallBin[] = null;
+		if(data != null && data.length > 0 && data[0] != null){
+			smallBin = new double[data[0].length];
+			for(int j=0;j<smallBin.length;j++){
+				ValueSeries vs = new ValueSeries();
+				for(int i=0;i<data.length;i++){
+					if(Double.isFinite(data[i][j])){
+						vs.addValue(data[i][j]);
+					}
+				}
+				double std = vs.getStd();
+				if(std < MIN_VARIANCE_SMALL_BINS){
+					smallBin[j] = MIN_VARIANCE_SMALL_BINS / std;
+				} else smallBin[j] = 0;
+			}
+			for(int i=0;i<data.length;i++){
+				for(int j=0;j<smallBin.length;j++){
+					if(Double.isFinite(smallBin[j]) && smallBin[j] > 1){
+						data[i][j] = data[i][j]*smallBin[j];
+					}
+				}
+			}
+		}
+		return data;
+	}
+
 	private static int STRING_BATCHES = 100;
 	
 	/**
@@ -110,6 +151,18 @@ public class WEKAUtils {
 			header = header + "@attribute class {no, yes}\n";
 		header = header + "\n@data\n";
 		return header;
+	}
+	
+	public static Instances multiplyData(Instances data, double n){
+		for(int i=0;i<data.size();i++){
+			Instance inst = data.get(i);
+			for(int j=0;j<inst.numAttributes();j++){
+				Attribute att = inst.attribute(j);
+				if(att.isNominal() && AppUtility.isNumber(inst.stringValue(att)))
+					inst.setValue(att, Double.parseDouble(inst.stringValue(att))*n*10000.0);
+			}
+		}
+		return data;
 	}
 
 }

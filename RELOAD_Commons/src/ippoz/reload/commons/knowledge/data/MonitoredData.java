@@ -10,6 +10,7 @@ import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.support.AppLogger;
@@ -28,7 +29,7 @@ import java.util.Map;
 public class MonitoredData {
 	
 	/** The experiment name. */
-	private Integer expID; 
+	private LoaderBatch expBatch; 
 	
 	/** The injections list. */
 	private Map<Date, InjectedElement> injMap;
@@ -46,9 +47,9 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(Integer expID, List<Observation> obsList, List<InjectedElement> injList){
+	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, List<InjectedElement> injList){
 		this.obsList = obsList;
-		this.expID = expID;
+		this.expBatch = expBatch;
 		if(obsList != null && obsList.size() > 0)
 			injMap = generateInjMap(injList, obsList.get(0).getTimestamp());
 		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
@@ -127,8 +128,8 @@ public class MonitoredData {
 		return obsList.get(0).getIndicators();
 	}
 
-	public Integer getDataID() {
-		return expID;
+	public LoaderBatch getDataID() {
+		return expBatch;
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -150,9 +151,9 @@ public class ARFFLoader extends FileLoader {
 						if(readLine != null){
 							readLine = readLine.trim();
 							if(readLine.length() > 0 && !isComment(readLine)){
-								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && currentBatchIndex != getBatch(rowIndex))){
+								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && getBatchIndex(rowIndex) >= 0 && currentBatchIndex != getBatchIndex(rowIndex))){
 									if(obList != null && obList.size() > 0){
-										dataList.add(new MonitoredData(getBatch(rowIndex-1), obList, injList));
+										dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injList));
 									}
 									injList = new LinkedList<InjectedElement>();
 									obList = new LinkedList<Observation>();
@@ -194,9 +195,14 @@ public class ARFFLoader extends FileLoader {
 							}
 						}
 					}
+					if(obList != null && obList.size() > 0){
+						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injList));
+					}
 					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 					reader.close();
-				}	
+				}
+				dataList = new ArrayList<>(dataList);
+				
 				// Setting up key variables
 				setTotalDataPoints(rowIndex);
 				setSkipRatio(100.0*skipCount/itemCount);
@@ -236,16 +242,17 @@ public class ARFFLoader extends FileLoader {
 				int startIndex = 0;
 				String featValue = null;
 				int columnIndex = getFeatureIndex(featureName);
-				while(reader.ready() && readLine == null){
+				while(reader.ready() && readLine != null){
 					readLine = reader.readLine();
 					if(readLine != null){
 						readLine = readLine.trim();
 						if(readLine.length() > 0 && !readLine.startsWith("*")){
 							String[] splitted = readLine.split(",");
 							if(splitted.length > columnIndex){
-								if(featValue != splitted[columnIndex]){
-									if(featValue != null)
-										bList.add(new LoaderBatch(startIndex, rowCount-1));
+								if(featValue == null || !featValue.equals(splitted[columnIndex])){
+									if(featValue != null){
+										bList.add(new LoaderBatch(new String(featValue + " (batch " + bList.size() + ")"), startIndex, rowCount-1));
+									}
 									featValue = splitted[columnIndex];
 									startIndex = rowCount;
 								}
@@ -260,7 +267,7 @@ public class ARFFLoader extends FileLoader {
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to get feature batches");
 		}
-		return bList;
+		return new ArrayList<>(bList);
 	}
 
 }

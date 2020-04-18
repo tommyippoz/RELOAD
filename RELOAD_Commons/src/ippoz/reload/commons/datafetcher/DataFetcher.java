@@ -7,6 +7,7 @@ import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
 
@@ -40,7 +41,7 @@ public abstract class DataFetcher extends Thread {
 	public void run() {
 		List<Observation> obList = getObservations();
 		if(obList != null && !obList.isEmpty())
-			mData = new MonitoredData(getID(), obList, getInjections());
+			mData = new MonitoredData(getBatch(), obList, getInjections());
 		else mData = null;
 	}
 
@@ -49,7 +50,7 @@ public abstract class DataFetcher extends Thread {
 	 *
 	 * @return the runID
 	 */
-	protected abstract Integer getID();
+	protected abstract LoaderBatch getBatch();
 	
 	/**
 	 * Gets the experiment observations.

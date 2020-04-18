@@ -7,11 +7,11 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
+import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
-import ippoz.reload.loader.Loader;
 import ippoz.reload.manager.train.TrainerManager;
 
 import java.io.File;

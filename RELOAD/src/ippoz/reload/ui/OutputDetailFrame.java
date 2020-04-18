@@ -3,6 +3,7 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
@@ -152,7 +153,7 @@ public class OutputDetailFrame {
 	private void setMinMaxValues() {
 		minRefValue = Double.POSITIVE_INFINITY;
 		maxRefValue = Double.NEGATIVE_INFINITY;
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -169,7 +170,7 @@ public class OutputDetailFrame {
 	}
 	
 	private DecisionFunction createDefaultDecisionFunction() {
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
 				for(int i=0;i<list.size();i++){
@@ -185,7 +186,7 @@ public class OutputDetailFrame {
 
 	private ValueSeries createScoresValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -199,7 +200,7 @@ public class OutputDetailFrame {
 	
 	private ValueSeries createAnomalyValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
@@ -532,7 +533,7 @@ public class OutputDetailFrame {
 				Map<Double, Integer> anList = new TreeMap<>();
 				try {
 					// TODO
-					for(Integer expName : dOut.getLabelledScores().keySet()){
+					for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
@@ -662,7 +663,7 @@ public class OutputDetailFrame {
 		if(containsInfiniteValues())
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
@@ -709,7 +710,7 @@ public class OutputDetailFrame {
 		List<Double> okList = new LinkedList<>();
 		List<Double> anList = new LinkedList<>();
 		
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
@@ -797,7 +798,7 @@ public class OutputDetailFrame {
 	
 	private boolean containsInfiniteValues(){
 		boolean infiniteFlag = false;
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
@@ -819,7 +820,7 @@ public class OutputDetailFrame {
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		// infiniti si vedono anche se tronchi la rappresentazione
 		//a
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
@@ -877,7 +878,7 @@ public class OutputDetailFrame {
 		if(infiniteFlag)
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(Integer expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){

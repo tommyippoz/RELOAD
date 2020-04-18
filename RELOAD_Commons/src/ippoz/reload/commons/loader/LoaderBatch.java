@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import java.util.List;
 
@@ -11,12 +11,15 @@ import java.util.List;
  */
 public class LoaderBatch implements Comparable<LoaderBatch>{
 	
+	private Object tag;
+	
 	private int from;
 	
 	private int to;
 
-	public LoaderBatch(int from, int to) {
+	public LoaderBatch(Object tag, int from, int to) {
 		super();
+		this.tag = tag;
 		this.from = from;
 		this.to = to;
 	}
@@ -63,6 +66,10 @@ public class LoaderBatch implements Comparable<LoaderBatch>{
 	public static List<LoaderBatch> compactBatches(List<LoaderBatch> outList) {
 		// TODO Auto-generated method stub
 		return outList;
+	}
+
+	public Object getTag() {
+		return tag;
 	}
 
 }

@@ -7,13 +7,14 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
-import ippoz.reload.loader.Loader;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.ScoresVoter;
@@ -45,7 +46,7 @@ public class DetectorOutput {
 	
 	private List<AlgorithmModel> modelList;
 	
-	private Map<Integer, List<VotingResult>> votingScores;
+	private Map<LoaderBatch, List<VotingResult>> votingScores;
 	
 	private Loader loader;
 	
@@ -59,12 +60,12 @@ public class DetectorOutput {
 	
 	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;	
 	
-	private Map<Integer, List<LabelledResult>> labelledScores;
+	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
 	public DetectorOutput(InputManager iManager, List<AlgorithmType> algorithms, double bestScore, ScoresVoter bestSetup, 
 			List<AlgorithmModel> modelList,
-			Map<Integer, List<VotingResult>> votingScores,
-			Loader loader, Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 
+			Map<LoaderBatch, List<VotingResult>> votingScores,
+			Loader loader, Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
 			String writableTag, double faultsRatio) {
 		this.iManager = iManager;
@@ -347,14 +348,14 @@ public class DetectorOutput {
 		return getGrid(basePath, "validation"); 
 	}
 	
-	public Map<Integer, List<LabelledResult>> getLabelledScores(){
+	public Map<LoaderBatch, List<LabelledResult>> getLabelledScores(){
 		return labelledScores;
 	}
 	
-	public Map<Integer, List<LabelledResult>> buildLabelledScores(Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores){
-		Map<Integer, List<LabelledResult>> outMap = new HashMap<>();
+	public Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores){
+		Map<LoaderBatch, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
-			for(Integer expName : votingScores.keySet()){
+			for(LoaderBatch expName : votingScores.keySet()){
 				outMap.put(expName, new LinkedList<LabelledResult>());
 				for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 					VotingResult ar = votingScores.get(expName).get(i);

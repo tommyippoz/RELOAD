@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.support.AppUtility;
@@ -69,9 +69,11 @@ public abstract class FileLoader extends SimpleLoader {
 		parseAvoidTags(avoidTags);
 		setBatches(deriveBatches(batchString, runsString));
 		initialize();
+		updateBatches();
 	}
 
 	private List<LoaderBatch> deriveBatches(String batchString, String runsString){
+		int batchIndex = 0;
 		String[] bList;
 		List<LoaderBatch> fileBatchesFeature = null;
 		List<LoaderBatch> outList = new LinkedList<LoaderBatch>();
@@ -87,10 +89,10 @@ public abstract class FileLoader extends SimpleLoader {
 				if(AppUtility.isNumber(s)){
 					int n = Integer.parseInt(s);
 					if(batchString == null || batchString.trim().length() == 0){
-						outList.add(new LoaderBatch(n, n));
+						outList.add(new LoaderBatch(new Integer(batchIndex), n, n));
 					} else if(AppUtility.isNumber(batchString.trim())){
 						int expRows = Integer.parseInt(batchString.trim());
-						outList.add(new LoaderBatch(n*expRows, (n+1)*expRows));
+						outList.add(new LoaderBatch(new Integer(n), n*expRows, (n+1)*expRows-1));
 					} else if(hasFeature(batchString.trim())){
 						outList.add(fileBatchesFeature.get(n));
 					}
@@ -98,11 +100,11 @@ public abstract class FileLoader extends SimpleLoader {
 					int n1 = Integer.parseInt(s.split("-")[0].trim());
 					int n2 = Integer.parseInt(s.split("-")[1].trim());
 					if(batchString == null || batchString.trim().length() == 0){
-						outList.add(new LoaderBatch(n1, n2));
+						outList.add(new LoaderBatch(new Integer(batchIndex), n1, n2));
 					} else if(AppUtility.isNumber(batchString.trim())){
 						int expRows = Integer.parseInt(batchString.trim());
 						for(int i=n1;i<=n2;i++){
-							outList.add(new LoaderBatch(i*expRows, (i+1)*expRows));
+							outList.add(new LoaderBatch(new Integer(i), i*expRows, (i+1)*expRows-1));
 						}
 					} else if(hasFeature(batchString.trim())){
 						for(int i=n1;i<=n2;i++){
@@ -110,6 +112,7 @@ public abstract class FileLoader extends SimpleLoader {
 						}
 					}
 				} 
+				batchIndex++;
 			}
 		} 
 		outList = LoaderBatch.compactBatches(outList);

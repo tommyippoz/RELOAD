@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.graphics.HistogramChartDrawer;
@@ -54,7 +55,7 @@ public class ExperimentEvaluator extends Thread {
 	public static final String FAILURE_LABEL = "Failure";
 	
 	/** The experiment name. */
-	private Integer expID;
+	private LoaderBatch expBatch;
 	
 	/** The algorithm list. */
 	private List<AlgorithmModel> algList;
@@ -87,11 +88,11 @@ public class ExperimentEvaluator extends Thread {
 		for(KnowledgeType kType : knowMap.keySet()){
 			kMap.put(kType, knowMap.get(kType).cloneKnowledge());
 		}
-		expID = kMap.get(kMap.keySet().iterator().next()).getID();
+		expBatch = kMap.get(kMap.keySet().iterator().next()).getID();
 	}
 	
-	public Integer getExperimentID(){
-		return expID;
+	public LoaderBatch getExperimentID(){
+		return expBatch;
 	}
 	
 	/**
@@ -214,7 +215,7 @@ public class ExperimentEvaluator extends Thread {
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expID + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
+				pw.append(expBatch + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
 				for(Metric met : validationMetrics){
 					pw.append(String.valueOf(metResults.get(met)) + ",");
 				}
@@ -239,7 +240,7 @@ public class ExperimentEvaluator extends Thread {
 		voterMap.put(ANOMALY_SCORE_LABEL, voting);
 		voterMap.put(FAILURE_LABEL, failures);
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, 10);
-		hist.saveToFile(outFolderName + "/voter/graphic/" + expID + ".png", IMG_WIDTH, IMG_HEIGHT);
+		hist.saveToFile(outFolderName + "/voter/graphic/" + expBatch + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
 	
 	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<? extends AlgorithmResult>> voterMap) {
@@ -278,7 +279,7 @@ public class ExperimentEvaluator extends Thread {
 		int count;
 		try {
 			countMap = buildMap();
-			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expID + ".csv")));
+			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expBatch + ".csv")));
 			writer.write("timestamp,anomaly_alerts,");
 			for(LayerType currentLayer : countMap.keySet()){
 				for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){

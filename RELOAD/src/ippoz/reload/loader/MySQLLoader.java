@@ -7,6 +7,9 @@ import ippoz.reload.commons.datafetcher.DataFetcher;
 import ippoz.reload.commons.datafetcher.DatabaseFetcher;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderBatch;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.commons.support.ThreadScheduler;
@@ -138,7 +141,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	protected void initRun() {
 		List<DataFetcher> fetchList = new ArrayList<DataFetcher>(expIDs.size());
 		for(Integer runId : expIDs){
-			fetchList.add(new DatabaseFetcher(runId, dbName, dbUsername, dbPassword, selectedLayers));
+			fetchList.add(new DatabaseFetcher(new LoaderBatch(runId, runId, runId), dbName, dbUsername, dbPassword, selectedLayers));
 		}
 		setThreadList(fetchList);
 	}

@@ -37,7 +37,7 @@ public class PearsonCombinationManager {
 	
 	private List<Knowledge> kList;
 	
-	private Map<DataSeries, Map<Integer, List<Double>>> seriesExpData;
+	private Map<DataSeries, Map<Object, List<Double>>> seriesExpData;
 	
 	private List<PearsonResult> pResults;
 	
@@ -49,10 +49,10 @@ public class PearsonCombinationManager {
 	}
 	
 	private void initExpData(){
-		seriesExpData = new HashMap<DataSeries, Map<Integer, List<Double>>>();
+		seriesExpData = new HashMap<>();
 		for(DataSeries ds : seriesList){
 			if(ds instanceof IndicatorDataSeries) { 
-				Map<Integer, List<Double>> map = new HashMap<Integer, List<Double>>();
+				Map<Object, List<Double>> map = new HashMap<>();
 				for(Knowledge kItem : kList){
 					List<SnapshotValue> dsValue = kItem.getDataSeriesValues(ds);
 					map.put(kItem.getID(), new ArrayList<Double>(dsValue.size()));

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -185,16 +186,16 @@ public class CSVLoader extends FileLoader {
 						if(readLine != null){
 							readLine = readLine.trim();
 							if(readLine.length() > 0 && !readLine.startsWith("*")){
-								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && currentBatchIndex != getBatch(rowIndex))){
+								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && getBatchIndex(rowIndex) >= 0 && currentBatchIndex != getBatchIndex(rowIndex))){
 									if(obList != null && obList.size() > 0){
-										dataList.add(new MonitoredData(getBatch(rowIndex-1), obList, injList));
+										dataList.add(new MonitoredData(getBatch(currentBatchIndex), new ArrayList<>(obList), new ArrayList<>(injList)));
 									}
 									injList = new LinkedList<InjectedElement>();
 									obList = new LinkedList<Observation>();
 									currentBatchIndex++;
 								}
 								readLine = AppUtility.filterInnerCommas(readLine);
-								if(canRead(rowIndex) && currentBatchIndex < getBatchesNumber()){
+								if(canRead(rowIndex)/* && currentBatchIndex < getBatchesNumber()*/){
 									i = 0;
 									current = new Observation(obList.size() > 0 ? obList.getLast().getTimestamp().getTime() + 1000 : System.currentTimeMillis());
 									for(String splitted : readLine.split(",")){
@@ -230,11 +231,12 @@ public class CSVLoader extends FileLoader {
 						}
 					}
 					if(obList != null && obList.size() > 0){
-						dataList.add(new MonitoredData(getBatch(rowIndex-1), obList, injList));
+						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injList));
 					}
 					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 					reader.close();
 				}
+				dataList = new ArrayList<>(dataList);
 				
 				// Setting up key variables
 				setTotalDataPoints(rowIndex);
@@ -282,8 +284,9 @@ public class CSVLoader extends FileLoader {
 							String[] splitted = readLine.split(",");
 							if(splitted.length > columnIndex){
 								if(featValue == null || !featValue.equals(splitted[columnIndex])){
-									if(featValue != null)
-										bList.add(new LoaderBatch(startIndex, rowCount-1));
+									if(featValue != null){
+										bList.add(new LoaderBatch(new String(featValue + " (batch " + bList.size() + ")"), startIndex, rowCount-1));
+									}
 									featValue = splitted[columnIndex];
 									startIndex = rowCount;
 								}
@@ -298,7 +301,7 @@ public class CSVLoader extends FileLoader {
 		} catch (IOException ex){
 			AppLogger.logException(getClass(), ex, "unable to get feature batches");
 		}
-		return bList;
+		return new ArrayList<>(bList);
 	}
 
 }

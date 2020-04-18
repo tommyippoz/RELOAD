@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.loader;
+package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 

@@ -11,6 +11,7 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.evaluation.ExperimentEvaluator;
@@ -182,8 +183,8 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}*/
 	
-	public Map<Integer, List<VotingResult>> getVotingEvaluations() {
-		Map<Integer, List<VotingResult>> outMap = new TreeMap<Integer, List<VotingResult>>();
+	public Map<LoaderBatch, List<VotingResult>> getVotingEvaluations() {
+		Map<LoaderBatch, List<VotingResult>> outMap = new TreeMap<>();
 		for(Thread t : getThreadList()){
 			ExperimentEvaluator ev = (ExperimentEvaluator)t;
 			outMap.put(ev.getExperimentID(), ev.getExperimentVoting());
@@ -195,13 +196,12 @@ public class EvaluatorManager extends DataManager {
 		return metricValues;
 	}
 	
-	public Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
-		Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<Integer, List<Map<AlgorithmModel, AlgorithmResult>>>();
+	public Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
+		Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
-				outMap.put(ev.getExperimentID(), new LinkedList<Map<AlgorithmModel, AlgorithmResult>>());
-				//System.out.println(ev.getExperimentName());
+				outMap.put(ev.getExperimentID(), new LinkedList<>());
 				if(i < detailedEvaluations.size()){
 					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
 					if(map != null){
@@ -219,8 +219,8 @@ public class EvaluatorManager extends DataManager {
 		return outMap;
 	}
 	
-	public Map<Integer, List<InjectedElement>> getFailures(){
-		Map<Integer, List<InjectedElement>> outMap = new TreeMap<Integer, List<InjectedElement>>();
+	public Map<LoaderBatch, List<InjectedElement>> getFailures(){
+		Map<LoaderBatch, List<InjectedElement>> outMap = new TreeMap<>();
 		for(int i=0;i<getThreadList().size();i++){
 			ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 			outMap.put(ev.getExperimentID(), ev.getFailuresList());
@@ -239,16 +239,16 @@ public class EvaluatorManager extends DataManager {
 		Map<AlgorithmModel, AlgorithmResult> map;
 		Set<AlgorithmModel> voterList;
 		try {
-			Map<Integer, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores = getDetailedEvaluations();
-			Map<Integer, List<VotingResult>> votingScores = getVotingEvaluations();
+			Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores = getDetailedEvaluations();
+			Map<LoaderBatch, List<VotingResult>> votingScores = getVotingEvaluations();
 			if(votingScores != null && votingScores.size() > 0 &&
 					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
-				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + "algorithmscores_" + voter.toString().replace(" ", "_") + ".csv")));
-				header1 = "exp,index,fault/attack,reload_eval,reload_score,reload_confidence,";
-				header2 = ",,,,,,";
+				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + eType.toString() + "_scores_" + voter.toString().replace(" ", "_") + ".csv")));
+				header1 = "exp,index,datapoint_index,fault/attack,reload_eval,reload_score,reload_confidence,";
+				header2 = ",,,,,,,";
 				
-				Iterator<Integer> it = detailedExperimentsScores.keySet().iterator();
-				Integer tag = it.next();
+				Iterator<LoaderBatch> it = detailedExperimentsScores.keySet().iterator();
+				LoaderBatch tag = it.next();
 				while(it.hasNext() && (detailedExperimentsScores.get(tag) == null || detailedExperimentsScores.get(tag).size() == 0)){
 					tag = it.next();
 				}
@@ -274,14 +274,14 @@ public class EvaluatorManager extends DataManager {
 						+ "In addition, for each anomaly checker we report a triple <score, decision function, evaluation> where the evaluation is calculated by applying such decision function to the score.\n");
 				writer.write(header1 + "\n" + header2 + "\n");
 				
-				Map<Integer, List<InjectedElement>> injections = getFailures();
-				for(Integer expName : votingScores.keySet()){
+				Map<LoaderBatch, List<InjectedElement>> injections = getFailures();
+				for(LoaderBatch expName : votingScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<votingScores.get(expName).size();i++){
-							writer.write(expName + "," + 
-									i + "," + 
+							writer.write(expName.getTag() + "," + 
+									i + "," + (expName.getFrom() + i) + "," +
 									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
 									(votingScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
 									votingScores.get(expName).get(i).getVotingResult() + "," + 

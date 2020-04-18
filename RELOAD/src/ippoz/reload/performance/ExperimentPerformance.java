@@ -10,6 +10,7 @@ import ippoz.reload.commons.support.AppUtility;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class ExperimentPerformance.
@@ -29,22 +30,22 @@ public class ExperimentPerformance {
 	private static final String DAT_SERIES = "dat";
 	
 	/** The experiment name. */
-	private Integer expName;
+	private Object expName;
 	
 	/** The experiment observations. */
 	private int expObs;
 	
 	/** The number of indicators per layer. */
-	private HashMap<LayerType, Integer> layerIndicators;
+	private Map<LayerType, Integer> layerIndicators;
 	
 	/** The number of algorithms per detection category. */
-	private HashMap<String, Integer> detCategories;
+	private Map<String, Integer> detCategories;
 	
 	/** The monitor time series. */
-	private HashMap<String, HashMap<LayerType, List<Integer>>> monitorTimeSeries;
+	private Map<String, Map<LayerType, List<Integer>>> monitorTimeSeries;
 	
 	/** The detection times. */
-	private HashMap<String, LinkedList<Integer>> detectionTimes;
+	private Map<String, List<Integer>> detectionTimes;
 	
 	/**
 	 * Instantiates a new experiment performance.
@@ -53,7 +54,7 @@ public class ExperimentPerformance {
 	 * @param algCategories the algorithm categories
 	 * @param timeSeries the time series
 	 */
-	public ExperimentPerformance(MonitoredData expData, HashMap<String, Integer> algCategories, HashMap<String, LinkedList<Integer>> timeSeries) {
+	public ExperimentPerformance(MonitoredData expData, Map<String, Integer> algCategories, Map<String, List<Integer>> timeSeries) {
 		expName = expData.getDataID();
 		expObs = expData.size();
 		//layerIndicators = expData.getLayerIndicators();
@@ -111,7 +112,7 @@ public class ExperimentPerformance {
 	 */
 	private String seriesSummary(String serieTag) {
 		String sSummary = "";
-		HashMap<LayerType, List<Integer>> map = monitorTimeSeries.get(serieTag);
+		Map<LayerType, List<Integer>> map = monitorTimeSeries.get(serieTag);
 		double[][] layerStats = new double[map.keySet().size()][2];
 		int i = 0;
 		for(LayerType layer : map.keySet()){

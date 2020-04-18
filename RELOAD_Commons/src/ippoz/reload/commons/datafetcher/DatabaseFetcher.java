@@ -7,6 +7,7 @@ import ippoz.reload.commons.datafetcher.database.DatabaseManager;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.support.AppLogger;
@@ -26,7 +27,7 @@ public class DatabaseFetcher extends DataFetcher {
 	/** The database manager. */
 	private DatabaseManager dbManager;
 	
-	private Integer runId;
+	private LoaderBatch runId;
 	
 	private String dbName;
 	
@@ -44,7 +45,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @param password the database password
 	 * @param dbPassword 
 	 */
-	public DatabaseFetcher(Integer runId, String dbName, String username, String password, List<LayerType> selectedLayers){
+	public DatabaseFetcher(LoaderBatch runId, String dbName, String username, String password, List<LayerType> selectedLayers){
 		this.runId = runId;
 		this.dbName = dbName;
 		this.username = username;
@@ -97,7 +98,7 @@ public class DatabaseFetcher extends DataFetcher {
 	 * @see ippoz.multilayer.detector.datafetcher.DataFetcher#getID()
 	 */
 	@Override
-	protected Integer getID() {
+	protected LoaderBatch getBatch() {
 		return dbManager.getRunID();
 	}
 

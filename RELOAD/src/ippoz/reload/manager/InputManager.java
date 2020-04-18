@@ -15,6 +15,11 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.ARFFLoader;
+import ippoz.reload.commons.loader.CSVLoader;
+import ippoz.reload.commons.loader.FileLoader;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -24,10 +29,6 @@ import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
-import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVLoader;
-import ippoz.reload.loader.Loader;
-import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.AUC_Metric;
 import ippoz.reload.metric.Accuracy_Metric;
@@ -1304,32 +1305,30 @@ public class InputManager {
 				writer.write("\n* Data Partitioning.\n\n");
 				
 				writer.write("\n* File Used for Training\n" +
-						"TRAIN_FILE = \n");
+						FileLoader.TRAIN_FILE + " = \n");
 				writer.write("\n* Train Runs.\n" + 
-						"TRAIN_RUN_IDS = 1 - 10\n");
+						FileLoader.TRAIN_PARTITION + " = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
-						"TRAIN_FAULTY_TAGS = attack\n");
+						FileLoader.TRAIN_FAULTY_TAGS + " = attack\n");
 				writer.write("\n* Train Runs.\n" + 
-						"TRAIN_SKIP_ROWS = \n");
+						FileLoader.TRAIN_SKIP_ROWS + " = \n");
 				writer.write("\n* File Used for Validation\n" +
-						"VALIDATION_FILE = \n");
+						FileLoader.VALIDATION_FILE + " = \n");
 				writer.write("\n* Validation Runs.\n" + 
-						"VALIDATION_RUN_IDS = 1 - 10\n");
+						FileLoader.VALIDATION_PARTITION + " = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
-						"VALIDATION_FAULTY_TAGS = attack\n");
+						FileLoader.VALIDATION_FAULTY_TAGS + " = attack\n");
 				writer.write("\n* Train Runs.\n" + 
-						"VALIDATION_SKIP_ROWS = \n");
+						FileLoader.VALIDATION_SKIP_ROWS + " = \n");
 				
 				writer.write("\n* Parsing Dataset.\n\n");
 				
 				writer.write("\n* Features to Skip\n" + 
-						"SKIP_COLUMNS = 0\n");
+						FileLoader.SKIP_COLUMNS + " = 0\n");
 				writer.write("\n* Column Containing the 'Label' Feature\n" + 
-						"LABEL_COLUMN = 1\n");
+						FileLoader.LABEL_COLUMN + " = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
-						"EXPERIMENT_ROWS = 100\n");	
-				writer.write("\n* Label Defining Experiments.\n" + 
-						"EXPERIMENT_SPLIT_ROWS = 0\n");	
+						FileLoader.BATCH_COLUMN + " = 100\n");	
 				
 				writer.close();
 			}
@@ -1662,30 +1661,30 @@ public class InputManager {
 			writer.write("\n* Data Partitioning.\n\n");
 			
 			writer.write("\n* File Used for Training\n" +
-					"TRAIN_FILE = " + csvFilename + "\n");
+					FileLoader.TRAIN_FILE + " = " + csvFilename + "\n");
 			writer.write("\n* Train Runs.\n" + 
-					"TRAIN_RUN_IDS = 1 - 50\n");
+					FileLoader.TRAIN_PARTITION + " = 0 - 50\n");
 			writer.write("\n* Train Faulty Tags.\n" + 
-					"TRAIN_FAULTY_TAGS = Attack\n");
+					FileLoader.TRAIN_FAULTY_TAGS + " = Attack\n");
 			writer.write("\n* Train Runs.\n" + 
-					"TRAIN_SKIP_ROWS = \n");
+					FileLoader.TRAIN_SKIP_ROWS + " = \n");
 			writer.write("\n* File Used for Validation\n" +
-					"VALIDATION_FILE = " + csvFilename + "\n");
+					FileLoader.VALIDATION_FILE + " = " + csvFilename + "\n");
 			writer.write("\n* Validation Runs.\n" + 
-					"VALIDATION_RUN_IDS = 1 - 100\n");
+					FileLoader.VALIDATION_PARTITION + " = 0 - 100\n");
 			writer.write("\n* Train Faulty Tags.\n" + 
-					"VALIDATION_FAULTY_TAGS = Attack\n");
+					FileLoader.VALIDATION_FAULTY_TAGS + " = Attack\n");
 			writer.write("\n* Train Runs.\n" + 
-					"VALIDATION_SKIP_ROWS = \n");
+					FileLoader.VALIDATION_SKIP_ROWS + " = \n");
 			
 			writer.write("\n* Parsing Dataset.\n\n");
 			
 			writer.write("\n* Features to Skip\n" + 
-					"SKIP_COLUMNS = " + toSkip.replace("@", "-") + "\n");
+					FileLoader.SKIP_COLUMNS + " = " + toSkip.replace("@", "-") + "\n");
 			writer.write("\n* Column Containing the 'Label' Feature\n" + 
-					"LABEL_COLUMN = label\n");
+					FileLoader.LABEL_COLUMN + " = label\n");
 			writer.write("\n* Size of Each Experiment.\n" + 
-					"EXPERIMENT_ROWS = 100\n");	
+					FileLoader.BATCH_COLUMN + " = 100\n");	
 			
 			writer.close();
 		} catch(Exception ex){

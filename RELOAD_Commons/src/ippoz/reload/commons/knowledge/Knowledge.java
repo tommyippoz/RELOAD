@@ -15,6 +15,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
@@ -117,7 +118,7 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.getInjections().size();
 	}
 	
-	public Integer getID(){
+	public LoaderBatch getID(){
 		return baseData.getDataID();
 	}
 	
@@ -265,7 +266,7 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
 	}
 	
-	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Integer expName) {
+	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Object expName) {
 		for(Knowledge know : knowledgeList){
 			if(know.getID().equals(expName))
 				return know;
