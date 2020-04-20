@@ -416,14 +416,13 @@ public class BuildUI {
 							}
 						} else {
 							LoaderFrame lf;
-							String type = option.split("-")[0].trim();
-							String a = option.split("-")[1].trim();
-							String b = a.split(" ")[0];
+							String type = option.split("@")[0].trim();
+							String loaderName = option.split("@")[1].trim();
 							try {
-								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(b), LoaderType.valueOf(type));
+								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
 								lf.setVisible(true);
 							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to open dataset '" + b + "' preferences");
+								AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
 							}
 						}
 						
@@ -661,13 +660,11 @@ public class BuildUI {
 		String[] dsStrings = new String[lList.size()];
 		for(PreferencesManager lPref : lList){
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
-				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
+				dsStrings[i++] = "MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME);
 			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
-				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + 
-						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+				dsStrings[i++] = "CSV @ " + lPref.getFilename();
 			} else {
-				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " - " + lPref.getFilename() + " (" + 
-						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename();
 			}
 		}
 		return dsStrings;

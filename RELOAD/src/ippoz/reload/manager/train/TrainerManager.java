@@ -157,7 +157,7 @@ public class TrainerManager extends TrainDataManager {
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
 				saveModels(getThreadList(), outFilename + "_scores.csv");
-				saveTrainScores((List<AlgorithmTrainer>)getThreadList(), datasetsFolder + File.separatorChar + metaFile);
+				saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
 				trainInfo.printFile(new File(outFilename + "_trainInfo.info"));
@@ -275,11 +275,11 @@ public class TrainerManager extends TrainDataManager {
 	private void saveTrainScores(List<AlgorithmTrainer> list, String metaFile) {
 		List<DataSeries> uniqueDs;
 		BufferedWriter scoreWriter;
-		File metaDatasetsFolder = new File(datasetsFolder + "meta");
+		File metaDatasetsFolder = new File(new File(datasetsFolder).getAbsoluteFile().getPath() + File.separatorChar + "meta");
 		try {
 			if(!metaDatasetsFolder.exists())
 				metaDatasetsFolder.mkdirs();
-			scoreWriter = new BufferedWriter(new FileWriter(new File(metaFile)));
+			scoreWriter = new BufferedWriter(new FileWriter(new File(new File(datasetsFolder).getAbsoluteFile().getPath() + File.separatorChar + metaFile)));
 			scoreWriter.write("*This file contains the scores each model obtained during training. Used Algorithms: \n");
 			if(seriesList != null && seriesList.size() > 0 && list != null && list.size() > 0){
 				for(AlgorithmTrainer trainer : list){

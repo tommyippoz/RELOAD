@@ -561,7 +561,7 @@ public class LoaderFrame {
 		button.setBounds(smallSize + 2*space, panelY, bigSize, bigLabelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				JFileChooser jfc = new JFileChooser(new File("").getAbsolutePath());
+				JFileChooser jfc = new JFileChooser(new File(iManager.getDatasetsFolder()).getAbsolutePath());
 				int returnValue = jfc.showOpenDialog(null);
 				if (returnValue == JFileChooser.APPROVE_OPTION) {
 					File selectedFile = jfc.getSelectedFile();
@@ -570,7 +570,7 @@ public class LoaderFrame {
 					if(!selectedFile.isDirectory()){
 						button.setText(pathBase.relativize(pathAbsolute).toString());
 						loaderPref.updatePreference(prefName, pathBase.relativize(pathAbsolute).toString(), true, false);
-					} else JOptionPane.showMessageDialog(lFrame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a folder");
+					} else JOptionPane.showMessageDialog(lFrame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a file");
 				}
 			} } );
 		root.add(button);		

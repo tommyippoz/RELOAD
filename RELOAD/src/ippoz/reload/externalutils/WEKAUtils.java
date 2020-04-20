@@ -25,7 +25,7 @@ import weka.core.Instances;
  */
 public class WEKAUtils {
 	
-	private static final double MIN_VARIANCE_SMALL_BINS = 0.0001;
+	private static final double MIN_VARIANCE_SMALL_BINS = 0.99;
 	
 	/**
 	 * Translates knowledge list into an Instances object to be processed by WEKA.
@@ -82,11 +82,14 @@ public class WEKAUtils {
 				ValueSeries vs = new ValueSeries();
 				for(int i=0;i<data.length;i++){
 					if(Double.isFinite(data[i][j])){
-						vs.addValue(data[i][j]);
+						vs.addValue(Math.abs(data[i][j]));
 					}
 				}
 				double std = vs.getStd();
-				if(std < MIN_VARIANCE_SMALL_BINS){
+				double minnz = vs.getMinimumNonZero();
+				if(minnz < MIN_VARIANCE_SMALL_BINS){
+					smallBin[j] = MIN_VARIANCE_SMALL_BINS / minnz;
+				} else if(std < MIN_VARIANCE_SMALL_BINS){
 					smallBin[j] = MIN_VARIANCE_SMALL_BINS / std;
 				} else smallBin[j] = 0;
 			}
@@ -151,18 +154,6 @@ public class WEKAUtils {
 			header = header + "@attribute class {no, yes}\n";
 		header = header + "\n@data\n";
 		return header;
-	}
-	
-	public static Instances multiplyData(Instances data, double n){
-		for(int i=0;i<data.size();i++){
-			Instance inst = data.get(i);
-			for(int j=0;j<inst.numAttributes();j++){
-				Attribute att = inst.attribute(j);
-				if(att.isNominal() && AppUtility.isNumber(inst.stringValue(att)))
-					inst.setValue(att, Double.parseDouble(inst.stringValue(att))*n*10000.0);
-			}
-		}
-		return data;
 	}
 
 }

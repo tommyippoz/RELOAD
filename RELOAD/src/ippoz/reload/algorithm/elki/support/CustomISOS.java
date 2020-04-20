@@ -171,9 +171,11 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 				}
 				reader.close();
 				Collections.sort(scoresList);
+				if(k > scoresList.size())
+					k = scoresList.size();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read LOF file");
+			AppLogger.logException(getClass(), ex, "Unable to read ISOS file");
 		} 
 	}
 
@@ -207,7 +209,7 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 
 	@Override
 	public List<Double> getScoresList() {
-		ArrayList<Double> list = new ArrayList<Double>(size());
+		List<Double> list = new ArrayList<Double>(size());
 		for(ISOSScore os : scoresList){
 			list.add(os.getSOS());
 		}
@@ -280,6 +282,8 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
       }
       LOG.incrementProcessed(prog);
     }
+    if(k > scoresList.size())
+		k = scoresList.size();
     LOG.ensureCompleted(prog);
     DoubleMinMax minmax = transformScores(db, scores, relation.getDBIDs(), logPerp, phi, sList);
     DoubleRelation scoreres = new MaterializedDoubleRelation("Intrinsic Stoachastic Outlier Selection", "isos-outlier", scores, relation.getDBIDs());

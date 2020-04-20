@@ -317,9 +317,8 @@ public class InputManager {
 		if(prefManager.hasPreference(DATASETS_FOLDER))
 			return checkFolder(prefManager.getPreference(DATASETS_FOLDER));
 		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DATASETS_FOLDER + " not found. Using default value of ' '");
-			return checkFolder("", true);
+			//AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + DATASETS_FOLDER + " not found. Using default value of ''");
+			return ""; //checkFolder(new File("").getAbsoluteFile().getPath(), true);
 		}
 	}
 	
@@ -1091,7 +1090,7 @@ public class InputManager {
 	}
 
 	public void removeDataset(String option) {
-		String a = option.split("-")[1].trim();
+		String a = option.split("@")[1].trim();
 		String b = a.split(" ")[0];
 		removeFromFile(new File(getSetupFolder() + "loaderPreferences.preferences"), b.trim(), true);
 	}	

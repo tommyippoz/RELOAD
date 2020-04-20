@@ -132,4 +132,19 @@ public class ValueSeries {
 		return toReturn;
 	}
 
+	public double getMinimumNonZero() {
+		double min = Math.abs(getMin());
+		if(min > 0)
+			return min;
+		else {
+			min = Double.MAX_VALUE;
+			for(Double v : values){
+				if(Math.abs(v) > 0 && Math.abs(v) < min){
+					min = Math.abs(v);
+				}
+			}
+			return min;
+		}
+	}
+
 }

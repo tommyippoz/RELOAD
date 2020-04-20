@@ -137,9 +137,11 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						for(String decFunctString : DECISION_FUNCTIONS){
 							if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
 								algorithm.setDecisionFunction(decFunctString);
-								List<AlgorithmResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
-								double val = getMetric().evaluateAnomalyResults(updatedList);
-								currentMetricValue.get(decFunctString).addValue(val);
+								if(algorithm.getDecisionFunction() != null){
+									List<AlgorithmResult> updatedList = updateResultWithDecision(algorithm.getDecisionFunction(), resultList);
+									double val = getMetric().evaluateAnomalyResults(updatedList);
+									currentMetricValue.get(decFunctString).addValue(val);
+								}
 							}
 						}
 						
