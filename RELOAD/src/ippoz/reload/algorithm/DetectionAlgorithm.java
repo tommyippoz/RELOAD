@@ -3,6 +3,7 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
@@ -24,13 +25,15 @@ import ippoz.reload.algorithm.elki.sliding.ABODSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
+import ippoz.reload.algorithm.meta.BaggingMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.sliding.SPSSlidingAlgorithm;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.reload.algorithm.weka.IsolationForestWEKA;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.ComplexDataSeries;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -42,11 +45,15 @@ import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.meta.MetaData;
+import ippoz.reload.meta.MetaLearnerType;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import weka.classifiers.meta.Bagging;
 
 /**
  * The Class DetectionAlgorithm.
@@ -56,7 +63,7 @@ import java.util.Map;
 public abstract class DetectionAlgorithm {
 
 	/** The configuration. */
-	protected AlgorithmConfiguration conf;
+	protected BasicConfiguration conf;
 	
 	protected ValueSeries loggedScores;
 	
@@ -69,7 +76,7 @@ public abstract class DetectionAlgorithm {
 	 *
 	 * @param conf the configuration
 	 */
-	public DetectionAlgorithm(AlgorithmConfiguration conf){
+	public DetectionAlgorithm(BasicConfiguration conf){
 		this.conf = conf;
 		loggedScores = new ValueSeries();
 		loggedAnomalyScores = new ValueSeries();
@@ -77,8 +84,8 @@ public abstract class DetectionAlgorithm {
 	}
 	
 	protected DecisionFunction buildClassifier(ValueSeries vs, boolean revertFlag) {
-		if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD))
-			return DecisionFunction.buildDecisionFunction(vs, conf.getItem(AlgorithmConfiguration.THRESHOLD), revertFlag);
+		if(conf != null && conf.hasItem(BasicConfiguration.THRESHOLD))
+			return DecisionFunction.buildDecisionFunction(vs, conf.getItem(BasicConfiguration.THRESHOLD), revertFlag);
 		else return null;
 	}
 	
@@ -158,7 +165,13 @@ public abstract class DetectionAlgorithm {
 	 * @param conf the configuration
 	 * @return the detection algorithm
 	 */
-	public static DetectionAlgorithm buildAlgorithm(AlgorithmType algType, DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public static DetectionAlgorithm buildAlgorithm(AlgorithmType algType, DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlType, MetaData data) {
+		if(mlType != null){
+			return buildMetaAlgorithm(mlType, dataSeries, conf, data);
+		} else return buildBaseAlgorithm(algType, dataSeries, conf);
+	}
+	
+	public static DetectionAlgorithm buildBaseAlgorithm(AlgorithmType algType, DataSeries dataSeries, BasicConfiguration conf) {
 		switch(algType){
 			case HBOS:
 				return new HBOSDetectionAlgorithm(dataSeries, conf);
@@ -208,6 +221,20 @@ public abstract class DetectionAlgorithm {
 				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			case SOM:
 				return new SOMDetectionAlgorithm(dataSeries, conf);		
+		}
+		return null;
+	}
+	
+	public static DetectionAlgorithm buildMetaAlgorithm(MetaLearnerType mlType, DataSeries dataSeries, BasicConfiguration conf, MetaData data) {
+		switch(mlType){
+			case BAGGING:
+				return new BaggingMetaLearner(dataSeries, conf, data);
+			case BOOSTING:
+				break;
+			case CASCADE_GENERALIZATION:
+				break;
+			case CASCADING:
+				break;
 		}
 		return null;
 	}
@@ -282,22 +309,10 @@ public abstract class DetectionAlgorithm {
 		return afl;
 	}
 	
-	public static KnowledgeType getKnowledgeType(AlgorithmType algType) {
-		if(algType.name().toUpperCase().contains("SLIDING"))
+	public static KnowledgeType getKnowledgeType(LearnerType algType) {
+		if(algType instanceof BaseLearner && ((BaseLearner)algType).getAlgType().toString().toUpperCase().contains("SLIDING"))
 			return KnowledgeType.SLIDING;
 		else return KnowledgeType.SINGLE;
-	}
-	
-	/**
-	 * Builds a DetectionAlgorithm.
-	 *
-	 * @param dataSeries the data series
-	 * @param conf the configuration
-	 * @return the detection algorithm
-	 */
-	public static DetectionAlgorithm buildAlgorithm(DataSeries dataSeries, AlgorithmType algType, String[] splitted) {
-		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
-		return buildAlgorithm(algType, dataSeries, conf);
 	}
 	
 	private boolean usesSimpleSeries(DataSeries container, DataSeries serie) {
@@ -333,8 +348,6 @@ public abstract class DetectionAlgorithm {
 		return evaluateSnapshot(knowledge, currentIndex);//*getWeight();
 	}
 	
-	// TODO
-	
 	/**
 	 * Evaluates a snapshot.
 	 *
@@ -367,8 +380,8 @@ public abstract class DetectionAlgorithm {
 	 * @return the weight
 	 */
 	protected Double getWeight(){
-		if(conf != null && conf.getItem(AlgorithmConfiguration.WEIGHT) != null)
-			return Double.valueOf(conf.getItem(AlgorithmConfiguration.WEIGHT));
+		if(conf != null && conf.getItem(BasicConfiguration.WEIGHT) != null)
+			return Double.valueOf(conf.getItem(BasicConfiguration.WEIGHT));
 		else return 1.0;
 	}
 
@@ -453,8 +466,8 @@ public abstract class DetectionAlgorithm {
 	 *
 	 * @return the algorithm type
 	 */
-	public AlgorithmType getAlgorithmType() {
-		return conf.getAlgorithmType();
+	public LearnerType getLearnerType() {
+		return conf.getLearnerType();
 	}
 
 	/**
@@ -462,7 +475,7 @@ public abstract class DetectionAlgorithm {
 	 *
 	 * @return the configuration
 	 */
-	public AlgorithmConfiguration getConfiguration() {
+	public BasicConfiguration getConfiguration() {
 		return conf;
 	}
 

@@ -3,13 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomSOS;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -32,7 +33,7 @@ public class SOSELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public SOSELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public SOSELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -46,8 +47,8 @@ public class SOSELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	@Override
-	public double getELKIScore(Vector v) {
-		return ((CustomSOS)getAlgorithm()).calculateSingleSOS(v);
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomSOS)getAlgorithm()).calculateSingleSOS(v), null);
 	}
 
 	@Override

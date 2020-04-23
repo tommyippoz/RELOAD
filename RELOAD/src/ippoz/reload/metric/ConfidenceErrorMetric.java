@@ -11,7 +11,7 @@ import java.util.List;
  * @author Tommy
  *
  */
-public class ConfidenceErrorMetric extends BetterMinMetric {
+public class ConfidenceErrorMetric extends BetterMaxMetric {
 	
 	private double fpfnRate;
 
@@ -46,15 +46,19 @@ public class ConfidenceErrorMetric extends BetterMinMetric {
 				tScore = tScore + (tResult.getConfidence() > 1 ? 1.0 : tResult.getConfidence());
 			}
 		}
-		if(fpHits > 0)
+		double val = 0;
+		if(fpHits > 0){
 			fpScore = fpScore / fpHits;
-		if(fnHits > 0)
-			fnScore = fnScore / fnHits;
+			if(fnHits > 0){
+				fnScore = fnScore / fnHits;
+				val = (fnScore*fpfnRate + fpScore) / (fpfnRate + 1);
+			} else val = fpScore;
+		} else if(fnHits > 0){
+			val = fnScore / fnHits;
+		} else val = 0;
 		if(tHits > 0)
-			tScore = tScore / tHits;
-		double v = (fnScore*fpfnRate + fpScore) / (fpfnRate + 1);
-		System.out.println(fpHits + " _ " + fnHits + " : " + v + " - " + tScore);
-		return (1- new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations)) * v / tScore;
+			return tScore / tHits - val;
+		else return - val;
 	}
 
 	/*

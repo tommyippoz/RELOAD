@@ -15,6 +15,7 @@ import ippoz.reload.commons.support.AppLogger;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +52,12 @@ public class MonitoredData {
 		if(obsList != null && obsList.size() > 0)
 			injMap = generateInjMap(injList, obsList.get(0).getTimestamp());
 		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
+	}
+	
+	public MonitoredData(){
+		obsList = new LinkedList<>();
+		injMap = new HashMap<>();
+		expBatch = null;
 	}
 
 	private Map<Date, InjectedElement> generateInjMap(List<InjectedElement> injList, Date refTime) {
@@ -150,6 +157,13 @@ public class MonitoredData {
 		if(obIndex >= 0 && obIndex < size() && injMap.containsKey(obsList.get(obIndex).getTimestamp()))
 			return injMap.get(obsList.get(obIndex).getTimestamp());
 		else return null;
+	}
+
+	public void addItem(Observation obs, InjectedElement injection) {
+		obsList.add(obs);
+		if(injection != null)
+			injMap.put(obs.getTimestamp(), injection);
+		
 	}
 	
 }

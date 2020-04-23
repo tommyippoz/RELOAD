@@ -420,19 +420,31 @@ public abstract class DecisionFunction {
 			if(allThr.length == 2 && allThr[0] == allThr[1] && allThr[0] == algorithmScore)
 				return 1.0;
 			else if(allThr.length == 1 || (allThr.length == 2 && allThr[0] == allThr[1])){
-				return computeConfidence(refScores.getMin(), refScores.getMax(), allThr[0], algorithmScore);
+				return computeConfidence(getMinForConfidence(algorithmScore), getMaxForConfidence(algorithmScore), allThr[0], algorithmScore);
 			} else {
 				if(allThr[0] <= allThr[1]){
 					if(Math.abs(algorithmScore - allThr[0]) < Math.abs(algorithmScore - allThr[1]))
-						return computeConfidence(refScores.getMin(), (allThr[0] + allThr[1]) / 2, allThr[0], algorithmScore);
-					else return computeConfidence((allThr[0] + allThr[1]) / 2, refScores.getMax(), allThr[1], algorithmScore);
+						return computeConfidence(getMinForConfidence(algorithmScore), (allThr[0] + allThr[1]) / 2, allThr[0], algorithmScore);
+					else return computeConfidence((allThr[0] + allThr[1]) / 2, getMaxForConfidence(algorithmScore), allThr[1], algorithmScore);
 				} else {
 					if(Math.abs(algorithmScore - allThr[0]) < Math.abs(algorithmScore - allThr[1]))
-						return computeConfidence((allThr[0] + allThr[1]) / 2, refScores.getMax(), allThr[0], algorithmScore);
-					else return computeConfidence(refScores.getMin(), (allThr[0] + allThr[1]) / 2, allThr[1], algorithmScore);
+						return computeConfidence((allThr[0] + allThr[1]) / 2, getMaxForConfidence(algorithmScore), allThr[0], algorithmScore);
+					else return computeConfidence(getMinForConfidence(algorithmScore), (allThr[0] + allThr[1]) / 2, allThr[1], algorithmScore);
 				}
 			}
 		} else return Double.NaN;
+	}
+	
+	private double getMinForConfidence(double value){
+		if(refScores != null && Double.isFinite(refScores.getMin()))
+			return Math.min(refScores.getMin(), value);
+		else return value;
+	}
+	
+	private double getMaxForConfidence(double value){
+		if(refScores != null && Double.isFinite(refScores.getMin()))
+			return Math.max(refScores.getMax(), value);
+		else return value;
 	}
 	
 	private double computeConfidence(double min, double max, double threshold, double value){
@@ -440,10 +452,14 @@ public abstract class DecisionFunction {
 		if(Double.isFinite(value)){
 			if(value == threshold)
 				conf = 0;
+			else if(value == min || value == max)
+				conf = 1;
 			else if(value < threshold)
 				conf = Math.abs(value - threshold) / Math.abs(min - threshold);
 			else 
 				conf = Math.abs(value - threshold) / Math.abs(max - threshold);
+			if(conf > 1)
+				conf = conf*2;
 			return conf*0.98 + 0.01;
 		} else return Double.NaN;	
 	}

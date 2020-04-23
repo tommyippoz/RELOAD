@@ -4,8 +4,8 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
 import ippoz.reload.manager.InputManager;
@@ -59,13 +59,13 @@ public class AlgorithmSetupFrame {
 	
 	private InputManager iManager;
 	
-	private List<AlgorithmConfiguration> confList;
+	private List<BasicConfiguration> confList;
 	
 	private AlgorithmType algType;
 	
 	private String[] algParams;
 	
-	public AlgorithmSetupFrame(InputManager iManager, AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+	public AlgorithmSetupFrame(InputManager iManager, AlgorithmType algType, List<BasicConfiguration> confList) {
 		this.iManager = iManager;
 		this.algType = algType;
 		this.confList = confList;
@@ -429,7 +429,7 @@ public class AlgorithmSetupFrame {
 		    	int index = Integer.parseInt(label.split(" ")[1]);
 		    	if(label.contains("Add")){
 		    		try {
-						confList.add(index+1, (AlgorithmConfiguration) confList.get(index).clone());
+						confList.add(index+1, (BasicConfiguration) confList.get(index).clone());
 						
 					} catch (CloneNotSupportedException e) {
 						// TODO Auto-generated catch block

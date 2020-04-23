@@ -3,8 +3,8 @@
  */
 package ippoz.reload.trainer;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
@@ -22,7 +22,7 @@ import java.util.List;
 public class FixedConfigurationTrainer extends AlgorithmTrainer {
 
 	/** The fixed (unique) configuration. */
-	private AlgorithmConfiguration fixConf;
+	private BasicConfiguration fixConf;
 	
 	/**
 	 * Instantiates a new algorithm trainer.
@@ -34,17 +34,17 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	 * @param expList the considered train data
 	 * @param configurations the possible configurations
 	 */
-	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, AlgorithmConfiguration configuration) {
+	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, BasicConfiguration configuration) {
 		super(algTag, dataSeries, metric, reputation, kList, null);
 		try {
-			fixConf = (AlgorithmConfiguration) configuration.clone();
+			fixConf = (BasicConfiguration) configuration.clone();
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train '" + algTag + "' algorithm");
 		}
 	}
 
 	@Override
-	protected AlgorithmConfiguration lookForBestConfiguration() {
+	protected BasicConfiguration lookForBestConfiguration() {
 		return fixConf;
 	}
 	

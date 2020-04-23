@@ -4,11 +4,9 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.result.DBSCANResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -25,6 +23,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javafx.util.Pair;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
@@ -60,7 +60,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	private List<DBSCANScore> scores;
 	
-	public DBSCANDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public DBSCANDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(CLUSTERS)){
 			clSnaps = loadFromConfiguration();
@@ -107,20 +107,17 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		return list;
 	}
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		GenericCluster uc = calculateCluster(snapArray);
+		double score = uc.distanceFrom(snapArray);
+		return new Pair<Double, Object>(score, uc.getVar());
+	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		GenericCluster uc;
-		double score;
-		double[] snapsArray = getSnapValueArray(sysSnapshot);
-		if(clSnaps != null){
-			uc = calculateCluster(snapsArray);
-			score = uc.distanceFrom(snapsArray);
-			ar = new DBSCANResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, uc.getVar(), getConfidence(score));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	protected boolean checkCalculationCondition(double[] snapValue) {
+		return clSnaps != null;
 	}
 
 	@Override
@@ -373,7 +370,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("threshold", new String[]{"CLUSTER(0.1STD)", "CLUSTER(0.5STD)"});
 		defPar.put("eps", new String[]{"100", "500", "1000"});
 		defPar.put("pts", new String[]{"0.5", "1", "2"});
 		return defPar;

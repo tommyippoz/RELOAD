@@ -4,9 +4,10 @@
 package ippoz.reload.evaluation;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.meta.DataSeriesMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
@@ -47,7 +48,11 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 */
 	@Override
 	protected AlgorithmModel clone() throws CloneNotSupportedException {
-		return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(alg.getAlgorithmType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
+		if(alg instanceof DataSeriesMetaLearner){
+			DataSeriesMetaLearner dsml = (DataSeriesMetaLearner)alg;
+			new AlgorithmModel(DetectionAlgorithm.buildMetaAlgorithm(dsml.getMetaType(), alg.getDataSeries(), alg.getConfiguration(), dsml.getMetaData()), metricScore, reputationScore);
+		}
+		return new AlgorithmModel(DetectionAlgorithm.buildBaseAlgorithm(alg.getLearnerType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
 	}
 
 	/**
@@ -106,7 +111,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 * @return the algorithm type
 	 */
 	public AlgorithmType getAlgorithmType() {
-		return alg.getAlgorithmType();
+		return alg.getLearnerType();
 	}
 
 	/* (non-Javadoc)
@@ -121,7 +126,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		return alg.getDataSeries();
 	}
 
-	public AlgorithmConfiguration getAlgorithmConfiguration() {
+	public BasicConfiguration getAlgorithmConfiguration() {
 		return alg.getConfiguration();
 	}
 	
@@ -139,15 +144,16 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	public static AlgorithmModel fromString(String amString) {
 		if(amString != null && amString.length() > 0 && amString.indexOf("§") != -1){
 			String[] splitted = AppUtility.splitAndPurify(amString, "§");
-			if(splitted.length > 4){
-				AlgorithmConfiguration conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+			if(splitted.length > 5){
+				BasicConfiguration conf = BasicConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 				if(conf != null){
-					conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-					conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-					conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-					conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
+					conf.addItem(BasicConfiguration.WEIGHT, splitted[2]);
+					conf.addItem(BasicConfiguration.AVG_SCORE, splitted[3]);
+					conf.addItem(BasicConfiguration.STD_SCORE, splitted[4]);
+					conf.addItem(BasicConfiguration.DATASET_NAME, splitted[5]);
 				}
-				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(splitted[0], true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+				// TODO
+				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0], true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
 			}
 		}
 		return null;

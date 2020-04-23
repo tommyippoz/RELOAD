@@ -4,10 +4,9 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -21,6 +20,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import javafx.util.Pair;
 
 /**
  * @author Tommaso Capecchi, Tommaso Zoppi
@@ -43,7 +45,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	
 	private LDCOFModel model;
 
-	public LDCOFDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public LDCOFDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(CLUSTERS)){
 			clSnaps = loadFromConfiguration();
@@ -68,7 +70,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		
 		scores = new LinkedList<LDCOFScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(snap)));
+			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(getSnapValueArray(snap))));
 		}
 		
 		if(createOutput) {
@@ -85,24 +87,34 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		else return DEFAULT_GAMMA;
 	}
 	
-	private double calculateLDCOF(Snapshot snap) {
-		return model.evaluate(getSnapValueArray(snap));
+	private double calculateLDCOF(double[] snapArray) {
+		return model.evaluate(snapArray);
 	}
 
 	protected abstract List<GenericCluster> generateClusters(List<ClusterableSnapshot> clSnapList);
+	
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return clSnaps != null;
+	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		double score;
-		if(clSnaps != null){
-			score = calculateLDCOF(sysSnapshot);
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new Pair<Double, Object>(calculateLDCOF(snapArray), null);
 	}
-	
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Prints the file.
 	 *

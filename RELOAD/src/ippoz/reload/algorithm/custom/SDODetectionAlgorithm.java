@@ -4,13 +4,9 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -27,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import javafx.util.Pair;
 
 /**
  * @author Tommaso Capecchi, Tommaso Zoppi
@@ -56,7 +54,7 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	private List<SDOScore> scores;
 	
-	public SDODetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public SDODetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(TMP_FILE)){
 			loadFile(getFilename());
@@ -94,7 +92,7 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
 		List<Point> pointDs = new LinkedList<Point>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			pointDs.add(getPoint(snap));
+			pointDs.add(new Point(getSnapValueArray(snap)));
 		}
 		
 		observers = deriveObservers(pointDs);
@@ -112,30 +110,15 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		return true;
 	}
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new Pair<Double, Object>(calculateSDO(new Point(snapArray)), null);
+	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		double score;
-		if(observers != null){
-			score = calculateSDO(getPoint(sysSnapshot));
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-	}
-	
-	private Point getPoint(Snapshot snap) {
-		Double[] values = new Double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			values[0] = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				values[j] = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				
-			}
-		}
-		return new Point(values);
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return observers != null;
 	}
 
 	public List<Point> deriveObservers(List<Point> S){
@@ -409,8 +392,13 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		private double score;
 		
-		public Point(Double[] values){
-			this.values = values;
+		public Point(double[] val){
+			if(val != null){
+				values = new Double[val.length];
+				for(int i=0;i<val.length;i++){
+					values[i] = val[i];
+				}
+			}
 		}
 
 		public Point(String scoreString) {
@@ -427,7 +415,7 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 			}
 			values = valList.toArray(new Double[valList.size()]);
 		}
-		
+
 		public Double[] getValues() {
 			return values;
 		}

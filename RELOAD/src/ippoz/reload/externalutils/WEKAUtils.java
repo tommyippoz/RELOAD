@@ -7,7 +7,6 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
 
 import java.io.IOException;
@@ -15,8 +14,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
-import weka.core.Attribute;
-import weka.core.Instance;
 import weka.core.Instances;
 
 /**

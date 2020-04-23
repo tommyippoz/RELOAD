@@ -5,9 +5,9 @@ package ippoz.reload.trainer;
 
 import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -17,6 +17,8 @@ import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.meta.MetaData;
+import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 
@@ -50,7 +52,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		"CLUSTER(0.5STD)", "CLUSTER(VAR)"};
 
 	/** The possible configurations. */
-	private List<AlgorithmConfiguration> configurations;
+	private List<BasicConfiguration> configurations;
 	
 	/**
 	 * Instantiates a new algorithm trainer.
@@ -61,9 +63,14 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param reputation the used reputation metric
 	 * @param expList the considered train data
 	 */
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<AlgorithmConfiguration> basicConfigurations, String datasetName, int kfold) {
+	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<BasicConfiguration> basicConfigurations, String datasetName, int kfold) {
 		super(algTag, dataSeries, metric, reputation, kList, datasetName, kfold);
 		configurations = confCloneAndComplete(basicConfigurations);
+	}
+	
+	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, List<Knowledge> kList, MetaLearnerType mlType, MetaData mData) {
+		super(algTag, dataSeries, mData.getTargetMetric(), mData.getReputation(), kList, mData.getDatasetName(), mData.getKfold(), mlType, mData);
+		configurations = confCloneAndComplete(mData.getConfigurationsFor(algTag));
 	}
 	
 	/**
@@ -72,12 +79,12 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param inConf the configurations to clone
 	 * @return the cloned list of configuration
 	 */
-	private List<AlgorithmConfiguration> confCloneAndComplete(List<AlgorithmConfiguration> inConf) {
-		List<AlgorithmConfiguration> list = new ArrayList<AlgorithmConfiguration>(inConf.size());
+	private List<BasicConfiguration> confCloneAndComplete(List<BasicConfiguration> inConf) {
+		List<BasicConfiguration> list = new ArrayList<BasicConfiguration>(inConf.size());
 		try {
-			for(AlgorithmConfiguration conf : inConf){
-				AlgorithmConfiguration ac = (AlgorithmConfiguration) conf.clone();
-				ac.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
+			for(BasicConfiguration conf : inConf){
+				BasicConfiguration ac = (BasicConfiguration) conf.clone();
+				ac.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
 				list.add(ac);
 			}
 		} catch (CloneNotSupportedException ex) {
@@ -87,19 +94,19 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected AlgorithmConfiguration lookForBestConfiguration() {
+	protected BasicConfiguration lookForBestConfiguration() {
 		Map<String, ValueSeries> currentMetricValue = null;
 		ValueSeries vs = null;
 		DetectionAlgorithm algorithm;
-		AlgorithmConfiguration bestConf = null;
-		AlgorithmConfiguration currentConf = null;
+		BasicConfiguration bestConf = null;
+		BasicConfiguration currentConf = null;
 		Map<TimedResult, AlgorithmResult> resultList = null;
 		boolean trainingResult = true;
 		try {
 			metricScore = null;
 			
 			/* Iterates for Configurations */
-			for(AlgorithmConfiguration conf : configurations){
+			for(BasicConfiguration conf : configurations){
 				currentMetricValue = new HashMap<String, ValueSeries>();
 				for(String decFunctString : DECISION_FUNCTIONS){
 					if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString))
@@ -108,9 +115,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				
 				/* Iterates for K-Fold */
 				for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
-					//metricResults = new LinkedList<Double>();
-					currentConf = (AlgorithmConfiguration)conf.clone();
-					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
+					currentConf = (BasicConfiguration)conf.clone();
+					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf, getMetaLearnerType(), getMetaData());
 					
 					/* Automatic Training */
 					trainingResult = false;
@@ -156,8 +162,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						if(metricScore == null || getMetric().compareResults(currentMetricValue.get(decFunctString), metricScore) == 1){	
 							metricScore = currentMetricValue.get(decFunctString);
 							//System.out.println("UPDATE " + decFunctString + " - " + metricScore);
-							bestConf = (AlgorithmConfiguration) conf.clone();
-							bestConf.addItem(AlgorithmConfiguration.THRESHOLD, decFunctString);
+							bestConf = (BasicConfiguration) conf.clone();
+							bestConf.addItem(BasicConfiguration.THRESHOLD, decFunctString);
 						}
 					}
 				}
@@ -171,18 +177,18 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
 					metricScore.clear();
 					metricScore.addValue(Double.valueOf(value[1]));
-					bestConf.addItem(AlgorithmConfiguration.THRESHOLD, value[0]);
+					bestConf.addItem(BasicConfiguration.THRESHOLD, value[0]);
 					
 				}
 				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
 					metricScore.clear();
 					metricScore.addValue(Double.valueOf(value[1]));
-					bestConf.addItem(AlgorithmConfiguration.THRESHOLD, value[0]);
+					bestConf.addItem(BasicConfiguration.THRESHOLD, value[0]);
 				}
 			}
 						
-			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
+			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf, getMetaLearnerType(), getMetaData());
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
 				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
 			} else {

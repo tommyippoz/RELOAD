@@ -4,9 +4,11 @@
 package ippoz.reload.manager.train;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -56,7 +58,7 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, int kfold) {
 		super(map, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		clearTmpFolders(algTypes);
 	}
@@ -73,7 +75,7 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, List<DataSeries> selectedSeries, int kfold) {
 		super(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		clearTmpFolders(algTypes);
 	}
@@ -90,14 +92,14 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String datasetsFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<AlgorithmType> algTypes, String[] selectedSeriesString, int kfold) {
+	public TrainerManager(String setupFolder, String datasetsFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, List<LearnerType> algTypes, String[] selectedSeriesString, int kfold) {
 		this(setupFolder, dsDomain, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
 		this.datasetsFolder = datasetsFolder;
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes, dsDomain);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
-	private void clearTmpFolders(List<AlgorithmType> algTypes) {
+	private void clearTmpFolders(List<LearnerType> algTypes) {
 		File rootFolder = new File(new File(".").getAbsolutePath().substring(0, new File(".").getAbsolutePath().length()-2));
 		for(File file : rootFolder.listFiles()){
 			if(file.isDirectory() && file.getName().endsWith("_tmp_RELOAD")){
@@ -169,20 +171,18 @@ public class TrainerManager extends TrainDataManager {
 
 	private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
 		BufferedWriter thresholdRelevanceWriter;
-		AlgorithmConfiguration conf;
+		BasicConfiguration conf;
 		AlgorithmTrainer trainer;
 		Map<String,Integer> statMap = new HashMap<String, Integer>();
 		try {
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
-				if(trainer.isValidTrain()){
-					conf = trainer.getBestConfiguration();
-					if(conf != null && conf.hasItem(AlgorithmConfiguration.THRESHOLD)) {
-						if(statMap.containsKey(conf.getItem(AlgorithmConfiguration.THRESHOLD))){
-							statMap.put(conf.getItem(AlgorithmConfiguration.THRESHOLD), statMap.get(conf.getItem(AlgorithmConfiguration.THRESHOLD)) + 1);
-						} else statMap.put(conf.getItem(AlgorithmConfiguration.THRESHOLD), 1);
-					}
-				}			
+				conf = trainer.getBestConfiguration();
+				if(conf != null && conf.hasItem(BasicConfiguration.THRESHOLD)) {
+					if(statMap.containsKey(conf.getItem(BasicConfiguration.THRESHOLD))){
+						statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), statMap.get(conf.getItem(BasicConfiguration.THRESHOLD)) + 1);
+					} else statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), 1);
+				}		
 			}
 			if(statMap.size() > 0) {
 				statMap = sortByComparator(statMap, false);
@@ -231,11 +231,11 @@ public class TrainerManager extends TrainDataManager {
 	protected void initRun(){
 		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
-		for(AlgorithmType algType : algTypes){
+		for(LearnerType algType : algTypes){
 			if(confList.get(algType) == null || confList.get(algType).size() == 0){
 				AppLogger.logError(getClass(), "UnrecognizedConfiguration", algType + " does not have an associated configuration: basic will be applied");
-				confList.put(algType, new LinkedList<AlgorithmConfiguration>());
-				confList.get(algType).add(new AlgorithmConfiguration(algType));
+				confList.put(algType, new LinkedList<BasicConfiguration>());
+				confList.get(algType).add(BasicConfiguration.buildConfiguration(algType));
 			}
 			KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algType);
 			for(DataSeries dataSeries : seriesList){
@@ -323,9 +323,9 @@ public class TrainerManager extends TrainDataManager {
 		BufferedWriter scoreWriter, statWriter;
 		AlgorithmTrainer trainer;
 		int count = 0;
-		Map<AlgorithmType,Double[]> statMap = new HashMap<AlgorithmType, Double[]>();
+		Map<LearnerType,Double[]> statMap = new HashMap<>();
 		try {
-			for(AlgorithmType at : algTypes){
+			for(LearnerType at : algTypes){
 				statMap.put(at, new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
@@ -333,36 +333,34 @@ public class TrainerManager extends TrainDataManager {
 			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getMetricName() + "),std_metric_score(" + getMetric().getMetricName() + "),dataset,configuration\n");
 			for(Thread tThread : list){
 				trainer = (AlgorithmTrainer)tThread;
-				if(trainer.isValidTrain()){
-					count++;
-					if(trainer.getBestConfiguration() != null) {
-						scoreWriter.write(trainer.getSeriesDescription() + "§" + 
-								trainer.getAlgType() + "§" +
-								trainer.getReputationScore() + "§" + 
-								trainer.getMetricAvgScore() + "§" +  
-								trainer.getMetricStdScore() + "§" + 
-								trainer.getDatasetName() + "§" +
-								trainer.getBestConfiguration().toFileRow(false) + "\n");
-						statMap.get(trainer.getAlgType())[0] += 1.0;
-						statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
-						statMap.get(trainer.getAlgType())[2] += trainer.getMetricAvgScore();
-						if(count <= 10)
-							statMap.get(trainer.getAlgType())[3] += 1.0;
-						if(count <= 50)
-							statMap.get(trainer.getAlgType())[4] += 1.0;
-						if(count <= 100)
-							statMap.get(trainer.getAlgType())[5] += 1.0;
-						if(count <= 10)
-							statMap.get(trainer.getAlgType())[6] += trainer.getMetricAvgScore();
-						if(count <= 50)
-							statMap.get(trainer.getAlgType())[7] += trainer.getMetricAvgScore();
-						if(count <= 100)
-							statMap.get(trainer.getAlgType())[8] += trainer.getMetricAvgScore();
-					}
+				count++;
+				if(trainer.getBestConfiguration() != null) {
+					scoreWriter.write(trainer.getSeriesDescription() + "§" + 
+							trainer.getAlgType() + "§" +
+							trainer.getReputationScore() + "§" + 
+							trainer.getMetricAvgScore() + "§" +  
+							trainer.getMetricStdScore() + "§" + 
+							trainer.getDatasetName() + "§" +
+							trainer.getBestConfiguration().toFileRow(false) + "\n");
+					statMap.get(trainer.getAlgType())[0] += 1.0;
+					statMap.get(trainer.getAlgType())[1] += trainer.getTrainingTime();
+					statMap.get(trainer.getAlgType())[2] += trainer.getMetricAvgScore();
+					if(count <= 10)
+						statMap.get(trainer.getAlgType())[3] += 1.0;
+					if(count <= 50)
+						statMap.get(trainer.getAlgType())[4] += 1.0;
+					if(count <= 100)
+						statMap.get(trainer.getAlgType())[5] += 1.0;
+					if(count <= 10)
+						statMap.get(trainer.getAlgType())[6] += trainer.getMetricAvgScore();
+					if(count <= 50)
+						statMap.get(trainer.getAlgType())[7] += trainer.getMetricAvgScore();
+					if(count <= 100)
+						statMap.get(trainer.getAlgType())[8] += trainer.getMetricAvgScore();
 				}			
 			}
 			scoreWriter.close();
-			for(AlgorithmType at : algTypes){
+			for(LearnerType at : algTypes){
 				if(statMap.get(at)[0] > 0) {
 					statMap.get(at)[1] = statMap.get(at)[1] / statMap.get(at)[0];
 					statMap.get(at)[2] = statMap.get(at)[2] / statMap.get(at)[0];
@@ -378,7 +376,7 @@ public class TrainerManager extends TrainDataManager {
 			}
 			statWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + "trainingTimings.csv")));
 			statWriter.write("algorithm,knowledge,#checkers,avg_time(ms),avg_" + getMetric().getMetricName() + ",#top10,#top50,#top100,avg_" + getMetric().getMetricName() + "_top10,avg_" + getMetric().getMetricName() + "_top50,avg_" + getMetric().getMetricName() + "_top100,#conf\n");
-			for(AlgorithmType at : algTypes){
+			for(LearnerType at : algTypes){
 				statWriter.write(at.toString() + "," + DetectionAlgorithm.getKnowledgeType(at) + ",");
 				for(double d : statMap.get(at)){
 					statWriter.write(d + ",");

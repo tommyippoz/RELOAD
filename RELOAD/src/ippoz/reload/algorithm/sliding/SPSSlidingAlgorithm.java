@@ -4,8 +4,7 @@
 package ippoz.reload.algorithm.sliding;
 
 import ippoz.reload.algorithm.DataSeriesSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
@@ -14,7 +13,6 @@ import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
 import java.util.Date;
@@ -22,6 +20,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javafx.util.Pair;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.special.Erf;
@@ -73,7 +73,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public SPSSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public SPSSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(SPS_P)){
 			pdv = Double.parseDouble(conf.getItem(SPS_P));
@@ -99,25 +99,15 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		AlgorithmResult ar = null;
+	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		DataVector[] thresholds = calculateTreshold(parseBlocks(snapList));
 		DataVector snapValue = snapToDataVector(dsSnapshot);
 		double d1 = snapValue.calculateDistance(thresholds[1]);
 		double d0 = snapValue.calculateDistance(thresholds[0]);
 		double dt = thresholds[0].calculateDistance(thresholds[1]);
 		if(Double.isFinite(dt)){
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), d1 + d0 - dt, getConfidence(d1 + d0 - dt));
-			if(snapValue.compareTo(thresholds[1]) <= 0 && snapValue.compareTo(thresholds[0]) >= 0)
-				ar.setScoreEvaluation(AnomalyResult.NORMAL);
-			else {
-				ar.setScoreEvaluation(AnomalyResult.ANOMALY);
-			}
-		} else {
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), Double.NaN, 1);
-			ar.setScoreEvaluation(AnomalyResult.NORMAL);
-		}
-		return ar;
+			return new Pair<Double, Object>(d1 + d0 - dt, null);
+		} else return new Pair<Double, Object>(Double.NaN, null);
 	}
 
 	/**
@@ -464,6 +454,12 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		defPar.put("p", new String[]{"0.9999", "0.999", "0.99", "0.9"});
 		defPar.put("dweight", new String[]{"0", "1"});
 		return defPar;
+	}
+
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

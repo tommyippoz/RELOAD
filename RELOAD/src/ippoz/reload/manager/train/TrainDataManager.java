@@ -3,8 +3,9 @@
  */
 package ippoz.reload.manager.train;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -34,7 +35,7 @@ public abstract class TrainDataManager extends DataManager {
 	private String datasetName;
 	
 	/** The possible configurations. */
-	protected Map<AlgorithmType, List<AlgorithmConfiguration>> confList;
+	protected Map<LearnerType, List<BasicConfiguration>> confList;
 	
 	/** The chosen metric. */
 	private Metric metric;
@@ -46,7 +47,7 @@ public abstract class TrainDataManager extends DataManager {
 	protected List<DataSeries> seriesList;
 	
 	/** The algorithm types. */
-	protected List<AlgorithmType> algTypes;
+	protected List<LearnerType> algTypes;
 	
 	protected int kfold;
 
@@ -54,7 +55,7 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, int kfold) {
 		super(map);
 		this.setupFolder = setupFolder;
 		this.dsDomain = dsDomain;
@@ -71,7 +72,7 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<AlgorithmType, List<AlgorithmConfiguration>> confList, Metric metric, Reputation reputation, List<AlgorithmType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, List<DataSeries> selectedSeries, int kfold) {
 		this(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");

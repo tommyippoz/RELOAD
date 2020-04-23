@@ -3,7 +3,7 @@
  */
 package ippoz.reload.algorithm;
 
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -26,7 +26,7 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesNonSlidingAl
 	
 	protected double[][] minmax;
 	
-	public DataSeriesExternalAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
+	public DataSeriesExternalAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf);
 		this.needNormalization = needNormalization;
 		if(conf.hasItem(MINMAX))

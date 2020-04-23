@@ -3,13 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomABOD;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -27,7 +28,7 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public ABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public ABODELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -41,8 +42,8 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public double getELKIScore(Vector v) {
-		return ((CustomABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v);
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v), null);
 	}
 
 	/* (non-Javadoc)

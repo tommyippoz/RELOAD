@@ -3,6 +3,8 @@
  */
 package ippoz.reload.executable;
 
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
@@ -48,7 +50,7 @@ public class DetectorMain {
 				dmList = new LinkedList<DetectionManager>();
 				iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
 				for(PreferencesManager loaderPref : iManager.readLoaders()){
-					for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
+					for(List<LearnerType> aList : readAlgorithmCombinations(iManager)){
 						if(hasSliding(aList)){
 							for(Integer windowSize : readWindowSizes(iManager)){
 								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
@@ -75,7 +77,7 @@ public class DetectorMain {
 	
 	public static int getMADneSsIterations(InputManager iManager){
 		int count = 0;
-		for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
+		for(List<LearnerType> aList : readAlgorithmCombinations(iManager)){
 			if(hasSliding(aList)){
 				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
 			} else {
@@ -143,9 +145,9 @@ public class DetectorMain {
 		return lList;
 	}*/
 	
-	public static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
+	public static List<List<LearnerType>> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");
-		List<List<AlgorithmType>> alList = new LinkedList<List<AlgorithmType>>();
+		List<List<LearnerType>> alList = new LinkedList<>();
 		BufferedReader reader;
 		String readed;
 		try {
@@ -156,10 +158,10 @@ public class DetectorMain {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
+							List<LearnerType> aList = new LinkedList<>();
 							for(String s : readed.trim().split(",")){
 								try {
-									aList.add(AlgorithmType.valueOf(s.trim()));
+									aList.add(LearnerType.fromString(s.trim()));
 								} catch(Exception ex){
 									AppLogger.logError(DetectorMain.class, "ParsingError", "Algorithm '" + s + "' unrecognized");
 								}
@@ -173,8 +175,8 @@ public class DetectorMain {
 			} else {
 				AppLogger.logError(DetectorMain.class, "MissingPreferenceError", "File " + 
 						algTypeFile.getPath() + " not found. Will be generated. Using default value of 'ELKI_KMEANS'");
-				List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
-				aList.add(AlgorithmType.ELKI_KMEANS);
+				List<LearnerType> aList = new LinkedList<>();
+				aList.add(new BaseLearner(AlgorithmType.ELKI_KMEANS));
 				alList.add(aList);
 				iManager.generateDefaultAlgorithmPreferences();
 			}
@@ -184,9 +186,9 @@ public class DetectorMain {
 		return alList;
 	}
 
-	public static boolean hasSliding(List<AlgorithmType> aList) {
-		for(AlgorithmType at : aList){
-			if(at.toString().toUpperCase().contains("SLIDING"))
+	public static boolean hasSliding(List<LearnerType> aList) {
+		for(LearnerType at : aList){
+			if(at instanceof BaseLearner && ((BaseLearner)at).toString().toUpperCase().contains("SLIDING"))
 				return true;
 		}
 		return false;

@@ -4,8 +4,10 @@
 package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.IndicatorDataSeries;
@@ -573,7 +575,7 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
+	public Map<AlgorithmType, List<BasicConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
 		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
 		list.add(at);
 		return loadConfigurations(list, windowSize, sPolicy, true);
@@ -586,13 +588,13 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
-		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
+	public Map<LearnerType, List<BasicConfiguration>> loadConfigurations(List<LearnerType> algTypes, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
+		Map<LearnerType, List<BasicConfiguration>> confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
 		if(createMissing && algTypes != null && algTypes.size() != confList.size()){
-			for(AlgorithmType alg : algTypes){
+			for(LearnerType alg : algTypes){
 				if(!confList.containsKey(alg)){
 					AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
-					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, new AlgorithmConfiguration(alg)).getDefaultParameterValues());
+					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, new BasicConfiguration(alg)).getDefaultParameterValues());
 				}
 			}
 			confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
@@ -665,10 +667,10 @@ public class InputManager {
 		}
 	}
 
-	private Map<AlgorithmType, List<AlgorithmConfiguration>> readConfigurationsFile(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
+	private Map<AlgorithmType, List<BasicConfiguration>> readConfigurationsFile(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
-		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
-		AlgorithmConfiguration alConf;
+		Map<AlgorithmType, List<BasicConfiguration>> confList = new HashMap<AlgorithmType, List<BasicConfiguration>>();
+		BasicConfiguration alConf;
 		AlgorithmType algType;
 		BufferedReader reader = null;
 		String[] header = null;
@@ -695,16 +697,16 @@ public class InputManager {
 									readed = readed.trim();
 									if(readed.length() > 0 && !readed.startsWith("*")){
 										i = 0;
-										alConf = AlgorithmConfiguration.getConfiguration(algType, null);
+										alConf = new AlgorithmConfiguration(algType);
 										for(String element : readed.split(",")){
 											alConf.addItem(header[i++], element);
 										}
 										if(DetectionAlgorithm.isSliding(algType)){
-											alConf.addItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE, windowSize);
-											alConf.addItem(AlgorithmConfiguration.SLIDING_POLICY, sPolicy.toString());
+											alConf.addItem(BasicConfiguration.SLIDING_WINDOW_SIZE, windowSize);
+											alConf.addItem(BasicConfiguration.SLIDING_POLICY, sPolicy.toString());
 										}
 										if(confList.get(algType) == null)
-											confList.put(algType, new LinkedList<AlgorithmConfiguration>());
+											confList.put(algType, new LinkedList<BasicConfiguration>());
 										confList.get(algType).add(alConf);
 									}
 								}
@@ -729,7 +731,7 @@ public class InputManager {
 		return confList;
 	}
 	
-	public void updateConfiguration(AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+	public void updateConfiguration(AlgorithmType algType, List<BasicConfiguration> confList) {
 		BufferedWriter writer = null;
 		File outFile = new File(getConfigurationFolder() + algType.toString() + ".conf");
 		try {
@@ -740,7 +742,7 @@ public class InputManager {
 					writer.write(tag + ",");
 				}
 				writer.write("\n");
-				for(AlgorithmConfiguration conf : confList){
+				for(BasicConfiguration conf : confList){
 					for(String tag : confList.get(0).listLabels()){
 						writer.write(conf.getItem(tag) + ",");
 					}
@@ -909,8 +911,8 @@ public class InputManager {
 						"SLIDING_POLICY = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
 						"SLIDING_WINDOW_SIZE = 20\n");
-				writer.write("\n* Type of output produced by RELOAD. Accepted values are null, IMAGE, TEXT\n" + 
-						"OUTPUT_TYPE = null\n");
+				writer.write("\n* Type of output produced by RELOAD. Accepted values are ui, basic, IMAGE, TEXT\n" + 
+						"OUTPUT_TYPE = ui\n");
 				writer.write("\n* Path Setup.\n\n");
 				writer.write("\n* Input folder\n" + 
 						"INPUT_FOLDER = input\n");
@@ -1421,7 +1423,7 @@ public class InputManager {
 	public static List<AlgorithmModel> loadAlgorithmModelsFor(String scoresFileString, ScoresVoter voter) {
 		File asFile = new File(scoresFileString);
 		BufferedReader reader;
-		AlgorithmConfiguration conf;
+		BasicConfiguration conf;
 		String[] splitted;
 		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
 		String readed;
@@ -1437,16 +1439,8 @@ public class InputManager {
 						if(readed.length() > 0 && readed.indexOf("§") != -1){
 							splitted = AppUtility.splitAndPurify(readed, "§");
 							if(splitted.length > 4 && voter.checkAnomalyTreshold(Double.valueOf(splitted[3]))){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-								seriesString = splitted[0];
-								if(conf != null){
-									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
-								}
-								AlgorithmModel am = new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
-								if(voter.checkModel(am, modelList))
+								AlgorithmModel am = AlgorithmModel.fromString(readed);
+								if(am != null && voter.checkModel(am, modelList))
 									modelList.add(am);
 							}
 						}
@@ -1708,10 +1702,10 @@ public class InputManager {
 		return "meta" + File.separatorChar;
 	}
 
-	public AlgorithmConfiguration getMetaConfigurationFor(String datasetName, String mlName) {
+	public BasicConfiguration getMetaConfigurationFor(String datasetName, String mlName) {
 		String readed;
 		String[] header = null;
-		AlgorithmConfiguration acOut = null;
+		BasicConfiguration acOut = null;
 		BufferedReader reader = null;
 		File mcFile = new File(getMetaFolder() + "meta_" + datasetName.trim() + "_" + mlName.trim() + "_scores.csv");
 		try {
@@ -1728,21 +1722,10 @@ public class InputManager {
 				while(reader.ready()){
 					readed = reader.readLine();
 					if(readed != null){
-						readed = readed.trim();
-						
-						/*conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-						seriesString = splitted[0];
-						if(conf != null){
-							conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-							conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-							conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-							conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
-						}*/
-						
-						
+						readed = readed.trim();		
 						if(readed.length() > 0 && !readed.startsWith("*")){
 							int i = 0;
-							acOut = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(mlName.trim()), readed.split("§")[6]);
+							acOut = BasicConfiguration.buildConfiguration(AlgorithmType.valueOf(mlName.trim()), readed.split("§")[6]);
 							for(String element : readed.split("§")){
 								acOut.addItem(header[i++].trim(), element.trim());
 							}

@@ -3,11 +3,9 @@
  */
 package ippoz.reload.algorithm.weka;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.weka.support.CustomIsolationForest;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
@@ -21,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.util.Pair;
 import weka.core.Instances;
 
 /**
@@ -48,7 +47,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public IsolationForestWEKA(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public IsolationForestWEKA(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, true, false);
 		if(conf.hasItem(TMP_FILE)){
 			iForest = loadSerialized(conf.getItem(TMP_FILE));
@@ -151,26 +150,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#evaluateWEKASnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
-	@Override
-	protected AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		double score;
-		try {
-			if(iForest != null){
-				score = iForest.classifyInstance(snapshotToInstance(sysSnapshot));
-				ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
-				getDecisionFunction().assignScore(ar, true);
-				return ar;
-			} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		} catch (Exception ex) {
-			AppLogger.logException(getClass(), ex, "Unable to score IsolationForest");
-			return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		}
-	}
-
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
@@ -183,6 +162,16 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected Pair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception {
+		return new Pair<Double, Object>(iForest.classifyInstance(snapshotToInstance(snapArray)), null);
+	}
+
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return iForest != null;
 	}
 
 }

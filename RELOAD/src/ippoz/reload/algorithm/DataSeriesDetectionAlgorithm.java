@@ -3,13 +3,23 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.result.DBSCANResult;
+import ippoz.reload.algorithm.result.KMeansResult;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
+import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.io.File;
+
+import javafx.util.Pair;
+import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -34,7 +44,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	 * @param categoryTag the data category tag
 	 * @param conf the configuration
 	 */
-	public DataSeriesDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public DataSeriesDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(conf);
 		this.dataSeries = dataSeries;
 	}
@@ -53,7 +63,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	 * @return the filename
 	 */
 	protected String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getAlgorithmType().toString().toLowerCase();
+		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
 	}
 	
 	/**
@@ -62,9 +72,9 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	 * @return the default temporary folder
 	 */
 	protected String getDefaultTmpFolder(){
-		if(conf.hasItem(AlgorithmConfiguration.DATASET_NAME) && conf.getItem(AlgorithmConfiguration.DATASET_NAME).length() > 0)
-			return "tmp" + File.separatorChar + conf.getItem(AlgorithmConfiguration.DATASET_NAME) + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
-		else return "tmp" + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
+		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0)
+			return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+		else return "tmp" + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
 	}
 
 	@Override
@@ -74,9 +84,43 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 
 	@Override
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
-		return evaluateDataSeriesSnapshot(knowledge, knowledge.get(getAlgorithmType(), currentIndex, getDataSeries()), currentIndex);
+		AlgorithmResult ar;
+		Pair<Double, Object> score;
+		Snapshot dsSnap = knowledge.get(currentIndex, getDataSeries());
+		double[] snapArray = getSnapValueArray(dsSnap);
+		if(dsSnap != null && snapArray != null && checkCalculationCondition(snapArray)){
+			score = calculateSnapshotScore(knowledge, currentIndex, dsSnap, snapArray);
+			if(getLearnerType() instanceof BaseLearner){
+				AlgorithmType at = ((BaseLearner)getLearnerType()).getAlgType(); 
+				if(at == AlgorithmType.DBSCAN) {
+					ar = new DBSCANResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), (Double)score.getValue(), getConfidence(score.getKey()));
+				} else if(score.getValue() != null && score.getValue() instanceof KMeansModel){
+					KMeansModel kms = (KMeansModel)score.getValue();
+					ar = new KMeansResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), kms.getMean(), kms.getVarianceContribution(), getConfidence(score.getKey()));
+				} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()));
+			} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()));
+			getDecisionFunction().assignScore(ar, true);
+			return ar;
+		} else return AlgorithmResult.error(snapArray, dsSnap.getInjectedElement());
 	}
-
-	protected abstract AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex);
+	
+	protected double[] getSnapValueArray(Snapshot snap){
+		double snapValue;
+		double[] result = new double[getDataSeries().size()];
+		if(getDataSeries().size() == 1){
+			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
+			result[0] = snapValue;
+		} else {
+			for(int j=0;j<getDataSeries().size();j++){
+				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
+				result[j] = snapValue;
+			}
+		}
+		return result;
+	}
+	
+	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
+	
+	protected abstract boolean checkCalculationCondition(double[] snapArray);
 	
 }

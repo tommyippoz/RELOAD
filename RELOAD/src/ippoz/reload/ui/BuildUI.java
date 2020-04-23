@@ -8,7 +8,6 @@ import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
@@ -992,6 +991,14 @@ public class BuildUI {
 			        	if(comboBox.getSelectedItem().toString().equals("FSCORE") || comboBox.getSelectedItem().toString().equals("SAFESCORE")){
 			        		String s = (String)JOptionPane.showInputDialog(
 				                    frame, "Set parameter beta for F-Score or Safe-Score (beta > 0)", "FSCORE / SAFESCORE beta",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+								newValue = newValue + "(" + s + ")";
+							} else newValue = newValue + "(1)";
+			        	}
+			        	if(comboBox.getSelectedItem().toString().equals("CONFIDENCE_ERROR")){
+			        		String s = (String)JOptionPane.showInputDialog(
+				                    frame, "Set parameter P for Confidence Error (P in [0, 1]). the higher the P, the more relevance to FN", "Confidence Error P",
 				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 								newValue = newValue + "(" + s + ")";

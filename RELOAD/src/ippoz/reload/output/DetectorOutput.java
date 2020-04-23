@@ -4,6 +4,7 @@
 package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.loader.Loader;
@@ -51,7 +52,7 @@ public class DetectorOutput {
 	
 	private String writableTag;
 	
-	private List<AlgorithmType> algorithms;
+	private List<LearnerType> algorithms;
 	
 	private double faultsRatio;
 	
@@ -59,7 +60,7 @@ public class DetectorOutput {
 	
 	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
-	public DetectorOutput(InputManager iManager, List<AlgorithmType> algorithms, double bestScore, ScoresVoter bestSetup, 
+	public DetectorOutput(InputManager iManager, List<LearnerType> algorithms, double bestScore, ScoresVoter bestSetup, 
 			List<AlgorithmModel> modelList,
 			Map<LoaderBatch, List<VotingResult>> votingScores,
 			Loader loader, Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 

@@ -4,8 +4,7 @@
 package ippoz.reload.algorithm.weka;
 
 import ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
+import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -36,7 +36,7 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	 * @param conf the configuration
 	 * @param needNormalization the need for normalization of data
 	 */
-	public DataSeriesSlidingWEKAAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
+	public DataSeriesSlidingWEKAAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 	}
 	
@@ -73,11 +73,8 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
 	@Override
-	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true, getDataSeries()), snapshotToInstance(dsSnapshot), dsSnapshot); 
 	}
 	
@@ -105,6 +102,6 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	 * @param dsSnapshot the ds snapshot
 	 * @return the algorithm result
 	 */
-	protected abstract AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
+	protected abstract Pair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
 
 }

@@ -1,12 +1,15 @@
 /**
  * 
  */
-package ippoz.reload.commons.configuration;
+package ippoz.reload.algorithm.configuration;
 
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.meta.MetaLearnerType;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -15,7 +18,7 @@ import java.util.Set;
  *
  * @author Tommy
  */
-public class AlgorithmConfiguration implements Cloneable {
+public abstract class BasicConfiguration implements Cloneable {
 	
 	/** The Constant WEIGHT. */
 	public static final String WEIGHT = "weight";
@@ -67,29 +70,27 @@ public class AlgorithmConfiguration implements Cloneable {
 	public static final String DATASERIES = "data_series";
 
 	/** The configuration map. */
-	private HashMap<String, Object> confMap;
-	
-	/** The algorithm type */
-	private AlgorithmType algType;
+	private Map<String, Object> confMap;
 	
 	/**
 	 * Instantiates a new algorithm configuration.
 	 */
-	public AlgorithmConfiguration(AlgorithmType algType){
+	public BasicConfiguration(){
 		confMap = new HashMap<String, Object>();
-		this.algType = algType;
 	}
 	
-	private void setMap(HashMap<String, Object> newMap){
+	private void setMap(Map<String, Object> newMap){
 		confMap = newMap;
 	}
 	
 	@Override
 	public Object clone() throws CloneNotSupportedException {
-		HashMap<String, Object> newMap = new HashMap<String, Object>();
-		AlgorithmConfiguration newConf = null;
+		Map<String, Object> newMap = new HashMap<String, Object>();
+		BasicConfiguration newConf = null;
 		try {
-			newConf = getConfiguration(algType, this);
+			if(this instanceof AlgorithmConfiguration)
+				newConf = new AlgorithmConfiguration(((AlgorithmConfiguration)this).getAlgorithmType());
+			else newConf = new MetaConfiguration(((MetaConfiguration)this).getMetaType());
 			for(String mapKey : confMap.keySet()){
 				newMap.put(mapKey, confMap.get(mapKey));
 			}
@@ -103,11 +104,6 @@ public class AlgorithmConfiguration implements Cloneable {
 	public void removeItem(String tag) {
 		if(hasItem(tag))
 			confMap.remove(tag);
-	}
-	
-	public static AlgorithmConfiguration getConfiguration(AlgorithmType algType, AlgorithmConfiguration oldConf) {
-		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
-		return conf;
 	}
 
 	/**
@@ -177,22 +173,13 @@ public class AlgorithmConfiguration implements Cloneable {
 			return null;
 		} else return confMap.get(tag);
 	}
-	
-	/**
-	 * Gets the algorithm type.
-	 *
-	 * @return the algType
-	 */
-	public AlgorithmType getAlgorithmType(){
-		return algType;
-	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return algType + ":[" + getSpecificItems() + "]";
+		return "[" + getSpecificItems() + "]";
 	}
 
 	/**
@@ -217,9 +204,12 @@ public class AlgorithmConfiguration implements Cloneable {
 		return all;
 	}	
 	
-	public static AlgorithmConfiguration buildConfiguration(AlgorithmType algType, String descRow){
+	public static BasicConfiguration buildConfiguration(AlgorithmType algType, MetaLearnerType mlType, String descRow){
 		String tag, value;
-		AlgorithmConfiguration conf = new AlgorithmConfiguration(algType);
+		BasicConfiguration conf = null;
+		if(mlType != null)
+			conf = new MetaConfiguration(mlType);
+		else conf = new AlgorithmConfiguration(algType);
 		if(descRow != null){
 			for(String splitted : descRow.split("&")){
 				if(splitted.contains("=")){
@@ -252,6 +242,13 @@ public class AlgorithmConfiguration implements Cloneable {
 
 	public Set<String> listLabels() {
 		return confMap.keySet();
+	}
+	
+	public abstract LearnerType getLearnerType();
+
+	public static BasicConfiguration buildConfiguration(LearnerType algType) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

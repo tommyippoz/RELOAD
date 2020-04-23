@@ -3,13 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomFastABOD;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -33,7 +34,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public FastABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public FastABODELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -47,10 +48,9 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public double getELKIScore(Vector v) {
-		return Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v));
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v)), null);
 	}
 
 	/* (non-Javadoc)

@@ -4,15 +4,17 @@
 package ippoz.reload.trainer;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.meta.MetaData;
+import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
@@ -47,7 +49,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	protected List<Knowledge> kList;
 	
 	/** The best configuration. */
-	private AlgorithmConfiguration bestConf;
+	private BasicConfiguration bestConf;
 	
 	/** The metric score. */
 	protected ValueSeries metricScore;
@@ -70,6 +72,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	
 	private long trainingTime;
 	
+	private MetaData metaData;
+	
+	private MetaLearnerType mlType;
+	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -80,7 +86,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold, MetaLearnerType mlType, MetaData metaData) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
@@ -88,6 +94,12 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		this.kList = kList;
 		this.kfold = kfold;
 		this.datasetName = datasetName;
+		this.mlType = mlType;
+		this.metaData = metaData;
+	}
+	
+	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
+		this(algTag, dataSeries, metric, reputation, kList, datasetName, kfold, null, null);	
 	}
 	
 	/**
@@ -104,15 +116,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName) {
 		this(algTag, dataSeries, metric, reputation, kList, datasetName, 1);
-	}
-	
-	/**
-	 * Checks if is valid train.
-	 *
-	 * @return true, if is valid train
-	 */
-	public boolean isValidTrain(){
-		return true;
 	}
 	
 	public String getDatasetName(){
@@ -135,26 +138,26 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			metricScore = evaluateMetricScore();
 			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
-				bestConf.addItem(AlgorithmConfiguration.WEIGHT, String.valueOf(getReputationScore()));
-			else bestConf.addItem(AlgorithmConfiguration.WEIGHT, "1.0");
-			bestConf.addItem(AlgorithmConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
-			bestConf.addItem(AlgorithmConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_STD, trainMetricScore.getStd());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q0, trainMetricScore.getMin());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
-			bestConf.addItem(AlgorithmConfiguration.TRAIN_Q4, trainMetricScore.getMax());
-			bestConf.addItem(AlgorithmConfiguration.DATASET_NAME, getDatasetName());
-			bestConf.addItem(AlgorithmConfiguration.ANOMALY_AVG, getAnomalyAvg());
-			bestConf.addItem(AlgorithmConfiguration.ANOMALY_STD, getAnomalyStd());
-			bestConf.addItem(AlgorithmConfiguration.ANOMALY_MED, getAnomalyMed());
+				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
+			else bestConf.addItem(BasicConfiguration.WEIGHT, "1.0");
+			bestConf.addItem(BasicConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
+			bestConf.addItem(BasicConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
+			bestConf.addItem(BasicConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
+			bestConf.addItem(BasicConfiguration.TRAIN_STD, trainMetricScore.getStd());
+			bestConf.addItem(BasicConfiguration.TRAIN_Q0, trainMetricScore.getMin());
+			bestConf.addItem(BasicConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
+			bestConf.addItem(BasicConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
+			bestConf.addItem(BasicConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
+			bestConf.addItem(BasicConfiguration.TRAIN_Q4, trainMetricScore.getMax());
+			bestConf.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
+			bestConf.addItem(BasicConfiguration.ANOMALY_AVG, getAnomalyAvg());
+			bestConf.addItem(BasicConfiguration.ANOMALY_STD, getAnomalyStd());
+			bestConf.addItem(BasicConfiguration.ANOMALY_MED, getAnomalyMed());
 		}
 	}
 	
 	public String getDecisionFunctionString(){
-		return bestConf.getItem(AlgorithmConfiguration.THRESHOLD);
+		return bestConf.getItem(BasicConfiguration.THRESHOLD);
 	}
 	
 	private double getAnomalyMed() {
@@ -186,7 +189,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @return the algorithm configuration
 	 */
-	protected abstract AlgorithmConfiguration lookForBestConfiguration();
+	protected abstract BasicConfiguration lookForBestConfiguration();
 
 	/**
 	 * Evaluates metric score on a specified set of experiments.
@@ -197,7 +200,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		double[] metricEvaluation = null;
 		ValueSeries metricResults = new ValueSeries();
 		List<Double> algResults = new ArrayList<Double>(kList.size());
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
+		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf, mlType, metaData);
 		for(Knowledge knowledge : kList){
 			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
 			metricResults.addValue(metricEvaluation[0]);
@@ -323,7 +326,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the best configuration
 	 */
-	public AlgorithmConfiguration getBestConfiguration(){
+	public BasicConfiguration getBestConfiguration(){
 		return bestConf;
 	}
 	
@@ -394,6 +397,12 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		kList = null;
 	}
 
-	
+	public MetaData getMetaData() {
+		return metaData;
+	}
+
+	public MetaLearnerType getMetaLearnerType() {
+		return mlType;
+	}
 	
 }

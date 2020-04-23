@@ -50,10 +50,10 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries, int from, int to){
+	public List<Snapshot> buildSnapshotsFor(DataSeries dataSeries, int from, int to){
 		List<Snapshot> outList = new ArrayList<Snapshot>(to-from);
 		for(int i=from;i<to;i++){
-			outList.add(buildSnapshotFor(algType, i, dataSeries));
+			outList.add(buildSnapshotFor(i, dataSeries));
 		}
 		return outList;
 	}
@@ -70,12 +70,12 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.get(index).getTimestamp();
 	}
 	
-	public Snapshot get(AlgorithmType algType, int index, DataSeries dataSeries) {
-		return buildSnapshotFor(algType, index, dataSeries);
+	public Snapshot get(int index, DataSeries dataSeries) {
+		return buildSnapshotFor(index, dataSeries);
 	}	
 	
-	public Snapshot buildSnapshotFor(AlgorithmType algType, int index){
-		return buildSnapshotFor(algType, index, null);
+	public Snapshot buildSnapshotFor(int index){
+		return buildSnapshotFor(index, null);
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(int index,	MultipleDataSeries invDs) {
@@ -83,12 +83,6 @@ public abstract class Knowledge implements Cloneable {
 	}
 	
 	public Snapshot buildSnapshotFor(int index, DataSeries dataSeries){
-		if(dataSeries.size() == 1)
-			return baseData.generateDataSeriesSnapshot(dataSeries, index);
-		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
-	}
-	
-	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries){
 		if(dataSeries == null)
 			return null;
 		if(dataSeries.size() == 1)
@@ -270,6 +264,16 @@ public abstract class Knowledge implements Cloneable {
 				return know;
 		}
 		return null;
+	}
+
+	public Knowledge sample(double ratio) {
+		MonitoredData sampled = new MonitoredData();
+		for(int i=0;i<baseData.size();i++){
+			if(Math.random() < ratio){
+				sampled.addItem(baseData.get(i), baseData.getInjection(i));
+			}
+		}
+		return new SingleKnowledge(sampled);
 	}
 
 }

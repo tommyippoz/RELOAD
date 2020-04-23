@@ -3,13 +3,10 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
@@ -22,13 +19,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import javafx.util.Pair;
+
 /**
  * @author Tommy
  *
  */
 public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
 	
-	public DataSeriesNonSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public DataSeriesNonSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(TMP_FILE)){
 			clearLoggedScores();
@@ -89,7 +88,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	private String getScoresFilename(){
 		String base = getFilename();
 		base = base.substring(0, base.indexOf("."));
-		base = base + "_logged_scores." + getAlgorithmType().toString().toLowerCase();
+		base = base + "_logged_scores." + getLearnerType().toString().toLowerCase();
 		return base;
 	}
 
@@ -120,24 +119,16 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 			conf.addItem(TMP_FILE, getFilename());		    
 		    storeAdditionalPreferences();
 		    
-		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
+		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getLearnerType() + " to dataseries " + getDataSeries().getName());
 		return trainOut;
 	}
 	
-	protected double[] getSnapValueArray(Snapshot snap){
-		double snapValue;
-		double[] result = new double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			result[0] = snapValue;
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				result[j] = snapValue;
-			}
-		}
-		return result;
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
+		return calculateSnapshotScore(snapArray);
 	}
+
+	public abstract Pair<Double, Object> calculateSnapshotScore(double[] snapArray);
 
 	/**
 	 * Stores additional preferences (if any).

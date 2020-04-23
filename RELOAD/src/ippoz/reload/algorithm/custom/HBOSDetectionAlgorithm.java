@@ -4,8 +4,7 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -28,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javafx.util.Pair;
 
 /**
  * The Class HBOSDetectionAlgorithm. Implements the Histogram-Based Outlier Score algorithm.
@@ -69,7 +70,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public HBOSDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public HBOSDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(HISTOGRAMS)){
 			histograms = loadFromConfiguration();
@@ -134,7 +135,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		scores = new LinkedList<HBOSScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new HBOSScore(Snapshot.snapToString(snap, getDataSeries()), calculateHBOS(snap)));
+			scores.add(new HBOSScore(Snapshot.snapToString(snap, getDataSeries()), calculateHBOS(getSnapValueArray(snap))));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
@@ -221,20 +222,15 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		// TODO Auto-generated method stub
 		
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		double score;
-		if(histograms != null){
-			score = calculateHBOS(sysSnapshot);
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), score, getConfidence(score));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new Pair<Double, Object>(calculateHBOS(snapArray), null);
+	}
+
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return histograms != null;
 	}
 	
 	/**
@@ -243,19 +239,17 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 * @param snap the snap
 	 * @return the double
 	 */
-	private double calculateHBOS(Snapshot snap){
-		double snapValue;
+	private double calculateHBOS(double[] snapArray){
 		double hbos;
 		double temp;
 		if(getDataSeries().size() == 1){
-			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
 			if(histograms == null || histograms.get(getDataSeries().getName()) == null){
-				temp = histograms.get(histograms.keySet().iterator().next()).getScore(snapValue);
+				temp = histograms.get(histograms.keySet().iterator().next()).getScore(snapArray[0]);
 				if(temp > 0)
 					hbos = Math.log(1.0/temp);
 				else hbos = HBOS_DEFAULT_MAX;
 			} else {
-				temp = histograms.get(getDataSeries().getName()).getScore(snapValue);
+				temp = histograms.get(getDataSeries().getName()).getScore(snapArray[0]);
 				if(temp > 0)
 					hbos = Math.log(1.0/temp);
 				else hbos = HBOS_DEFAULT_MAX;
@@ -263,8 +257,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		} else {
 			hbos = 0;
 			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				temp = histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapValue);
+				temp = histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapArray[j]);
 				if(temp > 0)
 					hbos = hbos + Math.log(1.0/temp);
 				else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();

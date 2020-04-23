@@ -4,6 +4,7 @@
 package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
@@ -64,7 +65,7 @@ public class DetectionManager {
 	protected DataCategory[] dataTypes;
 	
 	/** The algorithm types (SPS, Historical...). */
-	protected List<AlgorithmType> algTypes;
+	protected List<LearnerType> algTypes;
 	
 	protected PreferencesManager loaderPref;
 	
@@ -78,11 +79,11 @@ public class DetectionManager {
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, List<AlgorithmType> algTypes, PreferencesManager loaderPref){
+	public DetectionManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref){
 		this(iManager, algTypes, loaderPref, null, null);
 	}
 	
-	public DetectionManager(InputManager iManager, List<AlgorithmType> algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
+	public DetectionManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
 		this.iManager = iManager;
 		this.algTypes = algTypes;
 		this.loaderPref = loaderPref;
@@ -270,13 +271,9 @@ public class DetectionManager {
 	protected Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
 		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
 		if(expList != null && !expList.isEmpty()){
-			for(AlgorithmType at : algTypes){
+			for(LearnerType at : algTypes){
 				if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(at)))
 					map.put(DetectionAlgorithm.getKnowledgeType(at), new ArrayList<Knowledge>(expList.size()));
-			}
-			if(needFiltering()){
-				if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS)))
-					map.put(DetectionAlgorithm.getKnowledgeType(AlgorithmType.ELKI_KMEANS), new ArrayList<Knowledge>(expList.size()));
 			}
 			for(int i=0;i<expList.size();i++){
 				if(map.containsKey(KnowledgeType.GLOBAL))

@@ -3,9 +3,9 @@
  */
 package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
@@ -34,7 +34,7 @@ public class LDCOFDBSCANDetectionAlgorithm extends LDCOFDetectionAlgorithm {
 	/** The Constant DEFAULT_PTS. */
 	public static final double DEFAULT_PTS = 3;
 
-	public LDCOFDBSCANDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public LDCOFDBSCANDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 	}
 	

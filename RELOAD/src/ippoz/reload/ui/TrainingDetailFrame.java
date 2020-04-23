@@ -4,7 +4,7 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.output.DetectorOutput;
@@ -203,11 +203,7 @@ public class TrainingDetailFrame {
 				case 4:
 					return String.valueOf(av.getAlgorithmType());
 				case 5:
-					try {
-						return DetectionAlgorithm.buildAlgorithm(av.getAlgorithmType(), av.getDataSeries(), av.getAlgorithmConfiguration()).getDecisionFunction().getClassifierTag();
-					} catch(Exception ex){
-						return av.getAlgorithmConfiguration().getItem(AlgorithmConfiguration.THRESHOLD);
-					}
+					return av.getAlgorithmConfiguration().getItem(BasicConfiguration.THRESHOLD);
 			}
 			return null;
 		}

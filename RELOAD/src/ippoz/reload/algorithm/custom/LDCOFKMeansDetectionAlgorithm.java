@@ -3,10 +3,10 @@
  */
 package ippoz.reload.algorithm.custom;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomKMeans;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.externalutils.ELKIUtils;
 
@@ -31,7 +31,7 @@ public class LDCOFKMeansDetectionAlgorithm extends LDCOFDetectionAlgorithm {
 	/** The Constant DEFAULT_K. */
 	public static final int DEFAULT_K = 3;
 
-	public LDCOFKMeansDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public LDCOFKMeansDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 	}
 

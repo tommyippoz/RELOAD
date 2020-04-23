@@ -3,14 +3,15 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomSVM;
 import ippoz.reload.algorithm.elki.support.CustomSVM.SVMKernel;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
@@ -32,7 +33,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public SVMELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public SVMELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, true);
 	}
 	
@@ -51,7 +52,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	 * @param conf the configuration
 	 * @return the nu
 	 */
-	private double getNU(AlgorithmConfiguration conf) {
+	private double getNU(BasicConfiguration conf) {
 		if(conf.hasItem(NU)){
 			if(conf.getItem(NU).trim().length() > 0){
 				try {
@@ -69,7 +70,7 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	 * @param conf the configuration
 	 * @return the kernel
 	 */
-	private SVMKernel getKernel(AlgorithmConfiguration conf) {
+	private SVMKernel getKernel(BasicConfiguration conf) {
 		if(conf.hasItem(KERNEL)){
 			if(conf.getItem(KERNEL).trim().length() > 0){
 				try {
@@ -82,8 +83,8 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	@Override
-	public double getELKIScore(Vector v) {
-		return ((CustomSVM)getAlgorithm()).calculateSVM(v);
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomSVM)getAlgorithm()).calculateSVM(v), null);
 	}
 
 	@Override

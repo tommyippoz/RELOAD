@@ -3,6 +3,7 @@
  */
 package ippoz.reload.info;
 
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
@@ -42,7 +43,7 @@ public class TrainInfo {
 	
 	private static final String TRAIN_ALGORITHMS = "TRAIN Algorithms";
 	
-	private List<AlgorithmType> algTypes;
+	private List<LearnerType> algTypes;
 	
 	private static final String TRAIN_FAULT_RATIO = "TRAIN FaultAttack Ratio";
 	
@@ -68,19 +69,19 @@ public class TrainInfo {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
-					algTypes = new LinkedList<AlgorithmType>();
+					algTypes = new LinkedList<LearnerType>();
 					if(preferences.get(TRAIN_ALGORITHMS).contains(",")){
 						String[] splitted = preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "").split(",");
 						for(String algString : splitted){
 							try {
-								algTypes.add(AlgorithmType.valueOf(algString.trim()));
+								algTypes.add(LearnerType.fromString(algString.trim()));
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
 							}
 						}
 					} else {
 						try {
-							algTypes.add(AlgorithmType.valueOf(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "")));
+							algTypes.add(LearnerType.fromString(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "")));
 						} catch(Exception ex){
 							AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + preferences.get(TRAIN_ALGORITHMS) + "'");
 						}
@@ -134,7 +135,7 @@ public class TrainInfo {
 		this.kFold = kFold;
 	}
 
-	public void setAlgorithms(List<AlgorithmType> algTypes) {
+	public void setAlgorithms(List<LearnerType> algTypes) {
 		this.algTypes = algTypes;
 	}
 
@@ -166,7 +167,7 @@ public class TrainInfo {
 		return faultRatio;
 	}
 
-	public List<AlgorithmType> getAlgTypes() {
+	public List<LearnerType> getAlgTypes() {
 		return algTypes;
 	}
 	

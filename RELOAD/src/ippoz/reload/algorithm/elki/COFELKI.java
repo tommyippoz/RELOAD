@@ -3,13 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomCOF;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -32,7 +33,7 @@ public class COFELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the conf
 	 */
-	public COFELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public COFELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -47,8 +48,8 @@ public class COFELKI extends DataSeriesELKIAlgorithm {
 	}
 
 	@Override
-	public double getELKIScore(Vector v) {
-		return ((CustomCOF)getAlgorithm()).calculateSingleOF(v);
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomCOF)getAlgorithm()).calculateSingleOF(v), null);
 	}
 
 	/* (non-Javadoc)
