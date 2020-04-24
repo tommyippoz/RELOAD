@@ -6,7 +6,6 @@ package ippoz.reload.evaluation;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;

@@ -6,7 +6,6 @@ package ippoz.reload.ui;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
 import ippoz.reload.manager.InputManager;

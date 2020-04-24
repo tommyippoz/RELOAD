@@ -3,7 +3,6 @@
  */
 package ippoz.reload.ui;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;

@@ -3,8 +3,6 @@
  */
 package ippoz.reload.algorithm.configuration;
 
-import java.util.HashMap;
-
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;

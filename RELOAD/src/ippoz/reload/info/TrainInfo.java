@@ -4,7 +4,6 @@
 package ippoz.reload.info;
 
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;

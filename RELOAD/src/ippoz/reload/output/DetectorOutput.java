@@ -5,7 +5,6 @@ package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderBatch;

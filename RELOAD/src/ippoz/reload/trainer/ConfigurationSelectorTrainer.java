@@ -8,7 +8,6 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -19,7 +18,6 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
-import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 

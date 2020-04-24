@@ -4,11 +4,9 @@
 package ippoz.reload.manager.train;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.algorithm.configuration.AlgorithmConfiguration;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;

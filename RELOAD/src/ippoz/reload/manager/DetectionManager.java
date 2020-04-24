@@ -5,7 +5,6 @@ package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;

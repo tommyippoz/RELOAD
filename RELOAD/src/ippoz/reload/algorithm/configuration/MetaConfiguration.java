@@ -5,7 +5,6 @@ package ippoz.reload.algorithm.configuration;
 
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.meta.MetaLearnerType;
 

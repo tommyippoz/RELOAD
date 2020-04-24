@@ -47,15 +47,11 @@ import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.meta.MetaData;
-import ippoz.reload.meta.MetaLearnerType;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import weka.classifiers.meta.Bagging;
 
 /**
  * The Class DetectionAlgorithm.
@@ -238,6 +234,14 @@ public abstract class DetectionAlgorithm {
 			case CASCADE_GENERALIZATION:
 				break;
 			case CASCADING:
+				break;
+			case ARBITRATING:
+				break;
+			case DELEGATING:
+				break;
+			case STACKING:
+				break;
+			default:
 				break;
 		}
 		return null;

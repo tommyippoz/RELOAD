@@ -4,7 +4,6 @@
 package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.algorithm.configuration.AlgorithmConfiguration;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
@@ -681,7 +680,7 @@ public class InputManager {
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
 					try {
 						algType = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
-						if(algType != null && algTypes.contains(algType)) {
+						if(algType != null && LearnerType.hasLearner(algTypes, algType)) {
 							reader = new BufferedReader(new FileReader(confFile));
 							// Eats the header
 							while(reader.ready()){
@@ -1098,7 +1097,9 @@ public class InputManager {
 	}	
 	
 	public void removeAlgorithm(String option) {
-		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.substring(0, option.indexOf('[')), false);
+		if(option.contains("["))
+			removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.substring(0, option.indexOf('[')), false);
+		else removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.trim(), false);
 	}
 	
 	private void removeFromFile(File file, String toRemove, boolean partialMatching){

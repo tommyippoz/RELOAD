@@ -170,7 +170,7 @@ public class BuildUI {
 		frame.getContentPane().setLayout(null);
 	}
 	
-	private void reload() {
+	public void reload() {
 		isUpdating = true;
 		frame.setVisible(false);
 		frame.getContentPane().removeAll();
@@ -378,7 +378,7 @@ public class BuildUI {
 		}).start();
 	}
 	
-	private JPanel printOptions(JPanel panel, String[] options, int fromX, int fromY, int space){
+	private JPanel printOptions(boolean isAlg, JPanel panel, String[] options, int fromX, int fromY, int space){
 		JLabel lbl;
 		JButton jb;
 		if(options != null && options.length > 0){
@@ -395,10 +395,42 @@ public class BuildUI {
 				
 				JPanel innerInnerPanel = new JPanel();
 				innerInnerPanel.setBackground(Color.WHITE);
-				innerInnerPanel.setLayout(new GridLayout(1, 2, 5, 0));
+				innerInnerPanel.setLayout(new GridLayout(1, (isAlg?3:2), 5, 0));
+				
+				if(isAlg){
+					jb = new JButton("Meta");
+					jb.setHorizontalAlignment(SwingConstants.CENTER);
+					jb.addActionListener(new ActionListener() { 
+						public void actionPerformed(ActionEvent e) { 
+							if(!option.contains(".")) {
+								String cropOption = option.substring(0, option.indexOf('['));
+								String[] algorithms = cropOption.contains(",") ? cropOption.split(",") : new String[]{cropOption.trim()};
+								for(String algName : algorithms){
+									try {
+										LearnerType at = LearnerType.fromString(algName.trim());
+										MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
+										mlf.setVisible(true);
+									} catch(Exception ex){
+										AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
+									}
+								}
+							} else {
+								LoaderFrame lf;
+								String type = option.split("@")[0].trim();
+								String loaderName = option.split("@")[1].trim();
+								try {
+									lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
+									lf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
+								}
+							}
+							
+						} } );
+					innerInnerPanel.add(jb);
+				}
 				
 				jb = new JButton("#");
-				//jb.setBounds(panel.getWidth() - fromX - 2*buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
@@ -430,7 +462,6 @@ public class BuildUI {
 				innerInnerPanel.add(jb);
 					
 				jb = new JButton("-");
-				//jb.setBounds(panel.getWidth() - fromX - buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
@@ -478,17 +509,15 @@ public class BuildUI {
 		dataAlgPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		//dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, frame.getHeight()/8 + labelSpacing*(getDatasets().length + getAlgorithms().length) + 2*bigLabelSpacing);
 		dataAlgPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
 		dataAlgPanel.setLayout(new GridLayout(4 + getAlgorithms().length + getDatasets().length, 1, 10, 0));
 		
 		JLabel mainLabel = new JLabel("Loaders");
-		//mainLabel.setBounds(dataAlgPanel.getWidth()/4, labelSpacing, dataAlgPanel.getWidth()/2, labelSpacing);
 		mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		mainLabel.setFont(titleFont);
 		dataAlgPanel.add(mainLabel, BorderLayout.NORTH);
 		
-		printOptions(dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
+		printOptions(false, dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -589,7 +618,7 @@ public class BuildUI {
 		
 		tabY = tabY + labelSpacing;
 		
-		printOptions(dataAlgPanel, getAlgorithms(), dataAlgPanel.getWidth()/20, tabY, labelSpacing);
+		printOptions(true, dataAlgPanel, getAlgorithms(), dataAlgPanel.getWidth()/20, tabY, labelSpacing);
 		
 		tabY = tabY + (getAlgorithms().length)*labelSpacing;
 		

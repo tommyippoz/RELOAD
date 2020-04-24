@@ -3,12 +3,10 @@
  */
 package ippoz.reload.algorithm.configuration;
 
+import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
-import ippoz.reload.algorithm.type.BaseLearner;
-import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.meta.MetaLearnerType;
 
 import java.util.HashMap;
 import java.util.Map;
