@@ -44,13 +44,13 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		try {
 			sampledKnowledge = baggingOf(kList, getSamplesNumber());
 			for(List<Knowledge> sKnow : sampledKnowledge){
-				mTrainer.addTrainer(getMetaType(), getLearnerType(), dataSeries, sKnow);
+				mTrainer.addTrainer(getLearnerType(), dataSeries, sKnow);
 			}
 			mTrainer.start();
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
-				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildBaseAlgorithm(getLearnerType(), dataSeries, at.getBestConfiguration()));
+				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getLearnerType(), dataSeries, at.getBestConfiguration()));
 			}
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());

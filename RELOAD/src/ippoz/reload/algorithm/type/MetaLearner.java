@@ -3,6 +3,8 @@
  */
 package ippoz.reload.algorithm.type;
 
+import java.util.Arrays;
+
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.meta.MetaLearnerType;
 
@@ -27,6 +29,17 @@ public class MetaLearner extends LearnerType {
 
 	public AlgorithmType[] getBaseLearners() {
 		return atList;
+	}	
+	
+	@Override
+	public String toString() {
+		String toString = "";
+		if(mlType != null){
+			toString = toString + mlType.toString();
+			if(atList != null && atList.length > 0)
+				toString = toString + Arrays.toString(atList);
+		}
+		return toString;
 	}	
 
 }

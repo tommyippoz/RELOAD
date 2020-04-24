@@ -4,6 +4,8 @@
 package ippoz.reload.algorithm.configuration;
 
 import ippoz.reload.algorithm.type.LearnerType;
+import ippoz.reload.algorithm.type.MetaLearner;
+import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.meta.MetaLearnerType;
@@ -90,7 +92,7 @@ public abstract class BasicConfiguration implements Cloneable {
 		try {
 			if(this instanceof AlgorithmConfiguration)
 				newConf = new AlgorithmConfiguration(((AlgorithmConfiguration)this).getAlgorithmType());
-			else newConf = new MetaConfiguration(((MetaConfiguration)this).getMetaType());
+			else newConf = new MetaConfiguration(((MetaConfiguration)this).getLearnerType());
 			for(String mapKey : confMap.keySet()){
 				newMap.put(mapKey, confMap.get(mapKey));
 			}
@@ -204,12 +206,12 @@ public abstract class BasicConfiguration implements Cloneable {
 		return all;
 	}	
 	
-	public static BasicConfiguration buildConfiguration(AlgorithmType algType, MetaLearnerType mlType, String descRow){
+	public static BasicConfiguration buildConfiguration(LearnerType lType, String descRow){
 		String tag, value;
 		BasicConfiguration conf = null;
-		if(mlType != null)
-			conf = new MetaConfiguration(mlType);
-		else conf = new AlgorithmConfiguration(algType);
+		if(lType instanceof MetaLearner)
+			conf = new MetaConfiguration((MetaLearner)lType);
+		else conf = new AlgorithmConfiguration(((BaseLearner)lType).getAlgType());
 		if(descRow != null){
 			for(String splitted : descRow.split("&")){
 				if(splitted.contains("=")){
@@ -247,8 +249,11 @@ public abstract class BasicConfiguration implements Cloneable {
 	public abstract LearnerType getLearnerType();
 
 	public static BasicConfiguration buildConfiguration(LearnerType algType) {
-		// TODO Auto-generated method stub
-		return null;
+		if(algType != null){
+			if(algType instanceof BaseLearner)
+				return new AlgorithmConfiguration(((BaseLearner)algType).getAlgType());
+			else return new MetaConfiguration(algType);
+		} else return null;
 	}
 	
 }

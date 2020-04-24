@@ -20,6 +20,15 @@ public class BaseLearner extends LearnerType {
 
 	public AlgorithmType getAlgType() {
 		return algType;
+	}
+
+	@Override
+	public String toString() {
+		if(algType != null)
+			return algType.toString();
+		else return "";
 	}	
+	
+	
 
 }

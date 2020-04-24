@@ -4,6 +4,7 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
@@ -323,7 +324,7 @@ public class BuildUI {
 				int tot = 0;
 				int index = 1;
 				try {
-					for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+					for(List<LearnerType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
 						if(DetectorMain.hasSliding(aList)){
 							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
 						} else {
@@ -335,7 +336,7 @@ public class BuildUI {
 					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
 					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
-						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+						for(List<LearnerType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
@@ -406,7 +407,7 @@ public class BuildUI {
 							String[] algorithms = cropOption.contains(",") ? cropOption.split(",") : new String[]{cropOption.trim()};
 							for(String algName : algorithms){
 								try {
-									AlgorithmType at = AlgorithmType.valueOf(algName.trim());
+									LearnerType at = LearnerType.fromString(algName.trim());
 									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)).get(at));
 									asf.setVisible(true);
 								} catch(Exception ex){
@@ -672,11 +673,11 @@ public class BuildUI {
 	private String[] getAlgorithms(){
 		int i = 0;
 		List<AlgorithmFamily> family = new LinkedList<AlgorithmFamily>();
-		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
+		List<List<LearnerType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
-		for(List<AlgorithmType> aList : aComb){
+		for(List<LearnerType> aList : aComb){
 			try {
-				family = DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1)));
+				family = DetectionAlgorithm.getFamily(LearnerType.fromString(aList.toString().substring(1, aList.toString().length()-1)));
 			} catch(Exception ex){
 				family.add(AlgorithmFamily.MIXED);
 			}

@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -63,13 +64,13 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	 * @param reputation the used reputation metric
 	 * @param expList the considered train data
 	 */
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<BasicConfiguration> basicConfigurations, String datasetName, int kfold) {
+	public ConfigurationSelectorTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, List<BasicConfiguration> basicConfigurations, String datasetName, int kfold) {
 		super(algTag, dataSeries, metric, reputation, kList, datasetName, kfold);
 		configurations = confCloneAndComplete(basicConfigurations);
 	}
 	
-	public ConfigurationSelectorTrainer(AlgorithmType algTag, DataSeries dataSeries, List<Knowledge> kList, MetaLearnerType mlType, MetaData mData) {
-		super(algTag, dataSeries, mData.getTargetMetric(), mData.getReputation(), kList, mData.getDatasetName(), mData.getKfold(), mlType, mData);
+	public ConfigurationSelectorTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, MetaData mData) {
+		super(algTag, dataSeries, mData.getTargetMetric(), mData.getReputation(), kList, mData.getDatasetName(), mData.getKfold(), mData);
 		configurations = confCloneAndComplete(mData.getConfigurationsFor(algTag));
 	}
 	
@@ -116,7 +117,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				/* Iterates for K-Fold */
 				for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
 					currentConf = (BasicConfiguration)conf.clone();
-					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf, getMetaLearnerType(), getMetaData());
+					// eventually has metadata
+					algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
 					
 					/* Automatic Training */
 					trainingResult = false;
@@ -188,7 +190,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				}
 			}
 						
-			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf, getMetaLearnerType(), getMetaData());
+			// eventually has metadata
+			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
 				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
 			} else {

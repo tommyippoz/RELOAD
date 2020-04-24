@@ -4,6 +4,7 @@
 package ippoz.reload.meta;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
@@ -57,7 +58,7 @@ public class MetaData {
 		return confMap;
 	}
 
-	public List<BasicConfiguration> getConfigurationsFor(AlgorithmType algTag) {
+	public List<BasicConfiguration> getConfigurationsFor(LearnerType algTag) {
 		if(confMap != null && confMap.containsKey(algTag))
 			return confMap.get(algTag);
 		else return new LinkedList<>();

@@ -5,6 +5,7 @@ package ippoz.reload.evaluation;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
@@ -274,7 +275,7 @@ public class ExperimentEvaluator extends Thread {
 	 */
 	private void printText(String outFolderName){
 		BufferedWriter writer = null;
-		Map<LayerType, Map<AlgorithmType, Integer>> countMap;
+		Map<LayerType, Map<LearnerType, Integer>> countMap;
 		String partial;
 		int count;
 		try {
@@ -282,7 +283,7 @@ public class ExperimentEvaluator extends Thread {
 			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expBatch + ".csv")));
 			writer.write("timestamp,anomaly_alerts,");
 			for(LayerType currentLayer : countMap.keySet()){
-				for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){
+				for(LearnerType algTag : countMap.get(currentLayer).keySet()){
 					writer.write(currentLayer.toString() + "@" + algTag + ",");
 				}
 			}
@@ -302,7 +303,7 @@ public class ExperimentEvaluator extends Thread {
 				writer.write(AppUtility.getSecondsBetween(timestamp, kMap.get(kMap.keySet().iterator().next()).getTimestamp(0)) + ",");
 				writer.write(count + ",");
 				for(LayerType currentLayer : countMap.keySet()){
-					for(AlgorithmType algTag : countMap.get(currentLayer).keySet()){
+					for(LearnerType algTag : countMap.get(currentLayer).keySet()){
 						writer.write(countMap.get(currentLayer).get(algTag) + ",");
 					}
 				}
@@ -319,11 +320,11 @@ public class ExperimentEvaluator extends Thread {
 	 *
 	 * @return the basic map
 	 */
-	private Map<LayerType, Map<AlgorithmType, Integer>> buildMap() {
-		Map<LayerType, Map<AlgorithmType, Integer>> map = new HashMap<LayerType, Map<AlgorithmType, Integer>>();
+	private Map<LayerType, Map<LearnerType, Integer>> buildMap() {
+		Map<LayerType, Map<LearnerType, Integer>> map = new HashMap<LayerType, Map<LearnerType, Integer>>();
 		for(AlgorithmModel aVoter : algList){
 			if(!map.keySet().contains(aVoter.getLayerType()))
-				map.put(aVoter.getLayerType(), new HashMap<AlgorithmType, Integer>());
+				map.put(aVoter.getLayerType(), new HashMap<LearnerType, Integer>());
 			if(!map.get(aVoter.getLayerType()).containsKey(aVoter.getAlgorithmType()))
 				map.get(aVoter.getLayerType()).put(aVoter.getAlgorithmType(), 0);
 		}

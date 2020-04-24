@@ -6,6 +6,7 @@ package ippoz.reload.algorithm.configuration;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.meta.MetaData;
 import ippoz.reload.meta.MetaLearnerType;
 
 /**
@@ -15,11 +16,13 @@ import ippoz.reload.meta.MetaLearnerType;
  */
 public class MetaConfiguration extends BasicConfiguration {
 	
-	private MetaLearnerType mlType;
+	private MetaLearner mlType;
 
-	public MetaConfiguration(MetaLearnerType mlType) {
+	public MetaConfiguration(LearnerType learnerType) {
 		super();
-		this.mlType = mlType;
+		if(learnerType instanceof MetaLearner)
+			this.mlType = (MetaLearner)learnerType;
+		else mlType = null;
 	}
 	
 	/**
@@ -28,7 +31,7 @@ public class MetaConfiguration extends BasicConfiguration {
 	 * @return the algType
 	 */
 	public MetaLearnerType getMetaType(){
-		return mlType;
+		return mlType.getMetaType();
 	}
 	
 	@Override
@@ -38,7 +41,12 @@ public class MetaConfiguration extends BasicConfiguration {
 
 	@Override
 	public LearnerType getLearnerType() {
-		return new MetaLearner(mlType, null);
+		return mlType;
+	}
+
+	public MetaData generateMetaData() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.meta.DataSeriesMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -48,11 +49,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 */
 	@Override
 	protected AlgorithmModel clone() throws CloneNotSupportedException {
-		if(alg instanceof DataSeriesMetaLearner){
-			DataSeriesMetaLearner dsml = (DataSeriesMetaLearner)alg;
-			new AlgorithmModel(DetectionAlgorithm.buildMetaAlgorithm(dsml.getMetaType(), alg.getDataSeries(), alg.getConfiguration(), dsml.getMetaData()), metricScore, reputationScore);
-		}
-		return new AlgorithmModel(DetectionAlgorithm.buildBaseAlgorithm(alg.getLearnerType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
+		return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(alg.getLearnerType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
 	}
 
 	/**
@@ -110,7 +107,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 *
 	 * @return the algorithm type
 	 */
-	public AlgorithmType getAlgorithmType() {
+	public LearnerType getAlgorithmType() {
 		return alg.getLearnerType();
 	}
 
@@ -145,7 +142,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		if(amString != null && amString.length() > 0 && amString.indexOf("§") != -1){
 			String[] splitted = AppUtility.splitAndPurify(amString, "§");
 			if(splitted.length > 5){
-				BasicConfiguration conf = BasicConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+				BasicConfiguration conf = BasicConfiguration.buildConfiguration(LearnerType.fromString(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
 				if(conf != null){
 					conf.addItem(BasicConfiguration.WEIGHT, splitted[2]);
 					conf.addItem(BasicConfiguration.AVG_SCORE, splitted[3]);

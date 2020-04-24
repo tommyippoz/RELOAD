@@ -4,6 +4,7 @@
 package ippoz.reload.trainer;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -34,7 +35,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	 * @param expList the considered train data
 	 * @param configurations the possible configurations
 	 */
-	public FixedConfigurationTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, BasicConfiguration configuration) {
+	public FixedConfigurationTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, BasicConfiguration configuration) {
 		super(algTag, dataSeries, metric, reputation, kList, null);
 		try {
 			fixConf = (BasicConfiguration) configuration.clone();

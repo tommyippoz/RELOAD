@@ -6,6 +6,7 @@ package ippoz.reload.trainer;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -34,7 +35,7 @@ import java.util.Map;
 public abstract class AlgorithmTrainer extends Thread implements Comparable<AlgorithmTrainer> {
 	
 	/** The algorithm tag. */
-	private AlgorithmType algTag;	
+	private LearnerType algTag;	
 	
 	/** The involved data series. */
 	private DataSeries dataSeries;
@@ -74,8 +75,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	
 	private MetaData metaData;
 	
-	private MetaLearnerType mlType;
-	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -86,7 +85,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @param kList the considered train data
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold, MetaLearnerType mlType, MetaData metaData) {
+	public AlgorithmTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold, MetaData metaData) {
 		this.algTag = algTag;
 		this.dataSeries = dataSeries;
 		this.metric = metric;
@@ -94,12 +93,11 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		this.kList = kList;
 		this.kfold = kfold;
 		this.datasetName = datasetName;
-		this.mlType = mlType;
 		this.metaData = metaData;
 	}
 	
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
-		this(algTag, dataSeries, metric, reputation, kList, datasetName, kfold, null, null);	
+	public AlgorithmTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
+		this(algTag, dataSeries, metric, reputation, kList, datasetName, kfold, null);	
 	}
 	
 	/**
@@ -114,7 +112,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param kfold2 
 	 * @param datasetName 
 	 */
-	public AlgorithmTrainer(AlgorithmType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName) {
+	public AlgorithmTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName) {
 		this(algTag, dataSeries, metric, reputation, kList, datasetName, 1);
 	}
 	
@@ -200,7 +198,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		double[] metricEvaluation = null;
 		ValueSeries metricResults = new ValueSeries();
 		List<Double> algResults = new ArrayList<Double>(kList.size());
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf, mlType, metaData);
+		// eventually has metadata
+		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
 			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
 			metricResults.addValue(metricEvaluation[0]);
@@ -368,7 +367,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the algorithm type
 	 */
-	public AlgorithmType getAlgType(){
+	public LearnerType getAlgType(){
 		return algTag;
 	}
 
@@ -399,10 +398,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 
 	public MetaData getMetaData() {
 		return metaData;
-	}
-
-	public MetaLearnerType getMetaLearnerType() {
-		return mlType;
 	}
 	
 }

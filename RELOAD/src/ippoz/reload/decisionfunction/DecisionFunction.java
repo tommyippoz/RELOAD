@@ -4,6 +4,8 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -401,11 +403,12 @@ public abstract class DecisionFunction {
 	 */
 	public abstract double[] getThresholds();
 
-	public static boolean isApplicableTo(AlgorithmType algType, String decFunctString) {
-		if(decFunctString == null || !checkDecisionFunction(decFunctString))
+	public static boolean isApplicableTo(LearnerType algType, String decFunctString) {
+		if(algType == null || decFunctString == null || !checkDecisionFunction(decFunctString))
 			return false;
-		else if(decFunctString.contains("CLUSTER"))
-			return algType.equals(AlgorithmType.DBSCAN) || algType.equals(AlgorithmType.ELKI_KMEANS);
+		else if(algType instanceof BaseLearner && decFunctString.contains("CLUSTER"))
+			return ((BaseLearner)algType).getAlgType().equals(AlgorithmType.DBSCAN) || 
+					((BaseLearner)algType).getAlgType().equals(AlgorithmType.ELKI_KMEANS);
 		else return true;
 	}
 	

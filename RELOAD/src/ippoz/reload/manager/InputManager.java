@@ -575,8 +575,8 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<AlgorithmType, List<BasicConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
-		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
+	public Map<LearnerType, List<BasicConfiguration>> loadConfiguration(LearnerType at, Integer windowSize, SlidingPolicy sPolicy) {
+		List<LearnerType> list = new LinkedList<>();
 		list.add(at);
 		return loadConfigurations(list, windowSize, sPolicy, true);
 	}
@@ -594,7 +594,7 @@ public class InputManager {
 			for(LearnerType alg : algTypes){
 				if(!confList.containsKey(alg)){
 					AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
-					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, new BasicConfiguration(alg)).getDefaultParameterValues());
+					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
 				}
 			}
 			confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
@@ -634,7 +634,7 @@ public class InputManager {
 			generateCombinations(confMap, keyIndex, keyList, combinations);
 	}
 	
-	private void generateConfigurationsFile(AlgorithmType alg, Map<String, String[]> confMap) {
+	private void generateConfigurationsFile(LearnerType alg, Map<String, String[]> confMap) {
 		File confFile;
 		BufferedWriter writer = null;
 		List<String> keyList = null;
@@ -667,11 +667,11 @@ public class InputManager {
 		}
 	}
 
-	private Map<AlgorithmType, List<BasicConfiguration>> readConfigurationsFile(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
+	private Map<LearnerType, List<BasicConfiguration>> readConfigurationsFile(List<LearnerType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
-		Map<AlgorithmType, List<BasicConfiguration>> confList = new HashMap<AlgorithmType, List<BasicConfiguration>>();
+		Map<LearnerType, List<BasicConfiguration>> confList = new HashMap<>();
 		BasicConfiguration alConf;
-		AlgorithmType algType;
+		LearnerType algType;
 		BufferedReader reader = null;
 		String[] header = null;
 		String readed;
@@ -680,7 +680,7 @@ public class InputManager {
 			for(File confFile : confFolder.listFiles()){
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
 					try {
-						algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
+						algType = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
 						if(algType != null && algTypes.contains(algType)) {
 							reader = new BufferedReader(new FileReader(confFile));
 							// Eats the header
@@ -697,7 +697,7 @@ public class InputManager {
 									readed = readed.trim();
 									if(readed.length() > 0 && !readed.startsWith("*")){
 										i = 0;
-										alConf = new AlgorithmConfiguration(algType);
+										alConf = BasicConfiguration.buildConfiguration(algType);
 										for(String element : readed.split(",")){
 											alConf.addItem(header[i++], element);
 										}
@@ -731,7 +731,7 @@ public class InputManager {
 		return confList;
 	}
 	
-	public void updateConfiguration(AlgorithmType algType, List<BasicConfiguration> confList) {
+	public void updateConfiguration(LearnerType algType, List<BasicConfiguration> confList) {
 		BufferedWriter writer = null;
 		File outFile = new File(getConfigurationFolder() + algType.toString() + ".conf");
 		try {
@@ -1442,7 +1442,7 @@ public class InputManager {
 								AlgorithmModel am = AlgorithmModel.fromString(readed);
 								if(am != null && voter.checkModel(am, modelList))
 									modelList.add(am);
-							}
+							} 
 						}
 					}
 				}
@@ -1725,7 +1725,7 @@ public class InputManager {
 						readed = readed.trim();		
 						if(readed.length() > 0 && !readed.startsWith("*")){
 							int i = 0;
-							acOut = BasicConfiguration.buildConfiguration(AlgorithmType.valueOf(mlName.trim()), readed.split("§")[6]);
+							acOut = BasicConfiguration.buildConfiguration(LearnerType.fromString(mlName.trim()), readed.split("§")[6]);
 							for(String element : readed.split("§")){
 								acOut.addItem(header[i++].trim(), element.trim());
 							}

@@ -3,6 +3,8 @@
  */
 package ippoz.reload.algorithm.type;
 
+import ippoz.reload.commons.algorithm.AlgorithmType;
+
 /**
  * @author Tommy
  *
@@ -10,8 +12,12 @@ package ippoz.reload.algorithm.type;
 public abstract class LearnerType {
 
 	public static LearnerType fromString(String trim) {
-		// TODO Auto-generated method stub
-		return null;
+		try{
+			AlgorithmType at = AlgorithmType.valueOf(trim);
+			return new BaseLearner(at);
+		} catch(Exception ex){
+			return null;
+		}
 	}
 
 }

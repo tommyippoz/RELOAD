@@ -5,6 +5,7 @@ package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
@@ -61,13 +62,13 @@ public class AlgorithmSetupFrame {
 	
 	private List<BasicConfiguration> confList;
 	
-	private AlgorithmType algType;
+	private LearnerType algType;
 	
 	private String[] algParams;
 	
-	public AlgorithmSetupFrame(InputManager iManager, AlgorithmType algType, List<BasicConfiguration> confList) {
+	public AlgorithmSetupFrame(InputManager iManager, LearnerType at, List<BasicConfiguration> confList) {
 		this.iManager = iManager;
-		this.algType = algType;
+		this.algType = at;
 		this.confList = confList;
 		if(confList == null){
 			//iManager.

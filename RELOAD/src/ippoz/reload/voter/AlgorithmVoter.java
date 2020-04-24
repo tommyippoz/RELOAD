@@ -7,6 +7,8 @@ import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -21,16 +23,16 @@ public class AlgorithmVoter extends ScoresVoter {
 	
 	private DataSeriesNonSlidingAlgorithm alg;
 
-	public AlgorithmVoter(String checkerSelection, AlgorithmType algType, BasicConfiguration conf) {
+	public AlgorithmVoter(String checkerSelection, LearnerType algType, BasicConfiguration conf) {
 		super(checkerSelection, algType.toString());
 		if(conf != null)
-			alg = (DataSeriesNonSlidingAlgorithm) DetectionAlgorithm.buildBaseAlgorithm(algType, DataSeries.fromString(conf.getItem(BasicConfiguration.DATASERIES) + "#PLAIN#NO_LAYER", false), conf);
+			alg = (DataSeriesNonSlidingAlgorithm) DetectionAlgorithm.buildAlgorithm(algType, DataSeries.fromString(conf.getItem(BasicConfiguration.DATASERIES) + "#PLAIN#NO_LAYER", false), conf);
 	}
 	
-	public AlgorithmType getAlgorithmType(){
+	public LearnerType getAlgorithmType(){
 		if(alg != null)
 			return alg.getLearnerType();
-		else return AlgorithmType.valueOf(getVotingStrategy());
+		else return LearnerType.fromString(getVotingStrategy());
 	}
 
 	@Override

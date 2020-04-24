@@ -5,6 +5,7 @@ package ippoz.reload.voter;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
@@ -94,8 +95,8 @@ public abstract class ScoresVoter {
 		if(checkerSelection != null){
 			if(votingStrategy != null && DetectionAlgorithm.isAlgorithm(votingStrategy.trim()) != null){
 				if(iManager != null)
-					return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy.trim()), iManager.getMetaConfigurationFor(datasetName, votingStrategy));
-				else return new AlgorithmVoter(checkerSelection, DetectionAlgorithm.isAlgorithm(votingStrategy.trim()), null);
+					return new AlgorithmVoter(checkerSelection, LearnerType.fromString(votingStrategy.trim()), iManager.getMetaConfigurationFor(datasetName, votingStrategy));
+				else return new AlgorithmVoter(checkerSelection, LearnerType.fromString(votingStrategy.trim()), null);
 			} else return new MajorityVoter(checkerSelection, votingStrategy.trim());
 		} else {
 			return null;

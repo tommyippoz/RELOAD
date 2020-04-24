@@ -3,6 +3,7 @@
  */
 package ippoz.reload.meta;
 
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -31,8 +32,8 @@ public class MetaTrainer extends ThreadScheduler {
 		trainerList = new LinkedList<AlgorithmTrainer>();
 	}
 
-	public void addTrainer(MetaLearnerType mlType, AlgorithmType algTag, DataSeries dataSeries, List<Knowledge> kList){
-		trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, mlType, data));
+	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList){
+		trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data));
 	}
 
 	@Override

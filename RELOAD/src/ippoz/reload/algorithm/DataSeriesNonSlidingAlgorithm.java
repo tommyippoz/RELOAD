@@ -29,7 +29,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	
 	public DataSeriesNonSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
-		if(conf.hasItem(TMP_FILE)){
+		if(conf != null && conf.hasItem(TMP_FILE)){
 			clearLoggedScores();
 			loadLoggedScores();
 		}

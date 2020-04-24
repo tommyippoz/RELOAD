@@ -3,6 +3,7 @@
  */
 package ippoz.reload.manager;
 
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -25,7 +26,7 @@ import java.util.Map;
  */
 public class MetaLearningManager extends DetectionManager {
 
-	public MetaLearningManager(InputManager iManager, List<AlgorithmType> algTypes, PreferencesManager loaderPref) {
+	public MetaLearningManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref) {
 		super(iManager, algTypes, loaderPref);
 		// TODO Auto-generated constructor stub
 	}
