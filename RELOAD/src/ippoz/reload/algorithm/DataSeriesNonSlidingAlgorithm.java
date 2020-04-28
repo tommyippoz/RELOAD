@@ -85,7 +85,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		} 
 	}
 	
-	private String getScoresFilename(){
+	protected String getScoresFilename(){
 		String base = getFilename();
 		base = base.substring(0, base.indexOf("."));
 		base = base + "_logged_scores." + getLearnerType().toString().toLowerCase();

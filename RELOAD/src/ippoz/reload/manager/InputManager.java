@@ -5,7 +5,10 @@ package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.configuration.MetaConfiguration;
+import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -268,7 +271,8 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						metricList.add(getMetric(readed.trim()));
+						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim(), 
+								prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true));
 					}
 				}
 			}
@@ -343,115 +347,8 @@ public class InputManager {
 		}
 	}
 	
-	/**
-	 * Gets the reputation.
-	 *
-	 * @param metric the chosen metric
-	 * @return the obtained reputation
-	 */
-	public Reputation getReputation(Metric metric) {
-		String reputationType = prefManager.getPreference(REPUTATION_TYPE);
-		boolean validAfter = Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION));
-		switch(reputationType.toUpperCase()){
-			case "BETA":
-				return new BetaReputation(reputationType, validAfter);
-			case "METRIC":
-				return new MetricReputation(reputationType, metric);
-			default:
-				if(AppUtility.isNumber(reputationType))
-					return new ConstantReputation(reputationType, Double.parseDouble(reputationType));
-				else {
-					AppLogger.logError(getClass(), "MissingPreferenceError", "Reputation cannot be defined");
-					return null;
-				}
-		}
-	}
-	
 	public MetricType getMetricType() {
-		return getMetric(prefManager.getPreference(METRIC)).getMetricType();
-	}
-	
-	/**
-	 * Gets the metric.
-	 *
-	 * @param metricType the metric tag
-	 * @return the obtained metric
-	 */
-	public Metric getMetric(String metricType){
-		String param = null;
-		String mType = prefManager.getPreference(METRIC_TYPE).trim();
-		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
-		boolean validAfter = prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true;
-		if(metricType.contains("(")){
-			param = metricType.substring(metricType.indexOf('(')+1, metricType.indexOf(')'));
-			metricType = metricType.substring(0, metricType.indexOf('('));
-		}
-		switch(metricType.toUpperCase()){
-			case "TP":
-			case "TRUEPOSITIVE":
-				return new TP_Metric(absolute, validAfter);
-			case "TN":
-			case "TRUENEGATIVE":
-				return new TN_Metric(absolute, validAfter);
-			case "FN":
-			case "FALSENEGATIVE":
-				return new FN_Metric(absolute, validAfter);
-			case "FP":
-			case "FALSEPOSITIVE":
-				return new FP_Metric(absolute, validAfter);
-			case "PRECISION":
-				return new Precision_Metric(validAfter);
-			case "RECALL":
-				return new Recall_Metric(validAfter);
-			case "F-MEASURE":
-			case "FMEASURE":
-				return new FMeasure_Metric(validAfter);
-			case "G-MEAN":
-			case "GMEAN":
-			case "GMEANS":
-				return new GMean_Metric(validAfter);
-			case "F-SCORE":
-			case "FSCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new FScore_Metric(Double.valueOf(param), validAfter);
-				else return new FMeasure_Metric(validAfter);
-			case "FPR":
-				return new FalsePositiveRate_Metric(validAfter);
-			case "MCC":
-			case "MATTHEWS":
-				return new Matthews_Coefficient(validAfter);
-			case "AUC":
-				return new AUC_Metric(validAfter);
-			case "ACCURACY":
-				return new Accuracy_Metric(validAfter);
-			case "SSCORE":
-			case "SAFESCORE":
-			case "SAFE_SCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new SafeScore_Metric(Double.valueOf(param), validAfter);
-				else return new SafeScore_Metric(2.0, validAfter);
-			case "CUSTOM":
-				return new Custom_Metric(validAfter);
-			case "OVERLAP":
-				return new Overlap_Metric(validAfter);
-			case "OVERLAPD":
-			case "OVERLAPDETAIL":
-			case "OVERLAP_DETAIL":
-			case "NOPREDICTION":
-				return new NoPredictionArea_Metric(validAfter);
-			case "THRESHOLD":
-			case "THRESHOLDS":
-			case "THRESHOLDS_AMOUNT":
-				return new ThresholdAmount_Metric(validAfter);
-			case "CONFIDENCE_ERROR":
-			case "CONFERROR":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new ConfidenceErrorMetric(validAfter, Double.valueOf(param));
-				else return new ConfidenceErrorMetric(validAfter, 1.0);
-			default:
-				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric '" + mType + "'cannot be defined");
-				return null;
-		}
+		return getTargetMetric().getMetricType();
 	}
 
 	/**
@@ -460,7 +357,8 @@ public class InputManager {
 	 * @return the metric
 	 */
 	public Metric getTargetMetric() {
-		return getMetric(prefManager.getPreference(METRIC));
+		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim(), 
+				prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true);
 	}
 
 	public String getConfigurationFolder() {
@@ -574,10 +472,8 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<LearnerType, List<BasicConfiguration>> loadConfiguration(LearnerType at, Integer windowSize, SlidingPolicy sPolicy) {
-		List<LearnerType> list = new LinkedList<>();
-		list.add(at);
-		return loadConfigurations(list, windowSize, sPolicy, true);
+	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
+		return loadConfigurations(at, datasetName, windowSize, sPolicy, true);
 	}
 
 	/**
@@ -587,16 +483,12 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<LearnerType, List<BasicConfiguration>> loadConfigurations(List<LearnerType> algTypes, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
-		Map<LearnerType, List<BasicConfiguration>> confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
-		if(createMissing && algTypes != null && algTypes.size() != confList.size()){
-			for(LearnerType alg : algTypes){
-				if(!confList.containsKey(alg)){
-					AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
-					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
-				}
-			}
-			confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
+	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
+		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
+		if(createMissing && alg != null && alg instanceof BaseLearner){
+			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
+			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
+			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
 		}
 		return confList;
 	}
@@ -666,22 +558,29 @@ public class InputManager {
 		}
 	}
 
-	private Map<LearnerType, List<BasicConfiguration>> readConfigurationsFile(List<LearnerType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
+	private List<BasicConfiguration> readConfigurationsFile(LearnerType mainLearner, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
-		Map<LearnerType, List<BasicConfiguration>> confList = new HashMap<>();
-		BasicConfiguration alConf;
-		LearnerType algType;
-		BufferedReader reader = null;
+		List<BasicConfiguration> confList = new LinkedList<>();
+		LearnerType fileLearner;
 		String[] header = null;
 		String readed;
-		int i;
-		try {
+		MetaConfiguration mConf = null;
+		if(mainLearner instanceof MetaLearner){
+			mConf = new MetaConfiguration(mainLearner);
+			mConf.addItem(BasicConfiguration.K_FOLD, getKFoldCounter());
+			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getMetricName());
+			mConf.addItem(BasicConfiguration.REPUTATION, getReputation(getTargetMetric()).toString());
+			mConf.addItem(BasicConfiguration.DATASET_NAME, datasetName);
+			
+		}
+		if(confFolder != null && confFolder.exists() && confFolder.isDirectory()){
 			for(File confFile : confFolder.listFiles()){
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
 					try {
-						algType = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
-						if(algType != null && LearnerType.hasLearner(algTypes, algType)) {
-							reader = new BufferedReader(new FileReader(confFile));
+						fileLearner = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
+						if(fileLearner != null && (mainLearner.compareTo(fileLearner) == 0 
+								|| (mConf != null && ((MetaLearner)mainLearner).hasBaseLearner(fileLearner)))) {
+							BufferedReader reader = new BufferedReader(new FileReader(confFile));
 							// Eats the header
 							while(reader.ready()){
 								readed = reader.readLine();
@@ -690,43 +589,43 @@ public class InputManager {
 									break;
 								}
 							}
+							List<BasicConfiguration> partialList = new LinkedList<>();
 							while(reader.ready()){
 								readed = reader.readLine();
 								if(readed != null){
 									readed = readed.trim();
 									if(readed.length() > 0 && !readed.startsWith("*")){
-										i = 0;
-										alConf = BasicConfiguration.buildConfiguration(algType);
+										int i = 0;
+										BasicConfiguration alConf = BasicConfiguration.buildConfiguration(fileLearner);
 										for(String element : readed.split(",")){
 											alConf.addItem(header[i++], element);
 										}
-										if(DetectionAlgorithm.isSliding(algType)){
+										if(DetectionAlgorithm.isSliding(fileLearner)){
 											alConf.addItem(BasicConfiguration.SLIDING_WINDOW_SIZE, windowSize);
 											alConf.addItem(BasicConfiguration.SLIDING_POLICY, sPolicy.toString());
 										}
-										if(confList.get(algType) == null)
-											confList.put(algType, new LinkedList<BasicConfiguration>());
-										confList.get(algType).add(alConf);
+										partialList.add(alConf);
 									}
 								}
 							}
-							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
+							reader.close();
+							AppLogger.logInfo(getClass(), "Found " + partialList.size() + " configuration for " + fileLearner + " algorithm");
+							if(mConf == null){
+								confList = partialList;
+								break;
+							} else {
+								mConf.addConfiguration(fileLearner, partialList);
+							}
 						}
 					} catch(Exception ex){
 						AppLogger.logWarning(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
 					}
 				} 
 			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read configurations");
-		} finally {
-			try {
-				if(reader != null)
-					reader.close();
-			} catch (IOException ex) {
-				AppLogger.logException(getClass(), ex, "Unable to read configurations");
+			if(mConf != null){
+				confList.add(mConf);
 			}
-		}
+		} else AppLogger.logError(getClass(), "FolderNotFoundError", "Folder '" + confFolder + "' not valid");
 		return confList;
 	}
 	
@@ -1096,12 +995,55 @@ public class InputManager {
 		removeFromFile(new File(getSetupFolder() + "loaderPreferences.preferences"), b.trim(), true);
 	}	
 	
-	public void removeAlgorithm(String option) {
-		if(option.contains("["))
-			removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.substring(0, option.indexOf('[')), false);
-		else removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.trim(), false);
+	public void removeAlgorithm(LearnerType learnerType) {
+		if(learnerType != null)
+			removeAlgorithmFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), learnerType, false);
 	}
 	
+	private void removeAlgorithmFromFile(File file, LearnerType learnerType, boolean b) {
+		// TODO Auto-generated method stub
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							try {
+								LearnerType rowLearner = LearnerType.fromString(readed.trim());
+								if(rowLearner != null && rowLearner.compareTo(learnerType) == 0){
+									readed = fileLines.remove(fileLines.size()-1);
+									readed = "* " + readed;
+									fileLines.add(readed);
+									found = true;
+								}
+							} catch(Exception ex){
+								AppLogger.logError(getClass(), "UnrecognizedAlgorithm", "Unable to parse algorithm '" + readed + "'");
+							}
+						}
+					}
+				}
+				reader.close();
+				if(found){
+					writer = new BufferedWriter(new FileWriter(file));
+					for(String st : fileLines){
+						writer.write(st + "\n");
+					}
+					writer.close();
+				}
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 	
+	}
+
 	private void removeFromFile(File file, String toRemove, boolean partialMatching){
 		BufferedReader reader = null;
 		BufferedWriter writer = null;
@@ -1463,30 +1405,7 @@ public class InputManager {
 	 */
 	public List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
 		String scoresFile = getScoresFile(scoresFileString);
-		File asFile = new File(scoresFile);
-		BufferedReader reader;
-		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
-		String readed;
-		try {
-			if(asFile.exists()){
-				reader = new BufferedReader(new FileReader(asFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						AlgorithmModel am = AlgorithmModel.fromString(readed);
-						if(am != null)
-							modelList.add(am);
-					}
-				}
-				reader.close();
-			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + scoresFile + "'");
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read scores");
-		}
-		Collections.sort(modelList);
-		return modelList;
+		return AlgorithmModel.fromFile(scoresFile);
 	}
 
 	public String[] loadSelectedDataSeriesString(String baseFolder, String filename) {
@@ -1767,6 +1686,10 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "Unable to read voting preferences");
 		}
 		return false;
+	}
+
+	public Reputation getReputation(Metric met) {
+		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met, prefManager.getPreference(VALID_AFTER_INJECTION).equals("no") ? false : true);
 	}	
 	
 }

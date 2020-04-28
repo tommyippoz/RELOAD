@@ -8,6 +8,7 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.DBSCANResult;
 import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
@@ -31,6 +32,9 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	
 	/** The Constant TMP_FILE. */
 	protected static final String TMP_FILE = "tmp_file";
+	
+	/** The Constant TMP_FILE. */
+	public static final String TAG = "tag";
 	
 	protected final static int DEFAULT_MINIMUM_ITEMS = 5;
 	
@@ -72,9 +76,19 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	 * @return the default temporary folder
 	 */
 	protected String getDefaultTmpFolder(){
-		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0)
-			return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
-		else return "tmp" + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0){
+			if(conf.hasItem(TAG))
+				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + conf.getItem(TAG);
+			else if(getLearnerType() instanceof BaseLearner)
+				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+			else return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME);
+		} else {
+			if(conf.hasItem(TAG))
+				return "tmp" + File.separatorChar + conf.getItem(TAG);
+			else if(getLearnerType() instanceof BaseLearner)
+				return "tmp" + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+			else return "tmp";
+		}
 	}
 
 	@Override
@@ -118,9 +132,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 		}
 		return result;
 	}
-	
-	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
-	
+
 	protected abstract boolean checkCalculationCondition(double[] snapArray);
 	
 }

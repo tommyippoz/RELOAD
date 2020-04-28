@@ -23,6 +23,8 @@ public enum AlgorithmFamily {
 	
 	MIXED, 
 	
-	NEURAL_NETWORK
+	NEURAL_NETWORK, 
+	
+	META
 
 }

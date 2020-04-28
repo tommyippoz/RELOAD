@@ -34,7 +34,7 @@ public abstract class TrainDataManager extends DataManager {
 	private String datasetName;
 	
 	/** The possible configurations. */
-	protected Map<LearnerType, List<BasicConfiguration>> confList;
+	protected List<BasicConfiguration> confList;
 	
 	/** The chosen metric. */
 	private Metric metric;
@@ -46,7 +46,7 @@ public abstract class TrainDataManager extends DataManager {
 	protected List<DataSeries> seriesList;
 	
 	/** The algorithm types. */
-	protected List<LearnerType> algTypes;
+	protected LearnerType algTypes;
 	
 	protected int kfold;
 
@@ -54,7 +54,7 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
 		super(map);
 		this.setupFolder = setupFolder;
 		this.dsDomain = dsDomain;
@@ -71,7 +71,7 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, Map<LearnerType, List<BasicConfiguration>> confList, Metric metric, Reputation reputation, List<LearnerType> algTypes, List<DataSeries> selectedSeries, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
 		this(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");

@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class MetaLearningManager extends DetectionManager {
 
-	public MetaLearningManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref) {
+	public MetaLearningManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref) {
 		super(iManager, algTypes, loaderPref);
 		// TODO Auto-generated constructor stub
 	}
@@ -69,7 +69,7 @@ public class MetaLearningManager extends DetectionManager {
 			if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
 				iManager.generateDataSeries(kMap, new DataCategory[]{DataCategory.PLAIN}, iManager.getMetaFolder() + buildOutFilePrequel() + "_filtered.csv");
 			}
-			tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDatasetsFolder(), "MULTIPLE_UNION", iManager.getMetaFolder(), loaderPref.getCompactFilename(), iManager.getMetaFolder(), kMap, iManager.loadConfigurations(algTypes, windowSize, sPolicy, true), metric, reputation, new DataCategory[]{DataCategory.PLAIN}, algTypes, iManager.loadSelectedDataSeriesString(iManager.getMetaFolder(), buildOutFilePrequel()), iManager.getKFoldCounter());
+			tManager = new TrainerManager(iManager.getSetupFolder(), iManager.getDatasetsFolder(), "MULTIPLE_UNION", iManager.getMetaFolder(), loaderPref.getCompactFilename(), iManager.getMetaFolder(), kMap, iManager.loadConfigurations(mainLearner, buildOutFilePrequel(), windowSize, sPolicy, true), metric, reputation, new DataCategory[]{DataCategory.PLAIN}, mainLearner, iManager.loadSelectedDataSeriesString(iManager.getMetaFolder(), buildOutFilePrequel()), iManager.getKFoldCounter());
 			tManager.addLoaderInfo(loaders.get(0));
 			tManager.train(iManager.getMetaFolder() + buildOutFilePrequel(), getMetaLearningCSV());
 			tManager.flush();
@@ -80,7 +80,7 @@ public class MetaLearningManager extends DetectionManager {
 	
 	@Override
 	public String buildOutFilePrequel(){
-		return loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1).replace(" ", "").replace(",", "_");
+		return loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')) + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1).replace(" ", "").replace(",", "_");
 	}
 
 }

@@ -3,32 +3,18 @@
  */
 package ippoz.reload.ui;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
-import ippoz.reload.commons.loader.ARFFLoader;
-import ippoz.reload.commons.loader.CSVLoader;
-import ippoz.reload.commons.loader.FileLoader;
-import ippoz.reload.commons.loader.Loader;
-import ippoz.reload.commons.loader.LoaderType;
-import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.meta.MetaLearnerType;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -205,7 +191,7 @@ public class MetaLearnerFrame {
 		button.setFont(new Font(button.getFont().getName(), Font.BOLD, 16));
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				iManager.removeAlgorithm(oldLearner.toString());
+				iManager.removeAlgorithm(oldLearner);
 				iManager.addAlgorithm(lType.toString());
 				mlFrame.setVisible(false);
 				item.reload();

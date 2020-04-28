@@ -3,6 +3,14 @@
  */
 package ippoz.reload.evaluation;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import javafx.util.Pair;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -10,6 +18,7 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
 /**
@@ -58,6 +67,10 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 */
 	public AlgorithmResult voteKnowledgeSnapshot(Knowledge knowledge, int i) {
 		return alg.snapshotAnomalyRate(knowledge, i);
+	}
+	
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray){
+		return alg.calculateSnapshotScore(null, 0, null, snapArray);
 	}
 
 	/**
@@ -152,6 +165,37 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 			}
 		}
 		return null;
+	}
+	
+	public static List<AlgorithmModel> fromFile(String fileString) {
+		File asFile = new File(fileString);
+		BufferedReader reader;
+		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
+		String readed;
+		try {
+			if(asFile.exists()){
+				reader = new BufferedReader(new FileReader(asFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						AlgorithmModel am = AlgorithmModel.fromString(readed);
+						if(am != null)
+							modelList.add(am);
+					}
+				}
+				reader.close();
+			} else AppLogger.logError(AlgorithmModel.class, "FileNotFound", "Unable to find '" + fileString + "'");
+		} catch(Exception ex){
+			AppLogger.logException(AlgorithmModel.class, ex, "Unable to read scores");
+		}
+		Collections.sort(modelList);
+		return modelList;
+	}
+
+	public DetectionAlgorithm getAlgorithm() {
+		return alg;
 	}
 
 }

@@ -51,7 +51,7 @@ public class DetectorOutput {
 	
 	private String writableTag;
 	
-	private List<LearnerType> algorithms;
+	private LearnerType algorithms;
 	
 	private double faultsRatio;
 	
@@ -59,7 +59,7 @@ public class DetectorOutput {
 	
 	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
-	public DetectorOutput(InputManager iManager, List<LearnerType> algorithms, double bestScore, ScoresVoter bestSetup, 
+	public DetectorOutput(InputManager iManager, LearnerType algorithms, double bestScore, ScoresVoter bestSetup, 
 			List<AlgorithmModel> modelList,
 			Map<LoaderBatch, List<VotingResult>> votingScores,
 			Loader loader, Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores, 

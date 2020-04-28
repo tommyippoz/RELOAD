@@ -46,9 +46,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", 
 		"CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", 
 		"LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", 
-		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)", 
-		"CLUSTER(STD)", "CLUSTER(0.1STD)", 
-		"CLUSTER(0.5STD)", "CLUSTER(VAR)"};
+		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)"};
 
 	/** The possible configurations. */
 	private List<BasicConfiguration> configurations;
@@ -67,9 +65,9 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		configurations = confCloneAndComplete(basicConfigurations);
 	}
 	
-	public ConfigurationSelectorTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, MetaData mData) {
+	public ConfigurationSelectorTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, MetaData mData, List<BasicConfiguration> confList) {
 		super(algTag, dataSeries, mData.getTargetMetric(), mData.getReputation(), kList, mData.getDatasetName(), mData.getKfold(), mData);
-		configurations = confCloneAndComplete(mData.getConfigurationsFor(algTag));
+		configurations = confList;
 	}
 	
 	/**
@@ -97,6 +95,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		Map<String, ValueSeries> currentMetricValue = null;
 		ValueSeries vs = null;
 		DetectionAlgorithm algorithm;
+		DetectionAlgorithm bestAlgorithm;
 		BasicConfiguration bestConf = null;
 		BasicConfiguration currentConf = null;
 		Map<TimedResult, AlgorithmResult> resultList = null;
@@ -167,12 +166,10 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						}
 					}
 				}
-				
 			}
 			
 			/* Searches for the best static threshold, if any */
 			if(resultList != null && vs != null){
-				//System.out.println(metricScore.getAvg());
 				String[] value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(getMetric().compareResults(Double.valueOf(value[1]), metricScore.getAvg()) > 0){
 					metricScore.clear();
@@ -188,7 +185,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				}
 			}
 						
-			// eventually has metadata
 			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 			if(algorithm instanceof AutomaticTrainingAlgorithm) {
 				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);

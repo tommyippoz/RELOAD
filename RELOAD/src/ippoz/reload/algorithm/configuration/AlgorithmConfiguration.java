@@ -3,6 +3,8 @@
  */
 package ippoz.reload.algorithm.configuration;
 
+import java.util.Map;
+
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
@@ -24,6 +26,11 @@ public class AlgorithmConfiguration extends BasicConfiguration {
 		this.algType = algType;
 	}
 	
+	public AlgorithmConfiguration(AlgorithmType algType, Map<String, Object> confMap) {
+		super(confMap);
+		this.algType = algType;
+	}
+
 	/**
 	 * Gets the algorithm type.
 	 *

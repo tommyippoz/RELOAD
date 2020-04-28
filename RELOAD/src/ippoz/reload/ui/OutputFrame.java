@@ -157,7 +157,7 @@ public class OutputFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, 5, 50, 5));
+		panel.setLayout(new GridLayout(1, 5, 10, 5));
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
@@ -192,7 +192,7 @@ public class OutputFrame {
 		else lbl.setFont(smallLabelFont);
 		//lbl.setBounds(panel.getWidth()*4/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		lbl.setToolTipText("% of Faults/Attacks in the Evaluation Set");
+		lbl.setToolTipText("% of Anomalies in the Evaluation Set");
 		panel.add(lbl);
 		
 		lbl = new JLabel(dOut != null ? String.valueOf(dOut.getFormattedBestScore()) : "Metric Score");

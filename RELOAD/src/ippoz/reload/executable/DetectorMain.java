@@ -50,15 +50,15 @@ public class DetectorMain {
 				dmList = new LinkedList<DetectionManager>();
 				iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
 				for(PreferencesManager loaderPref : iManager.readLoaders()){
-					for(List<LearnerType> aList : readAlgorithmCombinations(iManager)){
-						if(hasSliding(aList)){
+					for(LearnerType lt : readAlgorithmCombinations(iManager)){
+						if(hasSliding(lt)){
 							for(Integer windowSize : readWindowSizes(iManager)){
 								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
-									dmList.add(new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy));
+									dmList.add(new DetectionManager(iManager, lt, loaderPref, windowSize, sPolicy));
 								}
 							}
 						} else {
-							dmList.add(new DetectionManager(iManager, aList, loaderPref));
+							dmList.add(new DetectionManager(iManager, lt, loaderPref));
 						}
 					}
 				}
@@ -77,8 +77,8 @@ public class DetectorMain {
 	
 	public static int getMADneSsIterations(InputManager iManager){
 		int count = 0;
-		for(List<LearnerType> aList : readAlgorithmCombinations(iManager)){
-			if(hasSliding(aList)){
+		for(LearnerType lt : readAlgorithmCombinations(iManager)){
+			if(hasSliding(lt)){
 				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
 			} else {
 				count++;
@@ -145,9 +145,9 @@ public class DetectorMain {
 		return lList;
 	}*/
 	
-	public static List<List<LearnerType>> readAlgorithmCombinations(InputManager iManager) {
+	public static List<LearnerType> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");
-		List<List<LearnerType>> alList = new LinkedList<>();
+		List<LearnerType> alList = new LinkedList<>();
 		BufferedReader reader;
 		String readed;
 		try {
@@ -158,16 +158,14 @@ public class DetectorMain {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							List<LearnerType> aList = new LinkedList<>();
-							for(String s : readed.trim().split(",")){
-								try {
-									aList.add(LearnerType.fromString(s.trim()));
-								} catch(Exception ex){
-									AppLogger.logError(DetectorMain.class, "ParsingError", "Algorithm '" + s + "' unrecognized");
-								}
+							LearnerType lt = null;
+							try {
+								lt = LearnerType.fromString(readed.trim());
+							} catch(Exception ex){
+								AppLogger.logError(DetectorMain.class, "ParsingError", "Algorithm '" + readed + "' unrecognized");
 							}
-							if(aList.size() > 0)
-								alList.add(aList);
+							if(lt != null)
+								alList.add(lt);
 						}
 					}
 				}
@@ -175,9 +173,7 @@ public class DetectorMain {
 			} else {
 				AppLogger.logError(DetectorMain.class, "MissingPreferenceError", "File " + 
 						algTypeFile.getPath() + " not found. Will be generated. Using default value of 'ELKI_KMEANS'");
-				List<LearnerType> aList = new LinkedList<>();
-				aList.add(new BaseLearner(AlgorithmType.ELKI_KMEANS));
-				alList.add(aList);
+				alList.add(new BaseLearner(AlgorithmType.ELKI_KMEANS));
 				iManager.generateDefaultAlgorithmPreferences();
 			}
 		} catch(Exception ex){
@@ -186,11 +182,9 @@ public class DetectorMain {
 		return alList;
 	}
 
-	public static boolean hasSliding(List<LearnerType> aList) {
-		for(LearnerType at : aList){
-			if(at instanceof BaseLearner && ((BaseLearner)at).toString().toUpperCase().contains("SLIDING"))
-				return true;
-		}
+	public static boolean hasSliding(LearnerType at) {
+		if(at instanceof BaseLearner && ((BaseLearner)at).toString().toUpperCase().contains("SLIDING"))
+			return true;
 		return false;
 	}
 
@@ -231,7 +225,7 @@ public class DetectorMain {
 			AppLogger.logInfo(DetectorMain.class, "Starting Meta-Learning...");
 			for(AlgorithmVoter av : iManager.getMetaLearners(dManager.buildOutFilePrequel())){
 				AppLogger.logInfo(DetectorMain.class, "Meta-Learning for " + av.getAlgorithmType() + "(" + av.getCheckerSelection() + ")");
-				mlm = new MetaLearningManager(iManager, Arrays.asList(av.getAlgorithmType()), iManager.getMetaLearningPreferences(av, dManager.getModelsPath(), dManager.getMetaLearningCSV(), dManager.buildOutFilePrequel()));
+				mlm = new MetaLearningManager(iManager, av.getAlgorithmType(), iManager.getMetaLearningPreferences(av, dManager.getModelsPath(), dManager.getMetaLearningCSV(), dManager.buildOutFilePrequel()));
 				mlm.metaLearning();
 			}
 		} else AppLogger.logInfo(DetectorMain.class, "No Meta-Learning is required");

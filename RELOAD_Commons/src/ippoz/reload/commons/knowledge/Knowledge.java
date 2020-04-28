@@ -38,6 +38,11 @@ public abstract class Knowledge implements Cloneable {
 		this.baseData = baseData;
 	}
 	
+	@Override
+	public String toString() {
+		return "Knowledge [baseData=" + baseData.size() + "]";
+	}
+
 	public Indicator[] getIndicators(){
 		return baseData.getIndicators();
 	}

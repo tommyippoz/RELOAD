@@ -64,7 +64,7 @@ public class DetectionManager {
 	protected DataCategory[] dataTypes;
 	
 	/** The algorithm types (SPS, Historical...). */
-	protected List<LearnerType> algTypes;
+	protected LearnerType mainLearner;
 	
 	protected PreferencesManager loaderPref;
 	
@@ -78,13 +78,13 @@ public class DetectionManager {
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref){
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref){
 		this(iManager, algTypes, loaderPref, null, null);
 	}
 	
-	public DetectionManager(InputManager iManager, List<LearnerType> algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
 		this.iManager = iManager;
-		this.algTypes = algTypes;
+		this.mainLearner = algTypes;
 		this.loaderPref = loaderPref;
 		this.windowSize = windowSize;
 		this.sPolicy = sPolicy;
@@ -100,7 +100,7 @@ public class DetectionManager {
 	}
 	
 	public String getDetectorOutputFolder(){
-		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + algTypes.toString().replace(",", "");
+		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + mainLearner.toString().replace(",", "");
 	}
 	
 	public Metric[] getMetrics() {
@@ -119,8 +119,8 @@ public class DetectionManager {
 		if(loaderPref != null)
 			tag = tag + loaderPref.getPreference(Loader.VALIDATION_PARTITION).replace(",", "");
 		tag = tag + ",";
-		if(algTypes != null)
-			tag = tag + Arrays.toString(algTypes.toArray()).replace(",", "");
+		if(mainLearner != null)
+			tag = tag + mainLearner.toString().replace(",", "");
 		tag = tag + ",";
 		if(windowSize != null)
 			tag = tag + windowSize;
@@ -251,15 +251,15 @@ public class DetectionManager {
 						loaderPref.getCompactFilename(), 
 						iManager.getOutputFolder(), 
 						kMap, 
-						iManager.loadConfigurations(algTypes, windowSize, sPolicy, true), 
+						iManager.loadConfigurations(mainLearner, buildOutFilePrequel(), windowSize, sPolicy, true), 
 						metric, 
 						reputation, 
 						dataTypes, 
-						algTypes, 
+						mainLearner, 
 						iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
 						iManager.getKFoldCounter());
 				tManager.addLoaderInfo(loaders.get(0));
-				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1), getMetaLearningCSV());
+				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1), getMetaLearningCSV());
 				tManager.flush();
 			}
 		} catch(Exception ex){
@@ -270,10 +270,8 @@ public class DetectionManager {
 	protected Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
 		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
 		if(expList != null && !expList.isEmpty()){
-			for(LearnerType at : algTypes){
-				if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(at)))
-					map.put(DetectionAlgorithm.getKnowledgeType(at), new ArrayList<Knowledge>(expList.size()));
-			}
+			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(mainLearner)))
+				map.put(DetectionAlgorithm.getKnowledgeType(mainLearner), new ArrayList<Knowledge>(expList.size()));
 			for(int i=0;i<expList.size();i++){
 				if(map.containsKey(KnowledgeType.GLOBAL))
 					map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
@@ -303,7 +301,7 @@ public class DetectionManager {
 		double bestScore = Double.NaN;
 		double score;
 		int index = 0;
-		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
 		try {
 			if(iManager.countAvailableModels(scoresFileString) > 0){
 				if(lList.size() > 1){
@@ -347,7 +345,7 @@ public class DetectionManager {
 		List<ScoresVoter> voterList = iManager.getScoresVoters(buildOutFilePrequel());
 		Map<ScoresVoter, Integer> nVoters = new HashMap<ScoresVoter, Integer>();
 		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
-		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			for(ScoresVoter voter : voterList){
 				EvaluatorManager eManager;
@@ -383,8 +381,8 @@ public class DetectionManager {
 				vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()));
 				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 			}
-			return new DetectorOutput(iManager, algTypes, Double.isFinite(bestScore) ? bestScore : 0.0,
-					getBestSetup(evaluations, metList, voterList), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+			return new DetectorOutput(iManager, mainLearner, Double.isFinite(bestScore) ? bestScore : 0.0,
+					getBestSetup(evaluations, metList, voterList), iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1)),
 					bestEManager != null ? bestEManager.getVotingEvaluations() : null, l,
 					bestEManager != null ? bestEManager.getDetailedEvaluations() : null,
 					iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
@@ -472,7 +470,7 @@ public class DetectionManager {
 	}
 
 	public DetectorOutput evaluate(DetectorOutput optOut) {
-		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			if(optOut == null || optOut.getVoter() == null){
 				return evaluateAll();
@@ -516,7 +514,7 @@ public class DetectionManager {
 		Map<ScoresVoter, List<Map<Metric, Double>>> evaluations = new HashMap<ScoresVoter, List<Map<Metric,Double>>>();
 		vInfo.setRuns(l.getRuns());
 		vInfo.setVoter(voter.toString());
-		EvaluatorManager eManager = new ValidationManager(voter, getDetectorOutputFolder(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)), map, metList, printOutput);
+		EvaluatorManager eManager = new ValidationManager(voter, getDetectorOutputFolder(), iManager.getScoresFile(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1)), map, metList, printOutput);
 		vInfo.setFaultRatio(eManager.getInjectionsRatio());
 		vInfo.setModels(eManager.getModels());
 		if(eManager.detectAnomalies()) {
@@ -531,10 +529,10 @@ public class DetectionManager {
 			vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 		}
 		return new DetectorOutput(
-				iManager, algTypes,
+				iManager, mainLearner,
 				Double.isFinite(score) ? score : 0.0,
 				getBestSetup(evaluations, metList, voter), 
-				iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1)),
+				iManager.loadAlgorithmModels(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1)),
 				eManager.getVotingEvaluations(), 
 				l, 
 				eManager.getDetailedEvaluations(), 
@@ -590,11 +588,11 @@ public class DetectionManager {
 	}
 	
 	public String getMetaLearningCSV(){
-		return "meta" + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1).replace(" ", "").replace(",", "_") + "_trainscores.csv";
+		return "meta" + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1).replace(" ", "").replace(",", "_") + "_trainscores.csv";
 	}
 
 	public String getModelsPath() {
-		return buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1);
+		return buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
 	}
 	
 	public void report(){
@@ -605,7 +603,7 @@ public class DetectionManager {
 		BufferedWriter writer;
 		try {
 			fsInfo = iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info");
-			tInfo = iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + algTypes.toString().substring(1, algTypes.toString().length()-1) + "_trainInfo.info");
+			tInfo = iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1) + "_trainInfo.info");
 			vInfo = iManager.loadValidationInfo(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info");
 			if(!drFile.exists()){
 				writer = new BufferedWriter(new FileWriter(drFile, false));

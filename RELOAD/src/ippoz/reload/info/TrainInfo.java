@@ -42,7 +42,7 @@ public class TrainInfo {
 	
 	private static final String TRAIN_ALGORITHMS = "TRAIN Algorithms";
 	
-	private List<LearnerType> algTypes;
+	private LearnerType algTypes;
 	
 	private static final String TRAIN_FAULT_RATIO = "TRAIN FaultAttack Ratio";
 	
@@ -68,19 +68,18 @@ public class TrainInfo {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
-					algTypes = new LinkedList<LearnerType>();
 					if(preferences.get(TRAIN_ALGORITHMS).contains(",")){
 						String[] splitted = preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "").split(",");
 						for(String algString : splitted){
 							try {
-								algTypes.add(LearnerType.fromString(algString.trim()));
+								algTypes = LearnerType.fromString(algString.trim());
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
 							}
 						}
 					} else {
 						try {
-							algTypes.add(LearnerType.fromString(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "")));
+							algTypes = LearnerType.fromString(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", ""));
 						} catch(Exception ex){
 							AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + preferences.get(TRAIN_ALGORITHMS) + "'");
 						}
@@ -134,7 +133,7 @@ public class TrainInfo {
 		this.kFold = kFold;
 	}
 
-	public void setAlgorithms(List<LearnerType> algTypes) {
+	public void setAlgorithm(LearnerType algTypes) {
 		this.algTypes = algTypes;
 	}
 
@@ -166,7 +165,7 @@ public class TrainInfo {
 		return faultRatio;
 	}
 
-	public List<LearnerType> getAlgTypes() {
+	public LearnerType getAlgTypes() {
 		return algTypes;
 	}
 	
@@ -179,7 +178,7 @@ public class TrainInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on training details\n"); 
-			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? Arrays.toString(algTypes.toArray()) : "") + "\n");
+			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? algTypes.toString() : "") + "\n");
 			writer.write("\n* K-Fold value used\n" + TRAIN_KFOLD + " = " + (kFold != null ? kFold : "") + "\n");
 			writer.write("\n* Runs used for training\n" + TRAIN_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + TRAIN_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
@@ -193,7 +192,7 @@ public class TrainInfo {
 	}
 	
 	public String toFileString(){
-		return (algTypes != null ? Arrays.toString(algTypes.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (kFold != null ? kFold : "") + ","
 				+ (runs != null ? runs : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","

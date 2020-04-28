@@ -6,15 +6,21 @@ package ippoz.reload.algorithm.meta;
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
 import ippoz.reload.trainer.AlgorithmTrainer;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,28 +39,33 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 	
 	public static final int DEFAULT_SAMPLES = 10;
 
-	public BaggingMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaData data) {
-		super(dataSeries, conf, MetaLearnerType.BAGGING, data);
+	public BaggingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
+		super(dataSeries, conf, MetaLearnerType.BAGGING);
+	}
+	
+	private BaseLearner getBaseLearner(){
+		return ((MetaLearner)getLearnerType()).getBaseLearners()[0];
 	}
 
 	@Override
-	protected void trainMetaLearner(List<Knowledge> kList) {
+	protected MetaTrainer trainMetaLearner(List<Knowledge> kList) {
 		List<List<Knowledge>> sampledKnowledge = null;
-		MetaTrainer mTrainer = new MetaTrainer(data);
+		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
 			sampledKnowledge = baggingOf(kList, getSamplesNumber());
 			for(List<Knowledge> sKnow : sampledKnowledge){
-				mTrainer.addTrainer(getLearnerType(), dataSeries, sKnow);
+				mTrainer.addTrainer(getBaseLearner(), dataSeries, sKnow);
 			}
 			mTrainer.start();
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
-				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getLearnerType(), dataSeries, at.getBestConfiguration()));
+				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
 			}
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
 		}
+		return mTrainer;
 	}
 
 	private List<List<Knowledge>> baggingOf(List<Knowledge> kList, int samplesNumber) {
@@ -62,7 +73,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		for(int i=0;i<samplesNumber;i++){
 			List<Knowledge> sList = new ArrayList<>(kList.size());
 			for(Knowledge know : kList){
-				sList.add(know.sample(200.0/samplesNumber));
+				sList.add(know.sample(1.5/samplesNumber));
 			}
 			outList.add(sList);
 		}
@@ -71,15 +82,19 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		int count = 0;
+		int count = 0, i = 0;
 		double sum = 0;
+		double[] scores = new double[baseLearners.size()];
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
-			if(Double.isFinite(score))
+			scores[i++] = score;
+			if(Double.isFinite(score)){
 				sum = sum + score;
+				count++;
+			}
 		}
 		if(count > 0)
-			return new Pair<Double, Object>(sum / count, null);
+			return new Pair<Double, Object>(sum / count, scores);
 		else return new Pair<Double, Object>(0.0, null);
 	}
 
@@ -88,20 +103,10 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		return true;
 	}
 	
-	@Override
-	protected void loadFile(String filename) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	protected void printFile(File file) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	private int getSamplesNumber(){
-		return conf != null && conf.hasItem(N_SAMPLES) ? Integer.parseInt(conf.getItem(N_SAMPLES)) : DEFAULT_SAMPLES;
+		return getLearnerType() instanceof MetaLearner && 
+				((MetaLearner)getLearnerType()).hasPreference(N_SAMPLES) ? 
+						Integer.parseInt(((MetaLearner)getLearnerType()).getPreference(N_SAMPLES)) : DEFAULT_SAMPLES;
 	}
 	
 	/* (non-Javadoc)

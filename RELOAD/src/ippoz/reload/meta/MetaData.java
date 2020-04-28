@@ -27,15 +27,15 @@ public class MetaData {
 	
 	private Reputation reputation;
 	
-	private Map<AlgorithmType, List<BasicConfiguration>> confMap;
+	private Map<LearnerType, List<BasicConfiguration>> confMap;
 
 	public MetaData(int kfold, String datasetName, Metric targetMetric,
-			Reputation reputation, Map<AlgorithmType, List<BasicConfiguration>> confMap) {
+			Reputation reputation, Map<LearnerType, List<BasicConfiguration>> baseConfs) {
 		this.kfold = kfold;
 		this.datasetName = datasetName;
 		this.targetMetric = targetMetric;
 		this.reputation = reputation;
-		this.confMap = confMap;
+		this.confMap = baseConfs;
 	}
 
 	public int getKfold() {
@@ -54,14 +54,18 @@ public class MetaData {
 		return reputation;
 	}
 
-	public Map<AlgorithmType, List<BasicConfiguration>> getConfMap() {
+	public Map<LearnerType, List<BasicConfiguration>> getConfMap() {
 		return confMap;
 	}
 
 	public List<BasicConfiguration> getConfigurationsFor(LearnerType algTag) {
-		if(confMap != null && confMap.containsKey(algTag))
-			return confMap.get(algTag);
-		else return new LinkedList<>();
+		if(confMap != null){
+			for(LearnerType lt : confMap.keySet()){
+				if(lt.compareTo(algTag) == 0)
+					return confMap.get(lt);
+			}
+		}
+		return new LinkedList<>();
 	}	
 
 }

@@ -323,8 +323,8 @@ public class BuildUI {
 			public void run() {
 				int tot = 0;
 				int index = 1;
-				try {
-					for(List<LearnerType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+				try { 
+					for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 						if(DetectorMain.hasSliding(aList)){
 							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
 						} else {
@@ -336,7 +336,7 @@ public class BuildUI {
 					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
 					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
-						for(List<LearnerType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
@@ -378,6 +378,13 @@ public class BuildUI {
 		}).start();
 	}
 	
+	private LearnerType fromOption(String optionText){
+		if(optionText != null && optionText.length() > 0){
+			String algName = optionText.substring(0, optionText.indexOf('[')).trim();
+			return LearnerType.fromString(algName.trim());
+		} else return null;
+	}
+	
 	private JPanel printOptions(boolean isAlg, JPanel panel, String[] options, int fromX, int fromY, int space){
 		JLabel lbl;
 		JButton jb;
@@ -403,16 +410,12 @@ public class BuildUI {
 					jb.addActionListener(new ActionListener() { 
 						public void actionPerformed(ActionEvent e) { 
 							if(!option.contains(".")) {
-								String cropOption = option.substring(0, option.indexOf('['));
-								String[] algorithms = cropOption.contains(",") ? cropOption.split(",") : new String[]{cropOption.trim()};
-								for(String algName : algorithms){
-									try {
-										LearnerType at = LearnerType.fromString(algName.trim());
-										MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
-										mlf.setVisible(true);
-									} catch(Exception ex){
-										AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
-									}
+								try {
+									LearnerType at = fromOption(option);
+									MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
+									mlf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
 								}
 							} else {
 								LoaderFrame lf;
@@ -435,16 +438,12 @@ public class BuildUI {
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
 						if(!option.contains(".")) {
-							String cropOption = option.substring(0, option.indexOf('['));
-							String[] algorithms = cropOption.contains(",") ? cropOption.split(",") : new String[]{cropOption.trim()};
-							for(String algName : algorithms){
-								try {
-									LearnerType at = LearnerType.fromString(algName.trim());
-									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)).get(at));
-									asf.setVisible(true);
-								} catch(Exception ex){
-									AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
-								}
+							try {
+								LearnerType at = fromOption(option);
+								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+								asf.setVisible(true);
+							} catch(Exception ex){
+								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
 							}
 						} else {
 							LoaderFrame lf;
@@ -468,7 +467,7 @@ public class BuildUI {
 						if(option.contains(".")){
 							iManager.removeDataset(option);
 						} else {
-							iManager.removeAlgorithm(option);
+							iManager.removeAlgorithm(fromOption(option));
 						}
 						reload();
 					} } );
@@ -702,15 +701,15 @@ public class BuildUI {
 	private String[] getAlgorithms(){
 		int i = 0;
 		List<AlgorithmFamily> family = new LinkedList<AlgorithmFamily>();
-		List<List<LearnerType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
+		List<LearnerType> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
-		for(List<LearnerType> aList : aComb){
+		for(LearnerType aList : aComb){
 			try {
-				family = DetectionAlgorithm.getFamily(LearnerType.fromString(aList.toString().substring(1, aList.toString().length()-1)));
+				family = DetectionAlgorithm.getFamily(aList);
 			} catch(Exception ex){
 				family.add(AlgorithmFamily.MIXED);
 			}
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " " + Arrays.toString(family.toArray());
+			algStrings[i++] = aList.toString() + " " + Arrays.toString(family.toArray());
 		}
 		return algStrings;
 	}

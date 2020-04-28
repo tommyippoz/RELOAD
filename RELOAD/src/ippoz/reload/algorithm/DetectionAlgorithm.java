@@ -53,6 +53,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javafx.util.Pair;
+
 /**
  * The Class DetectionAlgorithm.
  *
@@ -228,7 +230,7 @@ public abstract class DetectionAlgorithm {
 	public static DetectionAlgorithm buildMetaAlgorithm(MetaLearner ml, DataSeries dataSeries, BasicConfiguration conf) {
 		switch(ml.getMetaType()){
 			case BAGGING:
-				return new BaggingMetaLearner(dataSeries, conf, ((MetaConfiguration)conf).generateMetaData());
+				return new BaggingMetaLearner(dataSeries, conf);
 			case BOOSTING:
 				break;
 			case CASCADE_GENERALIZATION:
@@ -315,7 +317,7 @@ public abstract class DetectionAlgorithm {
 				default:
 					break;
 			}
-		} else afl.add(AlgorithmFamily.MIXED);
+		} else afl.add(AlgorithmFamily.META);
 		return afl;
 	}
 	
@@ -752,5 +754,8 @@ public abstract class DetectionAlgorithm {
 			return null;
 		}
 	}
+	
+	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
+	
 
 }

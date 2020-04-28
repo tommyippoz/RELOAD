@@ -6,6 +6,9 @@ package ippoz.reload.reputation;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.metric.Metric;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,5 +67,21 @@ public abstract class Reputation {
 	 * @return the final reputation
 	 */
 	protected abstract double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations);
+
+	public static Reputation fromString(String reputationType, Metric metric, boolean validAfter) {
+		switch(reputationType.toUpperCase()){
+			case "BETA":
+				return new BetaReputation(reputationType, validAfter);
+			case "METRIC":
+				return new MetricReputation(reputationType, metric);
+			default:
+				if(AppUtility.isNumber(reputationType))
+					return new ConstantReputation(reputationType, Double.parseDouble(reputationType));
+				else {
+					//AppLogger.logError(Reputation.class, "MissingPreferenceError", "Reputation cannot be defined");
+					return null;
+				}
+		}
+	}
 	
 }

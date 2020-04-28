@@ -71,8 +71,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	
 	private long trainingTime;
 	
-	private MetaData metaData;
-	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -91,7 +89,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		this.kList = kList;
 		this.kfold = kfold;
 		this.datasetName = datasetName;
-		this.metaData = metaData;
 	}
 	
 	public AlgorithmTrainer(LearnerType algTag, DataSeries dataSeries, Metric metric, Reputation reputation, List<Knowledge> kList, String datasetName, int kfold) {
@@ -392,10 +389,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	
 	public void flush(){
 		kList = null;
-	}
-
-	public MetaData getMetaData() {
-		return metaData;
 	}
 	
 }

@@ -45,7 +45,7 @@ public class BaseLearner extends LearnerType {
 	}	
 	
 	public MetaLearner toMeta(MetaLearnerType mlt){
-		return new MetaLearner(mlt, new AlgorithmType[]{getAlgType()});
+		return new MetaLearner(mlt, new BaseLearner[]{new BaseLearner(getAlgType())});
 	}
 
 	@Override
