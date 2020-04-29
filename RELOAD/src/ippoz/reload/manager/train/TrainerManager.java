@@ -45,6 +45,8 @@ public class TrainerManager extends TrainDataManager {
 	
 	private String datasetsFolder;
 	
+	private Metric[] validationMetrics;
+	
 	/**
 	 * Instantiates a new trainer manager.
 	 *
@@ -56,8 +58,9 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics) {
 		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+		this.validationMetrics = validationMetrics;
 		clearTmpFolders();
 	}
 	
@@ -73,8 +76,9 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold, Metric[] validationMetrics) {
 		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
+		this.validationMetrics = validationMetrics;
 		clearTmpFolders();
 	}
 	
@@ -90,8 +94,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String datasetsFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold) {
-		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
+	public TrainerManager(String setupFolder, String datasetsFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics);
 		this.datasetsFolder = datasetsFolder;
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
@@ -156,6 +160,8 @@ public class TrainerManager extends TrainDataManager {
 				Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
+				AlgorithmTrainer at = bestModel(getThreadList());
+				trainInfo.setMetricsString(at.calculateMetrics(validationMetrics));
 				saveModels(getThreadList(), outFilename + "_scores.csv");
 				//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
@@ -165,6 +171,18 @@ public class TrainerManager extends TrainDataManager {
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
 		}
+	}
+
+	private AlgorithmTrainer bestModel(List<? extends Thread> threadList) {
+		AlgorithmTrainer best = null;
+		for(Thread thr : threadList){
+			if(thr instanceof AlgorithmTrainer){
+				AlgorithmTrainer current = (AlgorithmTrainer)thr;
+				if(best == null || getMetric().compareResults(current.getMetricAvgScore(), best.getMetricAvgScore()) > 0)
+					best = current;
+			}
+		}
+		return best;
 	}
 
 	private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
@@ -259,7 +277,7 @@ public class TrainerManager extends TrainDataManager {
 		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
 				(at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
 				" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");		
-		at.flush();
+		//at.flush();
 	}
 	
 	/**

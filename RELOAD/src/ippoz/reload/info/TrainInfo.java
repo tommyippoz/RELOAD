@@ -52,6 +52,10 @@ public class TrainInfo {
 	
 	private Long trainTimeMs;
 	
+	private static final String TRAIN_METRICS = "TRAIN Metrics";
+	
+	private String metricsString;
+	
 	public TrainInfo(){
 		seriesList = null;
 		kFold = null;
@@ -60,6 +64,7 @@ public class TrainInfo {
 		algTypes = null;
 		faultRatio = null;
 		trainTimeMs = null;
+		metricsString = null;
 	}
 	
 	public TrainInfo(File file){
@@ -109,12 +114,19 @@ public class TrainInfo {
 				if(preferences.containsKey(TRAIN_TIME) && preferences.get(TRAIN_TIME) != null && AppUtility.isInteger(preferences.get(TRAIN_TIME).trim())){
 					trainTimeMs = Long.parseLong(preferences.get(TRAIN_TIME).trim());
 				}
+				if(preferences.containsKey(TRAIN_METRICS) && preferences.get(TRAIN_METRICS) != null){
+					metricsString = preferences.get(TRAIN_METRICS).trim();
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading train info");
 		}
 	}
 	
+	public String getRuns() {
+		return runs;
+	}
+
 	public void setSeries(List<DataSeries> seriesList) {
 		this.seriesList = seriesList;
 	}
@@ -175,6 +187,7 @@ public class TrainInfo {
 			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (seriesList != null ? Arrays.toString(seriesList.toArray()) : "") + "\n");
 			writer.write("\n* % of Faults/attacks in training set\n" + TRAIN_FAULT_RATIO + " = " + (faultRatio != null ? faultRatio : "") + "\n");
 			writer.write("\n* Training time in ms\n" + TRAIN_TIME + " = " + (trainTimeMs != null ? trainTimeMs : "") + "\n");
+			writer.write("\n* Metric values for training\n" + TRAIN_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
 			writer.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write train INFO");
@@ -188,17 +201,26 @@ public class TrainInfo {
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
-				+ (trainTimeMs != null ? trainTimeMs : "");
+				+ (trainTimeMs != null ? trainTimeMs : "") + ","
+				+ (metricsString != null ? metricsString : "");
 	}
 	
 	public static String getFileHeader(){
 		return TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
 				TRAIN_NDATAPOINTS + "," + TRAIN_SERIES + "," +
-				TRAIN_FAULT_RATIO + "," + TRAIN_TIME;
+				TRAIN_FAULT_RATIO + "," + TRAIN_TIME + "," + TRAIN_METRICS;
 	}
 
 	public void setRuns(String runs) {
 		this.runs = runs;
+	}
+	
+	public String getMetricsString() {
+		return metricsString;
+	}
+
+	public void setMetricsString(String metricsString) {
+		this.metricsString = metricsString;
 	}
 
 }

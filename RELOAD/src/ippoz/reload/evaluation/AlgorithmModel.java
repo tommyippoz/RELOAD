@@ -3,14 +3,6 @@
  */
 package ippoz.reload.evaluation;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import javafx.util.Pair;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -20,6 +12,15 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import javafx.util.Pair;
 
 /**
  * The Class AlgorithmVoter.

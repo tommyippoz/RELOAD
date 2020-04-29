@@ -3,29 +3,19 @@
  */
 package ippoz.reload.evaluation;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.graphics.HistogramChartDrawer;
 import ippoz.reload.metric.Metric;
-import ippoz.reload.voter.ScoresVoter;
-import ippoz.reload.voter.VotingResult;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;

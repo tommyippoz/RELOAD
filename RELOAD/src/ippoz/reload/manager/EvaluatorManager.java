@@ -3,8 +3,8 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -17,8 +17,6 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.evaluation.ExperimentEvaluator;
 import ippoz.reload.metric.Metric;
-import ippoz.reload.voter.ScoresVoter;
-import ippoz.reload.voter.VotingResult;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,12 +24,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**

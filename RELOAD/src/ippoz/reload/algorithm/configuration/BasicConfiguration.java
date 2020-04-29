@@ -7,7 +7,6 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.metric.Metric;
 
 import java.util.HashMap;
 import java.util.Map;

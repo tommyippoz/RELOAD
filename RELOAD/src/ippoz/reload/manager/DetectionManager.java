@@ -25,18 +25,14 @@ import ippoz.reload.manager.train.TrainerManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -236,9 +232,10 @@ public class DetectionManager {
 						dataTypes, 
 						mainLearner, 
 						iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
-						iManager.getKFoldCounter());
+						iManager.getKFoldCounter(),
+						iManager.loadValidationMetrics());
 				tManager.addLoaderInfo(loader);
-				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1));
+				tManager.train(scoresFolderName + File.separatorChar + mainLearner.toString());
 				tManager.flush();
 			}
 		} catch(Exception ex){
@@ -468,7 +465,7 @@ public class DetectionManager {
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		Loader l = buildLoader("validation");
-		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + mainLearner.toString();
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			eManager = new EvaluatorManager(getDetectorOutputFolder(), iManager.getScoresFile(scoresFileString), generateKnowledge(l.fetch()), metList, printOutput);
 			if(eManager.detectAnomalies()){
@@ -484,13 +481,15 @@ public class DetectionManager {
 			vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()));
 			vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 			return new DetectorOutput(iManager, mainLearner, score, 
-					iManager.loadAlgorithmModel(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1)),
+					iManager.loadAlgorithmModel(buildOutFilePrequel() + File.separatorChar + mainLearner.toString()),
 					l,
 					eManager.getDetailedEvaluations(),
 					iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
 					iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),		
 					getWritableTag(),
-					eManager.getInjectionsRatio(), vInfo);
+					eManager.getInjectionsRatio(), 
+					iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + mainLearner.toString() + "_trainInfo.info"),
+					vInfo);
 		} else {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather models as result of train phase.");
 			return null;
@@ -619,7 +618,7 @@ public class DetectionManager {
 		BufferedWriter writer;
 		try {
 			fsInfo = iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + "featureSelectionInfo.info");
-			tInfo = iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1) + "_trainInfo.info");
+			tInfo = iManager.loadTrainInfo(iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + mainLearner.toString() + "_trainInfo.info");
 			vInfo = iManager.loadValidationInfo(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info");
 			if(!drFile.exists()){
 				writer = new BufferedWriter(new FileWriter(drFile, false));

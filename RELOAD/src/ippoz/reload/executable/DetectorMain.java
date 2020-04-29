@@ -14,12 +14,10 @@ import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.output.DetectorOutput;
-import ippoz.reload.voter.AlgorithmVoter;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 

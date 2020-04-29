@@ -3,11 +3,11 @@
  */
 package ippoz.reload.algorithm.configuration;
 
-import java.util.Map;
-
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+
+import java.util.Map;
 
 /**
  * @author Tommy

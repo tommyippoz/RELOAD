@@ -4,7 +4,6 @@
 package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.voter.VotingResult;
 
 
 /**

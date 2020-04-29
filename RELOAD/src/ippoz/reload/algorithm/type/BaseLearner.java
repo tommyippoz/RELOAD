@@ -3,10 +3,10 @@
  */
 package ippoz.reload.algorithm.type;
 
-import java.util.Map;
-
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.meta.MetaLearnerType;
+
+import java.util.Map;
 
 /**
  * @author Tommy

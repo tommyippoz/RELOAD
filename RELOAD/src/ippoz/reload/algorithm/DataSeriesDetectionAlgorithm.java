@@ -8,7 +8,6 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.DBSCANResult;
 import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.algorithm.type.BaseLearner;
-import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;

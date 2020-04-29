@@ -9,19 +9,15 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderBatch;
-import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelectorType;
+import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
-import ippoz.reload.voter.ScoresVoter;
-import ippoz.reload.voter.VotingResult;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -55,13 +51,15 @@ public class DetectorOutput {
 	
 	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
+	private TrainInfo tInfo;
+	
 	private ValidationInfo vInfo;
 	
 	public DetectorOutput(InputManager iManager, LearnerType algorithms, double bestScore, 
 			AlgorithmModel modelList,
 			Loader loader, Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
-			String writableTag, double faultsRatio, ValidationInfo vInfo) {
+			String writableTag, double faultsRatio, TrainInfo tInfo, ValidationInfo vInfo) {
 		this.iManager = iManager;
 		this.algorithms = algorithms;
 		this.bestScore = bestScore;
@@ -71,6 +69,7 @@ public class DetectorOutput {
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
+		this.tInfo = tInfo;
 		this.vInfo = vInfo;
 		labelledScores = buildLabelledScores(detailedExperimentsScores);
 	}
@@ -218,13 +217,9 @@ public class DetectorOutput {
 	public String getFormattedBestScore() {
 		return new DecimalFormat("#.##").format(getBestScore());
 	}
-	
-	public String getTrainingBatches() {
-		return vInfo.getBatchesString();
-	}
 
 	public String getEvaluationBatches() {
-		return vInfo.getBatchesString();
+		return vInfo.getBatchesString().replace("[", "").replace("]", "");
 	}
 	
 	public Metric getReferenceMetric() {
@@ -315,7 +310,7 @@ public class DetectorOutput {
 	}*/
 	
 	public String[][] getTrainGrid() {
-		return getGrid(vInfo.getMetricsString()); 
+		return getGrid(tInfo.getMetricsString()); 
 	}
 	
 	public String[][] getEvaluationGrid() {
@@ -396,6 +391,10 @@ public class DetectorOutput {
 	
 	public String getTrainRuns(){
 		return loader.getRuns();
+	}
+
+	public String getTrainBatches() {
+		return tInfo.getRuns().replace("[", "").replace("]", "");
 	}
 
 	/*public TrainInfo getTrainInfo() {

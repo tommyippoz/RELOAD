@@ -128,7 +128,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
 		if(metricScore.size() > 0 && trainMetricScore.size() > 0){
-			metricScore = evaluateMetricScore();
+			metricScore = evaluateMetricScore(metric);
 			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
 				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
@@ -189,18 +189,23 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	private ValueSeries evaluateMetricScore(){
+	private ValueSeries evaluateMetricScore(Metric met){
 		double[] metricEvaluation = null;
 		ValueSeries metricResults = new ValueSeries();
-		List<Double> algResults = new ArrayList<Double>(kList.size());
-		// eventually has metadata
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
 		for(Knowledge knowledge : kList){
-			metricEvaluation = metric.evaluateMetric(algorithm, knowledge);
+			metricEvaluation = met.evaluateMetric(algorithm, knowledge);
 			metricResults.addValue(metricEvaluation[0]);
-			algResults.add(metricEvaluation[1]);
 		}
 		return metricResults;
+	}
+	
+	public String calculateMetrics(Metric[] validationMetrics) {
+		String toReturn = "";
+		for(Metric met : validationMetrics){
+			toReturn = toReturn + met.getMetricShortName() + ":" + evaluateMetricScore(met).getAvg() + ",";
+		}
+		return toReturn.substring(0, toReturn.length()-1);
 	}
 	
 	protected List<AlgorithmResult> calculateResults(DetectionAlgorithm alg, Knowledge know) {

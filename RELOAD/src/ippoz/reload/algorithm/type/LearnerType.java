@@ -3,12 +3,11 @@
  */
 package ippoz.reload.algorithm.type;
 
+import ippoz.reload.commons.algorithm.AlgorithmType;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.meta.MetaLearnerType;
 
 /**
  * @author Tommy

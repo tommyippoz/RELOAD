@@ -4,7 +4,6 @@
 package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
-import ippoz.reload.algorithm.configuration.MetaConfiguration;
 import ippoz.reload.algorithm.custom.DBSCANDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.HBOSDetectionAlgorithm;
 import ippoz.reload.algorithm.custom.LDCOFDBSCANDetectionAlgorithm;
