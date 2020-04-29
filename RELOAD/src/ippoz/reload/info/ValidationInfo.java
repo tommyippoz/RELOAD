@@ -229,5 +229,9 @@ public class ValidationInfo {
 		this.runs = runs;
 	}
 
+	public String getBatchesString() {
+		return runs;
+	}
+
 }
 

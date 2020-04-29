@@ -169,7 +169,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations);
 
 	/**
 	 * Compares metric results.

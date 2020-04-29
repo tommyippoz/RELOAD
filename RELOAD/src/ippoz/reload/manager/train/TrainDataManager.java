@@ -25,9 +25,6 @@ public abstract class TrainDataManager extends DataManager {
 	/** The setup folder. */
 	protected String setupFolder;
 	
-	/** The data series domain. */
-	protected String dsDomain;
-	
 	/** The scores folder. */
 	private String scoresFolder;
 	
@@ -54,10 +51,9 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String dsDomain, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
 		super(map);
 		this.setupFolder = setupFolder;
-		this.dsDomain = dsDomain;
 		this.scoresFolder = scoresFolder;
 		this.datasetName = datasetName;
 		this.confList = confList;
@@ -71,8 +67,8 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String dsDomain, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
-		this(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
+		this(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		seriesList = selectedSeries;
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -83,10 +79,6 @@ public abstract class TrainDataManager extends DataManager {
 
 	public String getSetupFolder() {
 		return setupFolder;
-	}
-
-	public String getDsDomain() {
-		return dsDomain;
 	}
 
 	public String getScoresFolder() {

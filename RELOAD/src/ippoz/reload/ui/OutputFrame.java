@@ -86,12 +86,10 @@ public class OutputFrame {
 		tabbedPane.setBounds(0, labelSpacing + 40, outFrame.getWidth() - 10, outFrame.getHeight() - labelSpacing - 50);		
 	}
 
-	public void addOutput(DetectorOutput[] dOut) {
+	public void addOutput(DetectorOutput dOut) {
 		if(dOut != null) {
-			JPanel outPanel = buildOutputPanel(dOut[0], dOut[1]);
-			if(dOut[1] != null) {
-				tabbedPane.addTab("DB: " + dOut[1].getDataset() + " - Alg: " + dOut[1].getAlgorithm().replace("[", "").replace("]", ""), outPanel);
-			} else tabbedPane.addTab("DB: " + dOut[0].getDataset() + " - Alg: " + dOut[0].getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+			JPanel outPanel = buildOutputPanel(dOut);
+			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm().replace("[", "").replace("]", ""), outPanel);
 		}
 	}
 
@@ -113,12 +111,12 @@ public class OutputFrame {
 		outFrame = new JFrame();
 		outFrame.setTitle("Summary");
 		if(screenSize.getWidth() > 1000)
-			outFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.6));
-		else outFrame.setBounds(0, 0, 600, 360);
+			outFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.5));
+		else outFrame.setBounds(0, 0, 600, 500);
 		outFrame.setBackground(Color.WHITE);
 	}
 	
-	public void buildSummaryPanel(List<DetectorOutput[]> outList){
+	public void buildSummaryPanel(List<DetectorOutput> outList){
 		JPanel summaryPanel = new JPanel();
 		summaryPanel.setBackground(Color.WHITE);
 		//summaryPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
@@ -131,7 +129,7 @@ public class OutputFrame {
 		//fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 200, 0, 200), tb));
 		fPanel.setLayout(new GridLayout(1, 1));
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? (outList.get(0)[0] != null ? outList.get(0)[0].getReferenceMetric().getMetricName() : (outList.get(0)[1] != null ? outList.get(0)[1].getReferenceMetric().getMetricName() : "-")) : "-"), null));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getMetricName() : "-"), null));			
 		summaryPanel.add(fPanel, BorderLayout.NORTH);
 		
 		JPanel contentPanel = new JPanel();
@@ -141,8 +139,8 @@ public class OutputFrame {
 		
 		contentPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing), BorderLayout.CENTER);
 		int i = 0;
-		for(DetectorOutput[] dOuts : outList){
-			contentPanel.add(buildOutputSummaryPanel((dOuts[1] != null ? dOuts[1] : dOuts[0]), contentPanel, i++, 0));
+		for(DetectorOutput dOut : outList){
+			contentPanel.add(buildOutputSummaryPanel(dOut, contentPanel, i++, 0));
 		}
 		
 		JScrollPane scroll = new JScrollPane(contentPanel);
@@ -207,7 +205,7 @@ public class OutputFrame {
 		return panel;
 	}
 	
-	private JPanel buildOutputPanel(DetectorOutput oOut, DetectorOutput dOut) {	
+	private JPanel buildOutputPanel(DetectorOutput dOut) {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
 		//containerPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
@@ -225,9 +223,9 @@ public class OutputFrame {
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 		
-		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getDataset() : oOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
-		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : oOut.getAlgorithm().replace("[", "").replace("]", ""), "Algorithm used by RELOAD"));
-		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut != null ? dOut.getReferenceMetric().getMetricName() : oOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
+		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
+		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm().replace("[", "").replace("]", ""), "Algorithm used by RELOAD"));
+		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -237,10 +235,10 @@ public class OutputFrame {
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Details ", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
-
-		miscPanel.add(createLPanel(true, "Best Setup", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut != null ? dOut.getVoter().toString() : oOut.getVoter().toString(), "Setup used to aggregate different anomaly checkers, if more than one"));
-		miscPanel.add(createLPanel(true, "Evaluation Runs", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut != null ? dOut.getBestRuns() : oOut.getBestRuns(), "Runs used for Evaluation"));
-		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, dOut != null ? String.valueOf(dOut.getBestScore()) : String.valueOf(oOut.getBestScore()), "Metric Score on Evaluation Runs"));			
+ 
+		miscPanel.add(createLPanel(true, "Train Batch(es)", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, "", "Setup used to aggregate different anomaly checkers, if more than one"));
+		miscPanel.add(createLPanel(true, "Evaluation Batch(es)", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getEvaluationBatches(), "Runs used for Evaluation"));
+		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, String.valueOf(dOut.getBestScore()), "Metric Score on Evaluation Runs"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -251,11 +249,11 @@ public class OutputFrame {
 		centerPanel.setLayout(new GridLayout(2, 1, 0, 20));
 		centerPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 		   
-        String[] columnNames = new String[(dOut != null ? dOut.getEvaluationMetrics().length : oOut.getEvaluationMetrics().length) + 2];
+        String[] columnNames = new String[dOut.getEvaluationMetrics().length + 2];
         columnNames[0] = "Voter";
         columnNames[1] = "# Checkers";
 		int i = 2;
-        for(Metric met : (dOut != null ? dOut.getEvaluationMetrics() : oOut.getEvaluationMetrics())){
+        for(Metric met : dOut.getEvaluationMetrics()){
 			columnNames[i++] = met.getMetricShortName();
 		}	 
         
@@ -267,12 +265,13 @@ public class OutputFrame {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment( JLabel.CENTER );
         
-        if(oOut != null){
+        String[][] trainGrid = dOut.getTrainGrid();
+        if(trainGrid != null){
         	JPanel optPanel = new JPanel();
     		optPanel.setBackground(Color.WHITE);
     		optPanel.setLayout(new BorderLayout());
     		
-        	JLabel lbl = new JLabel("Optimization Results (Average per Run)");
+        	JLabel lbl = new JLabel("Training Results (Average per Batch)");
     		lbl.setFont(labelFont);
     		lbl.setFont(lbl.getFont().deriveFont(lbl.getFont().getStyle() | Font.BOLD));
     		lbl.setBounds(containerPanel.getWidth()/5, yDist, containerPanel.getWidth()*3/5, bigLabelSpacing);
@@ -281,7 +280,7 @@ public class OutputFrame {
     		
     		yDist = yDist + bigLabelSpacing;
     		
-	        table = new JTable(oOut.getOptimizationGrid(oOut.buildPath(iManager.getOutputFolder())), columnNames);
+	        table = new JTable(new String[][]{trainGrid[1]}, trainGrid[0]);
 	        table.setFillsViewportHeight(true);
 	        for(int x=0;x<table.getColumnCount();x++){
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
@@ -298,7 +297,8 @@ public class OutputFrame {
 	        centerPanel.add(optPanel);
         }
         
-        if(dOut != null) {
+        String[][] evalGrid = dOut.getEvaluationGrid();
+        if(evalGrid != null) {
         	JPanel evPanel = new JPanel();
         	evPanel.setBackground(Color.WHITE);
         	evPanel.setLayout(new BorderLayout());
@@ -312,7 +312,7 @@ public class OutputFrame {
     		
     		yDist = yDist + bigLabelSpacing;
     		
-	        table = new JTable(dOut.getEvaluationGrid(dOut.buildPath(iManager.getOutputFolder())), columnNames);
+	        table = new JTable(new String[][]{evalGrid[1]}, evalGrid[0]);
 	        table.setFillsViewportHeight(true);
 	        for(int x=0;x<table.getColumnCount();x++){
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
@@ -343,11 +343,11 @@ public class OutputFrame {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				Desktop desktop = Desktop.getDesktop();
-		        File dirToOpen = new File(dOut != null ? dOut.buildPath(iManager.getOutputFolder()) : oOut.buildPath(iManager.getOutputFolder()));
+		        File dirToOpen = new File(dOut.buildPath(iManager.getOutputFolder()));
 		        try {
 		            desktop.open(dirToOpen);
 		        } catch (IOException ex) {
-		        	JOptionPane.showMessageDialog(outFrame, "ERROR: Unable to open '" + (dOut != null ? dOut.buildPath(iManager.getOutputFolder()) : oOut.buildPath(iManager.getOutputFolder())) + "'");
+		        	JOptionPane.showMessageDialog(outFrame, "ERROR: Unable to open '" + dOut.buildPath(iManager.getOutputFolder()) + "'");
 				}
 			} } );	
 		fPanel.add(button);
@@ -356,10 +356,7 @@ public class OutputFrame {
 		button.setVisible(true);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				FeaturesFrame odf;
-				if(dOut != null)
-					odf = new FeaturesFrame(dOut);
-				else odf = new FeaturesFrame(oOut);
+				FeaturesFrame odf = new FeaturesFrame(dOut);
 				odf.setVisible(true);
 			} } );	
 		fPanel.add(button);
@@ -368,10 +365,7 @@ public class OutputFrame {
 		button.setVisible(true);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				TrainingDetailFrame odf;
-				if(dOut != null)
-					odf = new TrainingDetailFrame(dOut);
-				else odf = new TrainingDetailFrame(oOut);
+				TrainingDetailFrame odf = new TrainingDetailFrame(dOut);
 				odf.setVisible(true);
 			} } );	
 		fPanel.add(button);
@@ -380,10 +374,7 @@ public class OutputFrame {
 		button.setVisible(true);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				OutputDetailFrame odf;
-				if(dOut != null)
-					odf = new OutputDetailFrame(dOut);
-				else odf = new OutputDetailFrame(oOut);
+				OutputDetailFrame odf = new OutputDetailFrame(dOut);
 				odf.buildMainPanel();
 				odf.setVisible(true);
 			} } );	
@@ -403,8 +394,10 @@ public class OutputFrame {
 	        if(refWidth <= 0) {
 		    	for (int row = 0; row < table.getRowCount(); row++) {
 		            TableCellRenderer renderer = table.getCellRenderer(row, column);
-		            Component comp = table.prepareRenderer(renderer, row, column);
-		            width = Math.max(comp.getPreferredSize().width +1 , width);
+		            try {
+			            Component comp = table.prepareRenderer(renderer, row, column);
+			            width = Math.max(comp.getPreferredSize().width +1 , width);
+		            } catch(Exception ex){}
 		        }
 		        if(width > 100)
 		            width = 100;

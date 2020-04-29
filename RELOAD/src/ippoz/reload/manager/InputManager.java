@@ -1397,6 +1397,13 @@ public class InputManager {
 		return modelList;
 	}
 	
+	public AlgorithmModel loadAlgorithmModel(String scoresFileString) {
+		List<AlgorithmModel> list = loadAlgorithmModels(scoresFileString);
+		if(list != null && list.size() > 0)
+			return list.get(0);
+		else return null;
+	}
+	
 	/**
 	 * Loads train scores.
 	 * This is the outcome of some previous training phases.

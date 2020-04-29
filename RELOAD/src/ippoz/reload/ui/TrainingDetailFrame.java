@@ -46,7 +46,7 @@ public class TrainingDetailFrame {
 
 	public TrainingDetailFrame(DetectorOutput dOut) {
 		this.dOut = dOut;
-		voterList = dOut.getVoters();
+		voterList = dOut.getTrainingModels();
 
 		buildFrame();
 
@@ -71,10 +71,10 @@ public class TrainingDetailFrame {
 		tdFrame = new JFrame();
 		tdFrame.setTitle("Train Detail for '" + dOut.getDataset() + "'");
 		if (screenSize.getWidth() > 1000)
-			tdFrame.setBounds(0, 0, (int) (screenSize.getWidth() * 0.5),
-					(int) (screenSize.getHeight() * 0.6));
+			tdFrame.setBounds(0, 0, (int) (screenSize.getWidth() * 0.7),
+					(int) (screenSize.getHeight() * 0.5));
 		else
-			tdFrame.setBounds(0, 0, 400, 450);
+			tdFrame.setBounds(0, 0, 600, 450);
 		tdFrame.setBackground(Color.WHITE);
 		tdFrame.setResizable(false);
 	}
@@ -107,7 +107,7 @@ public class TrainingDetailFrame {
 		lbl.setBorder(new EmptyBorder(0, tdFrame.getWidth()/10, 0, tdFrame.getWidth()/10));
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Algorithm(s): " + dOut.getAlgorithm().substring(1, dOut.getAlgorithm().length()-1));
+		lbl = new JLabel("Algorithm(s): " + dOut.getAlgorithm());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);

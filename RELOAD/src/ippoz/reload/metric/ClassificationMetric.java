@@ -33,7 +33,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 		
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {

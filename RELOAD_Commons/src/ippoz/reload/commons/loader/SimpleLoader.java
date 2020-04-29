@@ -261,14 +261,17 @@ public abstract class SimpleLoader implements Loader {
 	 */
 	@Override
 	public String getRuns() {
-		Object tag, endTag;
+		LoaderBatch tag;
 		if(dataList != null){
 			tag = dataList.get(0).getDataID();
 			if(dataList.size() == 1){
-				return "[" + tag + "]";
+				return "[" + tag.toString() + "]";
 			} else {
-				endTag = dataList.get(dataList.size()-1).getDataID();				
-				return "[" + tag + "-" + endTag + "]";
+				String toRet = "";
+				for(MonitoredData md : dataList){
+					toRet = toRet + md.getDataID().toString() + ",";
+				}			
+				return toRet.substring(0, toRet.length()-1);
 			}
 		}
 		else return null;

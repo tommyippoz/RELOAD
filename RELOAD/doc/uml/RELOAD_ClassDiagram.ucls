@@ -92,52 +92,52 @@
     </display>  
   </class>  
   <dependency id="11">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="8"/>  
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="6"/>  
   </dependency>  
-  <association id="12">    
+  <dependency id="12">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="9"/>  
+  </dependency>  
+  <dependency id="13">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="3"/>  
+  </dependency>  
+  <dependency id="14">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="1"/>  
+  </dependency>  
+  <dependency id="15">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="1"/>  
+  </dependency>  
+  <association id="16">    
     <end type="SOURCE" refId="3" navigable="false">      
-      <attribute id="13" name="metric">        
+      <attribute id="17" name="metric">        
         <position height="0" width="0" x="1" y="3"/>      
       </attribute>      
-      <multiplicity id="14" minimum="0" maximum="1">        
+      <multiplicity id="18" minimum="0" maximum="1">        
         <position height="0" width="0" x="1" y="3"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
     <display labels="false" multiplicity="true"/>  
   </association>  
-  <dependency id="15">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="8"/>  
-  </dependency>  
-  <dependency id="16">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="3"/>  
-  </dependency>  
-  <dependency id="17">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="4"/>  
-  </dependency>  
-  <dependency id="18">    
+  <dependency id="19">    
     <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="7"/>  
   </dependency>  
-  <dependency id="19">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="9"/>  
-  </dependency>  
   <dependency id="20">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="1"/>  
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="8"/>  
   </dependency>  
   <dependency id="21">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="1"/>  
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="8"/>  
   </dependency>  
   <dependency id="22">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="6"/>  
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="4"/>  
   </dependency>  
   <classifier-display autosize="true" stereotype="false" package="false" initial-value="true" signature="false" 
     sort-features="false" accessors="true" visibility="false">    

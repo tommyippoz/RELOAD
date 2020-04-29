@@ -26,7 +26,7 @@ public class Precision_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		if (tp + fp > 0)

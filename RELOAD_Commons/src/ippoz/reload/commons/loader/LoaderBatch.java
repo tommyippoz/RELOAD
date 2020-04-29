@@ -68,6 +68,11 @@ public class LoaderBatch implements Comparable<LoaderBatch>{
 		return outList;
 	}
 
+	@Override
+	public String toString() {
+		return "[" + from + "-" + to + "]";
+	}
+
 	public Object getTag() {
 		return tag;
 	}

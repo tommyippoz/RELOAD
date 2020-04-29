@@ -27,7 +27,7 @@ public class FalsePositiveRate_Metric extends BetterMinMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		if (tn + fp > 0)

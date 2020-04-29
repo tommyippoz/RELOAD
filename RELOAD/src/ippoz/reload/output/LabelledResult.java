@@ -3,6 +3,7 @@
  */
 package ippoz.reload.output;
 
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.voter.VotingResult;
 
 
@@ -13,9 +14,9 @@ import ippoz.reload.voter.VotingResult;
 public class LabelledResult {
 	
 	private boolean label;
-	private VotingResult value;
+	private AlgorithmResult value;
 	
-	public LabelledResult(boolean label, VotingResult value) {
+	public LabelledResult(boolean label, AlgorithmResult value) {
 		this.label = label;
 		this.value = value;
 	}
@@ -24,7 +25,7 @@ public class LabelledResult {
 		return label;
 	}
 	
-	public VotingResult getValue() {
+	public AlgorithmResult getValue() {
 		return value;
 	}
 

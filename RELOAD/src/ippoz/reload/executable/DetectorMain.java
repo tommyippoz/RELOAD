@@ -13,7 +13,6 @@ import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
-import ippoz.reload.manager.MetaLearningManager;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.voter.AlgorithmVoter;
 
@@ -188,8 +187,8 @@ public class DetectorMain {
 		return false;
 	}
 
-	public static DetectorOutput[] runRELOAD(DetectionManager dManager, InputManager iManager){
-		DetectorOutput oOut = null, dOut = null;
+	public static DetectorOutput runRELOAD(DetectionManager dManager, InputManager iManager){
+		DetectorOutput dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Feature Selection Process");
@@ -199,14 +198,14 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 
-			if(dManager.needOptimization()){
+			/*if(dManager.needOptimization()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Voting/Optimization Process");
 				checkMetaLearning(dManager, iManager);
 				oOut = dManager.optimizeVoting();
-			}
+			}*/
 			if(dManager.needEvaluation()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
-				dOut = dManager.evaluate(oOut);
+				dOut = dManager.evaluate();
 				dManager.report();
 			}
 			//report(dOut, iManager);
@@ -214,12 +213,10 @@ public class DetectorMain {
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
 		dManager = null;
-		if(oOut != null || dOut != null)
-			return new DetectorOutput[]{oOut, dOut};
-		else return null;
+		return dOut;
 	}
 
-	private static void checkMetaLearning(DetectionManager dManager, InputManager iManager) {
+	/*private static void checkMetaLearning(DetectionManager dManager, InputManager iManager) {
 		MetaLearningManager mlm;
 		if(dManager.hasMetaLearning()){
 			AppLogger.logInfo(DetectorMain.class, "Starting Meta-Learning...");
@@ -229,7 +226,7 @@ public class DetectorMain {
 				mlm.metaLearning();
 			}
 		} else AppLogger.logInfo(DetectorMain.class, "No Meta-Learning is required");
-	}
+	}*/
 
 	/*private static void report(DetectorOutput dOut, InputManager iManager){
 		File drFile = new File(DEFAULT_REPORT_FILE);

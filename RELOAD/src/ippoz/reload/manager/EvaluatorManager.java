@@ -1,9 +1,10 @@
 /**
  * 
  */
-package ippoz.reload.manager.evaluate;
+package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -15,8 +16,6 @@ import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.evaluation.ExperimentEvaluator;
-import ippoz.reload.manager.DataManager;
-import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.voter.ScoresVoter;
 import ippoz.reload.voter.VotingResult;
@@ -43,22 +42,20 @@ import java.util.TreeMap;
  */
 public class EvaluatorManager extends DataManager {
 	
-	private EvaluatorType eType;
-	
 	/** The output folder. */
 	private String outputFolder;
 	
 	/** The scores file. */
 	private String scoresFile;
 	
-	private ScoresVoter voter;
-	
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
 	private List<Map<Metric, Double>> metricValues;
 	
-	private List<Map<Date, Map<AlgorithmModel, AlgorithmResult>>> detailedEvaluations;
+	private AlgorithmModel evalModel;
+	
+	private List<Map<Date, AlgorithmResult>> detailedEvaluations;
 	
 	private boolean printOutput;
 	
@@ -73,21 +70,23 @@ public class EvaluatorManager extends DataManager {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(EvaluatorType eType, ScoresVoter voter, String outputFolder, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, boolean printOutput) {
+	public EvaluatorManager(String outputFolder, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, boolean printOutput) {
 		super(map);
-		this.eType = eType;
 		this.scoresFile = scoresFile;
 		this.validationMetrics = validationMetrics;
 		this.printOutput = printOutput;
-		this.voter = voter;
 		this.outputFolder = outputFolder;
+		evalModel = buildEvaluationModel();
 		if(!new File(outputFolder).exists())
 			new File(outputFolder).mkdirs();
-		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments with [" + voter.toString() + "]");
+		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments");
 	}
 	
-	public double[] getAnomalyThresholds(){
-		return voter.getThresholds();
+	private AlgorithmModel buildEvaluationModel(){
+		List<AlgorithmModel> algVoters = AlgorithmModel.fromFile(scoresFile);
+		if(algVoters != null && algVoters.size() > 0)
+			return algVoters.get(0);
+		else return null;
 	}
 
 	/**
@@ -105,7 +104,7 @@ public class EvaluatorManager extends DataManager {
 			} else AppLogger.logInfo(getClass(), "Detection not executed");
 			if(printOutput)
 				printDetailedKnowledgeScores();
-			summarizeCSV();
+			//summarizeCSV();
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete evaluation phase");
 		}
@@ -117,21 +116,17 @@ public class EvaluatorManager extends DataManager {
 	 */
 	@Override
 	protected void initRun() {
-		List<AlgorithmModel> algVoters = InputManager.loadAlgorithmModelsFor(scoresFile, voter);
 		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
 		Map<KnowledgeType, Knowledge> redKMap;
 		metricValues = new ArrayList<Map<Metric,Double>>(voterList.size());
-		detailedEvaluations = new ArrayList<Map<Date, Map<AlgorithmModel, AlgorithmResult>>>(voterList.size());
-		/*if(printOutput){
-			setupResultsFile();
-		}*/
-		if(algVoters != null && algVoters.size() > 0){
-			for(int expN = 0; expN < experimentsSize(); expN++){ 
-				redKMap = new HashMap<KnowledgeType, Knowledge>();
-				for(KnowledgeType kType : getKnowledgeTypes()){
-					redKMap.put(kType, getKnowledge(kType).get(expN));
+		detailedEvaluations = new ArrayList<>(voterList.size());
+		if(evalModel != null){
+			try {
+				for(int expN = 0; expN < experimentsSize(); expN++){ 
+					voterList.add(new ExperimentEvaluator(evalModel, getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN)));
 				}
-				voterList.add(new ExperimentEvaluator(algVoters, redKMap, voter));
+			} catch (CloneNotSupportedException e) {
+				AppLogger.logException(getClass(), e, "Error while loading Experiment Evaluators");
 			}
 		}
 		setThreadList(voterList);
@@ -180,11 +175,11 @@ public class EvaluatorManager extends DataManager {
 		} 		
 	}*/
 	
-	public Map<LoaderBatch, List<VotingResult>> getVotingEvaluations() {
-		Map<LoaderBatch, List<VotingResult>> outMap = new TreeMap<>();
+	public Map<LoaderBatch, List<AlgorithmResult>> getVotingEvaluations() {
+		Map<LoaderBatch, List<AlgorithmResult>> outMap = new TreeMap<>();
 		for(Thread t : getThreadList()){
 			ExperimentEvaluator ev = (ExperimentEvaluator)t;
-			outMap.put(ev.getExperimentID(), ev.getExperimentVoting());
+			outMap.put(ev.getExperimentID(), ev.getExperimentResults());
 		}
 		return outMap;
 	}
@@ -193,14 +188,14 @@ public class EvaluatorManager extends DataManager {
 		return metricValues;
 	}
 	
-	public Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> getDetailedEvaluations() {
-		Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> outMap = new TreeMap<>();
+	public Map<LoaderBatch, List<AlgorithmResult>> getDetailedEvaluations() {
+		Map<LoaderBatch, List<AlgorithmResult>> outMap = new TreeMap<>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 				outMap.put(ev.getExperimentID(), new LinkedList<>());
 				if(i < detailedEvaluations.size()){
-					Map<Date,Map<AlgorithmModel,AlgorithmResult>> map = detailedEvaluations.get(i);
+					Map<Date, AlgorithmResult> map = detailedEvaluations.get(i);
 					if(map != null){
 						for(Date mapEntry : map.keySet()){
 							outMap.get(ev.getExperimentID()).add(map.get(mapEntry));
@@ -226,21 +221,18 @@ public class EvaluatorManager extends DataManager {
 	}
 	
 	public Integer getCheckersNumber() {
-		return InputManager.loadAlgorithmModelsFor(scoresFile, voter).size();
+		return AlgorithmModel.fromFile(scoresFile).size();
 	}	
 	
 	public void printDetailedKnowledgeScores(){
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
-		Map<AlgorithmModel, AlgorithmResult> map;
-		Set<AlgorithmModel> voterList;
+		AlgorithmResult map;
 		try {
-			Map<LoaderBatch, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores = getDetailedEvaluations();
-			Map<LoaderBatch, List<VotingResult>> votingScores = getVotingEvaluations();
-			if(votingScores != null && votingScores.size() > 0 &&
-					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
-				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + eType.toString() + "_scores_" + voter.toString().replace(" ", "_") + ".csv")));
+			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores = getDetailedEvaluations();
+			if(detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
+				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + "scores.csv")));
 				header1 = "exp,index,datapoint_index,fault/attack,reload_eval,reload_score,reload_confidence,";
 				header2 = ",,,,,,,";
 				
@@ -251,20 +243,17 @@ public class EvaluatorManager extends DataManager {
 				}
 				
 				map = detailedExperimentsScores.get(tag).get(0);
-				voterList = map.keySet();
-				for(AlgorithmModel av : voterList){
-					header1 = header1 + "," + av.getAlgorithmType() + ",,,,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
-					header2 = header2 + ",score,decision_function,eval,confidence,,";
-					if(av.getDataSeries().size() == 1){
-						header2 = header2 + av.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
-					} else {
-						for(int i=0;i<av.getDataSeries().size();i++){
-							header1 = header1 + ",";
-							header2 = header2 + ((MultipleDataSeries)av.getDataSeries()).getSeries(i).getSanitizedName() + ",";
-						}
+				header1 = header1 + "," + evalModel.getAlgorithmType() + ",,,,," + evalModel.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
+				header2 = header2 + ",score,decision_function,eval,confidence,,";
+				if(evalModel.getDataSeries().size() == 1){
+					header2 = header2 + evalModel.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
+				} else {
+					for(int i=0;i<evalModel.getDataSeries().size();i++){
+						header1 = header1 + ",";
+						header2 = header2 + ((MultipleDataSeries)evalModel.getDataSeries()).getSeries(i).getSanitizedName() + ",";
 					}
-					header2 = header2 + ",";					
 				}
+				header2 = header2 + ",";					
 				
 				writer.write("* This file reports on the scores each anomaly checker (couple of algorithm and indicator/feature) gives for each data point considered in the evaluation set. \n"
 						+ "Data points are identified by name of the experiment and index inside the experiment, we report the true label of the data point (the one in the dataset) and the prediction made by RELOAD. \n"
@@ -272,37 +261,29 @@ public class EvaluatorManager extends DataManager {
 				writer.write(header1 + "\n" + header2 + "\n");
 				
 				Map<LoaderBatch, List<InjectedElement>> injections = getFailures();
-				for(LoaderBatch expName : votingScores.keySet()){
+				for(LoaderBatch expName : detailedExperimentsScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
-						for(int i=0;i<votingScores.get(expName).size();i++){
+						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							writer.write(expName.getTag() + "," + 
 									i + "," + (expName.getFrom() + i) + "," +
 									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
-									(votingScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
-									votingScores.get(expName).get(i).getVotingResult() + "," + 
-									votingScores.get(expName).get(i).getConfidence() + ",");
+									(detailedExperimentsScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
+									detailedExperimentsScores.get(expName).get(i).getScore() + "," + 
+									detailedExperimentsScores.get(expName).get(i).getConfidence() + ",");
 							if(i < detailedExperimentsScores.get(expName).size()){
 								map = detailedExperimentsScores.get(expName).get(i);
-								for(AlgorithmModel av : voterList){
-									for(AlgorithmModel mapVoter : map.keySet()){
-										if(mapVoter.compareTo(av) == 0){
-											av = mapVoter;
-											break;
-										}
-									}
-									writer.write("," + map.get(av).getScore() + "," + 
-											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
-											map.get(av).getScoreEvaluation() + "," + map.get(av).getConfidence() + ",,");
-									if(knowledge != null){
-										Snapshot snap = knowledge.buildSnapshotFor(i, av.getDataSeries());
-										if(av.getDataSeries().size() == 1){
-											writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
-										} else {
-											for(int j=0;j<av.getDataSeries().size();j++){
-												writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)av.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
-											}
+								writer.write("," + map.getScore() + "," + 
+										(map.getDecisionFunction() != null ? map.getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
+										map.getScoreEvaluation() + "," + map.getConfidence() + ",,");
+								if(knowledge != null){
+									Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
+									if(evalModel.getDataSeries().size() == 1){
+										writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
+									} else {
+										for(int j=0;j<evalModel.getDataSeries().size();j++){
+											writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)evalModel.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
 										}
 									}
 								}
@@ -317,7 +298,7 @@ public class EvaluatorManager extends DataManager {
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
 	}
-	
+	/*
 	private void summarizeCSV() {
 		BufferedWriter writer;
 		File summaryFile = new File(outputFolder + File.separatorChar + eType.toString().toLowerCase() + "Summary.csv");		
@@ -347,10 +328,10 @@ public class EvaluatorManager extends DataManager {
 		}
 	}
 	
-	protected enum EvaluatorType {VALIDATION, OPTIMIZATION}
+	protected enum EvaluatorType {VALIDATION, OPTIMIZATION}*/
 
 	public List<AlgorithmModel> getModels() {
-		return InputManager.loadAlgorithmModelsFor(scoresFile, voter);
+		return AlgorithmModel.fromFile(scoresFile);
 	}
 	
 	public String getMetricsString(){
@@ -358,14 +339,10 @@ public class EvaluatorManager extends DataManager {
 		if(metricValues != null){
 			for(Metric met : validationMetrics){
 				double score = Double.parseDouble(Metric.getAverageMetricValue(metricValues, met));
-				metString = metString + score + ",";
+				metString = metString + met.getMetricShortName() + ":" + score + ",";
 			}
 		}
 		return metString;
-	}
-
-	public ScoresVoter getVoter() {
-		return voter;
 	}
 
 }

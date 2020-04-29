@@ -56,8 +56,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
-		super(map, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
+		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		clearTmpFolders();
 	}
 	
@@ -73,8 +73,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
-		super(expList, setupFolder, dsDomain, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
+		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		clearTmpFolders();
 	}
 	
@@ -90,10 +90,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String datasetsFolder, String dsDomain, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold) {
-		this(setupFolder, dsDomain, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
+	public TrainerManager(String setupFolder, String datasetsFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold);
 		this.datasetsFolder = datasetsFolder;
-		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes, dsDomain);
+		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
 	
@@ -108,17 +108,17 @@ public class TrainerManager extends TrainDataManager {
 		}
 	}
 	
-	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes, String dsDomain) {
+	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
 		List<DataSeries> selected = DataSeries.fromString(selectedSeriesString, false);
 		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + selected.size());
 		List<DataSeries> finalList = selected;
 		List<DataSeries> combined = new LinkedList<DataSeries>();
-		if(dsDomain.equals("ALL")){
+		/*if(dsDomain.equals("ALL")){
 			combined = DataSeries.allCombinations(selected);
 			finalList.addAll(combined);
-		} else if(dsDomain.equals("UNION")){
+		} else if(dsDomain.equals("UNION")){*/
 			combined = DataSeries.unionCombinations(selected);
-			finalList = combined;
+			finalList = combined;/*
 		} else if(dsDomain.equals("MULTIPLE_UNION")){
 			combined = DataSeries.multipleUnionCombinations(selected);
 			finalList = combined;
@@ -129,9 +129,9 @@ public class TrainerManager extends TrainDataManager {
 			double pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
 			combined = DataSeries.pearsonCombinations(getKnowledge(), pearsonSimple, setupFolder, selected);
 			finalList.addAll(combined);
-		}
+		}*/
 		AppLogger.logInfo(getClass(), "Combined Data Series Created: " + combined.size());
-		AppLogger.logInfo(getClass(), "Finalized Data Series (" + dsDomain + "): " + finalList.size());
+		AppLogger.logInfo(getClass(), "Finalized Data Series (UNION): " + finalList.size());
 		return finalList;
 	}
 
@@ -141,7 +141,7 @@ public class TrainerManager extends TrainDataManager {
 	 * @param metaFile 
 	 */
 	@SuppressWarnings("unchecked")
-	public void train(String outFilename, String metaFile){
+	public void train(String outFilename){
 		long start = System.currentTimeMillis();
 		try {
 			if(trainInfo == null)
@@ -157,7 +157,7 @@ public class TrainerManager extends TrainDataManager {
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
 				saveModels(getThreadList(), outFilename + "_scores.csv");
-				saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
+				//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
 				trainInfo.printFile(new File(outFilename + "_trainInfo.info"));

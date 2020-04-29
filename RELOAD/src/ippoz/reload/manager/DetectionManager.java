@@ -21,9 +21,6 @@ import ippoz.reload.executable.DetectorMain;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
-import ippoz.reload.manager.evaluate.EvaluatorManager;
-import ippoz.reload.manager.evaluate.OptimizatorManager;
-import ippoz.reload.manager.evaluate.ValidationManager;
 import ippoz.reload.manager.train.TrainerManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
@@ -100,7 +97,7 @@ public class DetectionManager {
 	}
 	
 	public String getDetectorOutputFolder(){
-		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + mainLearner.toString().replace(",", "");
+		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + File.separatorChar + mainLearner.toString().replace(",", "");
 	}
 	
 	public Metric[] getMetrics() {
@@ -130,35 +127,18 @@ public class DetectionManager {
 		return tag;
 	}
 	
-	protected List<Loader> buildLoader(String loaderTag){
+	protected Loader buildLoader(String loaderTag){
 		if(loaderPref != null){
-			return buildLoaderList(loaderTag, iManager.getAnomalyWindow());
-		} else return new LinkedList<>();
+			return buildLoader(loaderTag, iManager.getAnomalyWindow());
+		} else return null;
 	}
 	
-	private List<Loader> buildLoaderList(String loaderTag, int anomalyWindow){
-		List<Loader> lList = new LinkedList<>();
-		Loader newLoader;
-		List<Integer> runs;
-		int nRuns;
+	private Loader buildLoader(String loaderTag, int anomalyWindow){
 		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
 		if(runsString != null && runsString.length() > 0){
-			if(runsString.startsWith("@") && runsString.contains("(") && runsString.contains(")")){
-				nRuns = Integer.parseInt(runsString.substring(runsString.indexOf('@')+1, runsString.indexOf('(')));
-				runs = iManager.readRunIds(runsString.substring(runsString.indexOf('(')+1, runsString.indexOf(')')));
-				for(int i=0;i<runs.size();i=i+nRuns){
-					newLoader = iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
-					if(newLoader != null){
-						lList.add(newLoader);
-					}
-				}
-			} else {
-				newLoader = iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
-				if(newLoader != null)
-					lList.add(newLoader);
-			}
+			return iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
-		return lList;
+		return null;
 	}
 	
 	/**
@@ -204,17 +184,17 @@ public class DetectionManager {
 		List<Knowledge> kList;
 		FeatureSelectorManager fsm;
 		String scoresFolderName;
-		List<Loader> loaders;
+		Loader loader;
 		try {
 			if(needFiltering()) {
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar;
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				loaders = buildLoader("train");
-				kList = Knowledge.generateKnowledge(loaders.get(0).fetch(), KnowledgeType.SINGLE, null, 0);
+				loader = buildLoader("train");
+				kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
 				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
 				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
-				fsm.addLoaderInfo(loaders.get(0));
+				fsm.addLoaderInfo(loader);
 				fsm.saveSelectedFeatures(scoresFolderName, buildOutFilePrequel() + "_filtered.csv");
 			}
 		} catch(Exception ex){
@@ -233,11 +213,11 @@ public class DetectionManager {
 		TrainerManager tManager;
 		String scoresFolderName;
 		Map<KnowledgeType, List<Knowledge>> kMap;
-		List<Loader> loaders;
+		Loader loader;
 		try {
 			if(needTraining()) {
-				loaders = buildLoader("train");
-				kMap = generateKnowledge(loaders.iterator().next().fetch());
+				loader = buildLoader("train");
+				kMap = generateKnowledge(loader.fetch());
 				scoresFolderName = iManager.getScoresFolder() + buildOutFilePrequel();
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
@@ -246,7 +226,6 @@ public class DetectionManager {
 				}
 				tManager = new TrainerManager(iManager.getSetupFolder(), 
 						iManager.getDatasetsFolder(), 
-						iManager.getDataSeriesDomain(), 
 						iManager.getScoresFolder(), 
 						loaderPref.getCompactFilename(), 
 						iManager.getOutputFolder(), 
@@ -258,8 +237,8 @@ public class DetectionManager {
 						mainLearner, 
 						iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
 						iManager.getKFoldCounter());
-				tManager.addLoaderInfo(loaders.get(0));
-				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1), getMetaLearningCSV());
+				tManager.addLoaderInfo(loader);
+				tManager.train(scoresFolderName + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1));
 				tManager.flush();
 			}
 		} catch(Exception ex){
@@ -289,10 +268,10 @@ public class DetectionManager {
 	 * Starts the optimization process.
 	 * @return 
 	 */
-	public DetectorOutput optimizeVoting(){
+/*	public DetectorOutput optimizeVoting(){
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
-		List<Loader> lList = buildLoader("train");
+		List<Loader lList = buildLoader("train");
 		List<MonitoredData> bestExpList = null;
 		List<MonitoredData> expList;
 		Loader bestLoader = null;
@@ -394,7 +373,7 @@ public class DetectionManager {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather train results. You may want to try a different training set which includes i) normal data, and ii) some anomalies that RELOAD can use to tune algorithms' parameters.");
 			return null;
 		}
-	}
+	}*/
 	
 /*	private String getMetricScores(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, ScoresVoter voter){
 		List<ScoresVoter> list = new LinkedList<ScoresVoter>();
@@ -423,7 +402,7 @@ public class DetectionManager {
 			out = out + score + ",";
 		}
 		return out.substring(0, out.length()-1);
-	} */
+	} 
 	
 	private double getBestScore(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, List<ScoresVoter> voterList) {
 		double score;
@@ -445,7 +424,7 @@ public class DetectionManager {
 		List<ScoresVoter> list = new LinkedList<ScoresVoter>();
 		list.add(voter);
 		return getBestSetup(evaluations, metList, list);
-	}
+	} 
 	
 	private ScoresVoter getBestSetup(Map<ScoresVoter, List<Map<Metric, Double>>> evaluations, Metric[] metList, List<ScoresVoter> voterList) {
 		double score;
@@ -463,13 +442,13 @@ public class DetectionManager {
 			}
 		}
 		return bSetup;
-	}
+	} */
 
 	public void flush() {
 		iManager = null;
 	}
 
-	public DetectorOutput evaluate(DetectorOutput optOut) {
+	/*public DetectorOutput evaluate(DetectorOutput optOut) {
 		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			if(optOut == null || optOut.getVoter() == null){
@@ -481,7 +460,44 @@ public class DetectionManager {
 			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather voters as result of train phase.");
 			return null;
 		}
+	}*/
+	
+	public DetectorOutput evaluate() {
+		double score = Double.NaN;
+		EvaluatorManager eManager;
+		Metric[] metList = iManager.loadValidationMetrics();
+		boolean printOutput = iManager.getOutputVisibility();
+		Loader l = buildLoader("validation");
+		String scoresFileString = buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);
+		if(iManager.countAvailableModels(scoresFileString) > 0){
+			eManager = new EvaluatorManager(getDetectorOutputFolder(), iManager.getScoresFile(scoresFileString), generateKnowledge(l.fetch()), metList, printOutput);
+			if(eManager.detectAnomalies()){
+				score = Double.parseDouble(Metric.getAverageMetricValue(eManager.getMetricsValues(), metric));
+				AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
+			}
+			ValidationInfo vInfo = new ValidationInfo();
+			vInfo.setRuns(l.getRuns());
+			vInfo.setFaultRatio(eManager.getInjectionsRatio());
+			vInfo.setModels(eManager.getModels());
+			vInfo.setBestScore(score);
+			vInfo.setMetricsString(eManager.getMetricsString());
+			vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()));
+			vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
+			return new DetectorOutput(iManager, mainLearner, score, 
+					iManager.loadAlgorithmModel(buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1)),
+					l,
+					eManager.getDetailedEvaluations(),
+					iManager.getSelectedSeries(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel()), 
+					iManager.extractSelectedFeatures(iManager.getScoresFolder(), buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel(), loaderPref.getFilename()),		
+					getWritableTag(),
+					eManager.getInjectionsRatio(), vInfo);
+		} else {
+			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather models as result of train phase.");
+			return null;
+		}
 	}
+	
+	/*
 	
 	private DetectorOutput optimizedEvaluation(ScoresVoter bestVoter){
 		Metric[] metList = iManager.loadValidationMetrics();
@@ -589,7 +605,7 @@ public class DetectionManager {
 	
 	public String getMetaLearningCSV(){
 		return "meta" + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1).replace(" ", "").replace(",", "_") + "_trainscores.csv";
-	}
+	} */
 
 	public String getModelsPath() {
 		return buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_" + mainLearner.toString().substring(1, mainLearner.toString().length()-1);

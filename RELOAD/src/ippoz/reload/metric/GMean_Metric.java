@@ -25,7 +25,7 @@ public class GMean_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		fpr = 1 - fpr;

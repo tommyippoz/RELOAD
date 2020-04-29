@@ -68,21 +68,11 @@ public class TrainInfo {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
-					if(preferences.get(TRAIN_ALGORITHMS).contains(",")){
-						String[] splitted = preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "").split(",");
-						for(String algString : splitted){
-							try {
-								algTypes = LearnerType.fromString(algString.trim());
-							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
-							}
-						}
-					} else {
-						try {
-							algTypes = LearnerType.fromString(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", ""));
-						} catch(Exception ex){
-							AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + preferences.get(TRAIN_ALGORITHMS) + "'");
-						}
+					String algString = preferences.get(TRAIN_ALGORITHMS).trim();
+					try {
+						algTypes = LearnerType.fromString(algString.trim());
+					} catch(Exception ex){
+						AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
 					}
 				}
 				if(preferences.containsKey(TRAIN_KFOLD) && preferences.get(TRAIN_KFOLD) != null && AppUtility.isInteger(preferences.get(TRAIN_KFOLD).trim())){

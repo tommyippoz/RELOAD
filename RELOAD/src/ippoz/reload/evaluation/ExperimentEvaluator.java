@@ -58,37 +58,30 @@ public class ExperimentEvaluator extends Thread {
 	private LoaderBatch expBatch;
 	
 	/** The algorithm list. */
-	private List<AlgorithmModel> algList;
-	
-	private ScoresVoter voter;
+	private AlgorithmModel evalModel;
 	
 	/** The complete results of the voting. */
-	private Map<Date, Map<AlgorithmModel, AlgorithmResult>> modelResults;
+	private Map<Date, AlgorithmResult> modelResults;
 	
-	/** The contracted results of the voting. */
-	private List<VotingResult> voting;
+	private List<AlgorithmResult> failureScores;
 	
-	private List<AlgorithmResult> failures;
-	
-	private Map<KnowledgeType, Knowledge> kMap;
+	private Knowledge evalKnowledge;
 	
 	/**
 	 * Instantiates a new experiment voter.
 	 *
 	 * @param expData the experiment data
 	 * @param algVoters the algorithm list
-	 * @param voter 
 	 * @param pManager 
+	 * @throws CloneNotSupportedException 
 	 */
-	public ExperimentEvaluator(List<AlgorithmModel> algVoters, Map<KnowledgeType, Knowledge> knowMap, ScoresVoter voter) {
+	public ExperimentEvaluator(AlgorithmModel evalModel, Knowledge evalKnowledge) throws CloneNotSupportedException {
 		super();
-		this.algList = deepClone(algVoters);
-		this.voter = voter;
-		kMap = new HashMap<KnowledgeType, Knowledge>();
-		for(KnowledgeType kType : knowMap.keySet()){
-			kMap.put(kType, knowMap.get(kType).cloneKnowledge());
-		}
-		expBatch = kMap.get(kMap.keySet().iterator().next()).getID();
+		if(evalModel != null)
+		this.evalModel = evalModel.clone();
+		this.evalKnowledge = evalKnowledge;
+		if(evalKnowledge != null)
+			expBatch = evalKnowledge.getID();
 	}
 	
 	public LoaderBatch getExperimentID(){
@@ -100,7 +93,7 @@ public class ExperimentEvaluator extends Thread {
 	 *
 	 * @param algVoters the algorithms
 	 * @return the deep-cloned list
-	 */
+	 *//*
 	private List<AlgorithmModel> deepClone(List<AlgorithmModel> algVoters) {
 		List<AlgorithmModel> list = new ArrayList<AlgorithmModel>(algVoters.size());
 		try {
@@ -111,43 +104,28 @@ public class ExperimentEvaluator extends Thread {
 			AppLogger.logException(getClass(), ex, "Unable to clone Experiment");
 		}
 		return list;
-	}
+	}*/
 
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
 	 */
 	@Override
 	public void run() {
-		double votingResult;
-		Map<AlgorithmModel, AlgorithmResult> snapVoting;
-		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
-		modelResults = new TreeMap<Date, Map<AlgorithmModel, AlgorithmResult>>();
-		voting = new ArrayList<VotingResult>(currentKnowledge.size());
-		failures = new LinkedList<AlgorithmResult>();
-		if(algList.size() > 0) {
-			for(int i=0;i<currentKnowledge.size();i++){
-				//System.out.println(i);
-				snapVoting = new HashMap<AlgorithmModel, AlgorithmResult>();
-				AlgorithmResult firstResult = null;
-				for(AlgorithmModel aVoter : algList){
-					firstResult = aVoter.voteKnowledgeSnapshot(kMap.get(DetectionAlgorithm.getKnowledgeType(aVoter.getAlgorithmType())), i);
-					if(!currentKnowledge.hasIndicatorData(i, aVoter.getAlgorithmType() + "(" + aVoter.getDataSeries().getCompactName().replace("@",  "-") + ")", DataCategory.PLAIN))
-						currentKnowledge.addIndicatorData(i, aVoter.getAlgorithmType() + "(" + aVoter.getDataSeries().getCompactName().replace("@",  "-") + ")",  String.valueOf(firstResult.getScore()), DataCategory.PLAIN);
-					snapVoting.put(aVoter, firstResult);
+		modelResults = new TreeMap<>();
+		failureScores = new LinkedList<AlgorithmResult>();
+		if(evalModel != null) {
+			for(int i=0;i<evalKnowledge.size();i++){
+				AlgorithmResult modelResult = evalModel.voteKnowledgeSnapshot(evalKnowledge, i);
+				modelResults.put(evalKnowledge.getTimestamp(i), modelResult);
+				if(evalKnowledge.getInjection(i) != null){
+					failureScores.add(modelResult);
 				}
-				modelResults.put(currentKnowledge.getTimestamp(i), snapVoting);
-				votingResult = voter.voteResults(currentKnowledge, i, snapVoting);
-				voting.add(new VotingResult(firstResult, votingResult, voter));
-				
-				if(currentKnowledge.getInjection(i) != null){
-					failures.add(new VotingResult(firstResult, 1.0, voter));
-				}
-				if(kMap.containsKey(KnowledgeType.SLIDING)){
-					((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).slide(i, votingResult);
+				if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
+					((SlidingKnowledge)evalKnowledge).slide(i, modelResult.getScore());
 				}
 			}
-			if(kMap.containsKey(KnowledgeType.SLIDING)){
-				((SlidingKnowledge)kMap.get(KnowledgeType.SLIDING)).reset();
+			if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
+				((SlidingKnowledge)evalKnowledge).reset();
 			}
 		}
 	}
@@ -192,7 +170,7 @@ public class ExperimentEvaluator extends Thread {
 	public synchronized Map<Metric, Double> calculateMetricScores(Metric[] validationMetrics) {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		for(Metric met : validationMetrics){
-			metResults.put(met, met.evaluateAnomalyResults(voting));
+			metResults.put(met, met.evaluateAnomalyResults(new ArrayList<AlgorithmResult>(modelResults.values())));
 		}
 		return metResults;
 	}
@@ -211,11 +189,11 @@ public class ExperimentEvaluator extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(voting));
+				metResults.put(met, met.evaluateAnomalyResults(new ArrayList<AlgorithmResult>(modelResults.values())));
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expBatch + "," + kMap.get(kMap.keySet().iterator().next()).size() + ",");
+				pw.append(expBatch + "," + evalKnowledge.size() + ",");
 				for(Metric met : validationMetrics){
 					pw.append(String.valueOf(metResults.get(met)) + ",");
 				}
@@ -237,8 +215,8 @@ public class ExperimentEvaluator extends Thread {
 	private void printGraphics(String outFolderName, double anomalyTreshold){
 		HistogramChartDrawer hist;
 		Map<String, List<? extends AlgorithmResult>> voterMap = new HashMap<String, List<? extends AlgorithmResult>>();
-		voterMap.put(ANOMALY_SCORE_LABEL, voting);
-		voterMap.put(FAILURE_LABEL, failures);
+		voterMap.put(ANOMALY_SCORE_LABEL, new ArrayList<AlgorithmResult>(modelResults.values()));
+		voterMap.put(FAILURE_LABEL, failureScores);
 		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, 10);
 		hist.saveToFile(outFolderName + "/voter/graphic/" + expBatch + ".png", IMG_WIDTH, IMG_HEIGHT);
 	}
@@ -271,7 +249,7 @@ public class ExperimentEvaluator extends Thread {
 	 * Prints the textual summarization of the voting.
 	 *
 	 * @param outFolderName the output folder
-	 */
+	 *//*
 	private void printText(String outFolderName){
 		BufferedWriter writer = null;
 		Map<LayerType, Map<LearnerType, Integer>> countMap;
@@ -291,7 +269,7 @@ public class ExperimentEvaluator extends Thread {
 				countMap = buildMap();
 				partial = "";
 				count = 0;
-				for(AlgorithmModel aVoter : algList){
+				for(AlgorithmModel aVoter : evalModel){
 					double algScore = DetectionAlgorithm.convertResultIntoDouble(modelResults.get(timestamp).get(aVoter).getScoreEvaluation());
 					if(algScore > 0.0){
 						countMap.get(aVoter.getLayerType()).replace(aVoter.getAlgorithmType(), countMap.get(aVoter.getLayerType()).get(aVoter.getAlgorithmType()) + 1);			
@@ -299,7 +277,7 @@ public class ExperimentEvaluator extends Thread {
 						count++;
 					}
 				}
-				writer.write(AppUtility.getSecondsBetween(timestamp, kMap.get(kMap.keySet().iterator().next()).getTimestamp(0)) + ",");
+				writer.write(AppUtility.getSecondsBetween(timestamp, evalKnowledge.get(evalKnowledge.keySet().iterator().next()).getTimestamp(0)) + ",");
 				writer.write(count + ",");
 				for(LayerType currentLayer : countMap.keySet()){
 					for(LearnerType algTag : countMap.get(currentLayer).keySet()){
@@ -312,43 +290,42 @@ public class ExperimentEvaluator extends Thread {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to save voting text output");
 		} 
-	}
+	}*/
 
 	/**
 	 * Builds the basic map used in printText function.
 	 *
 	 * @return the basic map
-	 */
+	 *//*
 	private Map<LayerType, Map<LearnerType, Integer>> buildMap() {
 		Map<LayerType, Map<LearnerType, Integer>> map = new HashMap<LayerType, Map<LearnerType, Integer>>();
-		for(AlgorithmModel aVoter : algList){
+		for(AlgorithmModel aVoter : evalModel){
 			if(!map.keySet().contains(aVoter.getLayerType()))
 				map.put(aVoter.getLayerType(), new HashMap<LearnerType, Integer>());
 			if(!map.get(aVoter.getLayerType()).containsKey(aVoter.getAlgorithmType()))
 				map.get(aVoter.getLayerType()).put(aVoter.getAlgorithmType(), 0);
 		}
 		return map;
-	}
+	}*/
 
-	public Map<Date, Map<AlgorithmModel, AlgorithmResult>> getSingleAlgorithmScores() {
+	public Map<Date, AlgorithmResult> getSingleAlgorithmScores() {
 		return modelResults;
-	}
-	
-	public List<VotingResult> getExperimentVoting(){
-		return voting;
 	}
 
 	public int getFailuresNumber() {
-		return failures != null ? failures.size() : 0;
+		return failureScores != null ? failureScores.size() : 0;
 	}
 	
 	public List<InjectedElement> getFailuresList() {
 		List<InjectedElement> list = new LinkedList<InjectedElement>();
-		Knowledge currentKnowledge = kMap.get(kMap.keySet().iterator().next());
-		for(int i=0;i<currentKnowledge.size();i++){
-			list.add(currentKnowledge.getInjection(i));
+		for(int i=0;i<evalKnowledge.size();i++){
+			list.add(evalKnowledge.getInjection(i));
 		}
 		return list;
+	}
+
+	public List<AlgorithmResult> getExperimentResults() {
+		return new ArrayList<AlgorithmResult>(modelResults.values());
 	}
 
 }

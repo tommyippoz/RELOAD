@@ -26,7 +26,7 @@ public class Recall_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
 		if (tp + fn > 0)

@@ -23,7 +23,7 @@ public class NoPredictionArea_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
 		for(AlgorithmResult tr : anomalyEvaluations){

@@ -333,7 +333,7 @@ public class BuildUI {
 					}
 					tot = tot*iManager.readLoaders().size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
-					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
+					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(tot);
 					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
@@ -358,10 +358,10 @@ public class BuildUI {
 				}
 			}
 			
-			private void runRELOAD(List<DetectorOutput[]> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
+			private void runRELOAD(List<DetectorOutput> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
 				long partialTime = System.currentTimeMillis();
 				AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + index + "/" + tot + "]: '" + detManager.getTag() + "'");
-				DetectorOutput[] newOut = DetectorMain.runRELOAD(detManager, iManager);
+				DetectorOutput newOut = DetectorMain.runRELOAD(detManager, iManager);
 				final String loggedErrors = AppLogger.getErrorsSince(partialTime);
 				if(loggedErrors != null){
 					Thread t = new Thread(new Runnable(){
@@ -763,7 +763,7 @@ public class BuildUI {
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(12, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(9, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
@@ -792,13 +792,13 @@ public class BuildUI {
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed."), setupMap);
 		setupPanel.add(seePrefPanel);
 		
-		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'MULTIPLE_UNION' considers j-dimensional subspaces (0 &lt j &lt= n), constituted by the j top-ranked features, <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed."), setupMap);
-		addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
+		//comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'MULTIPLE_UNION' considers j-dimensional subspaces (0 &lt j &lt= n), constituted by the j top-ranked features, <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
+		//comp.setVisible(iManager.getTrainingFlag());
+		//addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
 		
 		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>");
 		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 5*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed."), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
 		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>");
@@ -809,7 +809,7 @@ public class BuildUI {
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
-		seePrefPanel = new JPanel();
+		/*seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
 		//seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
@@ -831,7 +831,7 @@ public class BuildUI {
 		
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG, "Specifies if Optimization is needed."), setupMap);
 		
-		setupPanel.add(seePrefPanel);
+		setupPanel.add(seePrefPanel);*/
 		
 		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed."), setupMap);
 		
@@ -1056,11 +1056,11 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private void showDetectorOutputs(List<DetectorOutput[]> outList) {
+	private void showDetectorOutputs(List<DetectorOutput> outList) {
 		OutputFrame of = new OutputFrame(iManager, outList.size());
 		if(outList.size() > 0){
 			of.buildSummaryPanel(outList);
-			for(DetectorOutput[] dOut : outList){
+			for(DetectorOutput dOut : outList){
 				of.addOutput(dOut);
 			}
 		}

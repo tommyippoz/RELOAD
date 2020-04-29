@@ -28,7 +28,7 @@ public class ConfidenceErrorMetric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		int fpHits = 0, fnHits = 0, tHits = 0;
 		double fpScore = 0, fnScore = 0, tScore = 0;
 		AlgorithmResult tResult;
