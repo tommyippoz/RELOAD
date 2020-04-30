@@ -43,20 +43,13 @@ public class MetaLearner extends LearnerType {
 					case ARBITRATING:
 						break;
 					case BAGGING:
-						if(toDecode.contains(",")){
-							try {
-								atList = new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode.split(",")[0].trim()))};
-								addPreference(BaggingMetaLearner.N_SAMPLES, toDecode.split(",")[1].trim());
-							} catch(Exception ex){
-								AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
-							}
-						} else {
-							try {
-								atList = new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode))};
-								addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));
-							} catch(Exception ex){
-								AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
-							}
+						if(toDecode.contains(","))
+							addPreference(BaggingMetaLearner.N_SAMPLES, toDecode.split(",")[1].trim());
+						else addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));	 
+						try {
+							atList = new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode.split(",")[0].trim()))};
+						} catch(Exception ex){
+							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
 						}
 						break;
 					case BOOSTING:

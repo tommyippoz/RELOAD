@@ -63,6 +63,7 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 */
 	@Override
 	protected Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		@SuppressWarnings("unchecked")
 		KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
 		return new Pair<Double, Object>(of.getDistance(), of.getCluster());
 	}

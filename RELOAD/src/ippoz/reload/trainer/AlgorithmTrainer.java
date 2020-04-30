@@ -3,6 +3,7 @@
  */
 package ippoz.reload.trainer;
 
+import ippoz.reload.algorithm.AutomaticTrainingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -56,12 +57,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	/** The metric score. */
 	protected ValueSeries trainMetricScore;
 	
-	/** The metric score. */
-	protected ValueSeries anomalyTrainScore;
-	
-	/** Scores assigned to the training set. */
-	protected Map<Knowledge, List<AlgorithmResult>> trainResult;
-	
 	/** The reputation score. */
 	private double reputationScore;
 	
@@ -114,10 +109,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public String getDatasetName(){
 		return datasetName;
 	}
-	
-	public Map<Knowledge, List<AlgorithmResult>> getTrainResult(){
-		return trainResult;
-	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
@@ -127,48 +118,50 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		trainingTime = System.currentTimeMillis();
 		bestConf = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
-		if(metricScore.size() > 0 && trainMetricScore.size() > 0){
-			metricScore = evaluateMetricScore(metric);
+		if(metricScore != null && metricScore.size() > 0){
+			//printTrainingResults();
+			//metricScore = evaluateMetricScore(metric);
+			
 			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
 				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 			else bestConf.addItem(BasicConfiguration.WEIGHT, "1.0");
-			bestConf.addItem(BasicConfiguration.AVG_SCORE, String.valueOf(getMetricAvgScore()));
-			bestConf.addItem(BasicConfiguration.STD_SCORE, String.valueOf(getMetricStdScore()));
-			bestConf.addItem(BasicConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
-			bestConf.addItem(BasicConfiguration.TRAIN_STD, trainMetricScore.getStd());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q0, trainMetricScore.getMin());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q4, trainMetricScore.getMax());
+			bestConf.addItem(BasicConfiguration.AVG_SCORE, metricScore.getAvg());//String.valueOf(getMetricAvgScore()));
+			bestConf.addItem(BasicConfiguration.STD_SCORE, 0);//String.valueOf(getMetricStdScore()));
 			bestConf.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
-			bestConf.addItem(BasicConfiguration.ANOMALY_AVG, getAnomalyAvg());
-			bestConf.addItem(BasicConfiguration.ANOMALY_STD, getAnomalyStd());
-			bestConf.addItem(BasicConfiguration.ANOMALY_MED, getAnomalyMed());
 		}
+	}
+	
+	public String printTrainingResults(Metric[] validationMetrics){
+		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
+		if(algorithm instanceof AutomaticTrainingAlgorithm) {
+			((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
+		} else {
+			for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
+				//algorithm.setDecisionFunction(dFunctionString);
+				getMetric().evaluateMetric(algorithm, knowledge);
+			}
+		}
+		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
+		for(Knowledge know : kList){
+			trainResult.put(know, calculateResults(algorithm, know));
+		}
+		trainMetricScore = algorithm.getTrainScore();
+		bestConf.addItem(BasicConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
+		bestConf.addItem(BasicConfiguration.TRAIN_STD, trainMetricScore.getStd());
+		bestConf.addItem(BasicConfiguration.TRAIN_Q0, trainMetricScore.getMin());
+		bestConf.addItem(BasicConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
+		bestConf.addItem(BasicConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
+		bestConf.addItem(BasicConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
+		bestConf.addItem(BasicConfiguration.TRAIN_Q4, trainMetricScore.getMax());
+		
+		if(validationMetrics != null)
+			return calculateMetrics(validationMetrics, trainResult);
+		else return null;
 	}
 	
 	public String getDecisionFunctionString(){
 		return bestConf.getItem(BasicConfiguration.THRESHOLD);
-	}
-	
-	private double getAnomalyMed() {
-		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
-			return anomalyTrainScore.getMedian();
-		else return Double.NaN;
-	}
-
-	private double getAnomalyStd() {
-		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
-			return anomalyTrainScore.getStd();
-		else return Double.NaN;
-	}
-
-	private double getAnomalyAvg() {
-		if(anomalyTrainScore != null && anomalyTrainScore.size() > 0)
-			return anomalyTrainScore.getAvg();
-		else return Double.NaN;
 	}
 
 	public long getTrainingTime() {
@@ -189,21 +182,18 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	private ValueSeries evaluateMetricScore(Metric met){
-		double[] metricEvaluation = null;
+	private ValueSeries evaluateMetricScore(Metric met, Map<Knowledge, List<AlgorithmResult>> trainResults){
 		ValueSeries metricResults = new ValueSeries();
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), dataSeries, bestConf);
-		for(Knowledge knowledge : kList){
-			metricEvaluation = met.evaluateMetric(algorithm, knowledge);
-			metricResults.addValue(metricEvaluation[0]);
+		for(Knowledge knowledge : trainResults.keySet()){
+			metricResults.addValue(met.evaluateAnomalyResults(trainResults.get(knowledge)));
 		}
 		return metricResults;
 	}
 	
-	public String calculateMetrics(Metric[] validationMetrics) {
+	private String calculateMetrics(Metric[] validationMetrics, Map<Knowledge, List<AlgorithmResult>> trainResults) {
 		String toReturn = "";
 		for(Metric met : validationMetrics){
-			toReturn = toReturn + met.getMetricShortName() + ":" + evaluateMetricScore(met).getAvg() + ",";
+			toReturn = toReturn + met.getMetricShortName() + ":" + evaluateMetricScore(met, trainResults).getAvg() + ",";
 		}
 		return toReturn.substring(0, toReturn.length()-1);
 	}

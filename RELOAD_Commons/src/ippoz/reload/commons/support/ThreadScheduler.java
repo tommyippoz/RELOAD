@@ -59,6 +59,10 @@ public abstract class ThreadScheduler extends Thread {
 		this.tList = trainerList;
 	}
 	
+	public int getLoadFactor(){
+		return loadFactor;
+	}
+	
 	/**
 	 * Gets the thread list.
 	 *

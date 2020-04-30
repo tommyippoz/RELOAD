@@ -48,6 +48,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Pair<Double, Object> getELKIScore(Vector v) {
 		return new Pair<Double, Object>(Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v)), null);

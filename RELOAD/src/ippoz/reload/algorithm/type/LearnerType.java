@@ -67,4 +67,6 @@ public abstract class LearnerType implements Comparable<LearnerType> {
 	
 	public abstract LearnerType clone();
 
+	public abstract String toCompactString();
+
 }

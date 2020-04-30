@@ -5,6 +5,8 @@ package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -23,8 +25,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,11 +49,11 @@ public class EvaluatorManager extends DataManager {
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
-	private List<Map<Metric, Double>> metricValues;
+	private Map<String, Double> metricValues;
 	
 	private AlgorithmModel evalModel;
 	
-	private List<Map<Date, AlgorithmResult>> detailedEvaluations;
+	private List<List<AlgorithmResult>> detailedEvaluations;
 	
 	private boolean printOutput;
 	
@@ -113,8 +115,6 @@ public class EvaluatorManager extends DataManager {
 	@Override
 	protected void initRun() {
 		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
-		Map<KnowledgeType, Knowledge> redKMap;
-		metricValues = new ArrayList<Map<Metric,Double>>(voterList.size());
 		detailedEvaluations = new ArrayList<>(voterList.size());
 		if(evalModel != null){
 			try {
@@ -142,7 +142,6 @@ public class EvaluatorManager extends DataManager {
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentEvaluator ev = (ExperimentEvaluator)t;
-		metricValues.add(ev.calculateMetricScores(validationMetrics));
 		detailedEvaluations.add(ev.getSingleAlgorithmScores());
 	}
 	
@@ -180,10 +179,23 @@ public class EvaluatorManager extends DataManager {
 		return outMap;
 	}
 	
-	public List<Map<Metric, Double>> getMetricsValues() {
+	public Map<String, Double> getMetricsValues() {
+		if(metricValues == null)
+			computeMetricValues();
 		return metricValues;
 	}
 	
+	private void computeMetricValues() {
+		metricValues = new HashMap<>();
+		List<AlgorithmResult> allResults = new ArrayList<>();
+		for(List<AlgorithmResult> list : detailedEvaluations){
+			allResults.addAll(list);
+		}
+		for(Metric met : validationMetrics){
+			metricValues.put(met.getMetricName(), met.evaluateAnomalyResults(allResults));
+		}
+	}
+
 	public Map<LoaderBatch, List<AlgorithmResult>> getDetailedEvaluations() {
 		Map<LoaderBatch, List<AlgorithmResult>> outMap = new TreeMap<>();
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
@@ -191,14 +203,8 @@ public class EvaluatorManager extends DataManager {
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
 				outMap.put(ev.getExperimentID(), new LinkedList<>());
 				if(i < detailedEvaluations.size()){
-					Map<Date, AlgorithmResult> map = detailedEvaluations.get(i);
-					if(map != null){
-						for(Date mapEntry : map.keySet()){
-							outMap.get(ev.getExperimentID()).add(map.get(mapEntry));
-						}
-					} else {
-						System.out.println(ev.getExperimentID());
-					}
+					List<AlgorithmResult> map = detailedEvaluations.get(i);
+					outMap.get(ev.getExperimentID()).addAll(map);
 				} else {
 					System.out.println(ev.getExperimentID());
 				}
@@ -224,23 +230,12 @@ public class EvaluatorManager extends DataManager {
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
-		AlgorithmResult map;
 		try {
 			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores = getDetailedEvaluations();
 			if(detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(outputFolder + File.separatorChar + "scores.csv")));
-				header1 = "exp,index,datapoint_index,fault/attack,reload_eval,reload_score,reload_confidence,";
-				header2 = ",,,,,,,";
-				
-				Iterator<LoaderBatch> it = detailedExperimentsScores.keySet().iterator();
-				LoaderBatch tag = it.next();
-				while(it.hasNext() && (detailedExperimentsScores.get(tag) == null || detailedExperimentsScores.get(tag).size() == 0)){
-					tag = it.next();
-				}
-				
-				map = detailedExperimentsScores.get(tag).get(0);
-				header1 = header1 + "," + evalModel.getAlgorithmType() + ",,,,," + evalModel.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
-				header2 = header2 + ",score,decision_function,eval,confidence,,";
+				header1 = "dataset_information,,,,,reload_eval,,,,,dataset_features";
+				header2 = "batch_index,item_index,dataset_index,label,,boolean_score,confidence,score,decision_function,,";
 				if(evalModel.getDataSeries().size() == 1){
 					header2 = header2 + evalModel.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
 				} else {
@@ -248,41 +243,42 @@ public class EvaluatorManager extends DataManager {
 						header1 = header1 + ",";
 						header2 = header2 + ((MultipleDataSeries)evalModel.getDataSeries()).getSeries(i).getSanitizedName() + ",";
 					}
+				}				
+				if(evalModel.getAlgorithmType() instanceof MetaLearner){
+					header1 = header1 + ",meta_features,";
+					header2 = header2 + ",";
+					for(BaseLearner bl : ((MetaLearner)evalModel.getAlgorithmType()).getBaseLearners()){
+						header2 = header2 + bl.toCompactString() + ",";
+					}
 				}
-				header2 = header2 + ",";					
 				
 				writer.write("* This file reports on the scores each anomaly checker (couple of algorithm and indicator/feature) gives for each data point considered in the evaluation set. \n"
 						+ "Data points are identified by name of the experiment and index inside the experiment, we report the true label of the data point (the one in the dataset) and the prediction made by RELOAD. \n"
 						+ "In addition, for each anomaly checker we report a triple <score, decision function, evaluation> where the evaluation is calculated by applying such decision function to the score.\n");
 				writer.write(header1 + "\n" + header2 + "\n");
 				
-				Map<LoaderBatch, List<InjectedElement>> injections = getFailures();
 				for(LoaderBatch expName : detailedExperimentsScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
-							writer.write(expName.getTag() + "," + 
-									i + "," + (expName.getFrom() + i) + "," +
-									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
-									(detailedExperimentsScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
-									detailedExperimentsScores.get(expName).get(i).getScore() + "," + 
-									detailedExperimentsScores.get(expName).get(i).getConfidence() + ",");
-							if(i < detailedExperimentsScores.get(expName).size()){
-								map = detailedExperimentsScores.get(expName).get(i);
-								writer.write("," + map.getScore() + "," + 
-										(map.getDecisionFunction() != null ? map.getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
-										map.getScoreEvaluation() + "," + map.getConfidence() + ",,");
-								if(knowledge != null){
-									Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
-									if(evalModel.getDataSeries().size() == 1){
-										writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
-									} else {
-										for(int j=0;j<evalModel.getDataSeries().size();j++){
-											writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)evalModel.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
-										}
+							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
+							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.getInjection() != null ? res.getInjection().getDescription() : "") + ",,");
+							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
+									res.getScore() + "," + (res.getDecisionFunction() != null ? res.getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
+							if(knowledge != null){
+								Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
+								if(evalModel.getDataSeries().size() == 1){
+									writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
+								} else {
+									for(int j=0;j<evalModel.getDataSeries().size();j++){
+										writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)evalModel.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
 									}
 								}
+							}
+							if(evalModel.getAlgorithmType() instanceof MetaLearner){
+								double[] ob = (double[]) detailedExperimentsScores.get(expName).get(i).getAdditionalScore();
+								writer.write("," + Arrays.toString(ob).replace("[", "").replace("]", ""));
 							}
 							writer.write("\n");
 						}
@@ -334,7 +330,7 @@ public class EvaluatorManager extends DataManager {
 		String metString = "";
 		if(metricValues != null){
 			for(Metric met : validationMetrics){
-				double score = Double.parseDouble(Metric.getAverageMetricValue(metricValues, met));
+				double score = metricValues.get(met.getMetricName());
 				metString = metString + met.getMetricShortName() + ":" + score + ",";
 			}
 		}

@@ -66,8 +66,6 @@ public class CustomGMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	  
 	  private double max_k;
 	  
-	  private double actualK;
-	  
 	  /**
 	   * Constructor.
 	   *
@@ -80,7 +78,6 @@ public class CustomGMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	    super(distanceFunction, 1, maxiter, initializer);
 	    this.finalClusters = finalClusters;
 	    this.max_k = max_k;
-	    actualK = 0;
 	  }
 	  
 	  public boolean hasClusters(){
@@ -115,7 +112,6 @@ public class CustomGMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 	    }
 	    
 	    finalClusters = runKMeans(database, relation, k);
-	    actualK = k;
 	    
 	    // Calculating Distances
 	    scoresList = new LinkedList<KMeansScore>();

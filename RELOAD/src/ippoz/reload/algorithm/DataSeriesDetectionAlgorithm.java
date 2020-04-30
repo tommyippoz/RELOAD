@@ -110,8 +110,8 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 				} else if(score.getValue() != null && score.getValue() instanceof KMeansModel){
 					KMeansModel kms = (KMeansModel)score.getValue();
 					ar = new KMeansResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), kms.getMean(), kms.getVarianceContribution(), getConfidence(score.getKey()));
-				} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()));
-			} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()));
+				} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()), score.getValue());
+			} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()), score.getValue());
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
 		} else return AlgorithmResult.error(snapArray, dsSnap.getInjectedElement());

@@ -13,7 +13,7 @@ import ippoz.reload.commons.failure.InjectedElement;
 public abstract class ClusteringResult extends AlgorithmResult {
 
 	public ClusteringResult(double[] dataValues, InjectedElement injection, double score, double confidence) {
-		super(dataValues, injection, score, confidence);
+		super(dataValues, injection, score, confidence, null);
 		// TODO Auto-generated constructor stub
 	}
 

@@ -8,7 +8,10 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.support.AppLogger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -298,6 +301,18 @@ public abstract class BasicConfiguration implements Cloneable {
 
 	public Map<String, Object> getConfMap() {
 		return confMap;
+	}
+
+	public static List<List<BasicConfiguration>> partition(List<BasicConfiguration> confList, int nPartitions) {
+		List<List<BasicConfiguration>> part = new ArrayList<>(nPartitions);
+		for(int i=0;i<nPartitions;i++){
+			List<BasicConfiguration> innerList = new LinkedList<>();
+			for(int j=i;j<confList.size();j=j+nPartitions){
+				innerList.add(confList.get(j));
+			}
+			part.add(innerList);
+		}
+		return part;
 	}
 
 }

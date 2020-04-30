@@ -79,8 +79,6 @@ public class BuildUI {
 	
 	private static final String SETUP_LABEL_OUTPUT = "Output Format";
 	
-	private static final String SETUP_IND_SELECTION = "Feature Aggregation";
-	
 	private static final String SETUP_LABEL_FILTERING = "Feature Selection";
 	
 	private static final String SETUP_LABEL_TRAINING = "Training";
@@ -104,8 +102,6 @@ public class BuildUI {
 	private static final String PATH_LABEL_SCORES_FOLDER = "Scores Folder";
 	
 	private static final String PATH_LABEL_DETECTION_PREFERENCES = "Detection Preferences";
-
-	private static final String SETUP_LABEL_OPTIMIZATION = "Optimization";
 	
 	private static final String SETUP_LABEL_EVALUATION = "Evaluation";
 
@@ -647,7 +643,7 @@ public class BuildUI {
                         gui,
                         "Choose Algorithm(s)",
                         JOptionPane.QUESTION_MESSAGE);
-                List items = (List)possibilities.getSelectedValuesList();
+                List<String> items = possibilities.getSelectedValuesList();
                 
                 String returnValue = "";
                 for (Object item : items) {
@@ -902,7 +898,7 @@ public class BuildUI {
 
 			public void workOnUpdate() {
 				if (textField.getText() != null && textField.getText().length() > 0){
-	        		iManager.updatePreference(fileTag, textField.getText(), true);
+	        		iManager.updatePreference(fileTag, textField.getText(), false, true);
 	        	}
 			}
 		});
@@ -939,7 +935,7 @@ public class BuildUI {
 			        Path pathBase = Paths.get(new File("").getAbsolutePath());
 					if(!folderFlag || selectedFile.isDirectory()){
 						button.setText(pathBase.relativize(pathAbsolute).toString());
-						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString().replace('\\', File.separatorChar), true);
+						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString().replace('\\', File.separatorChar), true, true);
 					} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a folder");
 				}
 			} } );
@@ -977,7 +973,7 @@ public class BuildUI {
 			        		linkedPanel.setVisible(cb.isSelected());
 			        }
 			        if(!isUpdating){
-			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true);
+			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", false, true);
 			        	reload();
 			        }
 			        	
@@ -1041,7 +1037,7 @@ public class BuildUI {
 								newValue = newValue + "(" + s + ")";
 							} else newValue = newValue + "(0.9)";
 			        	}
-			        	iManager.updatePreference(fileTag, newValue, true);
+			        	iManager.updatePreference(fileTag, newValue, false, true);
 			        	reload();
 			    	}
 			    }

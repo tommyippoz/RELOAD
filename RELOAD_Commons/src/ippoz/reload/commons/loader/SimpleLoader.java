@@ -269,7 +269,8 @@ public abstract class SimpleLoader implements Loader {
 			} else {
 				String toRet = "";
 				for(MonitoredData md : dataList){
-					toRet = toRet + md.getDataID().toString() + ",";
+					if(md != null && md.getDataID() != null)
+						toRet = toRet + md.getDataID().toString() + ",";
 				}			
 				return toRet.substring(0, toRet.length()-1);
 			}

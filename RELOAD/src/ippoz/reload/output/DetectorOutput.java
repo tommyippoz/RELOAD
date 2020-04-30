@@ -265,7 +265,7 @@ public class DetectorOutput {
 	}
 	
 	public String getAlgorithm(){
-		return algorithms.toString();
+		return algorithms.toCompactString();
 	}
 
 	private String[][] getGrid(String scoresString) {

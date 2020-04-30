@@ -53,4 +53,9 @@ public class BaseLearner extends LearnerType {
 		return new BaseLearner(getAlgType(), learnerPreferences);
 	}
 
+	@Override
+	public String toCompactString() {
+		return toString();
+	}
+
 }

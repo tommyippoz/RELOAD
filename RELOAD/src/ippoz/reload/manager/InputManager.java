@@ -164,9 +164,9 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue, boolean updateFile){
-		if(tag != null && prefManager.hasPreference(tag)){
-			prefManager.updatePreference(tag, newValue, updateFile);
+	public boolean updatePreference(String tag, String newValue,boolean createNew,  boolean updateFile){
+		if(tag != null && (createNew || prefManager.hasPreference(tag))){
+			prefManager.updatePreference(tag, newValue, createNew, updateFile);
 			return true;
 		} else return false;
 	}
@@ -462,7 +462,7 @@ public class InputManager {
 	 */
 	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
 		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
-		if(createMissing && alg != null && alg instanceof BaseLearner){
+		if(confList == null && createMissing && alg != null && alg instanceof BaseLearner){
 			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
 			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
 			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
@@ -1343,11 +1343,9 @@ public class InputManager {
 	public static List<AlgorithmModel> loadAlgorithmModelsFor(String scoresFileString, ScoresVoter voter) {
 		File asFile = new File(scoresFileString);
 		BufferedReader reader;
-		BasicConfiguration conf;
 		String[] splitted;
 		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
 		String readed;
-		String seriesString;
 		try {
 			if(asFile.exists()){
 				reader = new BufferedReader(new FileReader(asFile));

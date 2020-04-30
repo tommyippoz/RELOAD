@@ -7,7 +7,6 @@ import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.configuration.MetaConfiguration;
-import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -98,7 +97,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	
 	@Override
 	protected String getFilename() {
-		return getDefaultTmpFolder() + File.separatorChar + ((MetaLearner)getLearnerType()).toCompactString() + File.separatorChar;
+		return getDefaultTmpFolder() + File.separatorChar + getLearnerType().toCompactString() + File.separatorChar;
 	}
 
 	private void printFile(String filename, List<AlgorithmTrainer> tList){

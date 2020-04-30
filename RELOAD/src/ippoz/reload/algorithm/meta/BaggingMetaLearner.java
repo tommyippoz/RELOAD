@@ -54,6 +54,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
+				at.printTrainingResults(null);
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
 			}
 		} catch (InterruptedException e) {

@@ -55,6 +55,7 @@ public class GMeansELKI extends DataSeriesELKIAlgorithm {
 	    		null);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Pair<Double, Object> getELKIScore(Vector v) {
 		KMeansScore of = ((CustomGMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);

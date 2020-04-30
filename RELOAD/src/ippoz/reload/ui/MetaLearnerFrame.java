@@ -23,8 +23,6 @@ import java.awt.event.ItemListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -271,73 +269,6 @@ public class MetaLearnerFrame {
 		panel.add(textField);
 		
 		return panel;
-	}
-	
-	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo, String checkboxText){
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, additionalInfo != null ? 4 : 3));
-		
-		JCheckBox cb = new JCheckBox(checkboxText);
-		cb.setHorizontalAlignment(SwingConstants.CENTER);
-		//cb.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
-		cb.setSelected(activated);
-		
-		JLabel lbl = new JLabel(prefName);
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		//lbl.setBounds(space, panelY, smallSize, labelSpacing);
-		if(description != null && description.trim().length() > 0)
-			lbl.setToolTipText(description);
-		
-		panel.add(lbl);
-		
-		JTextField textField = new JTextField();
-		textField.setText(textFieldText);
-		textField.setEnabled(activated);
-		textField.setColumns(10);
-		textField.getDocument().addDocumentListener(new DocumentListener() {
-			  
-			public void changedUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void removeUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void insertUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-
-			public void workOnUpdate() {
-				if (textField.getText() != null && textField.getText().length() > 0){
-	        		// TODO
-	        	}
-			}
-		});
-		
-		cb.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent event) {
-		        JCheckBox cb = (JCheckBox) event.getSource();
-		        textField.setEnabled(cb.isSelected());		
-		        if (!cb.isSelected() && textField.getText() != null){
-	        		// TODO
-	        	}
-		    }
-		});
-		
-		panel.add(textField);
-		
-		if(additionalInfo != null){
-			//additionalInfo.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
-			panel.add(additionalInfo);
-		}
-		
-		panel.add(cb);
-		
-		root.add(panel);
-		
 	}
 
 }

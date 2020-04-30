@@ -6,7 +6,6 @@ package ippoz.reload.algorithm.result;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.metric.Metric;
 
 /**
  * The Class AlgorithmResult. Stores results of an evaluation of a Knowledge item by an algorithm.
@@ -33,18 +32,22 @@ public class AlgorithmResult {
 	/** The confidence on the result. */
 	private double confidence;
 
+	private Object additionalScore;
+
 	/**
 	 * Instantiates a new algorithm result.
 	 *
 	 * @param dataValues the data values
 	 * @param injection the injection
 	 * @param score the score
+	 * @param object 
 	 */
-	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, double confidence) {
+	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, double confidence, Object additionalScore) {
 		this.dataValues = dataValues;
 		this.injection = injection;
 		this.score = score;
 		this.confidence = confidence;
+		this.additionalScore = additionalScore;
 	}
 
 	/**
@@ -183,11 +186,15 @@ public class AlgorithmResult {
 	}
 
 	public boolean getBooleanScore() {
-		return Metric.anomalyTrueFalse(getScore());
+		return getScoreEvaluation() == AnomalyResult.ANOMALY;
 	}
 	
 	public double getConfidence() {
 		return confidence;
+	}
+
+	public Object getAdditionalScore() {
+		return additionalScore;
 	}
 
 }

@@ -10,7 +10,6 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.graphics.HistogramChartDrawer;
 import ippoz.reload.metric.Metric;
 
 import java.io.File;
@@ -31,12 +30,6 @@ import java.util.TreeMap;
  * @author Tommy
  */
 public class ExperimentEvaluator extends Thread {
-	
-	/** The Constant IMG_WIDTH for printing. */
-	private static final int IMG_WIDTH = 1000;
-	
-	/** The Constant IMG_HEIGHT for printing. */
-	private static final int IMG_HEIGHT = 1000;
 	
 	/** The Constant ANOMALY_SCORE_LABEL. */
 	public static final String ANOMALY_SCORE_LABEL = "Anomaly Score";
@@ -196,110 +189,8 @@ public class ExperimentEvaluator extends Thread {
 		return metResults;
 	}
 
-	/**
-	 * Prints the graphics.
-	 *
-	 * @param outFolderName the output folder
-	 * @param anomalyTreshold the anomaly threshold
-	 */
-	private void printGraphics(String outFolderName, double anomalyTreshold){
-		HistogramChartDrawer hist;
-		Map<String, List<? extends AlgorithmResult>> voterMap = new HashMap<String, List<? extends AlgorithmResult>>();
-		voterMap.put(ANOMALY_SCORE_LABEL, new ArrayList<AlgorithmResult>(modelResults.values()));
-		voterMap.put(FAILURE_LABEL, failureScores);
-		hist = new HistogramChartDrawer("Anomaly Score", "Seconds", "Score", resultToMap(voterMap), anomalyTreshold, 10);
-		hist.saveToFile(outFolderName + "/voter/graphic/" + expBatch + ".png", IMG_WIDTH, IMG_HEIGHT);
-	}
-	
-	private Map<String, Map<Double, Double>> resultToMap(Map<String, List<? extends AlgorithmResult>> voterMap) {
-		Map<String, Map<Double, Double>> map = new HashMap<String, Map<Double,Double>>();
-		/*for(String mapTag : voterMap.keySet()){
-			map.put(mapTag, new TreeMap<Double,Double>());
-			for(AlgorithmResult vr : voterMap.get(mapTag)){
-				map.get(mapTag).put(vr.getDateOffset(voterMap.get(mapTag).get(0).getDate()), vr.getValue());
-			}
-		}*/
-		return map;
-	}
-
-	/*private List<TimedValue> convertFailures(List<Map<AlgorithmVoter, Snapshot>> expSnapMap) {
-		List<TimedValue> failList = new LinkedList<TimedValue>();
-		for(Map<AlgorithmVoter, Snapshot> map : expSnapMap){
-			if(map.get(algList.get(0)).getInjectedElement() != null){
-				failList.add(new TimedValue(map.get(algList.get(0)).getTimestamp(), 1.0));
-				for(int i=1;i<=map.get(algList.get(0)).getInjectedElement().getDuration();i++){
-					failList.add(new TimedValue(new Date(map.get(algList.get(0)).getTimestamp().getTime() + i*1000), -1.0));
-				}
-			}
-		}
-		return failList;
-	}*/
-	
-	/**
-	 * Prints the textual summarization of the voting.
-	 *
-	 * @param outFolderName the output folder
-	 *//*
-	private void printText(String outFolderName){
-		BufferedWriter writer = null;
-		Map<LayerType, Map<LearnerType, Integer>> countMap;
-		String partial;
-		int count;
-		try {
-			countMap = buildMap();
-			writer = new BufferedWriter(new FileWriter(new File(outFolderName + "/voter/" + expBatch + ".csv")));
-			writer.write("timestamp,anomaly_alerts,");
-			for(LayerType currentLayer : countMap.keySet()){
-				for(LearnerType algTag : countMap.get(currentLayer).keySet()){
-					writer.write(currentLayer.toString() + "@" + algTag + ",");
-				}
-			}
-			writer.write("details\n");
-			for(Date timestamp : modelResults.keySet()){
-				countMap = buildMap();
-				partial = "";
-				count = 0;
-				for(AlgorithmModel aVoter : evalModel){
-					double algScore = DetectionAlgorithm.convertResultIntoDouble(modelResults.get(timestamp).get(aVoter).getScoreEvaluation());
-					if(algScore > 0.0){
-						countMap.get(aVoter.getLayerType()).replace(aVoter.getAlgorithmType(), countMap.get(aVoter.getLayerType()).get(aVoter.getAlgorithmType()) + 1);			
-						partial = partial + aVoter.toString() + "|";
-						count++;
-					}
-				}
-				writer.write(AppUtility.getSecondsBetween(timestamp, evalKnowledge.get(evalKnowledge.keySet().iterator().next()).getTimestamp(0)) + ",");
-				writer.write(count + ",");
-				for(LayerType currentLayer : countMap.keySet()){
-					for(LearnerType algTag : countMap.get(currentLayer).keySet()){
-						writer.write(countMap.get(currentLayer).get(algTag) + ",");
-					}
-				}
-				writer.write(partial + "\n");
-			}
-			writer.close();
-		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to save voting text output");
-		} 
-	}*/
-
-	/**
-	 * Builds the basic map used in printText function.
-	 *
-	 * @return the basic map
-	 *//*
-	private Map<LayerType, Map<LearnerType, Integer>> buildMap() {
-		Map<LayerType, Map<LearnerType, Integer>> map = new HashMap<LayerType, Map<LearnerType, Integer>>();
-		for(AlgorithmModel aVoter : evalModel){
-			if(!map.keySet().contains(aVoter.getLayerType()))
-				map.put(aVoter.getLayerType(), new HashMap<LearnerType, Integer>());
-			if(!map.get(aVoter.getLayerType()).containsKey(aVoter.getAlgorithmType()))
-				map.get(aVoter.getLayerType()).put(aVoter.getAlgorithmType(), 0);
-		}
-		return map;
-	}*/
-
-	public Map<Date, AlgorithmResult> getSingleAlgorithmScores() {
-		return modelResults;
+	public List<AlgorithmResult> getSingleAlgorithmScores() {
+		return new ArrayList<>(modelResults.values());
 	}
 
 	public int getFailuresNumber() {

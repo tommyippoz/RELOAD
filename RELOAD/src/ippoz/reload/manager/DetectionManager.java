@@ -93,7 +93,7 @@ public class DetectionManager {
 	}
 	
 	public String getDetectorOutputFolder(){
-		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + File.separatorChar + mainLearner.toString().replace(",", "");
+		 return iManager.getOutputFolder() + loaderPref.getCompactFilename() + File.separatorChar + mainLearner.toCompactString();
 	}
 	
 	public Metric[] getMetrics() {
@@ -221,7 +221,6 @@ public class DetectionManager {
 					iManager.generateDataSeries(kMap, iManager.getScoresFolder() + buildOutFilePrequel() + File.separatorChar + buildOutFilePrequel() + "_filtered.csv");
 				}
 				tManager = new TrainerManager(iManager.getSetupFolder(), 
-						iManager.getDatasetsFolder(), 
 						iManager.getScoresFolder(), 
 						loaderPref.getCompactFilename(), 
 						iManager.getOutputFolder(), 
@@ -469,7 +468,7 @@ public class DetectionManager {
 		if(iManager.countAvailableModels(scoresFileString) > 0){
 			eManager = new EvaluatorManager(getDetectorOutputFolder(), iManager.getScoresFile(scoresFileString), generateKnowledge(l.fetch()), metList, printOutput);
 			if(eManager.detectAnomalies()){
-				score = Double.parseDouble(Metric.getAverageMetricValue(eManager.getMetricsValues(), metric));
+				score = eManager.getMetricsValues().get(metric.getMetricName());
 				AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
 			}
 			ValidationInfo vInfo = new ValidationInfo();

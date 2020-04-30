@@ -95,7 +95,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		Map<String, ValueSeries> currentMetricValue = null;
 		ValueSeries vs = null;
 		DetectionAlgorithm algorithm;
-		DetectionAlgorithm bestAlgorithm;
 		BasicConfiguration bestConf = null;
 		BasicConfiguration currentConf = null;
 		Map<TimedResult, AlgorithmResult> resultList = null;
@@ -184,26 +183,14 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					bestConf.addItem(BasicConfiguration.THRESHOLD, value[0]);
 				}
 			}
-						
-			algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
-			if(algorithm instanceof AutomaticTrainingAlgorithm) {
-				((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
-			} else {
-				for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
-					//algorithm.setDecisionFunction(dFunctionString);
-					getMetric().evaluateMetric(algorithm, knowledge);
-				}
-			}
-			trainResult = new HashMap<>();
-			for(Knowledge know : kList){
-				trainResult.put(know, calculateResults(algorithm, know));
-			}
-			trainMetricScore = algorithm.getTrainScore();
+					
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
 		return bestConf;
 	}
+	
+	
 	
 	private String[] linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, Map<TimedResult, AlgorithmResult> resultList){
 		double thrValue = (thrRight + thrLeft)/2;

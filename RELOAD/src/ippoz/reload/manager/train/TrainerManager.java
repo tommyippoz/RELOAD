@@ -5,7 +5,6 @@ package ippoz.reload.manager.train;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
-import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -42,8 +41,6 @@ import java.util.Map.Entry;
 public class TrainerManager extends TrainDataManager {
 	
 	private TrainInfo trainInfo;
-	
-	private String datasetsFolder;
 	
 	private Metric[] validationMetrics;
 	
@@ -94,9 +91,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String datasetsFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics) {
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics) {
 		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics);
-		this.datasetsFolder = datasetsFolder;
 		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
 		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
 	}
@@ -161,7 +157,9 @@ public class TrainerManager extends TrainDataManager {
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
 				AlgorithmTrainer at = bestModel(getThreadList());
-				trainInfo.setMetricsString(at.calculateMetrics(validationMetrics));
+				trainInfo.setMetricsString(at.printTrainingResults(validationMetrics));
+				AppLogger.logInfo(getClass(), "Found: " + (at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
+						" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
 				saveModels(getThreadList(), outFilename + "_scores.csv");
 				//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
 				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
@@ -254,7 +252,12 @@ public class TrainerManager extends TrainDataManager {
 		}
 		KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algTypes);
 		for(DataSeries dataSeries : seriesList){
-			trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold));
+			/*if(confList.size() > 1){
+				int nPartitions = 2;//Math.min(getLoadFactor()/seriesList.size(), confList.size());
+				for(List<BasicConfiguration> confPart : BasicConfiguration.partition(confList, nPartitions)){
+					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confPart, getDatasetName(), kfold));
+				}
+			} else*/ trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold));
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());
@@ -273,10 +276,10 @@ public class TrainerManager extends TrainDataManager {
 	 */
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
-		AlgorithmTrainer at = ((AlgorithmTrainer)t);
-		AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
+		//AlgorithmTrainer at = ((AlgorithmTrainer)t);
+		/*AppLogger.logInfo(getClass(), "[" + tIndex + "/" + threadNumber() + "] Found: " + 
 				(at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
-				" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");		
+				" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");	*/	
 		//at.flush();
 	}
 	
@@ -285,7 +288,7 @@ public class TrainerManager extends TrainDataManager {
 	 *
 	 * @param list the list of algorithm trainers
 	 * @param metaFile 
-	 */
+	 *//*
 	private void saveTrainScores(List<AlgorithmTrainer> list, String metaFile) {
 		List<DataSeries> uniqueDs;
 		BufferedWriter scoreWriter;
@@ -326,7 +329,7 @@ public class TrainerManager extends TrainDataManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write train scores");
 		}
-	}
+	}*/
 	
 	/**
 	 * Saves scores related to the executed AlgorithmTrainers.

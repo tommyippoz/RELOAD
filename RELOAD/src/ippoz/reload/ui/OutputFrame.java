@@ -89,7 +89,7 @@ public class OutputFrame {
 	public void addOutput(DetectorOutput dOut) {
 		if(dOut != null) {
 			JPanel outPanel = buildOutputPanel(dOut);
-			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm().replace("[", "").replace("]", ""), outPanel);
+			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm(), outPanel);
 		}
 	}
 
@@ -166,7 +166,7 @@ public class OutputFrame {
 		lbl.setToolTipText("Name of the loader used by RELOAD");
 		panel.add(lbl);
 		
-		lbl = new JLabel(dOut != null ? dOut.getAlgorithm().replace("[", "").replace("]", "") : "Algorithm");
+		lbl = new JLabel(dOut != null ? dOut.getAlgorithm() : "Algorithm");
 		if(dOut == null)
 			lbl.setFont(labelBoldFont);
 		else lbl.setFont(smallLabelFont);
@@ -224,7 +224,7 @@ public class OutputFrame {
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 		
 		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
-		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm().replace("[", "").replace("]", ""), "Algorithm used by RELOAD"));
+		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
 		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
 		
 		headerPanel.add(miscPanel);

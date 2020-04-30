@@ -403,8 +403,6 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		private Vector data;
 
 		private double abof;
-		
-		private double knn;
 
 		public ABODResult(SingleObjectBundle bundle, double abof) {
 			this.abof = abof;
