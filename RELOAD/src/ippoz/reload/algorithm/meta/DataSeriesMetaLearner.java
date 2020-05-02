@@ -40,6 +40,8 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	protected List<DataSeriesNonSlidingAlgorithm> baseLearners;
 	
 	private List<MetaScore> scores;
+	
+	private MetaTrainer mTrainer;
 
 	protected DataSeriesMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlType) {
 		super(dataSeries, conf);
@@ -75,10 +77,10 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	 * @see ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 		
-		MetaTrainer mTrainer = trainMetaLearner(kList);
+		mTrainer = trainMetaLearner(kList);
 		
 		scores = new LinkedList<MetaScore>();
 		for(Snapshot snap : snapList){
@@ -88,13 +90,17 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		
 		conf.addItem(TMP_FILE, getFilename());
 		
-		if(createOutput) {
-	    	printFile(getFilename(), mTrainer.getTrainers());
-		}
-		
 		return true;
 	}
 	
+	
+	
+	@Override
+	public void saveLoggedScores() {
+		super.saveLoggedScores();
+		printFile(getFilename(), mTrainer.getTrainers());
+	}
+
 	@Override
 	protected String getFilename() {
 		return getDefaultTmpFolder() + File.separatorChar + getLearnerType().toCompactString() + File.separatorChar;

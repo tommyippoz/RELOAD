@@ -90,7 +90,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#automaticWEKATraining(weka.core.Instances, boolean)
 	 */
 	@Override
-	protected boolean automaticWEKATraining(Instances db, boolean createOutput) {
+	protected boolean automaticWEKATraining(Instances db) {
 		int nTrees;
 		int sampleSize;
 		try {
@@ -98,10 +98,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			sampleSize = loadSampleSize();
 			iForest = new CustomIsolationForest(nTrees, sampleSize);
 			iForest.buildClassifier(db);
-			if(createOutput){
-		    	storeSerialized();
-		    	iForest.printScores(new File(getFilename() + "scores"));
-		    }
 			return true;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train IsolationForest");
@@ -109,6 +105,13 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 	
+	@Override
+	public void saveLoggedScores() {
+		super.saveLoggedScores();
+		storeSerialized();
+    	iForest.printScores(new File(getFilename() + "scores"));
+	}
+
 	/**
 	 * Loads the size of the sample to be used in each isolation tree.
 	 *

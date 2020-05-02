@@ -64,7 +64,8 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		} 
 	}
 	
-	private void saveLoggedScores() {
+	@Override
+	public void saveLoggedScores() {
 		BufferedWriter writer;
 		try {
 			writer = new BufferedWriter(new FileWriter(getScoresFilename()));
@@ -93,11 +94,9 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	}
 
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticTraining(List<Knowledge> kList) {
 		boolean trainOut;
-		if(createOutput && !new File(getDefaultTmpFolder()).exists())
-			new File(getDefaultTmpFolder()).mkdirs();
-		trainOut = automaticInnerTraining(kList, createOutput);
+		trainOut = automaticInnerTraining(kList);
 		if(trainOut){
 			ValueSeries vs = new ValueSeries(getTrainScores());
 			if(vs.size() > 0)
@@ -112,9 +111,6 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					logScore(ar.getScore(), snap.isAnomalous());
 				}
 			}
-			if(createOutput){
-		    	saveLoggedScores();
-		    }
 			
 			conf.addItem(TMP_FILE, getFilename());		    
 		    storeAdditionalPreferences();
@@ -137,6 +133,6 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	
 	public abstract List<Double> getTrainScores();
 	
-	public abstract boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput);	
+	public abstract boolean automaticInnerTraining(List<Knowledge> kList);	
 
 }

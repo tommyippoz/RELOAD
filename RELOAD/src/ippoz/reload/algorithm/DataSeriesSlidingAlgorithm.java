@@ -48,6 +48,11 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	}
 	
 	@Override
+	public void saveLoggedScores() {
+		
+	}
+	
+	@Override
 	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){

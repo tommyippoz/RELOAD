@@ -96,10 +96,11 @@ public abstract class DetectionAlgorithm {
 		decisionFunction = DecisionFunction.buildDecisionFunction(vs, dFunctionString, revertFlag);
 	}
 	
-	public void setDecisionFunction(String dFunctionString){
+	public DecisionFunction setDecisionFunction(String dFunctionString){
 		if(loggedAnomalyScores != null && loggedAnomalyScores.size() > 0)
 			decisionFunction = buildClassifier(dFunctionString, loggedAnomalyScores, true);
 		else decisionFunction = buildClassifier(dFunctionString, loggedScores, false);
+		return decisionFunction;
 	}
 	
 	protected void setDecisionFunction(){
@@ -497,10 +498,6 @@ public abstract class DetectionAlgorithm {
 	 */
 	public abstract DataSeries getDataSeries();
 
-	public ValueSeries getTrainScore() {
-		return loggedScores;
-	}
-
 	public static boolean isSliding(LearnerType algType) {
 		return algType instanceof BaseLearner && ((BaseLearner)algType).getAlgType().toString().contains("SLIDING");
 	}
@@ -755,6 +752,8 @@ public abstract class DetectionAlgorithm {
 	}
 	
 	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
+
+	public abstract void saveLoggedScores();
 	
 
 }

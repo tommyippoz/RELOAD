@@ -242,8 +242,7 @@ public abstract class BasicConfiguration implements Cloneable {
 		return all;
 	}
 
-	public static BasicConfiguration buildConfiguration(LearnerType lType,
-			String descRow) {
+	public static BasicConfiguration buildConfiguration(LearnerType lType, String descRow) {
 		String tag, value;
 		BasicConfiguration conf = null;
 		if (lType instanceof MetaLearner)

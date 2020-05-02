@@ -42,7 +42,7 @@ public class MetaTrainer extends ThreadScheduler {
 	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList){		
 		List<BasicConfiguration> cList = data.getConfigurationsFor(algTag);
 		cList = updateConfigurations(cList, algTag);
-		trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList));
+		trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList, data.getValidationMetrics()));
 	}
 	
 	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag){

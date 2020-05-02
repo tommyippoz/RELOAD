@@ -87,9 +87,15 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		return outScores;
 	}
+	
+	@Override
+	public void saveLoggedScores() {
+		printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
 
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Point> pointDs = new LinkedList<Point>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			pointDs.add(new Point(getSnapValueArray(snap)));
@@ -103,10 +109,6 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
-		
-		if(createOutput) {
-	    	printFile(new File(getFilename()));
-		}
 		
 		return true;
 	}

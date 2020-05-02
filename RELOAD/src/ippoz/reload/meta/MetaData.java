@@ -28,8 +28,7 @@ public class MetaData {
 	
 	private Map<LearnerType, List<BasicConfiguration>> confMap;
 
-	public MetaData(int kfold, String datasetName, Metric targetMetric,
-			Reputation reputation, Map<LearnerType, List<BasicConfiguration>> baseConfs) {
+	public MetaData(int kfold, String datasetName, Metric targetMetric, Reputation reputation, Map<LearnerType, List<BasicConfiguration>> baseConfs) {
 		this.kfold = kfold;
 		this.datasetName = datasetName;
 		this.targetMetric = targetMetric;
@@ -65,6 +64,10 @@ public class MetaData {
 			}
 		}
 		return new LinkedList<>();
+	}
+
+	public Metric[] getValidationMetrics() {
+		return null;
 	}	
 
 }

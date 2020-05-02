@@ -222,6 +222,10 @@ public class DetectorOutput {
 		return vInfo.getBatchesString().replace("[", "").replace("]", "");
 	}
 	
+	public String getEvaluationDataPoints() {
+		return String.valueOf(vInfo.getNRuns());
+	}
+	
 	public Metric getReferenceMetric() {
 		return iManager.getTargetMetric();
 	}
@@ -391,6 +395,10 @@ public class DetectorOutput {
 	
 	public String getTrainRuns(){
 		return loader.getRuns();
+	}
+	
+	public String getTrainDataPoints(){
+		return String.valueOf(tInfo.getNRuns());
 	}
 
 	public String getTrainBatches() {

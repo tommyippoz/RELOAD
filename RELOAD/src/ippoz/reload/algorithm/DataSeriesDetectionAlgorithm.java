@@ -66,7 +66,10 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	 * @return the filename
 	 */
 	protected String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
+		String folder = getDefaultTmpFolder() + File.separatorChar;
+		if(!new File(folder).exists())
+			new File(folder).mkdirs();
+		return folder + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
 	}
 	
 	/**
@@ -79,13 +82,13 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 			if(conf.hasItem(TAG))
 				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + conf.getItem(TAG);
 			else if(getLearnerType() instanceof BaseLearner)
-				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString();
 			else return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME);
 		} else {
 			if(conf.hasItem(TAG))
 				return "tmp" + File.separatorChar + conf.getItem(TAG);
 			else if(getLearnerType() instanceof BaseLearner)
-				return "tmp" + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+				return "tmp" + File.separatorChar + getLearnerType().toString();
 			else return "tmp";
 		}
 	}

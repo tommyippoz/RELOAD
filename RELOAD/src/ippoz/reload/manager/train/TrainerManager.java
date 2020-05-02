@@ -157,7 +157,7 @@ public class TrainerManager extends TrainDataManager {
 				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
 				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
 				AlgorithmTrainer at = bestModel(getThreadList());
-				trainInfo.setMetricsString(at.printTrainingResults(validationMetrics));
+				trainInfo.setMetricsString(at.getMetricsString());
 				AppLogger.logInfo(getClass(), "Found: " + (at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
 						" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
 				saveModels(getThreadList(), outFilename + "_scores.csv");
@@ -257,7 +257,7 @@ public class TrainerManager extends TrainDataManager {
 				for(List<BasicConfiguration> confPart : BasicConfiguration.partition(confList, nPartitions)){
 					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confPart, getDatasetName(), kfold));
 				}
-			} else*/ trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold));
+			} else*/ trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold, validationMetrics));
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());

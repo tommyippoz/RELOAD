@@ -472,6 +472,7 @@ public class DetectionManager {
 				AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
 			}
 			ValidationInfo vInfo = new ValidationInfo();
+			vInfo.setDataPoints(l.getDataPoints());
 			vInfo.setRuns(l.getRuns());
 			vInfo.setFaultRatio(eManager.getInjectionsRatio());
 			vInfo.setModels(eManager.getModels());

@@ -46,12 +46,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		Instances db = translateKnowledge(kList);
 		if(db != null) {
-			boolean trainFlag = automaticWEKATraining(db, createOutput);
-			
-			return trainFlag;
+			return automaticWEKATraining(db);
 		} else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 			return false;
@@ -109,10 +107,9 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * ABstract method for Automatic WEKA training.
 	 *
 	 * @param db the instances object resembling the DataBase
-	 * @param createOutput the create output flag
 	 * @return true, if training is successful
 	 */
-	protected abstract boolean automaticWEKATraining(Instances db, boolean createOutput);
+	protected abstract boolean automaticWEKATraining(Instances db);
 	
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
@@ -139,7 +136,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @return the filename
 	 */
 	protected String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
+		String folder = getDefaultTmpFolder() + File.separatorChar;
+		if(!new File(folder).exists())
+			new File(folder).mkdirs();
+		return folder + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
 	}
 	
 	/**
@@ -149,8 +149,8 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 */
 	protected String getDefaultTmpFolder(){
 		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0)
-			return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
-		else return "tmp" + File.separatorChar + getLearnerType().toString().toLowerCase() + "_tmp_RELOAD";
+			return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString();
+		else return "tmp" + File.separatorChar + getLearnerType().toString();
 	}
 
 }

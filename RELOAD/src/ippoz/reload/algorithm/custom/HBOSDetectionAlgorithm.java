@@ -128,7 +128,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		if(conf.hasItem(HISTOGRAM_FACTORY) && conf.getItem(HISTOGRAM_FACTORY).equalsIgnoreCase("DYNAMIC"))
 			generateDynamicHistograms(Knowledge.toSnapList(kList, getDataSeries()));
 		else generateStaticHistograms(Knowledge.toSnapList(kList, getDataSeries()), getK());
@@ -140,16 +140,18 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		conf.addItem(TMP_FILE, getFilename());
 		
-		if(createOutput) {
-			conf.addItem(HISTOGRAMS, histogramsToConfiguration());
-			if(!new File(getDefaultTmpFolder()).exists())
-	    		new File(getDefaultTmpFolder()).mkdirs();
-	    	printFile(new File(getFilename()));
-		}
-		
 		return true;
 	}
 	
+	@Override
+	public void saveLoggedScores() {
+		conf.addItem(HISTOGRAMS, histogramsToConfiguration());
+		if(!new File(getDefaultTmpFolder()).exists())
+    		new File(getDefaultTmpFolder()).mkdirs();
+    	printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
+
 	@Override
 	public List<Double> getTrainScores() {
 		List<Double> list = new LinkedList<Double>();

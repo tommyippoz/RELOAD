@@ -86,9 +86,15 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		return outScores;
 	}
+	
+	@Override
+	public void saveLoggedScores() {
+		printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
 
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 		
 		weights = trainSOM(snapList);
@@ -99,10 +105,6 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
-		
-		if(createOutput) {
-	    	printFile(new File(getFilename()));
-		}
 		
 		return true;
 	}

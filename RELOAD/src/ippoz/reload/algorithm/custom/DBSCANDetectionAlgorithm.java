@@ -196,9 +196,18 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN file");
 		} 
 	}
+	
+	@Override
+	public void saveLoggedScores() {
+		conf.addItem(CLUSTERS, clustersToConfiguration());
+		if(!new File(getDefaultTmpFolder()).exists())
+    		new File(getDefaultTmpFolder()).mkdirs();
+    	printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
 
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<ClusterableSnapshot> clSnapList = new LinkedList<>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			clSnapList.add(new ClusterableSnapshot(snap, getDataSeries()));
@@ -220,13 +229,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
-		
-		if(createOutput) {
-			conf.addItem(CLUSTERS, clustersToConfiguration());
-			if(!new File(getDefaultTmpFolder()).exists())
-	    		new File(getDefaultTmpFolder()).mkdirs();
-	    	printFile(new File(getFilename()));
-		}
 		
 		return true;
 	}

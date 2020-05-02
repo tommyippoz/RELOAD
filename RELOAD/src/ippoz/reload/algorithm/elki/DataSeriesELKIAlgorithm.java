@@ -79,10 +79,10 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		Database db = translateKnowledge(kList, outliersInTraining);
 		if(db != null){
-			return automaticElkiTraining(db, kList, createOutput);
+			return automaticElkiTraining(db, kList);
 		}
 		else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
@@ -97,16 +97,18 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @param createOutput the create output flag
 	 * @return true, if training is successful
 	 */
-	protected boolean automaticElkiTraining(Database db, List<Knowledge> kList, boolean createOutput){
+	protected boolean automaticElkiTraining(Database db, List<Knowledge> kList){
 		Object trainOut = customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-		if(trainOut != null){		    
-		    if(createOutput){
-		    	customELKI.printFile(new File(getFilename()));
-		    }
-		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getLearnerType() + " to dataseries " + getDataSeries().getName());
 		return trainOut != null;
 	}
 	
+	@Override
+	public void saveLoggedScores() {
+		super.saveLoggedScores();
+		if(customELKI != null)
+			customELKI.printFile(new File(getFilename()));
+	}
+
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		return getELKIScore(new Vector(snapArray));
