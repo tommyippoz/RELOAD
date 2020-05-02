@@ -4,11 +4,14 @@
 package ippoz.reload.algorithm.type;
 
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.meta.MetaLearnerType;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,6 +65,18 @@ public class MetaLearner extends LearnerType {
 						break;
 					case STACKING:
 						break;
+					case VOTING:
+						addPreference(VotingMetaLearner.BASE_LEARNERS, toDecode.trim());
+						try {
+							List<BaseLearner> lList = new LinkedList<>();
+							for(String item : toDecode.split(",")){
+								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+							}
+							atList = lList.toArray(new BaseLearner[lList.size()]);
+						} catch(Exception ex){
+							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+						}
+						break;
 					default:
 						AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
 						break;
@@ -78,6 +93,25 @@ public class MetaLearner extends LearnerType {
 		return atList;
 	}	
 	
+	@Override
+	public void addPreference(String prefString, String prefValue) {
+		super.addPreference(prefString, prefValue);
+		if(prefString.equals(VotingMetaLearner.BASE_LEARNERS)){
+			switch(mlType){
+				case VOTING:
+					List<BaseLearner> lList = new LinkedList<>();
+					for(String item : prefValue.split(",")){
+						 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+					}
+					atList = lList.toArray(new BaseLearner[lList.size()]);
+					break;
+				default:
+					break;
+					
+			}
+		}
+	}
+
 	public String toCompactString(){
 		String toRet = mlType.toString();
 		if(atList != null && atList.length > 0){
@@ -122,6 +156,9 @@ public class MetaLearner extends LearnerType {
 				case DELEGATING:
 					break;
 				case STACKING:
+					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");
+					break;
+				case VOTING:
 					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");
 					break;
 				default:

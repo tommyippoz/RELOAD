@@ -21,6 +21,8 @@ public enum MetaLearnerType {
 	
 	DELEGATING, 
 	
-	ARBITRATING
+	ARBITRATING, 
+	
+	VOTING
 
 }

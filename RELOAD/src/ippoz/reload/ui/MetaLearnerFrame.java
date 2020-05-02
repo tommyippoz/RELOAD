@@ -3,15 +3,19 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.meta.MetaLearnerType;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -20,13 +24,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -221,9 +232,64 @@ public class MetaLearnerFrame {
 			case BAGGING:
 				panel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled));
 				break;
+			case VOTING:
+				panel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled));
+				break;
 			default:
 				panel.add(new JLabel("-"));
 		}
+		return panel;
+	}
+
+	private Component showPreferenceAlgorithms(String prefName, String textFieldText, String description, boolean enabled) {
+		JPanel panel = new JPanel();
+		panel.setBackground(Color.WHITE);
+		panel.setLayout(new GridLayout(1, 2));
+				
+		JLabel lbl = new JLabel(prefName);
+		lbl.setFont(labelFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		
+		panel.add(lbl);
+		
+		JLabel textField = new JLabel(textFieldText);
+		textField.setFont(labelFont);
+		textField.setEnabled(enabled);
+		textField.addMouseListener(new MouseAdapter()  
+		{  
+		    public void mouseClicked(MouseEvent e) { 
+		    	String[] algList = new String[DetectionAlgorithm.availableAlgorithms().size()];
+				int i = 0;
+				for(AlgorithmType at : DetectionAlgorithm.availableAlgorithms()){
+					algList[i++] = at.toString();
+				}
+				
+				JPanel gui = new JPanel(new BorderLayout());
+				JList<String> possibilities = new JList<String>(algList);
+				gui.add(new JScrollPane(possibilities));
+                JOptionPane.showMessageDialog(
+                        null, 
+                        gui,
+                        "Choose Algorithm(s)",
+                        JOptionPane.QUESTION_MESSAGE);
+                List<String> items = possibilities.getSelectedValuesList();
+                
+                String returnValue = "";
+                for (Object item : items) {
+                    returnValue = returnValue + item + ",";
+                }
+                returnValue = returnValue.length() > 0 ? returnValue.substring(0, returnValue.length()-1) : returnValue;
+				if (returnValue != null && returnValue.length() > 0) {
+					lType.addPreference(prefName, returnValue);
+				    reload();
+				}
+		    }  
+		}); 
+		
+		panel.add(textField);
+		
 		return panel;
 	}
 

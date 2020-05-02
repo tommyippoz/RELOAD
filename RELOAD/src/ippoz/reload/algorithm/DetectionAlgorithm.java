@@ -26,6 +26,7 @@ import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -243,6 +244,8 @@ public abstract class DetectionAlgorithm {
 				break;
 			case STACKING:
 				break;
+			case VOTING:
+				return new VotingMetaLearner(dataSeries, conf);
 			default:
 				break;
 		}
