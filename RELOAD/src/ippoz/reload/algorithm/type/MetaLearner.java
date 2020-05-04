@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.type;
 
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
@@ -47,6 +48,8 @@ public class MetaLearner extends LearnerType {
 			case DELEGATING:
 				break;
 			case STACKING:
+				if(atList != null)
+					addPreference(StackingMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
 				break;
 			case VOTING:
 				if(atList != null)
@@ -89,6 +92,20 @@ public class MetaLearner extends LearnerType {
 					case DELEGATING:
 						break;
 					case STACKING:
+						if(toDecode.contains("@")){
+							addPreference(StackingMetaLearner.STACKING_LEARNER, toDecode.split("@")[1].trim());
+							toDecode = toDecode.split("@")[0].trim();
+						} else addPreference(StackingMetaLearner.STACKING_LEARNER, StackingMetaLearner.DEFAULT_META_LEARNER.toCompactString());
+						addPreference(StackingMetaLearner.BASE_LEARNERS, toDecode.trim());
+						try {
+							List<BaseLearner> lList = new LinkedList<>();
+							for(String item : toDecode.split(",")){
+								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+							}
+							atList = lList.toArray(new BaseLearner[lList.size()]);
+						} catch(Exception ex){
+							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+						}
 						break;
 					case VOTING:
 						addPreference(VotingMetaLearner.BASE_LEARNERS, toDecode.trim());
@@ -121,19 +138,18 @@ public class MetaLearner extends LearnerType {
 	@Override
 	public void addPreference(String prefString, String prefValue) {
 		super.addPreference(prefString, prefValue);
-		if(prefString.equals(VotingMetaLearner.BASE_LEARNERS)){
-			switch(mlType){
-				case VOTING:
-					List<BaseLearner> lList = new LinkedList<>();
-					for(String item : prefValue.split(",")){
-						 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
-					}
-					atList = lList.toArray(new BaseLearner[lList.size()]);
-					break;
-				default:
-					break;
-					
+		if(prefString.equals(VotingMetaLearner.BASE_LEARNERS) && mlType == MetaLearnerType.VOTING){
+			List<BaseLearner> lList = new LinkedList<>();
+			for(String item : prefValue.split(",")){
+				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
 			}
+			atList = lList.toArray(new BaseLearner[lList.size()]);
+		} else if(prefString.equals(StackingMetaLearner.BASE_LEARNERS) && mlType == MetaLearnerType.STACKING){
+			List<BaseLearner> lList = new LinkedList<>();
+			for(String item : prefValue.split(",")){
+				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+			}
+			atList = lList.toArray(new BaseLearner[lList.size()]);
 		}
 	}
 
@@ -181,7 +197,8 @@ public class MetaLearner extends LearnerType {
 				case DELEGATING:
 					break;
 				case STACKING:
-					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");
+					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", "@");
+					toString = toString + getPreference(StackingMetaLearner.STACKING_LEARNER) + ")";
 					break;
 				case VOTING:
 					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");

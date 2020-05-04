@@ -53,7 +53,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		}
 	}
 	
-	private List<DataSeriesNonSlidingAlgorithm> loadLearners(String filename){
+	protected List<DataSeriesNonSlidingAlgorithm> loadLearners(String filename){
 		List<AlgorithmModel> modelList = AlgorithmModel.fromFile(filename);
 		List<DataSeriesNonSlidingAlgorithm> retList = new LinkedList<>();
 		if(modelList != null && modelList.size() > 0){
@@ -96,7 +96,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	@Override
 	public void saveLoggedScores() {
 		super.saveLoggedScores();
-		printFile(getFilename(), mTrainer.getTrainers());
+		printFile(getFilename(), "metaPreferences.csv", mTrainer.getTrainers());
 	}
 
 	@Override
@@ -107,10 +107,10 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		return folder;
 	}
 
-	private void printFile(String filename, List<AlgorithmTrainer> tList){
+	protected void printFile(String filefolder, String filename, List<AlgorithmTrainer> tList){
 		BufferedWriter writer = null;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(filename + "metaPreferences.csv")));
+			writer = new BufferedWriter(new FileWriter(new File(filefolder + filename)));
 			writer.write("*This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
 			writer.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + data.getTargetMetric().getMetricName() + "),std_metric_score(" + data.getTargetMetric().getMetricName() + "),dataset,configuration\n");
 			for(AlgorithmTrainer trainer : tList){
