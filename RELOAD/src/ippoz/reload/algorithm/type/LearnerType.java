@@ -69,4 +69,13 @@ public abstract class LearnerType implements Comparable<LearnerType> {
 
 	public abstract String toCompactString();
 
+	public boolean isSliding() {
+		if(this instanceof MetaLearner){
+			return false;
+		} else {
+			BaseLearner bl = (BaseLearner)this;
+			return bl.getAlgType().toString().toUpperCase().contains("SLIDING");
+		}
+	}
+
 }

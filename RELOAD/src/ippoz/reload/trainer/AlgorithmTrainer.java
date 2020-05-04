@@ -46,7 +46,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", 
 		"CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", 
 		"LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", 
-		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)"};
+		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)", 
+		"STATIC_THRESHOLD_GREATERTHAN(0.9)", "STATIC_THRESHOLD_GREATERTHAN(2.9)", "STATIC_THRESHOLD_GREATERTHAN(4.9)"};
 	
 	/** The algorithm tag. */
 	private LearnerType algTag;	

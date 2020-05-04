@@ -9,6 +9,7 @@ import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.MetaLearner;
+import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
@@ -28,12 +29,18 @@ import javafx.util.Pair;
  * @author Tommy
  *
  */
-public class VotingMetaLearner extends DataSeriesMetaLearner {
+public class StackingMetaLearner extends DataSeriesMetaLearner {
 	
 	public static final String BASE_LEARNERS = "BASE_LEARNERS";
+	
+	public static final String META_LEARNER = "META_LEARNER";
+	
+	public static final BaseLearner DEFAULT_META_LEARNER = new BaseLearner(AlgorithmType.ELKI_ODIN);
+	
+	private DataSeriesNonSlidingAlgorithm metaLearner;
 
-	public VotingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, MetaLearnerType.VOTING);
+	public StackingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
+		super(dataSeries, conf, MetaLearnerType.STACKING);
 	}
 	
 	private BaseLearner[] getBaseLearners(){
@@ -53,6 +60,8 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
+			
+			// Train Meta-Learner
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
 		}
@@ -61,17 +70,13 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		double count = 0;
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(snapArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
-				count++;
-			}
 		}
-		return new Pair<Double, Object>(count, scores);
+		return new Pair<Double, Object>(metaLearner.calculateSnapshotScore(scores).getKey(), scores);
 	}
 
 	@Override

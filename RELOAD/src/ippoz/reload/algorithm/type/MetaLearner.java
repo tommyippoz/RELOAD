@@ -28,6 +28,31 @@ public class MetaLearner extends LearnerType {
 		super();
 		this.mlType = mlType;
 		this.atList = atList;
+		setDefaultMetaFreferences();
+	}
+
+	private void setDefaultMetaFreferences() {
+		switch(mlType){
+			case ARBITRATING:
+				break;
+			case BAGGING:
+				addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));
+				break;
+			case BOOSTING:
+				break;
+			case CASCADE_GENERALIZATION:
+				break;
+			case CASCADING:
+				break;
+			case DELEGATING:
+				break;
+			case STACKING:
+				break;
+			case VOTING:
+				if(atList != null)
+					addPreference(VotingMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
+				break;
+		}
 	}
 
 	public MetaLearner(MetaLearnerType mlType, BaseLearner[] atList, Map<String, String> learnerPreferences) {

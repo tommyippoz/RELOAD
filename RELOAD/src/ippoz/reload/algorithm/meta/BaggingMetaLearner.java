@@ -48,7 +48,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		try {
 			sampledKnowledge = baggingOf(kList, getSamplesNumber());
 			for(List<Knowledge> sKnow : sampledKnowledge){
-				mTrainer.addTrainer(getBaseLearner(), dataSeries, sKnow);
+				mTrainer.addTrainer(getBaseLearner(), dataSeries, sKnow, false);
 			}
 			mTrainer.start();
 			mTrainer.join();

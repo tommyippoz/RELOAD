@@ -43,9 +43,13 @@ import ippoz.reload.voter.ScoresVoter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -137,10 +141,12 @@ public class InputManager {
 	public static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
 	
 	public static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
-
-	public static final String OPTIMIZATION_NEEDED_FLAG = "OPTIMIZATION_FLAG";
 	
 	public static final String EVALUATION_NEEDED_FLAG = "EVALUATION_FLAG";
+	
+	public static final String FORCE_TRAINING_BASELEARNERS = "FORCE_TRAINING_BASELEARNERS";
+	
+	public static final String FORCE_TRAINING = "FORCE_TRAINING";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -544,6 +550,8 @@ public class InputManager {
 		MetaConfiguration mConf = null;
 		if(mainLearner instanceof MetaLearner){
 			mConf = new MetaConfiguration(mainLearner);
+			mConf.addItem(BasicConfiguration.SCORES_FOLDER, getScoresFolder());
+			mConf.addItem(BasicConfiguration.FORCE_META_TRAINING, String.valueOf(getForceBaseLearnersFlag()));
 			mConf.addItem(BasicConfiguration.K_FOLD, getKFoldCounter());
 			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getMetricName());
 			mConf.addItem(BasicConfiguration.REPUTATION, getReputation(getTargetMetric()).toString());
@@ -656,16 +664,6 @@ public class InputManager {
 		}
 	}
 	
-	public boolean getOptimizationFlag() {
-		if(prefManager.hasPreference(OPTIMIZATION_NEEDED_FLAG))
-			return !prefManager.getPreference(OPTIMIZATION_NEEDED_FLAG).equals("0");
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					OPTIMIZATION_NEEDED_FLAG + " not found. Using default value of '1'");
-			return true;
-		}
-	}
-	
 	public boolean getEvaluationFlag() {
 		if(prefManager.hasPreference(EVALUATION_NEEDED_FLAG))
 			return !prefManager.getPreference(EVALUATION_NEEDED_FLAG).equals("0");
@@ -708,7 +706,7 @@ public class InputManager {
 	
 	public String getScoresFile(String prequel){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
-			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + prefManager.getPreference(SCORES_FILE);
+			return getScoresFolder() + (prequel != null ? prequel + File.separatorChar : "") + prefManager.getPreference(SCORES_FILE);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					SCORES_FILE + " not found. Using default value of '" + getScoresFolder() + "scores.csv'");
@@ -752,58 +750,58 @@ public class InputManager {
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("\n\n* Data Source - Loaders.\n" + 
-						"LOADER_FOLDER = input" + File.separatorChar + "loaders\n");
+						LOADER_FOLDER + " = input" + File.separatorChar + "loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
-						"LOADERS = iscx\n");
+						LOADERS + " = iscx\n");
 				writer.write("\n* Datasets folder.\n" +
-						"DATASETS_FOLDER = \n");
+						DATASETS_FOLDER + " = \n");
 				writer.write("\n* RELOAD Execution.\n\n");
 				writer.write("\n* Perform Feature Selection (0 = NO, 1 = YES).\n" + 
-						"FEATURE_SELECTION_FLAG = 1\n");
+						FILTERING_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
-						"TRAIN_FLAG = 1\n");
-				writer.write("\n* Perform Optimization (0 = NO, 1 = YES).\n" + 
-						"OPTIMIZATION_FLAG = 1\n");
+						TRAIN_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* Perform Evaluation (0 = NO, 1 = YES).\n" + 
-						"EVALUATION_FLAG = 1\n");
+						EVALUATION_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* K for the K-Fold Evaluation (Default is 2).\n" + 
-						"KFOLD_COUNTER = 2\n");
+						KFOLD_COUNTER + " = 2\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
-						"METRIC = FMEASURE\n");
+						METRIC + " = FMEASURE\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
-						"METRIC_TYPE = relative\n");
+						METRIC_TYPE + " = relative\n");
 				writer.write("\n* Expected duration of injected faults (observations).\n" + 
-						"ANOMALY_WINDOW = 0\n");
-				writer.write("\n* Sliding window policy.\n" + 
-						"SLIDING_WINDOW_POLICY = FIFO\n");
+						ANOMALY_WINDOW + " = 0\n");
 				writer.write("\n* Flag which indicates if we expect more than one fault for each run\n" + 
-						"VALID_AFTER_INJECTION = true\n");
+						VALID_AFTER_INJECTION + " = true\n");
 				writer.write("\n* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS\n" + 
-						"REPUTATION = 1.0\n");
+						REPUTATION_TYPE + " = 1.0\n");
 				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
-						"INDICATOR_SELECTION = UNION\n");
+						INDICATOR_SELECTION + " = UNION\n");
 				writer.write("\n* Strategy to slide windows. Accepted Values are FIFO, \n" + 
-						"SLIDING_POLICY = FIFO\n");
+						SLIDING_POLICY + " = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
-						"SLIDING_WINDOW_SIZE = 20\n");
+						SLIDING_WINDOW_SIZE + " = 20\n");
 				writer.write("\n* Type of output produced by RELOAD. Accepted values are ui, basic, IMAGE, TEXT\n" + 
-						"OUTPUT_TYPE = ui\n");
+						OUTPUT_FORMAT + " = ui\n");
 				writer.write("\n* Path Setup.\n\n");
 				writer.write("\n* Input folder\n" + 
-						"INPUT_FOLDER = input\n");
+						INPUT_FOLDER + " = input\n");
 				writer.write("\n* Output folder\n" + 
-						"OUTPUT_FOLDER = output\n");
+						OUTPUT_FOLDER + " = output\n");
 				writer.write("\n* Configuration folder\n" + 
-						"CONF_FILE_FOLDER = configurations\n");
+						CONF_FILE_FOLDER + " = configurations\n");
 				writer.write("\n* Setup folder\n" + 
-						"SETUP_FILE_FOLDER = setup\n");
+						SETUP_FILE_FOLDER + " = setup\n");
 				writer.write("\n* Setup folder\n" + 
-						"SCORES_FILE_FOLDER = intermediate\n");
+						SCORES_FILE_FOLDER + " = intermediate\n");
 				writer.write("\n* Scores file\n" + 
-						"SCORES_FILE = scores.csv");
+						SCORES_FILE + " = scores.csv");
 				writer.write("\n\n* Other Preference Files.\n");
 				writer.write("\n* Detection Preferences\n" + 
-						"DETECTION_PREFERENCES_FILE = scoringPreferences.preferences\n");						
+						DETECTION_PREFERENCES_FILE + " = scoringPreferences.preferences\n");	
+				writer.write("\n* Meta-Training Preferences for base-learners\n" + 
+						FORCE_TRAINING_BASELEARNERS + " = 0\n");	
+				writer.write("\n* Training Preferences for base-learners\n" + 
+						FORCE_TRAINING + " = 0\n");	
 			}
 			new File("input").mkdir();
 			new File("input" + File.separatorChar + "setup").mkdir();
@@ -851,7 +849,7 @@ public class InputManager {
 				writer.write("* Default feature selection preferences for 'RELOAD'. Comments with '*'.\n");
 				writer.write("* This file reports on the feature selection techniques to be applied. \n");
 				writer.write("\nfeature_selection_strategy,threshold,ranked_flag\n");
-				writer.write("\nINFORMATION_GAIN,3.0,true\n");
+				writer.write("\n" + FeatureSelectorType.INFORMATION_GAIN + ",3.0,true\n");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -1219,9 +1217,7 @@ public class InputManager {
 				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
 				
 				writer.write("\n\n* Loader type (CSV, ARFF).\n" + 
-						"LOADER_TYPE = " + loaderType + "\n");
-				writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
-						"CONSIDERED_LAYERS = NO_LAYER\n");
+						Loader.LOADER_TYPE + " = " + loaderType + "\n");
 				
 				writer.write("\n* Data Partitioning.\n\n");
 				
@@ -1259,9 +1255,9 @@ public class InputManager {
 		return lFile;
 	}
 	
-	public static String[] getIndicatorSelectionPolicies(){
+	/*public static String[] getIndicatorSelectionPolicies(){
 		return new String[]{"NONE", "ALL", "UNION", "MULTIPLE_UNION", "PEARSON", "SIMPLE"};
-	}
+	}*/
 
 	public List<FeatureSelector> getFeatureSelectors() {
 		List<FeatureSelector> fsList = new LinkedList<FeatureSelector>();
@@ -1372,7 +1368,7 @@ public class InputManager {
 		return modelList;
 	}
 	
-	public AlgorithmModel loadAlgorithmModel(String scoresFileString) {
+	public static AlgorithmModel loadAlgorithmModel(String scoresFileString) {
 		List<AlgorithmModel> list = loadAlgorithmModels(scoresFileString);
 		if(list != null && list.size() > 0)
 			return list.get(0);
@@ -1385,9 +1381,10 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
-		String scoresFile = getScoresFile(scoresFileString);
-		return AlgorithmModel.fromFile(scoresFile);
+	public static List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
+		if(new File(scoresFileString).isDirectory())
+			return AlgorithmModel.fromFile(scoresFileString + File.separatorChar + "scores.csv");
+		else return AlgorithmModel.fromFile(scoresFileString);
 	}
 
 	public String[] loadSelectedDataSeriesString(String baseFolder, String filename) {
@@ -1519,91 +1516,6 @@ public class InputManager {
 		return new ValidationInfo(new File(outFilePrequel));
 	}
 
-	public PreferencesManager getMetaLearningPreferences(AlgorithmVoter av, String amString, String csvFilename, String loaderName) {
-		File mll = createMetaLearningLoader(deriveExcludedModels(av, amString), csvFilename, loaderName);
-		return new PreferencesManager(mll);
-	}
-	
-	private String deriveExcludedModels(AlgorithmVoter av, String amString) {
-		String toSkip = "";
-		List<AlgorithmModel> okModels = new LinkedList<>(); 
-		for(AlgorithmModel am : loadAlgorithmModels(amString)){
-			if(av.checkModel(am, okModels))
-				okModels.add(am);
-			else toSkip = toSkip + am.getAlgorithmType() + "(" + am.getDataSeries().getCompactName() + "), ";
-		}
-		if(toSkip.length() > 1)
-			return toSkip.substring(0, toSkip.length()-2);
-		else return "";
-	}
-
-	private File createMetaLearningLoader(String toSkip, String csvFilename, String loaderName) {
-		BufferedWriter writer = null;
-		File lFolder = new File(getLoaderFolder() + "meta" + File.separatorChar);
-		File lFile = new File(lFolder.getPath() + File.separatorChar + "meta_" + loaderName + ".loader");
-		try {
-			if(!lFolder.exists())
-				lFolder.mkdirs();
-			writer = new BufferedWriter(new FileWriter(lFile));
-				
-			writer.write("* Loader file for meta-learning. Comments with '*'.\n");
-				
-			writer.write("\n\n* Loader type (CSV, ARFF).\n" + 
-					"LOADER_TYPE = CSV\n");
-			writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
-					"CONSIDERED_LAYERS = NO_LAYER\n");
-			
-			writer.write("\n* Data Partitioning.\n\n");
-			
-			writer.write("\n* File Used for Training\n" +
-					FileLoader.TRAIN_FILE + " = " + csvFilename + "\n");
-			writer.write("\n* Train Runs.\n" + 
-					FileLoader.TRAIN_PARTITION + " = 0 - 50\n");
-			writer.write("\n* Train Faulty Tags.\n" + 
-					FileLoader.TRAIN_FAULTY_TAGS + " = Attack\n");
-			writer.write("\n* Train Runs.\n" + 
-					FileLoader.TRAIN_SKIP_ROWS + " = \n");
-			writer.write("\n* File Used for Validation\n" +
-					FileLoader.VALIDATION_FILE + " = " + csvFilename + "\n");
-			writer.write("\n* Validation Runs.\n" + 
-					FileLoader.VALIDATION_PARTITION + " = 0 - 100\n");
-			writer.write("\n* Train Faulty Tags.\n" + 
-					FileLoader.VALIDATION_FAULTY_TAGS + " = Attack\n");
-			writer.write("\n* Train Runs.\n" + 
-					FileLoader.VALIDATION_SKIP_ROWS + " = \n");
-			
-			writer.write("\n* Parsing Dataset.\n\n");
-			
-			writer.write("\n* Features to Skip\n" + 
-					FileLoader.SKIP_COLUMNS + " = " + toSkip.replace("@", "-") + "\n");
-			writer.write("\n* Column Containing the 'Label' Feature\n" + 
-					FileLoader.LABEL_COLUMN + " = label\n");
-			writer.write("\n* Size of Each Experiment.\n" + 
-					FileLoader.BATCH_COLUMN + " = 100\n");	
-			
-			writer.close();
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to create loader for meta-learning");
-		}
-		return lFile;
-	}
-
-	public List<AlgorithmVoter> getMetaLearners(String datasetName) {
-		List<AlgorithmVoter> ml = new LinkedList<>();
-		List<ScoresVoter> svs = getScoresVoters(datasetName);
-		if(svs != null && svs.size() > 0){
-			for(ScoresVoter sv : svs){
-				if(sv.isMetaLearner())
-					ml.add((AlgorithmVoter)sv);
-			}
-		} 
-		return ml;
-	}
-
-	public String getMetaFolder() {
-		return "meta" + File.separatorChar;
-	}
-
 	public BasicConfiguration getMetaConfigurationFor(String datasetName, String mlName) {
 		String readed;
 		String[] header = null;
@@ -1643,6 +1555,11 @@ public class InputManager {
 		return acOut;
 	}
 
+	private String getMetaFolder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public boolean hasMetaLearning() {
 		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
 		BufferedReader reader;
@@ -1672,6 +1589,56 @@ public class InputManager {
 
 	public Reputation getReputation(Metric met) {
 		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met, prefManager.getPreference(VALID_AFTER_INJECTION).equals("no") ? false : true);
+	}
+
+	public boolean getForceBaseLearnersFlag() {
+		if(prefManager.hasPreference(FORCE_TRAINING_BASELEARNERS))
+			return !prefManager.getPreference(FORCE_TRAINING_BASELEARNERS).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FORCE_TRAINING_BASELEARNERS + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
+
+	public boolean getForceTrainingFlag() {
+		if(prefManager.hasPreference(FORCE_TRAINING))
+			return !prefManager.getPreference(FORCE_TRAINING).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FORCE_TRAINING + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
+
+	public static void copyScores(String fromFolder, String toFolder) {
+		File from = new File(fromFolder);
+		if(fromFolder != null && from.isDirectory()){
+			File to = new File(toFolder);
+			if(!to.exists())
+				to.mkdirs();
+			for(File sourceFile : from.listFiles()){
+				copyFileUsingStream(sourceFile, new File(toFolder + File.separatorChar + sourceFile.getName()));
+			}
+		}
 	}	
+	
+	private static void copyFileUsingStream(File source, File dest){
+	    InputStream is = null;
+	    OutputStream os = null;
+	    try {
+	        is = new FileInputStream(source);
+	        os = new FileOutputStream(dest);
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = is.read(buffer)) > 0) {
+	            os.write(buffer, 0, length);
+	        }
+	        is.close();
+	        os.close();
+	    } catch (IOException e) {
+			AppLogger.logException(InputManager.class, e, "Unable to copy from " + source);
+		} 
+	}
 	
 }

@@ -77,6 +77,10 @@ public abstract class BasicConfiguration implements Cloneable {
 	public static final String METRIC = "metric";
 
 	public static final String REPUTATION = "reputation";
+	
+	public static final String FORCE_META_TRAINING = "meta_force_training";
+
+	public static final String SCORES_FOLDER = "scores_folder";
 
 	/** The configuration map. */
 	private Map<String, Object> confMap;

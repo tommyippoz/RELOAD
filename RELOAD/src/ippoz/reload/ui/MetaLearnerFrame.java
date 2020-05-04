@@ -10,6 +10,7 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.meta.MetaLearnerType;
 
@@ -230,7 +231,7 @@ public class MetaLearnerFrame {
 		panel.setLayout(new GridLayout(1, 1));
 		switch(mlt){
 			case BAGGING:
-				panel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled));
+				panel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES)));
 				break;
 			case VOTING:
 				panel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled));
@@ -272,7 +273,7 @@ public class MetaLearnerFrame {
                 JOptionPane.showMessageDialog(
                         null, 
                         gui,
-                        "Choose Algorithm(s)",
+                        "Choose Base Learner(s). Hold CTRL for multiple",
                         JOptionPane.QUESTION_MESSAGE);
                 List<String> items = possibilities.getSelectedValuesList();
                 
@@ -293,7 +294,7 @@ public class MetaLearnerFrame {
 		return panel;
 	}
 
-	private JPanel showPreferenceLabels(String prefName, String textFieldText, String description, boolean enabled){
+	private JPanel showPreferenceLabels(String prefName, String textFieldText, String description, boolean enabled, String defaultValue){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, 2));
@@ -308,9 +309,13 @@ public class MetaLearnerFrame {
 		
 		JTextField textField = new JTextField();
 		textField.setFont(labelFont);
-		textField.setText(textFieldText);
-		textField.setColumns(10);
 		textField.setEnabled(enabled);
+		if(enabled){
+			textField.setColumns(10);
+			if(textFieldText != null && AppUtility.isInteger(textFieldText))
+				textField.setText(textFieldText);
+			else textField.setText(defaultValue);
+		}
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
 		textField.getDocument().addDocumentListener(new DocumentListener() {
@@ -328,7 +333,9 @@ public class MetaLearnerFrame {
 			}
 
 			public void workOnUpdate() {
-	        	lType.addPreference(prefName, textField.getText());
+				if(textField.getText() != null && AppUtility.isInteger(textField.getText())){
+					lType.addPreference(prefName, textField.getText());
+				} else lType.addPreference(prefName, defaultValue);
 			}
 		});
 		

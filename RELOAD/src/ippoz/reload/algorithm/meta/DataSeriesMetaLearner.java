@@ -93,8 +93,6 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		return true;
 	}
 	
-	
-	
 	@Override
 	public void saveLoggedScores() {
 		super.saveLoggedScores();
@@ -103,7 +101,10 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 
 	@Override
 	protected String getFilename() {
-		return getDefaultTmpFolder() + File.separatorChar + getLearnerType().toCompactString() + File.separatorChar;
+		String folder = getDefaultTmpFolder() + File.separatorChar + getLearnerType().toCompactString() + File.separatorChar;
+		if(!new File(folder).exists())
+			new File(folder).mkdirs();
+		return folder;
 	}
 
 	private void printFile(String filename, List<AlgorithmTrainer> tList){

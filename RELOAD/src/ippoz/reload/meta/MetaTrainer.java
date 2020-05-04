@@ -11,8 +11,11 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ThreadScheduler;
+import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.manager.InputManager;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
+import ippoz.reload.trainer.FakeTrainer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,12 +42,27 @@ public class MetaTrainer extends ThreadScheduler {
 		trainerList = new LinkedList<AlgorithmTrainer>();
 	}
 
-	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList){		
-		List<BasicConfiguration> cList = data.getConfigurationsFor(algTag);
-		cList = updateConfigurations(cList, algTag);
-		trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList, data.getValidationMetrics()));
+	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse){	
+		String scoresFile = data.extractScoresFolder(algTag.toCompactString() + File.separatorChar + "scores.csv");
+		if(needsTraining(scoresFile, data.getForceTraining(), enableReuse)){
+			List<BasicConfiguration> cList = data.getConfigurationsFor(algTag);
+			cList = updateConfigurations(cList, algTag);
+			trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList, data.getValidationMetrics()));
+		} else {
+			//InputManager.copyScores(data.extractScoresFolder(algTag.toCompactString()), data.extractScoresFolder(learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
+			trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
+			AppLogger.logInfo(getClass(), "Train result for " + algTag.toString() + " is being re-used. No need to train again.");
+		}
 	}
 	
+	private boolean needsTraining(String scoresFile, boolean forceTraining, boolean enableReuse) {
+		if(forceTraining || !enableReuse)
+			return true;
+		else {
+			return !AlgorithmModel.trainResultExists(scoresFile);
+		}
+	}
+
 	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag){
 		List<BasicConfiguration> list = new ArrayList<BasicConfiguration>(cList.size());
 		try {

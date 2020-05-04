@@ -141,7 +141,7 @@ public class TrainerManager extends TrainDataManager {
 	 * @param metaFile 
 	 */
 	@SuppressWarnings("unchecked")
-	public void train(String outFilename){
+	public void train(String outFolder){
 		long start = System.currentTimeMillis();
 		try {
 			if(trainInfo == null)
@@ -160,11 +160,13 @@ public class TrainerManager extends TrainDataManager {
 				trainInfo.setMetricsString(at.getMetricsString());
 				AppLogger.logInfo(getClass(), "Found: " + (at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
 						" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
-				saveModels(getThreadList(), outFilename + "_scores.csv");
+				if(!new File(outFolder).exists())
+					new File(outFolder).mkdirs();
+				saveModels(getThreadList(), outFolder + File.separatorChar + "scores.csv");
 				//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
-				saveThresholdRelevance(getThreadList(), outFilename + "_thresholdrelevance.csv");
+				saveThresholdRelevance(getThreadList(), outFolder + File.separatorChar + "thresholdrelevance.csv");
 				AppLogger.logInfo(getClass(), "Training scores saved");
-				trainInfo.printFile(new File(outFilename + "_trainInfo.info"));
+				trainInfo.printFile(new File(outFolder + File.separatorChar + "trainInfo.info"));
 			} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
@@ -330,36 +332,6 @@ public class TrainerManager extends TrainDataManager {
 			AppLogger.logException(getClass(), ex, "Unable to write train scores");
 		}
 	}*/
-	
-	/**
-	 * Saves scores related to the executed AlgorithmTrainers.
-	 *
-	 * @param list the list of algorithm trainers
-	 */
-	public static void saveModels(List<? extends Thread> list, String filename, Metric metric) {
-		BufferedWriter scoreWriter;
-		AlgorithmTrainer trainer;
-		try {
-			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
-			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + metric.getMetricName() + "),std_metric_score(" + metric.getMetricName() + "),dataset,configuration\n");
-			for(Thread tThread : list){
-				trainer = (AlgorithmTrainer)tThread;
-				if(trainer.getBestConfiguration() != null) {
-					scoreWriter.write(trainer.getSeriesDescription() + "," + 
-							trainer.getAlgType().toString() + "," +
-							trainer.getReputationScore() + "," + 
-							trainer.getMetricAvgScore() + "," +  
-							trainer.getMetricStdScore() + "," + 
-							trainer.getDatasetName() + "," +
-							trainer.getBestConfiguration().toFileRow(false) + "\n");
-				}			
-			}
-			scoreWriter.close();			
-		} catch(IOException ex){
-			AppLogger.logException(TrainerManager.class, ex, "Unable to write scores");
-		}
-	}
 	
 	/**
 	 * Saves scores related to the executed AlgorithmTrainers.

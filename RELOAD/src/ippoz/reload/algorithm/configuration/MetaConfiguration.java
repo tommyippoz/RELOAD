@@ -84,7 +84,7 @@ public class MetaConfiguration extends BasicConfiguration {
 		if(hasItem(REPUTATION)){
 			rep = Reputation.fromString(getItem(REPUTATION), met, true);
 		}
-		return new MetaData((int)Double.parseDouble(getItem(K_FOLD)), getItem(DATASET_NAME), met, rep, baseConfs);
+		return new MetaData(getItem(SCORES_FOLDER), (int)Double.parseDouble(getItem(K_FOLD)), Boolean.valueOf(getItem(FORCE_META_TRAINING)), getItem(DATASET_NAME), met, rep, baseConfs);
 	}
 
 }

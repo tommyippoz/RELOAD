@@ -93,13 +93,13 @@ public abstract class ThreadScheduler extends Thread {
 			initRun();
 			for(int i=0;i<tList.size();i=i+tWindow){
 				for(int t=0;t<tWindow;t++){
-					if(i+t < tList.size()){
+					if(i+t < tList.size() && tList.get(i+t) != null){
 						threadStart(tList.get(i+t), i+t+1);
 						tList.get(i+t).start();
 					}
 				}
 				for(int t=0;t<tWindow;t++){
-					if(i+t < tList.size()){
+					if(i+t < tList.size() && tList.get(i+t) != null){
 						tList.get(i+t).join();
 						threadComplete(tList.get(i+t), i+t+1);
 					}

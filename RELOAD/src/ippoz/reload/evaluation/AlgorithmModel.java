@@ -168,7 +168,11 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		return null;
 	}
 	
-	public static List<AlgorithmModel> fromFile(String fileString) {
+	public static List<AlgorithmModel> fromFile(String fileString){
+		return fromFile(fileString, true);
+	}
+	
+	public static List<AlgorithmModel> fromFile(String fileString, boolean alertFlag) {
 		File asFile = new File(fileString);
 		BufferedReader reader;
 		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
@@ -187,7 +191,8 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 					}
 				}
 				reader.close();
-			} else AppLogger.logError(AlgorithmModel.class, "FileNotFound", "Unable to find '" + fileString + "'");
+			} else if(alertFlag)
+				AppLogger.logError(AlgorithmModel.class, "FileNotFound", "Unable to find '" + fileString + "'");
 		} catch(Exception ex){
 			AppLogger.logException(AlgorithmModel.class, ex, "Unable to read scores");
 		}
@@ -197,6 +202,13 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 
 	public DetectionAlgorithm getAlgorithm() {
 		return alg;
+	}
+	
+	public static boolean trainResultExists(String scoresFile) {
+		List<AlgorithmModel> algVoters = AlgorithmModel.fromFile(scoresFile, false);
+		if(algVoters != null && algVoters.size() > 0)
+			return true;
+		else return false;
 	}
 
 }

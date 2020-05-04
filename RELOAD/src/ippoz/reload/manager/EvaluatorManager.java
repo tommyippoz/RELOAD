@@ -70,7 +70,7 @@ public class EvaluatorManager extends DataManager {
 	 */
 	public EvaluatorManager(String outputFolder, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, boolean printOutput) {
 		super(map);
-		this.scoresFile = scoresFile;
+		this.scoresFile = scoresFile + File.separatorChar + "scores.csv";
 		this.validationMetrics = validationMetrics;
 		this.printOutput = printOutput;
 		this.outputFolder = outputFolder;
