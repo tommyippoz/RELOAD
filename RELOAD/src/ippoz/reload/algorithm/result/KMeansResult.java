@@ -3,12 +3,8 @@
  */
 package ippoz.reload.algorithm.result;
 
-import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.commons.failure.InjectedElement;
-
-import java.util.List;
-
-import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
+import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * @author Tommy
@@ -17,7 +13,9 @@ import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 public class KMeansResult extends ClusteringResult{
 	
 	/** The kmm. */
-	private KMeansModel kmm;
+	private Vector mean;
+	
+	private double var;
 
 	/**
 	 * Instantiates a new clustering result.
@@ -26,10 +24,10 @@ public class KMeansResult extends ClusteringResult{
 	 * @param injection the injection
 	 * @param of the of
 	 */
-	@SuppressWarnings("rawtypes")
-	public KMeansResult(List<Double> dataValues, InjectedElement injection, KMeansScore of) {
-		super(dataValues, injection, of.getDistance());
-		kmm = of.getCluster();
+	public KMeansResult(double[] dataValues, InjectedElement injection, double score, Vector vector, double var, double confidence) {
+		super(dataValues, injection, score, confidence);
+		this.mean = vector;
+		this.var = var;
 	}
 
 	/* (non-Javadoc)
@@ -46,7 +44,7 @@ public class KMeansResult extends ClusteringResult{
 	 * @return the cluster variance
 	 */
 	public double getClusterVariance(){
-		return kmm.getVarianceContribution();
+		return var;
 	}
 
 	/* (non-Javadoc)
@@ -54,7 +52,7 @@ public class KMeansResult extends ClusteringResult{
 	 */
 	@Override
 	public String toFileString(String sep) {
-		return super.toFileString(sep) + sep + "{" + kmm.getMean() + "}" + sep + kmm.getVarianceContribution();
+		return super.toFileString(sep) + sep + "{" + mean + "}" + sep + var;
 	}	
 
 }

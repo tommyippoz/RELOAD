@@ -390,7 +390,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 		} 
 	}
 	
-	public class KMeansScore implements Comparable<KMeansScore>{
+	public static class KMeansScore implements Comparable<KMeansScore>{
 
 		private double distance;
 		
@@ -445,7 +445,7 @@ public class CustomKMeans<V extends NumberVector> extends AbstractKMeans<V, KMea
 		}
 
 		@Override
-		public int compareTo(CustomKMeans<V>.KMeansScore o) {
+		public int compareTo(KMeansScore o) {
 			return Double.compare(distance, o.getDistance());
 		}
 		

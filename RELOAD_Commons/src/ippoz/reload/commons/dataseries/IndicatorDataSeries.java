@@ -3,8 +3,8 @@
  */
 package ippoz.reload.commons.dataseries;
 
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;

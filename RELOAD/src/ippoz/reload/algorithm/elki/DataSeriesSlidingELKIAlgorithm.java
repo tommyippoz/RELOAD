@@ -4,19 +4,18 @@
 package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.externalutils.ELKIUtils;
 
 import java.util.List;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -39,7 +38,7 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 * @param conf the configuration
 	 * @param needNormalization the flag that indicates the need of data normalization
 	 */
-	public DataSeriesSlidingELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
+	public DataSeriesSlidingELKIAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 	}
 	
@@ -63,17 +62,13 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 * @see ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.reload.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
-		AlgorithmResult ar;
+	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		Database windowDb = translateSnapList(snapList, true);
 		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
 			customELKI = generateELKIAlgorithm();
-			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));			
-			setDecisionFunction("IQR", new ValueSeries(customELKI.getScoresList()), false);
-			ar = evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot);			
-			logScore(ar.getScore(), dsSnapshot.isAnomalous());
-			return ar;
-		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
+			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot);			
+		} else return new Pair<Double, Object>(Double.NaN, null);
 	}
 
 	/**
@@ -85,7 +80,7 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 * @param dsSnapshot the snapshot to be evaluated
 	 * @return the algorithm result
 	 */
-	protected abstract AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
+	protected abstract Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
 
 	/**
 	 * Translates a snapshot list into an ELKI Database object.
@@ -121,6 +116,12 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 			}
 		}
 		return vec;
+	}
+	
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		Vector v = new Vector(snapArray);
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null;
 	}
 
 }

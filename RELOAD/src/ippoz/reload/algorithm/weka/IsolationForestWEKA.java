@@ -3,11 +3,9 @@
  */
 package ippoz.reload.algorithm.weka;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.weka.support.CustomIsolationForest;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
@@ -21,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.util.Pair;
 import weka.core.Instances;
 
 /**
@@ -48,7 +47,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public IsolationForestWEKA(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public IsolationForestWEKA(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, true, false);
 		if(conf.hasItem(TMP_FILE)){
 			iForest = loadSerialized(conf.getItem(TMP_FILE));
@@ -91,7 +90,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#automaticWEKATraining(weka.core.Instances, boolean)
 	 */
 	@Override
-	protected boolean automaticWEKATraining(Instances db, boolean createOutput) {
+	protected boolean automaticWEKATraining(Instances db) {
 		int nTrees;
 		int sampleSize;
 		try {
@@ -99,10 +98,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 			sampleSize = loadSampleSize();
 			iForest = new CustomIsolationForest(nTrees, sampleSize);
 			iForest.buildClassifier(db);
-			if(createOutput){
-		    	storeSerialized();
-		    	iForest.printScores(new File(getFilename() + "scores"));
-		    }
 			return true;
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train IsolationForest");
@@ -110,6 +105,13 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 	
+	@Override
+	public void saveLoggedScores() {
+		super.saveLoggedScores();
+		storeSerialized();
+    	iForest.printScores(new File(getFilename() + "scores"));
+	}
+
 	/**
 	 * Loads the size of the sample to be used in each isolation tree.
 	 *
@@ -151,24 +153,6 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.weka.DataSeriesWEKAAlgorithm#evaluateWEKASnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
-	@Override
-	protected AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		try {
-			if(iForest != null){
-				ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), iForest.classifyInstance(snapshotToInstance(sysSnapshot)));
-				getDecisionFunction().assignScore(ar, true);
-				return ar;
-			} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		} catch (Exception ex) {
-			AppLogger.logException(getClass(), ex, "Unable to score IsolationForest");
-			return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		}
-	}
-
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
@@ -181,6 +165,16 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	protected void storeAdditionalPreferences() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected Pair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception {
+		return new Pair<Double, Object>(iForest.classifyInstance(snapshotToInstance(snapArray)), null);
+	}
+
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return iForest != null;
 	}
 
 }

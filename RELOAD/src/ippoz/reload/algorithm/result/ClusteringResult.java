@@ -5,8 +5,6 @@ package ippoz.reload.algorithm.result;
 
 import ippoz.reload.commons.failure.InjectedElement;
 
-import java.util.List;
-
 /**
  * The Class ClusteringResult.
  *
@@ -14,8 +12,8 @@ import java.util.List;
  */
 public abstract class ClusteringResult extends AlgorithmResult {
 
-	public ClusteringResult(List<Double> dataValues, InjectedElement injection, double score) {
-		super(dataValues, injection, score);
+	public ClusteringResult(double[] dataValues, InjectedElement injection, double score, double confidence) {
+		super(dataValues, injection, score, confidence, null);
 		// TODO Auto-generated constructor stub
 	}
 

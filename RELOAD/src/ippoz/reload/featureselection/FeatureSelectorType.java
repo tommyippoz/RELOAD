@@ -29,6 +29,12 @@ public enum FeatureSelectorType {
 	PCA, 
 	
 	/** Feature Selection through GAIN Ratio */
-	GAIN_RATIO
+	GAIN_RATIO, 
+	
+	CHI_SQUARED, 
+	
+	RANDOM_FORESTS, 
+	
+	J48
 
 }

@@ -3,15 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomFastABOD;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -35,7 +34,7 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public FastABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public FastABODELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -48,20 +47,11 @@ public class FastABODELKI extends DataSeriesELKIAlgorithm {
 				HellingerDistanceFunction.STATIC, 
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@SuppressWarnings("unchecked")
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(getDecisionFunction() != null && v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v)));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(Math.sqrt(((CustomFastABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v)), null);
 	}
 
 	/* (non-Javadoc)

@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.result.ClusteringResult;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class KMeansDecision. Defines data point as anomalous if its distance is bigger than either 
@@ -24,8 +25,8 @@ public class ClusterDecision extends DecisionFunction {
 	 *
 	 * @param functionText the function text
 	 */
-	public ClusterDecision(String functionText, boolean revertFlag) {
-		super("cluster", DecisionFunctionType.CLUSTER, revertFlag);
+	public ClusterDecision(String functionText, boolean revertFlag, ValueSeries algorithmScores) {
+		super("cluster", DecisionFunctionType.CLUSTER, revertFlag, algorithmScores);
 		this.functionText = functionText;
 	}
 

@@ -9,6 +9,7 @@ import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.IndicatorData;
 import ippoz.reload.commons.knowledge.data.Observation;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.service.IndicatorStat;
 import ippoz.reload.commons.service.ServiceCall;
 import ippoz.reload.commons.service.ServiceStat;
@@ -35,7 +36,7 @@ public class DatabaseManager {
 	private DatabaseConnector connector;
 	
 	/** The runID. */
-	private String runId;
+	private LoaderBatch runId;
 	
 	/** The map of the layers. */
 	private HashMap<String, LayerType> layers;
@@ -48,7 +49,7 @@ public class DatabaseManager {
 	 * @param password the database password
 	 * @param runId the runID
 	 */
-	public DatabaseManager(String dbName, String username, String password, String runId, List<LayerType> selectedLayers){
+	public DatabaseManager(String dbName, String username, String password, LoaderBatch runId, List<LayerType> selectedLayers){
 		try {
 			this.runId = runId;
 			connector = new DatabaseConnector(dbName, username, password, false);
@@ -195,7 +196,7 @@ public class DatabaseManager {
 	 *
 	 * @return the runID
 	 */
-	public String getRunID() {
+	public LoaderBatch getRunID() {
 		return runId;
 	}
 

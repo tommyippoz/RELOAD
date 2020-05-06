@@ -3,6 +3,7 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
@@ -133,7 +134,7 @@ public class OutputDetailFrame {
 		if(anomalyScores != null && anomalyScores.size() > 0)
 			anomalyNormalFlag = true;
 		else anomalyNormalFlag = false;
-		
+
 		dFunction = createDefaultDecisionFunction();
 		
 		setMinMaxValues();
@@ -150,9 +151,9 @@ public class OutputDetailFrame {
 	private void setMinMaxValues() {
 		minRefValue = Double.POSITIVE_INFINITY;
 		maxRefValue = Double.NEGATIVE_INFINITY;
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore())){
 						if(lr.getValue().getScore() > maxRefValue)
@@ -162,12 +163,12 @@ public class OutputDetailFrame {
 					}
 						
 				}
-			}
+			//}
 		}
 	}
 	
 	private DecisionFunction createDefaultDecisionFunction() {
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			if(list != null && list.size() > 0){
 				for(int i=0;i<list.size();i++){
@@ -183,39 +184,30 @@ public class OutputDetailFrame {
 
 	private ValueSeries createScoresValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore()))
 						series.addValue(lr.getValue().getScore());
 				}
-			}
+			//}
 		}
 		return series;
 	}
 	
 	private ValueSeries createAnomalyValueSeries() {
 		ValueSeries series = new ValueSeries();
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)) {
+			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
 					if(Double.isFinite(lr.getValue().getScore()) && lr.getLabel())
 						series.addValue(lr.getValue().getScore());
 				}
-			}
+			//}
 		}
 		return series;
-	}
-	
-
-	private boolean containsPostiveLabel(List<LabelledResult> list){
-		for(LabelledResult lr : list){
-			if(lr.getLabel())
-				return true;
-		}
-		return false;
 	}
 
 	private void reload() {
@@ -539,9 +531,9 @@ public class OutputDetailFrame {
 				Map<Double, Integer> anList = new TreeMap<>();
 				try {
 					// TODO
-					for(String expName : dOut.getLabelledScores().keySet()){
+					for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-						if(containsPostiveLabel(list)){
+						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
 								double score = lr.getValue().getScore(); 
 								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
@@ -556,7 +548,7 @@ public class OutputDetailFrame {
 									}
 								}
 							}
-						}
+						//}
 					}
 					List<Double> keys = new LinkedList<Double>(anList.keySet());
 					List<Double> temp = new LinkedList<Double>(okList.keySet());
@@ -669,9 +661,9 @@ public class OutputDetailFrame {
 		if(containsInfiniteValues())
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -690,7 +682,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		DecimalFormat df = new DecimalFormat("#0.00"); 
@@ -716,9 +708,9 @@ public class OutputDetailFrame {
 		List<Double> okList = new LinkedList<>();
 		List<Double> anList = new LinkedList<>();
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
 					if(lr.getValue().getScore() >= minValue && (maxValue == maxRefValue || lr.getValue().getScore() <= maxValue)){
 						if(lr.getLabel()){
@@ -730,7 +722,7 @@ public class OutputDetailFrame {
 							countInf++;
 					} else countErr++;
 				}
-			} else countErr = countErr + list.size();
+			/*} else countErr = countErr + list.size();*/
 		}
 
 		if(numIntervals <= 0 || numIntervals > 100000){
@@ -745,7 +737,8 @@ public class OutputDetailFrame {
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "' with " + okList.size() + " normal and " + anList.size() + " anomalies \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
+				"Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
+				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   
@@ -803,15 +796,15 @@ public class OutputDetailFrame {
 	
 	private boolean containsInfiniteValues(){
 		boolean infiniteFlag = false;
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
 					if(Double.isInfinite(lr.getValue().getScore()) || lr.getValue().getScore() > Double.MAX_VALUE - 10){
 						infiniteFlag = true;
 					}
 				}
-			}
+			//}
 		}
 		return infiniteFlag;
 	}
@@ -825,9 +818,9 @@ public class OutputDetailFrame {
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		// infiniti si vedono anche se tronchi la rappresentazione
 		//a
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -849,7 +842,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		XYSeries trueSeries = new XYSeries(norm ? "Anomaly Series (Normalized)" : "Anomaly Series");
@@ -883,9 +876,9 @@ public class OutputDetailFrame {
 		if(infiniteFlag)
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		
-		for(String expName : dOut.getLabelledScores().keySet()){
+		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(containsPostiveLabel(list)){
+			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
 					if(Double.isFinite(lr.getValue().getScore()))
@@ -912,7 +905,7 @@ public class OutputDetailFrame {
 						}
 					}
 				}
-			}
+			//}
 		}
 		
 		XYSeries tpSeries = new XYSeries(norm ? "TP Series (Normalized)" : "TP Series");

@@ -22,7 +22,11 @@ public abstract class BetterMaxMetric extends ScoringMetric {
 	 */
 	@Override
 	public int compareResults(double currentMetricValue, double bestMetricValue) {
-		return Double.valueOf(currentMetricValue).compareTo(bestMetricValue);
+		if(!Double.isFinite(bestMetricValue))
+			return 1;
+		else if(!Double.isFinite(currentMetricValue))
+			return -1;
+		else return Double.valueOf(currentMetricValue).compareTo(bestMetricValue);
 	}
 
 }

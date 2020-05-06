@@ -4,17 +4,18 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.type.LearnerType;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.executable.DetectorMain;
-import ippoz.reload.loader.FileLoader;
-import ippoz.reload.loader.Loader;
-import ippoz.reload.loader.LoaderType;
 import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
@@ -54,8 +55,10 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
@@ -76,8 +79,6 @@ public class BuildUI {
 	private static final String SETUP_LABEL_METRIC = "Target Metric";
 	
 	private static final String SETUP_LABEL_OUTPUT = "Output Format";
-	
-	private static final String SETUP_IND_SELECTION = "Feature Aggregation";
 	
 	private static final String SETUP_LABEL_FILTERING = "Feature Selection";
 	
@@ -102,12 +103,14 @@ public class BuildUI {
 	private static final String PATH_LABEL_SCORES_FOLDER = "Scores Folder";
 	
 	private static final String PATH_LABEL_DETECTION_PREFERENCES = "Detection Preferences";
-
-	private static final String SETUP_LABEL_OPTIMIZATION = "Optimization";
 	
 	private static final String SETUP_LABEL_EVALUATION = "Evaluation";
 
 	private static final String PATH_LABEL_DATASETS_FOLDER = "Datasets Folder";
+	
+	private static final String SETUP_FORCE_BASELEARNERS = "Force Training of BaseLearners";
+	
+	private static final String SETUP_FORCE_TRAINING = "Force Training";
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
@@ -168,7 +171,7 @@ public class BuildUI {
 		frame.getContentPane().setLayout(null);
 	}
 	
-	private void reload() {
+	public void reload() {
 		isUpdating = true;
 		frame.setVisible(false);
 		frame.getContentPane().removeAll();
@@ -321,8 +324,8 @@ public class BuildUI {
 			public void run() {
 				int tot = 0;
 				int index = 1;
-				try {
-					for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+				try { 
+					for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 						if(DetectorMain.hasSliding(aList)){
 							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
 						} else {
@@ -331,10 +334,10 @@ public class BuildUI {
 					}
 					tot = tot*iManager.readLoaders().size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
-					List<DetectorOutput[]> outList = new ArrayList<DetectorOutput[]>(tot);
+					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(tot);
 					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : iManager.readLoaders()){
-						for(List<AlgorithmType> aList : DetectorMain.readAlgorithmCombinations(iManager)){
+						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
@@ -356,10 +359,10 @@ public class BuildUI {
 				}
 			}
 			
-			private void runRELOAD(List<DetectorOutput[]> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
+			private void runRELOAD(List<DetectorOutput> outList, DetectionManager detManager, ProgressBar pBar, int index, int tot){
 				long partialTime = System.currentTimeMillis();
 				AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + index + "/" + tot + "]: '" + detManager.getTag() + "'");
-				DetectorOutput[] newOut = DetectorMain.runMADneSs(detManager, iManager);
+				DetectorOutput newOut = DetectorMain.runRELOAD(detManager, iManager);
 				final String loggedErrors = AppLogger.getErrorsSince(partialTime);
 				if(loggedErrors != null){
 					Thread t = new Thread(new Runnable(){
@@ -369,14 +372,21 @@ public class BuildUI {
 				    });
 					t.start();
 				}	
-				if(newOut != null)
+				if(iManager.getOutputFormat().equalsIgnoreCase("ui") && newOut != null)
 					outList.add(newOut);
 				pBar.moveNext();
 			}
 		}).start();
 	}
 	
-	private JPanel printOptions(JPanel panel, String[] options, int fromX, int fromY, int space){
+	private LearnerType fromOption(String optionText){
+		if(optionText != null && optionText.length() > 0){
+			String algName = optionText.substring(0, optionText.indexOf('[')).trim();
+			return LearnerType.fromString(algName.trim());
+		} else return null;
+	}
+	
+	private JPanel printOptions(boolean isAlg, JPanel panel, String[] options, int fromX, int fromY, int space){
 		JLabel lbl;
 		JButton jb;
 		if(options != null && options.length > 0){
@@ -393,33 +403,58 @@ public class BuildUI {
 				
 				JPanel innerInnerPanel = new JPanel();
 				innerInnerPanel.setBackground(Color.WHITE);
-				innerInnerPanel.setLayout(new GridLayout(1, 2, 5, 0));
+				innerInnerPanel.setLayout(new GridLayout(1, (isAlg?3:2), 5, 0));
+				
+				if(isAlg){
+					jb = new JButton("Meta");
+					jb.setHorizontalAlignment(SwingConstants.CENTER);
+					jb.addActionListener(new ActionListener() { 
+						public void actionPerformed(ActionEvent e) { 
+							if(!option.contains(".")) {
+								try {
+									LearnerType at = fromOption(option);
+									MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
+									mlf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
+								}
+							} else {
+								LoaderFrame lf;
+								String type = option.split("@")[0].trim();
+								String loaderName = option.split("@")[1].trim();
+								try {
+									lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
+									lf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
+								}
+							}
+							
+						} } );
+					innerInnerPanel.add(jb);
+				}
 				
 				jb = new JButton("#");
-				//jb.setBounds(panel.getWidth() - fromX - 2*buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
 						if(!option.contains(".")) {
-							AlgorithmSetupFrame asf;
-							String algName = option.split(" ")[0];
 							try {
-								AlgorithmType at = AlgorithmType.valueOf(algName);
-								asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)).get(at));
+								LearnerType at = fromOption(option);
+								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
 								asf.setVisible(true);
 							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + algName + "' preferences");
+								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
 							}
 						} else {
 							LoaderFrame lf;
-							String type = option.split("-")[0].trim();
-							String a = option.split("-")[1].trim();
-							String b = a.split(" ")[0];
+							String type = option.split("@")[0].trim();
+							String loaderName = option.split("@")[1].trim();
 							try {
-								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(b), LoaderType.valueOf(type));
+								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
 								lf.setVisible(true);
 							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to open dataset '" + b + "' preferences");
+								AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
 							}
 						}
 						
@@ -427,14 +462,13 @@ public class BuildUI {
 				innerInnerPanel.add(jb);
 					
 				jb = new JButton("-");
-				//jb.setBounds(panel.getWidth() - fromX - buttonsSpace, fromY + i*space, buttonsSpace, space);
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
 						if(option.contains(".")){
 							iManager.removeDataset(option);
 						} else {
-							iManager.removeAlgorithm(option);
+							iManager.removeAlgorithm(fromOption(option));
 						}
 						reload();
 					} } );
@@ -475,17 +509,15 @@ public class BuildUI {
 		dataAlgPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
-		//dataAlgPanel.setBounds(frame.getWidth()*2/3 + 10, tabY, frame.getWidth()/3 - 20, frame.getHeight()/8 + labelSpacing*(getDatasets().length + getAlgorithms().length) + 2*bigLabelSpacing);
 		dataAlgPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
 		dataAlgPanel.setLayout(new GridLayout(4 + getAlgorithms().length + getDatasets().length, 1, 10, 0));
 		
 		JLabel mainLabel = new JLabel("Loaders");
-		//mainLabel.setBounds(dataAlgPanel.getWidth()/4, labelSpacing, dataAlgPanel.getWidth()/2, labelSpacing);
 		mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		mainLabel.setFont(titleFont);
 		dataAlgPanel.add(mainLabel, BorderLayout.NORTH);
 		
-		printOptions(dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
+		printOptions(false, dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -586,7 +618,7 @@ public class BuildUI {
 		
 		tabY = tabY + labelSpacing;
 		
-		printOptions(dataAlgPanel, getAlgorithms(), dataAlgPanel.getWidth()/20, tabY, labelSpacing);
+		printOptions(true, dataAlgPanel, getAlgorithms(), dataAlgPanel.getWidth()/20, tabY, labelSpacing);
 		
 		tabY = tabY + (getAlgorithms().length)*labelSpacing;
 		
@@ -599,18 +631,30 @@ public class BuildUI {
 		button = new JButton("Add Algorithm");
 		button.setVisible(true);
 		button.setFont(labelFont);
-		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				Object[] possibilities = new String[DetectionAlgorithm.availableAlgorithms().size()];
+				String[] algList = new String[DetectionAlgorithm.availableAlgorithms().size()];
 				int i = 0;
 				for(AlgorithmType at : DetectionAlgorithm.availableAlgorithms()){
 					if(!Arrays.asList(getAlgorithms()).contains(at.toString()))
-						possibilities[i++] = at.toString();
+						algList[i++] = at.toString();
 				}
-				String returnValue = (String)JOptionPane.showInputDialog(
-				                    frame, "Choose an Algorithm", "Add Algorithm",
-				                    JOptionPane.PLAIN_MESSAGE, null, possibilities, "");
+				
+				JPanel gui = new JPanel(new BorderLayout());
+				JList<String> possibilities = new JList<String>(algList);
+				gui.add(new JScrollPane(possibilities));
+                JOptionPane.showMessageDialog(
+                        null, 
+                        gui,
+                        "Choose Algorithm(s)",
+                        JOptionPane.QUESTION_MESSAGE);
+                List<String> items = possibilities.getSelectedValuesList();
+                
+                String returnValue = "";
+                for (Object item : items) {
+                    returnValue = returnValue + item + ", ";
+                }
+                returnValue = returnValue.length() > 0 ? returnValue.substring(0, returnValue.length()-2) : returnValue;
 				if (returnValue != null && returnValue.length() > 0) {
 				    iManager.addAlgorithm(returnValue);
 				    reload();
@@ -645,13 +689,11 @@ public class BuildUI {
 		String[] dsStrings = new String[lList.size()];
 		for(PreferencesManager lPref : lList){
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
-				dsStrings[i++] = "MySQL - " + lPref.getPreference(MySQLLoader.DB_NAME);
+				dsStrings[i++] = "MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME);
 			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
-				dsStrings[i++] = "CSV - " + lPref.getFilename() + " (" + 
-						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+				dsStrings[i++] = "CSV @ " + lPref.getFilename();
 			} else {
-				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " - " + lPref.getFilename() + " (" + 
-						(lPref.hasPreference(FileLoader.TRAIN_FILE) ? lPref.getPreference(FileLoader.TRAIN_FILE) : lPref.getPreference("TRAIN_" + lPref.getPreference(Loader.LOADER_TYPE) + "_FILE")) + ")";
+				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename();
 			}
 		}
 		return dsStrings;
@@ -660,15 +702,15 @@ public class BuildUI {
 	private String[] getAlgorithms(){
 		int i = 0;
 		List<AlgorithmFamily> family = new LinkedList<AlgorithmFamily>();
-		List<List<AlgorithmType>> aComb = DetectorMain.readAlgorithmCombinations(iManager);
+		List<LearnerType> aComb = DetectorMain.readAlgorithmCombinations(iManager);
 		String[] algStrings = new String[aComb.size()];
-		for(List<AlgorithmType> aList : aComb){
+		for(LearnerType aList : aComb){
 			try {
-				family = DetectionAlgorithm.getFamily(AlgorithmType.valueOf(aList.toString().substring(1, aList.toString().length()-1)));
+				family = DetectionAlgorithm.getFamily(aList);
 			} catch(Exception ex){
 				family.add(AlgorithmFamily.MIXED);
 			}
-			algStrings[i++] = aList.toString().substring(1, aList.toString().length()-1) + " " + Arrays.toString(family.toArray());
+			algStrings[i++] = aList.toString() + " " + Arrays.toString(family.toArray());
 		}
 		return algStrings;
 	}
@@ -725,6 +767,8 @@ public class BuildUI {
 		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
+		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
@@ -746,27 +790,39 @@ public class BuildUI {
 		seePrefPanel.setVisible(iManager.getFilteringFlag());
 		seePrefPanel.add(button);
 		
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed.", true, true), setupMap);
 		setupPanel.add(seePrefPanel);
 		
-		comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 6*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed."), setupMap);
-		addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
+		//comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'MULTIPLE_UNION' considers j-dimensional subspaces (0 &lt j &lt= n), constituted by the j top-ranked features, <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
+		//comp.setVisible(iManager.getTrainingFlag());
+		//addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>");
+		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>", true);
 		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 5*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed.", true, true), setupMap);
 		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>");
+		boolean[] result = hasAlgorithmType();
+		boolean hasBase = result[0];
+		boolean hasMeta = result[1];
+		boolean hasSliding = result[2];
+		comp = createLCKPanel(SETUP_FORCE_TRAINING, setupPanel, 5*optionSpacing, iManager.getForceTrainingFlag(), comp, InputManager.FORCE_TRAINING, "Specifies if existing data about a past training of this algorithm can be re-used.", hasBase, false);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_FORCE_TRAINING, comp, setupMap);
+		
+		comp = createLCKPanel(SETUP_FORCE_BASELEARNERS, setupPanel, 5*optionSpacing, iManager.getForceBaseLearnersFlag(), comp, InputManager.FORCE_TRAINING_BASELEARNERS, "Specifies if, during training of a meta-learner, all base-learners need to be trained or if existring results could be used to speedup the process.", hasMeta, false);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_FORCE_BASELEARNERS, comp, setupMap);
+	
+		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the size of the sliding window.</p></html>");
+		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the size of the sliding window.</p></html>", hasSliding);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
-		seePrefPanel = new JPanel();
+		/*seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
 		//seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
@@ -788,13 +844,29 @@ public class BuildUI {
 		
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG, "Specifies if Optimization is needed."), setupMap);
 		
-		setupPanel.add(seePrefPanel);
+		setupPanel.add(seePrefPanel);*/
 		
-		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed.", true, true), setupMap);
 		
 		return setupPanel;
 	}
 	
+	private boolean[] hasAlgorithmType() {
+		boolean hasMeta = false, hasSliding = false, hasBase = false;
+		List<LearnerType> algList = DetectorMain.readAlgorithmCombinations(iManager);
+		if(algList != null){
+			for(LearnerType lType : algList){
+				if(lType.isSliding())
+					hasSliding = true;
+				else if(lType instanceof MetaLearner)
+					hasMeta = true;
+				else hasBase = true;
+			}
+		}
+		return new boolean[]{hasBase, hasMeta, hasSliding};
+	}
+
+
 	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText, String tooltipText){
 		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, tooltipText);
 	}
@@ -824,7 +896,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager, String tooltipText){
+	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager, String tooltipText, boolean isEnabled){
 		JPanel panel = new JPanel();
 		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(new GridLayout(1, 2));
@@ -841,7 +913,7 @@ public class BuildUI {
 		textField.setText(textFieldText);
 		textField.setFont(labelFont);
 		//textField.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
-		panel.add(textField);
+		textField.setEnabled(isEnabled);
 		textField.setColumns(10);
 		textField.getDocument().addDocumentListener(new DocumentListener() {
 			  
@@ -859,11 +931,12 @@ public class BuildUI {
 
 			public void workOnUpdate() {
 				if (textField.getText() != null && textField.getText().length() > 0){
-	        		iManager.updatePreference(fileTag, textField.getText(), true);
+	        		iManager.updatePreference(fileTag, textField.getText(), false, true);
 	        	}
 			}
 		});
 		
+		panel.add(textField);
 		root.add(panel);
 		
 		return panel;
@@ -896,7 +969,7 @@ public class BuildUI {
 			        Path pathBase = Paths.get(new File("").getAbsolutePath());
 					if(!folderFlag || selectedFile.isDirectory()){
 						button.setText(pathBase.relativize(pathAbsolute).toString());
-						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString().replace('\\', File.separatorChar), true);
+						iManager.updatePreference(panelToPreference(textName), pathBase.relativize(pathAbsolute).toString().replace('\\', File.separatorChar), true, true);
 					} else JOptionPane.showMessageDialog(frame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a folder");
 				}
 			} } );
@@ -907,18 +980,19 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag, String tooltipText){
-		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag, tooltipText);
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
+		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag, tooltipText, isEnabled, isBold);
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag, String tooltipText){
+	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
 		JPanel panel = new JPanel();
 		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(new GridLayout(1, 1));
 		
 		JCheckBox cb = new JCheckBox(textName);
 		cb.setSelected(checked);
-		cb.setFont(bigFont);
+		cb.setFont(isBold ? bigFont : smallLabelFont);
+		cb.setEnabled(isEnabled);
 		//cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
 		if(tooltipText != null)
@@ -934,7 +1008,7 @@ public class BuildUI {
 			        		linkedPanel.setVisible(cb.isSelected());
 			        }
 			        if(!isUpdating){
-			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true);
+			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true, true);
 			        	reload();
 			        }
 			        	
@@ -982,6 +1056,14 @@ public class BuildUI {
 								newValue = newValue + "(" + s + ")";
 							} else newValue = newValue + "(1)";
 			        	}
+			        	if(comboBox.getSelectedItem().toString().equals("CONFIDENCE_ERROR")){
+			        		String s = (String)JOptionPane.showInputDialog(
+				                    frame, "Set parameter P for Confidence Error (P in [0, 1]). the higher the P, the more relevance to FN", "Confidence Error P",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+								newValue = newValue + "(" + s + ")";
+							} else newValue = newValue + "(1)";
+			        	}
 			        	if(comboBox.getSelectedItem().toString().equals("PEARSON")){
 			        		String s = (String)JOptionPane.showInputDialog(
 				                    frame, "Set threshold for Pearson Correlation Index (0<threshold<=1) ", "Pearson Index Threshold",
@@ -990,7 +1072,7 @@ public class BuildUI {
 								newValue = newValue + "(" + s + ")";
 							} else newValue = newValue + "(0.9)";
 			        	}
-			        	iManager.updatePreference(fileTag, newValue, true);
+			        	iManager.updatePreference(fileTag, newValue, false, true);
 			        	reload();
 			    	}
 			    }
@@ -1005,11 +1087,11 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private void showDetectorOutputs(List<DetectorOutput[]> outList) {
+	private void showDetectorOutputs(List<DetectorOutput> outList) {
 		OutputFrame of = new OutputFrame(iManager, outList.size());
 		if(outList.size() > 0){
 			of.buildSummaryPanel(outList);
-			for(DetectorOutput[] dOut : outList){
+			for(DetectorOutput dOut : outList){
 				of.addOutput(dOut);
 			}
 		}

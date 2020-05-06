@@ -4,36 +4,26 @@
 package ippoz.reload.output;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.type.LearnerType;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderBatch;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelectorType;
-import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
-import ippoz.reload.loader.Loader;
+import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
-import ippoz.reload.voter.ScoresVoter;
-import ippoz.reload.voter.VotingResult;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Tommy
@@ -43,74 +33,48 @@ public class DetectorOutput {
 	
 	private InputManager iManager;
 	
-	private List<Knowledge> knowledgeList;
+	private double bestScore;
 	
-	private ScoresVoter bestSetup;
-	
-	private String bestRuns;
-	
-	private List<AlgorithmModel> modelList;
-	
-	private String evaluationMetricsScores;
-	
-	private List<ScoresVoter> voterList;
-	
-	private Map<ScoresVoter, Integer> nVoters;
-	
-	private Map<String, List<VotingResult>> votingScores;
+	private AlgorithmModel refModel;
 	
 	private Loader loader;
 	
 	private List<DataSeries> selectedSeries;
 	
-	private Map<ScoresVoter, List<Map<Metric, Double>>> detailedMetricScores;
-	
-	private Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores;
-	
-	private Map<String, List<InjectedElement>> injections;
-	
-	private double bestAnomalyThreshold;
-	
 	private String writableTag;
+	
+	private LearnerType algorithms;
 	
 	private double faultsRatio;
 	
-	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;
+	private Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures;	
 	
-	private FeatureSelectionInfo fsInfo;
+	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
 	private TrainInfo tInfo;
 	
-	public DetectorOutput(InputManager iManager, List<Knowledge> knowledgeList, double bestScore, ScoresVoter bestSetup, 
-			List<AlgorithmModel> modelList, String evaluationMetricsScores, List<ScoresVoter> voterList, Map<ScoresVoter, Integer> nVoters, 
-			Map<String, List<VotingResult>> votingScores,
-			Loader loader, Map<ScoresVoter, List<Map<Metric, Double>>> evaluations,
-			Map<String, List<Map<AlgorithmModel, AlgorithmResult>>> detailedExperimentsScores,
-			double bestAnomalyThreshold, Map<String, List<InjectedElement>> injections, 
+	private ValidationInfo vInfo;
+	
+	public DetectorOutput(InputManager iManager, LearnerType algorithms, double bestScore, 
+			AlgorithmModel modelList,
+			Loader loader, Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
-			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo) {
+			String writableTag, double faultsRatio, TrainInfo tInfo, ValidationInfo vInfo) {
 		this.iManager = iManager;
-		this.knowledgeList = knowledgeList;
-		this.bestSetup = bestSetup;
-		this.modelList = modelList;
-		this.evaluationMetricsScores = evaluationMetricsScores;
-		this.voterList = voterList;
-		this.nVoters = nVoters;
-		this.votingScores = votingScores;
+		this.algorithms = algorithms;
+		this.bestScore = bestScore;
+		this.refModel = modelList;
 		this.loader = loader;
-		this.detailedMetricScores = evaluations;
-		this.detailedExperimentsScores = detailedExperimentsScores;
-		this.bestAnomalyThreshold = bestAnomalyThreshold;
-		this.injections = injections;
 		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
-		this.fsInfo = fsInfo;
 		this.tInfo = tInfo;
+		this.vInfo = vInfo;
+		labelledScores = buildLabelledScores(detailedExperimentsScores);
 	}
 	
-	public void printDetailedKnowledgeScores(String outputFolder){
+	/*public void printDetailedKnowledgeScores(String outputFolder){
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
@@ -120,8 +84,8 @@ public class DetectorOutput {
 			if(votingScores != null && votingScores.size() > 0 &&
 					detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "algorithmscores.csv")));
-				header1 = "exp,index,fault/attack,reload_eval,reload_score,";
-				header2 = ",,,,,";
+				header1 = "exp,index,fault/attack,reload_eval,reload_score,reload_confidence,";
+				header2 = ",,,,,,";
 				
 				Iterator<String> it = detailedExperimentsScores.keySet().iterator();
 				String tag = it.next();
@@ -132,8 +96,8 @@ public class DetectorOutput {
 				map = detailedExperimentsScores.get(tag).get(0);
 				voterList = map.keySet();
 				for(AlgorithmModel av : voterList){
-					header1 = header1 + "," + av.getAlgorithmType() + ",,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
-					header2 = header2 + ",score,decision_function,eval,";
+					header1 = header1 + "," + av.getAlgorithmType() + ",,,,," + av.getDataSeries().toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "") + ",";
+					header2 = header2 + ",score,decision_function,eval,confidence,,";
 					if(av.getDataSeries().size() == 1){
 						header2 = header2 + av.getDataSeries().getName().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "");
 					} else {
@@ -153,13 +117,14 @@ public class DetectorOutput {
 				for(String expName : votingScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
 						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
-						Knowledge knowledge = findKnowledge(expName);
+						Knowledge knowledge = Knowledge.findKnowledge(knowledgeList, expName);
 						for(int i=0;i<votingScores.get(expName).size();i++){
 							writer.write(expName + "," + 
 									i + "," + 
 									(injections.get(expName).get(i) != null ? injections.get(expName).get(i).getDescription() : "") + "," +
-									(votingScores.get(expName).get(i).getVotingResult() >= bestAnomalyThreshold ? "YES" : "NO") + "," +
-									votingScores.get(expName).get(i).getVotingResult() + ",");
+									(votingScores.get(expName).get(i).getBooleanScore() ? "YES" : "NO") + "," +
+									votingScores.get(expName).get(i).getVotingResult() + "," + 
+									votingScores.get(expName).get(i).getConfidence() + ",");
 							if(i < detailedExperimentsScores.get(expName).size()){
 								map = detailedExperimentsScores.get(expName).get(i);
 								for(AlgorithmModel av : voterList){
@@ -171,7 +136,7 @@ public class DetectorOutput {
 									}
 									writer.write("," + map.get(av).getScore() + "," + 
 											(map.get(av).getDecisionFunction() != null ? map.get(av).getDecisionFunction().toCompactStringComplete() : "CUSTOM")  + "," + 
-											map.get(av).getScoreEvaluation() + ",");
+											map.get(av).getScoreEvaluation() + "," + map.get(av).getConfidence() + ",,");
 									if(knowledge != null){
 										Snapshot snap = knowledge.buildSnapshotFor(i, av.getDataSeries());
 										if(av.getDataSeries().size() == 1){
@@ -193,30 +158,22 @@ public class DetectorOutput {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
-	}
-
-	private Knowledge findKnowledge(String expName) {
-		for(Knowledge know : knowledgeList){
-			if(know.getTag().equals(expName))
-				return know;
-		}
-		return null;
-	}
+	}*/
 
 	public String buildPath(String basePath){
-		String path = basePath + getDataset() + getAlgorithm() + File.separatorChar;
+		String path = basePath + getDataset() + File.separatorChar + getAlgorithm() + File.separatorChar;
 		if(!new File(path).exists())
 			new File(path).mkdirs();
 		return path;
 	}
 	
-	public void summarizeCSV(String outputFolder) {
+	/*public void summarizeCSV(String outputFolder) {
 		BufferedWriter writer;
 		double score;
 		try {
 			if(detailedMetricScores != null){
 				writer = new BufferedWriter(new FileWriter(new File(buildPath(outputFolder) + "summary.csv")));
-				writer.write("voter,anomaly,checkers,");
+				writer.write("voter,anomaly_checkers,");
 				for(Metric met : getEvaluationMetrics()){
 					writer.write(met.getMetricName() + ",");
 				}
@@ -235,31 +192,38 @@ public class DetectorOutput {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write summary files");
 		}
-	}
+	}*/
 
 	public double getBestScore() {
-		List<AlgorithmResult> allResults = new LinkedList<>();
-		for(String expName : votingScores.keySet()){
-			if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
-				allResults.addAll(votingScores.get(expName));
-		}
-		return getReferenceMetric().evaluateAnomalyResults(allResults);
+		return bestScore;
 	}
+		
+		/*
+		String[][] grid = getEvaluationGrid(outFolder);
+		int i = 0;
+		for(Metric m : getEvaluationMetrics()){
+			if()
+		}
+		List<AlgorithmResult> allResults = new LinkedList<>();
+		if(votingScores != null){
+			for(String expName : votingScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+					allResults.addAll(votingScores.get(expName));
+			}
+			return getReferenceMetric().evaluateAnomalyResults(allResults);
+		} else return Double.NaN;
+	}*/
 	
 	public String getFormattedBestScore() {
 		return new DecimalFormat("#.##").format(getBestScore());
 	}
 
-	public ScoresVoter getBestSetup() {
-		return bestSetup;
+	public String getEvaluationBatches() {
+		return vInfo.getBatchesString().replace("[", "").replace("]", "");
 	}
-
-	public String getBestRuns() {
-		return bestRuns;
-	}
-
-	public void setBestRuns(String bestRuns) {
-		this.bestRuns = bestRuns;
+	
+	public String getEvaluationDataPoints() {
+		return String.valueOf(vInfo.getNRuns());
 	}
 	
 	public Metric getReferenceMetric() {
@@ -269,18 +233,29 @@ public class DetectorOutput {
 	public Metric[] getEvaluationMetrics() {
 		return iManager.loadValidationMetrics();
 	}
-
+/*
 	public String getEvaluationMetricsScores() {
-		return evaluationMetricsScores;
+		String outString = "";
+		if(bestVoter != null){			
+			List<AlgorithmResult> allResults = new LinkedList<>();
+			for(String expName : votingScores.keySet()){
+				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
+					allResults.addAll(votingScores.get(expName));
+			}
+			
+			for(Metric met : getEvaluationMetrics()){
+				double res = met.evaluateAnomalyResults(allResults);
+				if(Double.isNaN(res)){
+					outString = outString + "-,";
+				} else outString = outString + res + ",";
+			}
+		}
+		return outString;
 	}
 
 	public String getWritableTag() {
 		return writableTag;
-	}
-	
-	public double getFaultsRatio(){
-		return faultsRatio;
-	}
+	}*/
 	
 	public String getFaultsRatioString(){
 		NumberFormat formatter = new DecimalFormat("#0.0");     
@@ -294,19 +269,35 @@ public class DetectorOutput {
 	}
 	
 	public String getAlgorithm(){
-		String[] splitted;
-		if(writableTag != null){
-			splitted = writableTag.split(",");
-			if(splitted.length > 3)
-				return splitted[2] + " (" + splitted[4] + " - " + splitted[3] + ")";
-			else return splitted[2];
-		}
-		else return null;
+		return algorithms.toCompactString();
 	}
 
-	public String[][] getEvaluationGridAveraged() {
+	private String[][] getGrid(String scoresString) {
+		List<String> gridRows = new LinkedList<>();
+		if(scoresString != null && scoresString.trim().length() > 0){
+			for(String splitItem : scoresString.trim().split(",")){
+				if(splitItem.contains(":")){
+					gridRows.add(splitItem.trim());
+				}
+			}
+			int i = 0;
+			String[][] grid = new String[2][gridRows.size()];
+			for(String row : gridRows){
+				String[] splitted = row.split(":");
+				grid[0][i] = row.split(":")[0].trim();
+				if(AppUtility.isInteger(splitted[1])){
+					grid[1][i] = splitted[1].trim();
+				} else if(AppUtility.isNumber(splitted[1])){
+					grid[1][i] = AppUtility.formatDouble(Double.parseDouble(splitted[1].trim()));
+				} else grid[1][i] = splitted[1].trim();
+				i++;
+			}
+			return grid;
+		} else return null;
+	}
+		/*
 		int row = 0;
-		String[][] result = new String[voterList.size()][getEvaluationMetrics().length + 2];
+		String[][] result = new String[detailedMetricScores.keySet().size()][getEvaluationMetrics().length + 2];
 		for(ScoresVoter voter : detailedMetricScores.keySet()){
 			result[row][0] = voter.toString();
 			result[row][1] = nVoters.get(voter).toString();
@@ -320,66 +311,28 @@ public class DetectorOutput {
 			row++;
 		}
 		return result;
+	}*/
+	
+	public String[][] getTrainGrid() {
+		return getGrid(tInfo.getMetricsString()); 
 	}
 	
 	public String[][] getEvaluationGrid() {
-		String[][] result = new String[1][getEvaluationMetrics().length + 2];
-		if(bestSetup != null){
-			result[0][0] = bestSetup.toString();
-			result[0][1] = String.valueOf(nVoters.get(bestSetup));
-			
-			List<AlgorithmResult> allResults = new LinkedList<>();
-			for(String expName : votingScores.keySet()){
-				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0)
-					allResults.addAll(votingScores.get(expName));
-			}
-			
-			int col = 2;
-			for(Metric met : getEvaluationMetrics()){
-				double res = met.evaluateAnomalyResults(allResults);
-				if(Double.isNaN(res)){
-					result[0][col++] = "-";
-				} else result[0][col++] = String.valueOf(new DecimalFormat("#.##").format(res));
-			}
-		}
-		return result;
+		return getGrid(vInfo.getMetricsString()); 
 	}
 	
-	/*public Map<String, List<LabelledResult>> getLabelledScores(){
-		Map<AlgorithmModel, AlgorithmResult> map;
-		Map<String, List<LabelledResult>> outMap = new HashMap<>();
-		AlgorithmModel bestVoter = null;
-		if(votingScores != null && votingScores.size() > 0 && detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
-			for(String expName : votingScores.keySet()){
-				if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
-					map = detailedExperimentsScores.get(expName).get(0);
-					bestVoter = null;
-					for(AlgorithmModel av : map.keySet()){
-						if(bestVoter == null || getReferenceMetric().compareResults(bestVoter.getMetricScore(), av.getMetricScore()) > 0)
-							bestVoter = av;
-					}
-					outMap.put(expName, new LinkedList<LabelledResult>());
-					for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
-						boolean tag = injections.get(expName).get(i) != null;
-						if(i < detailedExperimentsScores.get(expName).size()){
-							if(detailedExperimentsScores.get(expName).get(i).get(bestVoter) != null)
-								outMap.get(expName).add(new LabelledResult(tag, detailedExperimentsScores.get(expName).get(i).get(bestVoter)));
-						}
-					}
-				}
-			}
-		}
-		return outMap;
-	}*/
+	public Map<LoaderBatch, List<LabelledResult>> getLabelledScores(){
+		return labelledScores;
+	}
 	
-	public Map<String, List<LabelledResult>> getLabelledScores(){
-		Map<String, List<LabelledResult>> outMap = new HashMap<>();
+	public Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<AlgorithmResult>> votingScores){
+		Map<LoaderBatch, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
-			for(String expName : votingScores.keySet()){
+			for(LoaderBatch expName : votingScores.keySet()){
 				outMap.put(expName, new LinkedList<LabelledResult>());
-				for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
+				for(int i=0;i<votingScores.get(expName).size();i++){
 					AlgorithmResult ar = votingScores.get(expName).get(i);
-					if(i < detailedExperimentsScores.get(expName).size()){
+					if(i < votingScores.get(expName).size()){
 						outMap.get(expName).add(new LabelledResult(ar.getInjection() != null, ar));
 					}
 				}
@@ -416,18 +369,8 @@ public class DetectorOutput {
 	}
 	
 	public String getBestSeriesString() {
-		double bestScore = Double.NEGATIVE_INFINITY;
-		DataSeries toReturn = null;
-		if(modelList!= null && modelList.size() > 0){
-			for(AlgorithmModel voter : modelList){
-				if(voter.getMetricScore() > bestScore){
-					bestScore = voter.getMetricScore();
-					toReturn = voter.getDataSeries();
-				}
-			}
-			if(toReturn != null)
-				return toReturn.getName();
-			else return "";
+		if(refModel!= null){
+			return refModel.getDataSeries().getName();
 		} else return "";
 	}
 
@@ -435,8 +378,15 @@ public class DetectorOutput {
 		return iManager.getDataSeriesDomain();
 	}    
 	
-	public List<AlgorithmModel> getVoters(){
-		return modelList;
+	public List<AlgorithmModel> getTrainingModels(){
+		List<AlgorithmModel> list = new LinkedList<>();
+		list.add(refModel);
+		if(refModel.getAlgorithmType() instanceof MetaLearner){
+			String metaFile = "tmp" + File.separatorChar + getDataset() + File.separatorChar + ((MetaLearner)refModel.getAlgorithmType()).toCompactString() + File.separatorChar + "metaPreferences.csv";
+			if(new File(metaFile).exists())
+				list.addAll(AlgorithmModel.fromFile(metaFile));
+		}
+		return list;
 	}  
 
 	public int getKFold() {
@@ -446,8 +396,16 @@ public class DetectorOutput {
 	public String getTrainRuns(){
 		return loader.getRuns();
 	}
+	
+	public String getTrainDataPoints(){
+		return String.valueOf(tInfo.getNRuns());
+	}
 
-	public TrainInfo getTrainInfo() {
+	public String getTrainBatches() {
+		return tInfo.getRuns().replace("[", "").replace("]", "");
+	}
+
+	/*public TrainInfo getTrainInfo() {
 		if(tInfo != null)
 			return tInfo;
 		else return new TrainInfo();
@@ -457,7 +415,7 @@ public class DetectorOutput {
 		if(fsInfo != null)
 			return fsInfo;
 		else return new FeatureSelectionInfo();
-	}
+	}*/
 
 	
 

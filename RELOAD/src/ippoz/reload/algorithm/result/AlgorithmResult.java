@@ -7,8 +7,6 @@ import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
-import java.util.List;
-
 /**
  * The Class AlgorithmResult. Stores results of an evaluation of a Knowledge item by an algorithm.
  *
@@ -17,7 +15,7 @@ import java.util.List;
 public class AlgorithmResult {
 	
 	/** The data point values. */
-	private List<Double> dataValues; 
+	private double[] dataValues; 
 	
 	/** The fault (if any) corresponding to each data point. */
 	private InjectedElement injection;
@@ -30,6 +28,11 @@ public class AlgorithmResult {
 	
 	/** The decision function used. */
 	private DecisionFunction dFunction;
+	
+	/** The confidence on the result. */
+	private double confidence;
+
+	private Object additionalScore;
 
 	/**
 	 * Instantiates a new algorithm result.
@@ -37,11 +40,14 @@ public class AlgorithmResult {
 	 * @param dataValues the data values
 	 * @param injection the injection
 	 * @param score the score
+	 * @param object 
 	 */
-	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score) {
+	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, double confidence, Object additionalScore) {
 		this.dataValues = dataValues;
 		this.injection = injection;
 		this.score = score;
+		this.confidence = confidence;
+		this.additionalScore = additionalScore;
 	}
 
 	/**
@@ -53,12 +59,13 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(List<Double> dataValues, InjectedElement injection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction) {
+	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
 		this.dataValues = dataValues;
 		this.injection = injection;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
 		this.dFunction = dFunction;
+		this.confidence = confidence;
 	}
 
 	/**
@@ -75,7 +82,7 @@ public class AlgorithmResult {
 	 *
 	 * @return the score
 	 */
-	public List<Double> getData() {
+	public double[] getData() {
 		return dataValues;
 	}
 
@@ -122,8 +129,8 @@ public class AlgorithmResult {
 	 * @param injection the injection
 	 * @return the algorithm result
 	 */
-	public static AlgorithmResult error(List<Double> dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.ERROR, null);
+	public static AlgorithmResult error(double[] dataValues, InjectedElement injection) {
+		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.ERROR, null, 1);
 	}
 
 	/**
@@ -133,8 +140,8 @@ public class AlgorithmResult {
 	 * @param injection the injection
 	 * @return the algorithm result
 	 */
-	public static AlgorithmResult unknown(List<Double> dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.UNKNOWN, null);
+	public static AlgorithmResult unknown(double[] dataValues, InjectedElement injection) {
+		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
 	}	
 	
 	/**
@@ -176,6 +183,18 @@ public class AlgorithmResult {
 
 	public InjectedElement getInjection() {
 		return injection;
+	}
+
+	public boolean getBooleanScore() {
+		return getScoreEvaluation() == AnomalyResult.ANOMALY;
+	}
+	
+	public double getConfidence() {
+		return confidence;
+	}
+
+	public Object getAdditionalScore() {
+		return additionalScore;
 	}
 
 }

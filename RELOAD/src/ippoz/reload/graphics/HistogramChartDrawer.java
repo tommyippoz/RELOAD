@@ -3,7 +3,7 @@
  */
 package ippoz.reload.graphics;
 
-import ippoz.reload.evaluation.ExperimentVoter;
+import ippoz.reload.evaluation.ExperimentEvaluator;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -61,7 +61,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 	 */
 	@Override
 	protected void setupChart(Map<String, Map<Double, Double>> data) {
-		XYBarRenderer renderer = new CustomRenderer(new Paint[] {Color.BLUE, Color.RED, Color.YELLOW}, data.get(ExperimentVoter.FAILURE_LABEL));
+		XYBarRenderer renderer = new CustomRenderer(new Paint[] {Color.BLUE, Color.RED, Color.YELLOW}, data.get(ExperimentEvaluator.FAILURE_LABEL));
         renderer.setBaseItemLabelGenerator(new StandardXYItemLabelGenerator());
         renderer.setBaseItemLabelsVisible(true);
         ((XYPlot) chart.getPlot()).setRenderer(renderer);
@@ -113,7 +113,7 @@ public class HistogramChartDrawer extends ChartDrawer {
 		XYSeries current;
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for(String seriesName : data.keySet()){
-			if(seriesName.equals(ExperimentVoter.ANOMALY_SCORE_LABEL)){
+			if(seriesName.equals(ExperimentEvaluator.ANOMALY_SCORE_LABEL)){
 				current = new XYSeries(seriesName + " (B:Normal, R:Fault, Y:LastingEffect)");
 				for(Double key : data.get(seriesName).keySet()){
 					current.add(key, data.get(seriesName).get(key));

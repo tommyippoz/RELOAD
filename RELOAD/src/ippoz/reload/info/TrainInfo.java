@@ -3,7 +3,7 @@
  */
 package ippoz.reload.info;
 
-import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -42,7 +42,7 @@ public class TrainInfo {
 	
 	private static final String TRAIN_ALGORITHMS = "TRAIN Algorithms";
 	
-	private List<AlgorithmType> algTypes;
+	private LearnerType algTypes;
 	
 	private static final String TRAIN_FAULT_RATIO = "TRAIN FaultAttack Ratio";
 	
@@ -52,6 +52,10 @@ public class TrainInfo {
 	
 	private Long trainTimeMs;
 	
+	private static final String TRAIN_METRICS = "TRAIN Metrics";
+	
+	private String metricsString;
+	
 	public TrainInfo(){
 		seriesList = null;
 		kFold = null;
@@ -60,6 +64,7 @@ public class TrainInfo {
 		algTypes = null;
 		faultRatio = null;
 		trainTimeMs = null;
+		metricsString = null;
 	}
 	
 	public TrainInfo(File file){
@@ -68,22 +73,11 @@ public class TrainInfo {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
-					algTypes = new LinkedList<AlgorithmType>();
-					if(preferences.get(TRAIN_ALGORITHMS).contains(",")){
-						String[] splitted = preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "").split(",");
-						for(String algString : splitted){
-							try {
-								algTypes.add(AlgorithmType.valueOf(algString.trim()));
-							} catch(Exception ex){
-								AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
-							}
-						}
-					} else {
-						try {
-							algTypes.add(AlgorithmType.valueOf(preferences.get(TRAIN_ALGORITHMS).trim().replace("[", "").replace("]", "")));
-						} catch(Exception ex){
-							AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + preferences.get(TRAIN_ALGORITHMS) + "'");
-						}
+					String algString = preferences.get(TRAIN_ALGORITHMS).trim();
+					try {
+						algTypes = LearnerType.fromString(algString.trim());
+					} catch(Exception ex){
+						AppLogger.logException(getClass(), ex, "Unable to decode algorithm '" + algString + "'");
 					}
 				}
 				if(preferences.containsKey(TRAIN_KFOLD) && preferences.get(TRAIN_KFOLD) != null && AppUtility.isInteger(preferences.get(TRAIN_KFOLD).trim())){
@@ -120,21 +114,28 @@ public class TrainInfo {
 				if(preferences.containsKey(TRAIN_TIME) && preferences.get(TRAIN_TIME) != null && AppUtility.isInteger(preferences.get(TRAIN_TIME).trim())){
 					trainTimeMs = Long.parseLong(preferences.get(TRAIN_TIME).trim());
 				}
+				if(preferences.containsKey(TRAIN_METRICS) && preferences.get(TRAIN_METRICS) != null){
+					metricsString = preferences.get(TRAIN_METRICS).trim();
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading train info");
 		}
 	}
 	
+	public String getRuns() {
+		return runs;
+	}
+
 	public void setSeries(List<DataSeries> seriesList) {
 		this.seriesList = seriesList;
 	}
-
+	
 	public void setKFold(int kFold) {
 		this.kFold = kFold;
 	}
 
-	public void setAlgorithms(List<AlgorithmType> algTypes) {
+	public void setAlgorithm(LearnerType algTypes) {
 		this.algTypes = algTypes;
 	}
 
@@ -166,7 +167,7 @@ public class TrainInfo {
 		return faultRatio;
 	}
 
-	public List<AlgorithmType> getAlgTypes() {
+	public LearnerType getAlgTypes() {
 		return algTypes;
 	}
 	
@@ -179,13 +180,14 @@ public class TrainInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on training details\n"); 
-			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? Arrays.toString(algTypes.toArray()) : "") + "\n");
+			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? algTypes.toString() : "") + "\n");
 			writer.write("\n* K-Fold value used\n" + TRAIN_KFOLD + " = " + (kFold != null ? kFold : "") + "\n");
 			writer.write("\n* Runs used for training\n" + TRAIN_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + TRAIN_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
 			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (seriesList != null ? Arrays.toString(seriesList.toArray()) : "") + "\n");
 			writer.write("\n* % of Faults/attacks in training set\n" + TRAIN_FAULT_RATIO + " = " + (faultRatio != null ? faultRatio : "") + "\n");
 			writer.write("\n* Training time in ms\n" + TRAIN_TIME + " = " + (trainTimeMs != null ? trainTimeMs : "") + "\n");
+			writer.write("\n* Metric values for training\n" + TRAIN_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
 			writer.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write train INFO");
@@ -193,23 +195,32 @@ public class TrainInfo {
 	}
 	
 	public String toFileString(){
-		return (algTypes != null ? Arrays.toString(algTypes.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (kFold != null ? kFold : "") + ","
 				+ (runs != null ? runs : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
-				+ (trainTimeMs != null ? trainTimeMs : "");
+				+ (trainTimeMs != null ? trainTimeMs : "") + ","
+				+ (metricsString != null ? metricsString : "");
 	}
 	
 	public static String getFileHeader(){
 		return TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
 				TRAIN_NDATAPOINTS + "," + TRAIN_SERIES + "," +
-				TRAIN_FAULT_RATIO + "," + TRAIN_TIME;
+				TRAIN_FAULT_RATIO + "," + TRAIN_TIME + "," + TRAIN_METRICS;
 	}
 
 	public void setRuns(String runs) {
 		this.runs = runs;
+	}
+	
+	public String getMetricsString() {
+		return metricsString;
+	}
+
+	public void setMetricsString(String metricsString) {
+		this.metricsString = metricsString;
 	}
 
 }

@@ -3,16 +3,17 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
 import java.util.List;
+
+import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -22,10 +23,10 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	
 	private int windowSize;
 
-	public DataSeriesSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public DataSeriesSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
-		if(conf.hasItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE) && AppUtility.isInteger(conf.getItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE))){
-			windowSize = Integer.parseInt(conf.getItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE));
+		if(conf.hasItem(BasicConfiguration.SLIDING_WINDOW_SIZE) && AppUtility.isInteger(conf.getItem(BasicConfiguration.SLIDING_WINDOW_SIZE))){
+			windowSize = Integer.parseInt(conf.getItem(BasicConfiguration.SLIDING_WINDOW_SIZE));
 		} else windowSize = -1;
 		logScore(0.0, false);
 	}
@@ -38,29 +39,32 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar = calculateSnapshotScore(knowledge, sysSnapshot, currentIndex);
+	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
+		AlgorithmResult ar = super.evaluateSnapshot(knowledge, currentIndex);
 		if(currentIndex >= getWindowSize()){
-			logScore(ar.getScore(), sysSnapshot.isAnomalous());
+			logScore(ar.getScore(), ar.getInjection() != null);
 		}
 		return ar;
 	}
 	
-	private AlgorithmResult calculateSnapshotScore(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
+	@Override
+	public void saveLoggedScores() {
+		
+	}
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
 			windowSize = ((SlidingKnowledge)knowledge).getWindowSize();
 			snapList = knowledge.toArray(getDataSeries());
 			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= windowSize)
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
-			else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		} else {
-			AppLogger.logError(getClass(), "WrongKnowledgeError", "Knowledge is not 'Sliding'");
-			return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-		}
+		} 
+		return new Pair<Double, Object>(Double.NaN, null);
 	}
 	
-	protected abstract AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
+	protected abstract Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
 
 	@Override
 	protected void printImageResults(String outFolderName, String expTag) {

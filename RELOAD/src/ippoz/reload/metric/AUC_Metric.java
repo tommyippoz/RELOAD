@@ -19,7 +19,7 @@ public class AUC_Metric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double tpr = new TruePositiveRate_Metric(isValidAfter())
 				.evaluateAnomalyResults(anomalyEvaluations);
 		double fpr = new FalsePositiveRate_Metric(isValidAfter())

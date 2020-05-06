@@ -4,13 +4,9 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 
@@ -24,6 +20,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -55,7 +53,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	private int trainIterations;
 	
-	public SOMDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public SOMDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(TMP_FILE)){
 			loadFile(getFilename());
@@ -88,39 +86,27 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		}
 		return outScores;
 	}
+	
+	@Override
+	public void saveLoggedScores() {
+		printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
 
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 		
 		weights = trainSOM(snapList);
 		
 		scores = new LinkedList<SOMScore>();
 		for(Snapshot snap : snapList){
-			scores.add(new SOMScore(Snapshot.snapToString(snap, getDataSeries()), calculateSOM(snapToDouble(snap))));
+			scores.add(new SOMScore(Snapshot.snapToString(snap, getDataSeries()), calculateSOM(getSnapValueArray(snap))));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
 		
-		if(createOutput) {
-	    	printFile(new File(getFilename()));
-		}
-		
 		return true;
-	}
-	
-	private double[] snapToDouble(Snapshot snap){
-		double[] vec = new double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			vec[0] = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				if(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue() != null){
-					vec[j] = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				} else vec[j] = 0.0;					
-			}
-		}
-		return vec;
 	}
 	
 	private double calculateSOM(Double[][] w, double[] row) {		
@@ -168,7 +154,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	        
 	        for(int p=0;p<snapList.size();p++) {
 
-	        	double[] snapValues = snapToDouble(snapList.get(p));
+	        	double[] snapValues = getSnapValueArray(snapList.get(p));
 		        DMin = calculateSOM(w, snapValues) < 1.0 ? 1 : 0;
 
 	            // Update the weights on the winning unit.
@@ -187,15 +173,15 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	    	    
 	    return w;
 	}
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new Pair<Double, Object>(calculateSOM(snapArray), null);
+	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		if(weights != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateSOM(snapToDouble(sysSnapshot)));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return weights != null;
 	}
 
 	@Override

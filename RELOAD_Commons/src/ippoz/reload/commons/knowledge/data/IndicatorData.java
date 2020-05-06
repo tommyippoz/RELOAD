@@ -6,6 +6,7 @@ package ippoz.reload.commons.knowledge.data;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.support.AppLogger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,6 +29,11 @@ public class IndicatorData {
 		this.dataMap = dataMap;
 	}
 	
+	public IndicatorData(String indData, DataCategory dataTag) {
+		dataMap = new HashMap<>();
+		dataMap.put(dataTag, indData);
+	}
+
 	/**
 	 * Gets the indicator data related to a chosen category value.
 	 *

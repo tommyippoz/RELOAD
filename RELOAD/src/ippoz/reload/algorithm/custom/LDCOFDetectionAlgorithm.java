@@ -4,15 +4,11 @@
 package ippoz.reload.algorithm.custom;
 
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 
@@ -24,6 +20,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import javafx.util.Pair;
 
 /**
  * @author Tommaso Capecchi, Tommaso Zoppi
@@ -46,7 +45,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	
 	private LDCOFModel model;
 
-	public LDCOFDetectionAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public LDCOFDetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
 		if(conf.hasItem(CLUSTERS)){
 			clSnaps = loadFromConfiguration();
@@ -57,7 +56,14 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	}
 	
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public void saveLoggedScores() {
+		conf.addItem(CLUSTERS, clustersToConfiguration());
+    	printFile(new File(getFilename()));
+		super.saveLoggedScores();
+	}
+	
+	@Override
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<ClusterableSnapshot> clSnapList = new LinkedList<>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
 			clSnapList.add(new ClusterableSnapshot(snap, getDataSeries()));
@@ -71,12 +77,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		
 		scores = new LinkedList<LDCOFScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(snap)));
-		}
-		
-		if(createOutput) {
-			conf.addItem(CLUSTERS, clustersToConfiguration());
-	    	printFile(new File(getFilename()));
+			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(getSnapValueArray(snap))));
 		}
 		
 		return true;
@@ -88,37 +89,34 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		else return DEFAULT_GAMMA;
 	}
 	
-	private double calculateLDCOF(Snapshot snap) {
-		return model.evaluate(getSnapValueArray(snap));
+	private double calculateLDCOF(double[] snapArray) {
+		return model.evaluate(snapArray);
 	}
 
 	protected abstract List<GenericCluster> generateClusters(List<ClusterableSnapshot> clSnapList);
+	
+	@Override
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return clSnaps != null;
+	}
 
 	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		AlgorithmResult ar;
-		if(clSnaps != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), calculateLDCOF(sysSnapshot));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.error(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new Pair<Double, Object>(calculateLDCOF(snapArray), null);
 	}
-	
-	private double[] getSnapValueArray(Snapshot snap){
-		double snapValue;
-		double[] result = new double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			result[0] = snapValue;
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				result[j] = snapValue;
-			}
-		}
-		return result;
+
+	@Override
+	protected void storeAdditionalPreferences() {
+		// TODO Auto-generated method stub
+		
 	}
-	
+
+	@Override
+	public Map<String, String[]> getDefaultParameterValues() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Prints the file.
 	 *
@@ -141,7 +139,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("cluster_avg,cluster_std\n");
+				writer.write("cluster_avg;cluster_std;distance_center;size;isLarge\n");
 				for(GenericCluster uc : clSnaps){
 					writer.write(uc.toConfiguration().replace("@", ";") + "\n");
 				}
@@ -378,18 +376,18 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 			 * euclideanDistance(data, centroid)/centroid.getAvgDistance()	
 			 */
 			
-			double score = 0;
+			double score = 0, distanceFrom;
 			GenericCluster centroid = getClusterFor(data);
 			if(centroid == null)
 				return Double.NaN;
-			else if(centroid.isLarge() || findNearestLargeClusterFor(data) == null) {
-				//it is a large cluster
-				score = (centroid.distanceFrom(data))/centroid.getAvgDistanceFromCenter();
-			} else {
-				//it is a small cluster
-				GenericCluster nearestLargeCluster = findNearestLargeClusterFor(data);
-				score = (nearestLargeCluster.distanceFrom(data))/nearestLargeCluster.getAvgDistanceFromCenter();
-			}
+			else {
+				if(!centroid.isLarge() && findNearestLargeClusterFor(data) != null)
+					centroid = findNearestLargeClusterFor(data);
+				distanceFrom = centroid.distanceFrom(data);
+				if(centroid.getAvgDistanceFromCenter() != 0)
+					score = (centroid.distanceFrom(data))/centroid.getAvgDistanceFromCenter();
+				else score = distanceFrom;
+			} 
 			return score;
 		}
 		

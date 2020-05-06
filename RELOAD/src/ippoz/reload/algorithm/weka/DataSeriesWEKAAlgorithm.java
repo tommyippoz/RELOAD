@@ -4,14 +4,9 @@
 package ippoz.reload.algorithm.weka;
 
 import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.externalutils.WEKAUtils;
 
@@ -20,6 +15,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
+import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -41,7 +37,7 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @param outliersInTraining the flag for faulty items in training
 	 * @param needNormalization the flag that defines need for normalization
 	 */
-	public DataSeriesWEKAAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
+	public DataSeriesWEKAAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 		this.outliersInTraining = outliersInTraining;
 	}
@@ -50,12 +46,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		Instances db = translateKnowledge(kList);
 		if(db != null) {
-			boolean trainFlag = automaticWEKATraining(db, createOutput);
-			
-			return trainFlag;
+			return automaticWEKATraining(db);
 		} else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
 			return false;
@@ -82,19 +76,19 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @param snap the snapshot
 	 * @return the instance
 	 */
-	protected Instance snapshotToInstance(Snapshot snap){
+	protected Instance snapshotToInstance(double[] snapValues){
 		String st = "";
 		Instances iList;
 		try {
 			if(getDataSeries().size() == 1){
 				if(needNormalization)
-					st = st + (((DataSeriesSnapshot)snap).getSnapValue().getFirst() - minmax[0][0])/(minmax[0][1] - minmax[0][0]) + ",";
-				else st = st + ((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",";
+					st = st + (snapValues[0] - minmax[0][0])/(minmax[0][1] - minmax[0][0]) + ",";
+				else st = st + snapValues[0] + ",";
 			} else {
 				for(int j=0;j<getDataSeries().size();j++){
 					if(needNormalization)
-						st = st + (((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]) + ",";
-					else st = st + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",";						
+						st = st + (snapValues[j] - minmax[j][0])/(minmax[j][1] - minmax[j][0]) + ",";
+					else st = st + snapValues[j] + ",";						
 				}
 			}
 			st = WEKAUtils.getStreamHeader(getDataSeries(), true) + st + "no";
@@ -113,26 +107,28 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * ABstract method for Automatic WEKA training.
 	 *
 	 * @param db the instances object resembling the DataBase
-	 * @param createOutput the create output flag
 	 * @return true, if training is successful
 	 */
-	protected abstract boolean automaticWEKATraining(Instances db, boolean createOutput);
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)
-	 */
-	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		return evaluateWEKASnapshot(sysSnapshot);
-	}
+	protected abstract boolean automaticWEKATraining(Instances db);
 	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		try {
+			return calculateWEKAScore(snapArray);
+		} catch (Exception e) {
+			AppLogger.logException(getClass(), e, "Unabl to calculate WEKA score for " + snapArray);
+			return new Pair<Double, Object>(Double.NaN, null);
+		}
+	}
+
 	/**
 	 * Evaluates a WEKA snapshot.
 	 *
 	 * @param sysSnapshot the sys snapshot
 	 * @return the algorithm result
+	 * @throws Exception 
 	 */
-	protected abstract AlgorithmResult evaluateWEKASnapshot(Snapshot sysSnapshot);
+	protected abstract Pair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception;
 	
 	/**
 	 * Gets the filename used to store data about scores and histograms.
@@ -140,7 +136,10 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @return the filename
 	 */
 	protected String getFilename(){
-		return getDefaultTmpFolder() + File.separatorChar + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getAlgorithmType().toString().toLowerCase();
+		String folder = getDefaultTmpFolder() + File.separatorChar;
+		if(!new File(folder).exists())
+			new File(folder).mkdirs();
+		return folder + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
 	}
 	
 	/**
@@ -149,9 +148,9 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @return the default temporary folder
 	 */
 	protected String getDefaultTmpFolder(){
-		if(conf.hasItem(AlgorithmConfiguration.DATASET_NAME) && conf.getItem(AlgorithmConfiguration.DATASET_NAME).length() > 0)
-			return "tmp" + File.separatorChar + conf.getItem(AlgorithmConfiguration.DATASET_NAME) + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
-		else return "tmp" + File.separatorChar + getAlgorithmType().toString().toLowerCase() + "_tmp_RELOAD";
+		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0)
+			return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString();
+		else return "tmp" + File.separatorChar + getLearnerType().toString();
 	}
 
 }

@@ -3,12 +3,10 @@
  */
 package ippoz.reload.algorithm;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -28,7 +26,7 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesSlidi
 	
 	protected double[][] minmax;
 	
-	public DataSeriesExternalSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean needNormalization) {
+	public DataSeriesExternalSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean needNormalization) {
 		super(dataSeries, conf);
 		this.needNormalization = needNormalization;
 		if(conf.hasItem(MINMAX))
@@ -137,6 +135,4 @@ public abstract class DataSeriesExternalSlidingAlgorithm extends DataSeriesSlidi
 		return mm.substring(0, mm.length()-1);
 	}
 	
-	protected abstract AlgorithmResult evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
-
 }

@@ -21,10 +21,11 @@ import java.util.Map;
 public class DataSeriesSnapshot extends Snapshot {
 
 	private DataSeries dataSeries;
+	
 	private SnapshotValue snapValue;
 	
-	public DataSeriesSnapshot(Observation obs, List<ServiceCall> list, InjectedElement injEl, DataSeries dataSeries) {
-		super(obs.getTimestamp(), list, injEl);
+	public DataSeriesSnapshot(Observation obs, InjectedElement injEl, DataSeries dataSeries) {
+		super(obs.getTimestamp(), injEl);
 		this.dataSeries = dataSeries;
 		if(dataSeries != null)
 			snapValue = dataSeries.getSeriesValue(obs);

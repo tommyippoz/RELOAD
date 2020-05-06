@@ -7,9 +7,9 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,90 @@ public abstract class Metric implements Comparable<Metric> {
 	public Metric(MetricType mType) {
 		this.mType = mType;
 	}
+	
+	/**
+	 * Gets the metric.
+	 *
+	 * @param metricType the metric tag
+	 * @return the obtained metric
+	 */
+	public static Metric fromString(String metricType, String mType, boolean validAfter){
+		String param = null;
+		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
+		if(metricType.contains("(")){
+			param = metricType.substring(metricType.indexOf('(')+1, metricType.indexOf(')'));
+			metricType = metricType.substring(0, metricType.indexOf('('));
+		}
+		switch(metricType.toUpperCase()){
+			case "TP":
+			case "TRUEPOSITIVE":
+				return new TP_Metric(absolute, validAfter);
+			case "TN":
+			case "TRUENEGATIVE":
+				return new TN_Metric(absolute, validAfter);
+			case "FN":
+			case "FALSENEGATIVE":
+				return new FN_Metric(absolute, validAfter);
+			case "FP":
+			case "FALSEPOSITIVE":
+				return new FP_Metric(absolute, validAfter);
+			case "PRECISION":
+				return new Precision_Metric(validAfter);
+			case "RECALL":
+				return new Recall_Metric(validAfter);
+			case "F-MEASURE":
+			case "FMEASURE":
+				return new FMeasure_Metric(validAfter);
+			case "G-MEAN":
+			case "GMEAN":
+			case "GMEANS":
+				return new GMean_Metric(validAfter);
+			case "F-SCORE":
+			case "FSCORE":
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new FScore_Metric(Double.valueOf(param), validAfter);
+				else return new FMeasure_Metric(validAfter);
+			case "FPR":
+				return new FalsePositiveRate_Metric(validAfter);
+			case "MCC":
+			case "MATTHEWS":
+				return new Matthews_Coefficient(validAfter);
+			case "AUC":
+				return new AUC_Metric(validAfter);
+			case "ACCURACY":
+				return new Accuracy_Metric(validAfter);
+			case "SSCORE":
+			case "SAFESCORE":
+			case "SAFE_SCORE":
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new SafeScore_Metric(Double.valueOf(param), validAfter);
+				else return new SafeScore_Metric(2.0, validAfter);
+			case "CUSTOM":
+				return new Custom_Metric(validAfter);
+			case "OVERLAP":
+				return new Overlap_Metric(validAfter);
+			case "OVERLAPD":
+			case "OVERLAPDETAIL":
+			case "OVERLAP_DETAIL":
+			case "NOPREDICTION":
+				return new NoPredictionArea_Metric(validAfter);
+			case "THRESHOLD":
+			case "THRESHOLDS":
+			case "THRESHOLDS_AMOUNT":
+				return new ThresholdAmount_Metric(validAfter);
+			case "CONFIDENCE_ERROR":
+			case "CONFERROR":
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new ConfidenceErrorMetric(validAfter, Double.valueOf(param));
+				else return new ConfidenceErrorMetric(validAfter, 1.0);
+			default:
+				AppLogger.logError(Metric.class, "MissingPreferenceError", "Metric '" + mType + "'cannot be defined");
+				return null;
+		}
+	}
 
+	
+	
 	/**
 	 * Evaluates the experiment using the chosen metric.
 	 *
@@ -39,7 +122,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 * @return the anomaly evaluation [metric score, avg algorithm score, std
 	 *         algorithm score]
 	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know, ScoresVoter voter) {
+	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know) {
 		double average = 0;
 		double std = 0;
 		double snapValue;
@@ -86,7 +169,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations);
+	public abstract double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations);
 
 	/**
 	 * Compares metric results.
@@ -113,7 +196,7 @@ public abstract class Metric implements Comparable<Metric> {
 	/**
 	 * Gets the metric name.
 	 *
-	 * @return the metric name
+	 * @return the metric name 
 	 */
 	public abstract String getMetricName();
 

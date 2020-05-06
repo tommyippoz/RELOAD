@@ -3,11 +3,10 @@
  */
 package ippoz.reload.algorithm.elki.sliding;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm;
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
 import ippoz.reload.algorithm.elki.support.CustomKNN;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -16,6 +15,7 @@ import ippoz.reload.commons.support.AppUtility;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -39,7 +39,7 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public KNNSlidingELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public KNNSlidingELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false);
 	}
 	
@@ -55,13 +55,8 @@ public class KNNSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm#evaluateSlidingELKISnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, de.lmu.ifi.dbs.elki.database.Database, de.lmu.ifi.dbs.elki.math.linearalgebra.Vector)
 	 */
 	@Override
-	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
-		AlgorithmResult ar;
-		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			ar = new AlgorithmResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), ((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+	protected Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		return new Pair<Double, Object>(((CustomKNN) getAlgorithm()).calculateKNN(newInstance, windowDb), null);
 	}
 	
 	/**

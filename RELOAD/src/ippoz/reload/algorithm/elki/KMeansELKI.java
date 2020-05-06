@@ -3,17 +3,15 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomKMeans;
 import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.result.KMeansResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
@@ -39,7 +37,7 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public KMeansELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public KMeansELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 
@@ -63,28 +61,19 @@ public class KMeansELKI extends DataSeriesELKIAlgorithm {
 	    		null);
 	}
 	
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-			ar = new KMeansResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), of);
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
-	}
-	
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		//defPar.put("threshold", new String[]{"CLUSTER(STD)", "CLUSTER(0.1STD)", "CLUSTER(0.5STD)", "CLUSTER(VAR)"});
-		defPar.put("k", new String[]{"2", "5", "10"});
+		defPar.put("k", new String[]{"2", "5", "10", "20", "50"});
 		return defPar;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
+		return new Pair<Double, Object>(of.getDistance(), of.getCluster());
 	}
 	
 }

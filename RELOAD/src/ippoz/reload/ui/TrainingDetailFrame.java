@@ -3,8 +3,7 @@
  */
 package ippoz.reload.ui;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.output.DetectorOutput;
@@ -47,7 +46,7 @@ public class TrainingDetailFrame {
 
 	public TrainingDetailFrame(DetectorOutput dOut) {
 		this.dOut = dOut;
-		voterList = dOut.getVoters();
+		voterList = dOut.getTrainingModels();
 
 		buildFrame();
 
@@ -72,10 +71,10 @@ public class TrainingDetailFrame {
 		tdFrame = new JFrame();
 		tdFrame.setTitle("Train Detail for '" + dOut.getDataset() + "'");
 		if (screenSize.getWidth() > 1000)
-			tdFrame.setBounds(0, 0, (int) (screenSize.getWidth() * 0.5),
-					(int) (screenSize.getHeight() * 0.6));
+			tdFrame.setBounds(0, 0, (int) (screenSize.getWidth() * 0.7),
+					(int) (screenSize.getHeight() * 0.5));
 		else
-			tdFrame.setBounds(0, 0, 400, 450);
+			tdFrame.setBounds(0, 0, 600, 450);
 		tdFrame.setBackground(Color.WHITE);
 		tdFrame.setResizable(false);
 	}
@@ -91,7 +90,7 @@ public class TrainingDetailFrame {
 
 		JPanel outPanel = new JPanel();
 		outPanel.setBackground(Color.WHITE);
-		outPanel.setBorder(new EmptyBorder(5, tdFrame.getWidth()/10, 5, tdFrame.getWidth()/10));
+		outPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
 		
 		JPanel fPanel = new JPanel();
 		fPanel.setBackground(Color.WHITE);
@@ -108,7 +107,7 @@ public class TrainingDetailFrame {
 		lbl.setBorder(new EmptyBorder(0, tdFrame.getWidth()/10, 0, tdFrame.getWidth()/10));
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Algorithm(s): " + dOut.getAlgorithm().substring(1, dOut.getAlgorithm().length()-1));
+		lbl = new JLabel("Algorithm(s): " + dOut.getAlgorithm());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
@@ -132,6 +131,7 @@ public class TrainingDetailFrame {
 		JTable table = new JTable(new MyTableModel());
 		table.setFillsViewportHeight(true);
 		table.setAutoCreateRowSorter(true);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -203,11 +203,7 @@ public class TrainingDetailFrame {
 				case 4:
 					return String.valueOf(av.getAlgorithmType());
 				case 5:
-					try {
-						return DetectionAlgorithm.buildAlgorithm(av.getAlgorithmType(), av.getDataSeries(), av.getAlgorithmConfiguration()).getDecisionFunction().getClassifierTag();
-					} catch(Exception ex){
-						return av.getAlgorithmConfiguration().getItem(AlgorithmConfiguration.THRESHOLD);
-					}
+					return av.getAlgorithmConfiguration().getItem(BasicConfiguration.THRESHOLD);
 			}
 			return null;
 		}

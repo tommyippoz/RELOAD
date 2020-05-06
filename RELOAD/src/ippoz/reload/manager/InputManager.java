@@ -4,8 +4,12 @@
 package ippoz.reload.manager;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.configuration.MetaConfiguration;
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
+import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.IndicatorDataSeries;
@@ -15,6 +19,11 @@ import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.ARFFLoader;
+import ippoz.reload.commons.loader.CSVLoader;
+import ippoz.reload.commons.loader.FileLoader;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -23,42 +32,22 @@ import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
-import ippoz.reload.loader.ARFFLoader;
-import ippoz.reload.loader.CSVCompleteLoader;
-import ippoz.reload.loader.Loader;
-import ippoz.reload.loader.LoaderType;
+import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.loader.MySQLLoader;
-import ippoz.reload.metric.AUC_Metric;
-import ippoz.reload.metric.Accuracy_Metric;
-import ippoz.reload.metric.Custom_Metric;
-import ippoz.reload.metric.FMeasure_Metric;
-import ippoz.reload.metric.FN_Metric;
-import ippoz.reload.metric.FP_Metric;
-import ippoz.reload.metric.FScore_Metric;
-import ippoz.reload.metric.FalsePositiveRate_Metric;
-import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
-import ippoz.reload.metric.NoPredictionArea_Metric;
-import ippoz.reload.metric.Overlap_Metric;
-import ippoz.reload.metric.Precision_Metric;
-import ippoz.reload.metric.Recall_Metric;
-import ippoz.reload.metric.SafeScore_Metric;
-import ippoz.reload.metric.TN_Metric;
-import ippoz.reload.metric.TP_Metric;
-import ippoz.reload.metric.ThresholdAmount_Metric;
-import ippoz.reload.reputation.BetaReputation;
-import ippoz.reload.reputation.ConstantReputation;
-import ippoz.reload.reputation.MetricReputation;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -150,10 +139,12 @@ public class InputManager {
 	public static final String SLIDING_POLICY = "SLIDING_WINDOW_POLICY";
 	
 	public static final String SLIDING_WINDOW_SIZE = "SLIDING_WINDOW_SIZE";
-
-	public static final String OPTIMIZATION_NEEDED_FLAG = "OPTIMIZATION_FLAG";
 	
 	public static final String EVALUATION_NEEDED_FLAG = "EVALUATION_FLAG";
+	
+	public static final String FORCE_TRAINING_BASELEARNERS = "FORCE_TRAINING_BASELEARNERS";
+	
+	public static final String FORCE_TRAINING = "FORCE_TRAINING";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -177,9 +168,9 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue, boolean updateFile){
-		if(tag != null && prefManager.hasPreference(tag)){
-			prefManager.updatePreference(tag, newValue, updateFile);
+	public boolean updatePreference(String tag, String newValue,boolean createNew,  boolean updateFile){
+		if(tag != null && (createNew || prefManager.hasPreference(tag))){
+			prefManager.updatePreference(tag, newValue, createNew, updateFile);
 			return true;
 		} else return false;
 	}
@@ -261,7 +252,8 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						metricList.add(getMetric(readed.trim()));
+						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim(), 
+								prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true));
 					}
 				}
 			}
@@ -311,9 +303,8 @@ public class InputManager {
 		if(prefManager.hasPreference(DATASETS_FOLDER))
 			return checkFolder(prefManager.getPreference(DATASETS_FOLDER));
 		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					DATASETS_FOLDER + " not found. Using default value of ' datasets'");
-			return checkFolder("datasets", true);
+			//AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + DATASETS_FOLDER + " not found. Using default value of ''");
+			return ""; //checkFolder(new File("").getAbsoluteFile().getPath(), true);
 		}
 	}
 	
@@ -337,105 +328,8 @@ public class InputManager {
 		}
 	}
 	
-	/**
-	 * Gets the reputation.
-	 *
-	 * @param metric the chosen metric
-	 * @return the obtained reputation
-	 */
-	public Reputation getReputation(Metric metric) {
-		String reputationType = prefManager.getPreference(REPUTATION_TYPE);
-		boolean validAfter = Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION));
-		switch(reputationType.toUpperCase()){
-			case "BETA":
-				return new BetaReputation(reputationType, validAfter);
-			case "METRIC":
-				return new MetricReputation(reputationType, metric);
-			default:
-				if(AppUtility.isNumber(reputationType))
-					return new ConstantReputation(reputationType, Double.parseDouble(reputationType));
-				else {
-					AppLogger.logError(getClass(), "MissingPreferenceError", "Reputation cannot be defined");
-					return null;
-				}
-		}
-	}
-	
 	public MetricType getMetricType() {
-		return getMetric(prefManager.getPreference(METRIC)).getMetricType();
-	}
-	
-	/**
-	 * Gets the metric.
-	 *
-	 * @param metricType the metric tag
-	 * @return the obtained metric
-	 */
-	public Metric getMetric(String metricType){
-		String param = null;
-		String mType = prefManager.getPreference(METRIC_TYPE);
-		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
-		boolean validAfter = prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true;
-		if(metricType.contains("(")){
-			param = metricType.substring(metricType.indexOf('(')+1, metricType.indexOf(')'));
-			metricType = metricType.substring(0, metricType.indexOf('('));
-		}
-		switch(metricType.toUpperCase()){
-			case "TP":
-			case "TRUEPOSITIVE":
-				return new TP_Metric(absolute, validAfter);
-			case "TN":
-			case "TRUENEGATIVE":
-				return new TN_Metric(absolute, validAfter);
-			case "FN":
-			case "FALSENEGATIVE":
-				return new FN_Metric(absolute, validAfter);
-			case "FP":
-			case "FALSEPOSITIVE":
-				return new FP_Metric(absolute, validAfter);
-			case "PRECISION":
-				return new Precision_Metric(validAfter);
-			case "RECALL":
-				return new Recall_Metric(validAfter);
-			case "F-MEASURE":
-			case "FMEASURE":
-				return new FMeasure_Metric(validAfter);
-			case "F-SCORE":
-			case "FSCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new FScore_Metric(Double.valueOf(param), validAfter);
-				else return new FMeasure_Metric(validAfter);
-			case "FPR":
-				return new FalsePositiveRate_Metric(validAfter);
-			case "MCC":
-			case "MATTHEWS":
-				return new Matthews_Coefficient(validAfter);
-			case "AUC":
-				return new AUC_Metric(validAfter);
-			case "ACCURACY":
-				return new Accuracy_Metric(validAfter);
-			case "SAFESCORE":
-			case "SAFE_SCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new SafeScore_Metric(Double.valueOf(param), validAfter);
-				else return new SafeScore_Metric(2.0, validAfter);
-			case "CUSTOM":
-				return new Custom_Metric(validAfter);
-			case "OVERLAP":
-				return new Overlap_Metric(validAfter);
-			case "OVERLAPD":
-			case "OVERLAPDETAIL":
-			case "OVERLAP_DETAIL":
-			case "NOPREDICTION":
-				return new NoPredictionArea_Metric(validAfter);
-			case "THRESHOLD":
-			case "THRESHOLDS":
-			case "THRESHOLDS_AMOUNT":
-				return new ThresholdAmount_Metric(validAfter);
-			default:
-				AppLogger.logError(getClass(), "MissingPreferenceError", "Metric cannot be defined");
-				return null;
-		}
+		return getTargetMetric().getMetricType();
 	}
 
 	/**
@@ -444,7 +338,8 @@ public class InputManager {
 	 * @return the metric
 	 */
 	public Metric getTargetMetric() {
-		return getMetric(prefManager.getPreference(METRIC));
+		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim(), 
+				prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true);
 	}
 
 	public String getConfigurationFolder() {
@@ -484,37 +379,6 @@ public class InputManager {
 		return "";
 	}
 	
-	public List<ScoresVoter> getScoresVoters() {
-		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
-		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
-		BufferedReader reader;
-		String readed;
-		try {
-			if(voterFile.exists()){
-				reader = new BufferedReader(new FileReader(voterFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							ScoresVoter voter = ScoresVoter.generateVoter(readed.split(",")[0], readed.split(",")[1]);
-							if(voter != null)
-								voterList.add(voter);
-						}
-					}
-				}
-				reader.close();
-			} else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						voterFile.getPath() + " not found. Using default value of 'BEST 1 - 1'");
-				voterList.add(ScoresVoter.generateVoter("BEST  1", "1"));
-			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read data types");
-		}
-		return voterList;
-	}
-	
 	/**
 	 * Gets the data types.
 	 *
@@ -549,10 +413,8 @@ public class InputManager {
 		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfiguration(AlgorithmType at, Integer windowSize, SlidingPolicy sPolicy) {
-		List<AlgorithmType> list = new LinkedList<AlgorithmType>();
-		list.add(at);
-		return loadConfigurations(list, windowSize, sPolicy, false);
+	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
+		return loadConfigurations(at, datasetName, windowSize, sPolicy, true);
 	}
 
 	/**
@@ -562,16 +424,12 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public Map<AlgorithmType, List<AlgorithmConfiguration>> loadConfigurations(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
-		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
-		if(createMissing && algTypes != null && algTypes.size() != confList.size()){
-			for(AlgorithmType alg : algTypes){
-				if(!confList.containsKey(alg)){
-					AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
-					generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, new AlgorithmConfiguration(alg)).getDefaultParameterValues());
-				}
-			}
-			confList = readConfigurationsFile(algTypes, windowSize, sPolicy);
+	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
+		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
+		if(confList == null && createMissing && alg != null && alg instanceof BaseLearner){
+			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
+			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
+			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
 		}
 		return confList;
 	}
@@ -608,7 +466,7 @@ public class InputManager {
 			generateCombinations(confMap, keyIndex, keyList, combinations);
 	}
 	
-	private void generateConfigurationsFile(AlgorithmType alg, Map<String, String[]> confMap) {
+	private void generateConfigurationsFile(LearnerType alg, Map<String, String[]> confMap) {
 		File confFile;
 		BufferedWriter writer = null;
 		List<String> keyList = null;
@@ -641,22 +499,31 @@ public class InputManager {
 		}
 	}
 
-	private Map<AlgorithmType, List<AlgorithmConfiguration>> readConfigurationsFile(List<AlgorithmType> algTypes, Integer windowSize, SlidingPolicy sPolicy) {
+	private List<BasicConfiguration> readConfigurationsFile(LearnerType mainLearner, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
 		File confFolder = new File(getConfigurationFolder());
-		Map<AlgorithmType, List<AlgorithmConfiguration>> confList = new HashMap<AlgorithmType, List<AlgorithmConfiguration>>();
-		AlgorithmConfiguration alConf;
-		AlgorithmType algType;
-		BufferedReader reader = null;
+		List<BasicConfiguration> confList = new LinkedList<>();
+		LearnerType fileLearner;
 		String[] header = null;
 		String readed;
-		int i;
-		try {
+		MetaConfiguration mConf = null;
+		if(mainLearner instanceof MetaLearner){
+			mConf = new MetaConfiguration(mainLearner);
+			mConf.addItem(BasicConfiguration.SCORES_FOLDER, getScoresFolder());
+			mConf.addItem(BasicConfiguration.FORCE_META_TRAINING, String.valueOf(getForceBaseLearnersFlag()));
+			mConf.addItem(BasicConfiguration.K_FOLD, getKFoldCounter());
+			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getMetricName());
+			mConf.addItem(BasicConfiguration.REPUTATION, getReputation(getTargetMetric()).toString());
+			mConf.addItem(BasicConfiguration.DATASET_NAME, datasetName);
+			
+		}
+		if(confFolder != null && confFolder.exists() && confFolder.isDirectory()){
 			for(File confFile : confFolder.listFiles()){
 				if(confFile.exists() && confFile.getName().endsWith(".conf")){
 					try {
-						algType = AlgorithmType.valueOf(confFile.getName().substring(0,  confFile.getName().indexOf(".")));
-						if(algType != null && algTypes.contains(algType)) {
-							reader = new BufferedReader(new FileReader(confFile));
+						fileLearner = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
+						if(fileLearner != null && (mainLearner.compareTo(fileLearner) == 0 
+								|| (mConf != null && ((MetaLearner)mainLearner).hasLearner(fileLearner)))) {
+							BufferedReader reader = new BufferedReader(new FileReader(confFile));
 							// Eats the header
 							while(reader.ready()){
 								readed = reader.readLine();
@@ -665,47 +532,47 @@ public class InputManager {
 									break;
 								}
 							}
+							List<BasicConfiguration> partialList = new LinkedList<>();
 							while(reader.ready()){
 								readed = reader.readLine();
 								if(readed != null){
 									readed = readed.trim();
 									if(readed.length() > 0 && !readed.startsWith("*")){
-										i = 0;
-										alConf = AlgorithmConfiguration.getConfiguration(algType, null);
+										int i = 0;
+										BasicConfiguration alConf = BasicConfiguration.buildConfiguration(fileLearner);
 										for(String element : readed.split(",")){
 											alConf.addItem(header[i++], element);
 										}
-										if(DetectionAlgorithm.isSliding(algType)){
-											alConf.addItem(AlgorithmConfiguration.SLIDING_WINDOW_SIZE, windowSize);
-											alConf.addItem(AlgorithmConfiguration.SLIDING_POLICY, sPolicy.toString());
+										if(DetectionAlgorithm.isSliding(fileLearner)){
+											alConf.addItem(BasicConfiguration.SLIDING_WINDOW_SIZE, windowSize);
+											alConf.addItem(BasicConfiguration.SLIDING_POLICY, sPolicy.toString());
 										}
-										if(confList.get(algType) == null)
-											confList.put(algType, new LinkedList<AlgorithmConfiguration>());
-										confList.get(algType).add(alConf);
+										partialList.add(alConf);
 									}
 								}
 							}
-							AppLogger.logInfo(getClass(), "Found " + confList.get(algType).size() + " configuration for " + algType + " algorithm");
+							reader.close();
+							AppLogger.logInfo(getClass(), "Found " + partialList.size() + " configuration for " + fileLearner + " algorithm");
+							if(mConf == null){
+								confList = partialList;
+								break;
+							} else {
+								mConf.addConfiguration(fileLearner, partialList);
+							}
 						}
 					} catch(Exception ex){
 						AppLogger.logWarning(getClass(), "ConfigurationError", "File " + confFile.getPath() + " cannot be associated to any known algorithm");
 					}
 				} 
 			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read configurations");
-		} finally {
-			try {
-				if(reader != null)
-					reader.close();
-			} catch (IOException ex) {
-				AppLogger.logException(getClass(), ex, "Unable to read configurations");
+			if(mConf != null){
+				confList.add(mConf);
 			}
-		}
+		} else AppLogger.logError(getClass(), "FolderNotFoundError", "Folder '" + confFolder + "' not valid");
 		return confList;
 	}
 	
-	public void updateConfiguration(AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+	public void updateConfiguration(LearnerType algType, List<BasicConfiguration> confList) {
 		BufferedWriter writer = null;
 		File outFile = new File(getConfigurationFolder() + algType.toString() + ".conf");
 		try {
@@ -716,7 +583,7 @@ public class InputManager {
 					writer.write(tag + ",");
 				}
 				writer.write("\n");
-				for(AlgorithmConfiguration conf : confList){
+				for(BasicConfiguration conf : confList){
 					for(String tag : confList.get(0).listLabels()){
 						writer.write(conf.getItem(tag) + ",");
 					}
@@ -755,16 +622,6 @@ public class InputManager {
 		}
 	}
 	
-	public boolean getOptimizationFlag() {
-		if(prefManager.hasPreference(OPTIMIZATION_NEEDED_FLAG))
-			return !prefManager.getPreference(OPTIMIZATION_NEEDED_FLAG).equals("0");
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					OPTIMIZATION_NEEDED_FLAG + " not found. Using default value of '1'");
-			return true;
-		}
-	}
-	
 	public boolean getEvaluationFlag() {
 		if(prefManager.hasPreference(EVALUATION_NEEDED_FLAG))
 			return !prefManager.getPreference(EVALUATION_NEEDED_FLAG).equals("0");
@@ -787,7 +644,7 @@ public class InputManager {
 
 	public boolean getOutputVisibility() {
 		if(prefManager.hasPreference(OUTPUT_FORMAT))
-			return !prefManager.getPreference(OUTPUT_FORMAT).equals("null");
+			return !prefManager.getPreference(OUTPUT_FORMAT).equals("basic");
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					OUTPUT_FORMAT + " not found. Using default value of 'not visible'");
@@ -807,7 +664,7 @@ public class InputManager {
 	
 	public String getScoresFile(String prequel){
 		if(prefManager.hasPreference(SCORES_FILE_FOLDER) && prefManager.hasPreference(SCORES_FILE))
-			return getScoresFolder() + (prequel != null ? prequel + "_" : "") + prefManager.getPreference(SCORES_FILE);
+			return getScoresFolder() + (prequel != null ? prequel + File.separatorChar : "") + prefManager.getPreference(SCORES_FILE);
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					SCORES_FILE + " not found. Using default value of '" + getScoresFolder() + "scores.csv'");
@@ -851,58 +708,58 @@ public class InputManager {
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("\n\n* Data Source - Loaders.\n" + 
-						"LOADER_FOLDER = input" + File.separatorChar + "loaders\n");
+						LOADER_FOLDER + " = input" + File.separatorChar + "loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
-						"LOADERS = iscx\n");
+						LOADERS + " = iscx\n");
 				writer.write("\n* Datasets folder.\n" +
-						"DATASETS_FOLDER = datasets\n");
+						DATASETS_FOLDER + " = \n");
 				writer.write("\n* RELOAD Execution.\n\n");
 				writer.write("\n* Perform Feature Selection (0 = NO, 1 = YES).\n" + 
-						"FEATURE_SELECTION_FLAG = 1\n");
+						FILTERING_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* Perform Training (0 = NO, 1 = YES).\n" + 
-						"TRAIN_FLAG = 1\n");
-				writer.write("\n* Perform Optimization (0 = NO, 1 = YES).\n" + 
-						"OPTIMIZATION_FLAG = 1\n");
+						TRAIN_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* Perform Evaluation (0 = NO, 1 = YES).\n" + 
-						"EVALUATION_FLAG = 1\n");
+						EVALUATION_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* K for the K-Fold Evaluation (Default is 2).\n" + 
-						"KFOLD_COUNTER = 2\n");
+						KFOLD_COUNTER + " = 2\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
-						"METRIC = MATTHEWS\n");
+						METRIC + " = FMEASURE\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
-						"METRIC_TYPE = absolute\n");
+						METRIC_TYPE + " = relative\n");
 				writer.write("\n* Expected duration of injected faults (observations).\n" + 
-						"ANOMALY_WINDOW = 0\n");
-				writer.write("\n* Sliding window policy.\n" + 
-						"SLIDING_WINDOW_POLICY = FIFO\n");
+						ANOMALY_WINDOW + " = 0\n");
 				writer.write("\n* Flag which indicates if we expect more than one fault for each run\n" + 
-						"VALID_AFTER_INJECTION = true\n");
+						VALID_AFTER_INJECTION + " = true\n");
 				writer.write("\n* Reputation Score. Accepted values are 'double value', BETA, FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS\n" + 
-						"REPUTATION = 1.0\n");
+						REPUTATION_TYPE + " = 1.0\n");
 				writer.write("\n* Strategy to aggregate indicators. Suggested is PEARSON(n), where 'n' is the minimum value of correlation that is accepted\n" + 
-						"INDICATOR_SELECTION = PEARSON(0.90)\n");
+						INDICATOR_SELECTION + " = UNION\n");
 				writer.write("\n* Strategy to slide windows. Accepted Values are FIFO, \n" + 
-						"SLIDING_POLICY = FIFO\n");
+						SLIDING_POLICY + " = FIFO\n");
 				writer.write("\n* Size of the sliding window buffer\n" + 
-						"SLIDING_WINDOW_SIZE = 20\n");
-				writer.write("\n* Type of output produced by RELOAD. Accepted values are null, IMAGE, TEXT\n" + 
-						"OUTPUT_TYPE = null\n");
+						SLIDING_WINDOW_SIZE + " = 20\n");
+				writer.write("\n* Type of output produced by RELOAD. Accepted values are ui, basic, IMAGE, TEXT\n" + 
+						OUTPUT_FORMAT + " = ui\n");
 				writer.write("\n* Path Setup.\n\n");
 				writer.write("\n* Input folder\n" + 
-						"INPUT_FOLDER = input\n");
+						INPUT_FOLDER + " = input\n");
 				writer.write("\n* Output folder\n" + 
-						"OUTPUT_FOLDER = output\n");
+						OUTPUT_FOLDER + " = output\n");
 				writer.write("\n* Configuration folder\n" + 
-						"CONF_FILE_FOLDER = configurations\n");
+						CONF_FILE_FOLDER + " = configurations\n");
 				writer.write("\n* Setup folder\n" + 
-						"SETUP_FILE_FOLDER = setup\n");
+						SETUP_FILE_FOLDER + " = setup\n");
 				writer.write("\n* Setup folder\n" + 
-						"SCORES_FILE_FOLDER = intermediate\n");
+						SCORES_FILE_FOLDER + " = intermediate\n");
 				writer.write("\n* Scores file\n" + 
-						"SCORES_FILE = scores.csv");
+						SCORES_FILE + " = scores.csv");
 				writer.write("\n\n* Other Preference Files.\n");
 				writer.write("\n* Detection Preferences\n" + 
-						"DETECTION_PREFERENCES_FILE = scoringPreferences.preferences\n");						
+						DETECTION_PREFERENCES_FILE + " = scoringPreferences.preferences\n");	
+				writer.write("\n* Meta-Training Preferences for base-learners\n" + 
+						FORCE_TRAINING_BASELEARNERS + " = 0\n");	
+				writer.write("\n* Training Preferences for base-learners\n" + 
+						FORCE_TRAINING + " = 0\n");	
 			}
 			new File("input").mkdir();
 			new File("input" + File.separatorChar + "setup").mkdir();
@@ -927,8 +784,8 @@ public class InputManager {
 				writer = new BufferedWriter(new FileWriter(prefFile));
 				writer.write("* Default scoring preferences file for 'RELOAD'. Comments with '*'.\n");
 				writer.write("\nchecker_selection,voting_strategy");
-				writer.write("BEST 1, 1");
-				writer.write("FILTERED 10, HALF");
+				writer.write("\nBEST 1, 1");
+				writer.write("\nFILTERED 10, HALF");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -950,7 +807,7 @@ public class InputManager {
 				writer.write("* Default feature selection preferences for 'RELOAD'. Comments with '*'.\n");
 				writer.write("* This file reports on the feature selection techniques to be applied. \n");
 				writer.write("\nfeature_selection_strategy,threshold,ranked_flag\n");
-				writer.write("\nVARIANCE,3.0,false\n");
+				writer.write("\n" + FeatureSelectorType.INFORMATION_GAIN + ",3.0,true\n");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD scoring preferences");
@@ -1066,15 +923,60 @@ public class InputManager {
 	}
 
 	public void removeDataset(String option) {
-		String a = option.split("-")[1].trim();
+		String a = option.split("@")[1].trim();
 		String b = a.split(" ")[0];
 		removeFromFile(new File(getSetupFolder() + "loaderPreferences.preferences"), b.trim(), true);
 	}	
 	
-	public void removeAlgorithm(String option) {
-		removeFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), option.split(" ")[0], false);
+	public void removeAlgorithm(LearnerType learnerType) {
+		if(learnerType != null)
+			removeAlgorithmFromFile(new File(getSetupFolder() + "algorithmPreferences.preferences"), learnerType, false);
 	}
 	
+	private void removeAlgorithmFromFile(File file, LearnerType learnerType, boolean b) {
+		// TODO Auto-generated method stub
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		boolean found = false;
+		List<String> fileLines = new LinkedList<String>();
+		try {
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						fileLines.add(readed);
+						if(readed.length() > 0 && !readed.trim().startsWith("*")){
+							try {
+								LearnerType rowLearner = LearnerType.fromString(readed.trim());
+								if(rowLearner != null && rowLearner.compareTo(learnerType) == 0){
+									readed = fileLines.remove(fileLines.size()-1);
+									readed = "* " + readed;
+									fileLines.add(readed);
+									found = true;
+								}
+							} catch(Exception ex){
+								AppLogger.logError(getClass(), "UnrecognizedAlgorithm", "Unable to parse algorithm '" + readed + "'");
+							}
+						}
+					}
+				}
+				reader.close();
+				if(found){
+					writer = new BufferedWriter(new FileWriter(file));
+					for(String st : fileLines){
+						writer.write(st + "\n");
+					}
+					writer.close();
+				}
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 	
+	}
+
 	private void removeFromFile(File file, String toRemove, boolean partialMatching){
 		BufferedReader reader = null;
 		BufferedWriter writer = null;
@@ -1090,7 +992,7 @@ public class InputManager {
 						readed = readed.trim();
 						fileLines.add(readed);
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							if(readed.equalsIgnoreCase(toRemove) || (partialMatching && readed.endsWith(toRemove))){
+							if(readed.equalsIgnoreCase(toRemove) || readed.replace(" ", "").equalsIgnoreCase(toRemove.replace(" ", "")) || (partialMatching && readed.endsWith(toRemove))){
 								readed = fileLines.remove(fileLines.size()-1);
 								readed = "* " + readed;
 								fileLines.add(readed);
@@ -1144,7 +1046,7 @@ public class InputManager {
 									fileLines.add(readed);
 									found = true;
 								}
-							} else if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/"))){
+							} else if(readed.equalsIgnoreCase(toAdd) || readed.equalsIgnoreCase(toAdd.replace("/", "\\")) || readed.equalsIgnoreCase(toAdd.replace("\\", "/")) || readed.equalsIgnoreCase(toAdd.replace(" ", ""))){
 								found = true;
 							}
 						}
@@ -1212,14 +1114,14 @@ public class InputManager {
 		return lList;	
 	}
 	
-	public Loader buildSingleLoader(PreferencesManager lPref, List<Integer> list, String loaderTag, int anomalyWindow){
+	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag, int anomalyWindow, String runIdsString){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
 		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(list, lPref, loaderTag, getConsideredLayers(), null);
+			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
 		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
-			return new CSVCompleteLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+			return new CSVLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
-			return new ARFFLoader(list, lPref, loaderTag, anomalyWindow, getDatasetsFolder());
+			return new ARFFLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;
@@ -1273,39 +1175,35 @@ public class InputManager {
 				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
 				
 				writer.write("\n\n* Loader type (CSV, ARFF).\n" + 
-						"LOADER_TYPE = " + loaderType + "\n");
-				writer.write("\n* * Investigated Data Layers (if any, NO_LAYER otherwise).\n" + 
-						"CONSIDERED_LAYERS = NO_LAYER\n");
+						Loader.LOADER_TYPE + " = " + loaderType + "\n");
 				
 				writer.write("\n* Data Partitioning.\n\n");
 				
 				writer.write("\n* File Used for Training\n" +
-						"TRAIN_FILE = \n");
+						FileLoader.TRAIN_FILE + " = \n");
 				writer.write("\n* Train Runs.\n" + 
-						"TRAIN_RUN_IDS = 1 - 10\n");
+						FileLoader.TRAIN_PARTITION + " = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
-						"TRAIN_FAULTY_TAGS = attack\n");
+						FileLoader.TRAIN_FAULTY_TAGS + " = attack\n");
 				writer.write("\n* Train Runs.\n" + 
-						"TRAIN_SKIP_ROWS = \n");
+						FileLoader.TRAIN_SKIP_ROWS + " = \n");
 				writer.write("\n* File Used for Validation\n" +
-						"VALIDATION_FILE = \n");
+						FileLoader.VALIDATION_FILE + " = \n");
 				writer.write("\n* Validation Runs.\n" + 
-						"VALIDATION_RUN_IDS = 1 - 10\n");
+						FileLoader.VALIDATION_PARTITION + " = 1 - 10\n");
 				writer.write("\n* Train Faulty Tags.\n" + 
-						"VALIDATION_FAULTY_TAGS = attack\n");
+						FileLoader.VALIDATION_FAULTY_TAGS + " = attack\n");
 				writer.write("\n* Train Runs.\n" + 
-						"VALIDATION_SKIP_ROWS = \n");
+						FileLoader.VALIDATION_SKIP_ROWS + " = \n");
 				
 				writer.write("\n* Parsing Dataset.\n\n");
 				
 				writer.write("\n* Features to Skip\n" + 
-						"SKIP_COLUMNS = 0\n");
+						FileLoader.SKIP_COLUMNS + " = 0\n");
 				writer.write("\n* Column Containing the 'Label' Feature\n" + 
-						"LABEL_COLUMN = 1\n");
+						FileLoader.LABEL_COLUMN + " = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
-						"EXPERIMENT_ROWS = 100\n");	
-				writer.write("\n* Label Defining Experiments.\n" + 
-						"EXPERIMENT_SPLIT_ROWS = 0\n");	
+						FileLoader.BATCH_COLUMN + " = 100\n");	
 				
 				writer.close();
 			}
@@ -1315,9 +1213,9 @@ public class InputManager {
 		return lFile;
 	}
 	
-	public static String[] getIndicatorSelectionPolicies(){
-		return new String[]{"NONE", "ALL", "UNION", "PEARSON", "SIMPLE"};
-	}
+	/*public static String[] getIndicatorSelectionPolicies(){
+		return new String[]{"NONE", "ALL", "UNION", "MULTIPLE_UNION", "PEARSON", "SIMPLE"};
+	}*/
 
 	public List<FeatureSelector> getFeatureSelectors() {
 		List<FeatureSelector> fsList = new LinkedList<FeatureSelector>();
@@ -1383,11 +1281,18 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public int countAvailableVoters(String scoresFileString) {
-		List<AlgorithmModel> vList = loadVoters(scoresFileString);
+	public int countAvailableModels(String scoresFileString) {
+		List<AlgorithmModel> vList = loadAlgorithmModels(scoresFileString);
 		if(vList != null)
 			return vList.size();
 		else return 0;
+	}
+	
+	public static AlgorithmModel loadAlgorithmModel(String scoresFileString) {
+		List<AlgorithmModel> list = loadAlgorithmModels(scoresFileString);
+		if(list != null && list.size() > 0)
+			return list.get(0);
+		else return null;
 	}
 	
 	/**
@@ -1396,52 +1301,18 @@ public class InputManager {
 	 *
 	 * @return the list of AlgorithmVoters resulting from the read scores
 	 */
-	public List<AlgorithmModel> loadVoters(String scoresFileString) {
-		String scoresFile = getScoresFile(scoresFileString);
-		File asFile = new File(scoresFile);
-		BufferedReader reader;
-		AlgorithmConfiguration conf;
-		String[] splitted;
-		LinkedList<AlgorithmModel> voterList = new LinkedList<AlgorithmModel>();
-		String readed;
-		String seriesString;
-		try {
-			if(asFile.exists()){
-				reader = new BufferedReader(new FileReader(asFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = AppUtility.splitAndPurify(readed, "§");
-							if(splitted.length > 4){
-								conf = AlgorithmConfiguration.buildConfiguration(AlgorithmType.valueOf(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
-								seriesString = splitted[0];
-								if(conf != null){
-									conf.addItem(AlgorithmConfiguration.WEIGHT, splitted[2]);
-									conf.addItem(AlgorithmConfiguration.AVG_SCORE, splitted[3]);
-									conf.addItem(AlgorithmConfiguration.STD_SCORE, splitted[4]);
-									conf.addItem(AlgorithmConfiguration.DATASET_NAME, splitted[5]);
-								}
-								voterList.add(new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getAlgorithmType(), DataSeries.fromString(seriesString, true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2])));
-							}
-						}
-					}
-				}
-				reader.close();
-			} else AppLogger.logError(getClass(), "FileNotFound", "Unable to find '" + scoresFile + "'");
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read scores");
-		}
-		return voterList;
+	public static List<AlgorithmModel> loadAlgorithmModels(String scoresFileString) {
+		if(new File(scoresFileString).isDirectory())
+			return AlgorithmModel.fromFile(scoresFileString + File.separatorChar + "scores.csv");
+		else return AlgorithmModel.fromFile(scoresFileString);
 	}
 
-	public String[] loadSelectedDataSeriesString(String filePrequel) {
+	public String[] loadSelectedDataSeriesString(String baseFolder, String filename) {
 		LinkedList<String> sSeries = new LinkedList<String>();
 		String readed;
 		BufferedReader reader = null;
-		File dsF = new File(getScoresFolder() + filePrequel + File.separatorChar + filePrequel + "_filtered.csv");
+		//File dsF = new File(getScoresFolder() + filePrequel + File.separatorChar + filePrequel + "_filtered.csv");
+		File dsF = new File(baseFolder + filename + "_filtered.csv");
 		try {
 			reader = new BufferedReader(new FileReader(dsF));
 			while((readed = reader.readLine()).trim().length() == 0 || readed.startsWith("*"));
@@ -1450,9 +1321,7 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						if(readed.contains(","))
-							sSeries.add(readed.trim().split(",")[0].trim());
-						else sSeries.add(readed.trim());
+						sSeries.add(readed.trim());
 					}
 				}
 			}
@@ -1463,20 +1332,21 @@ public class InputManager {
 		return sSeries.toArray(new String[sSeries.size()]);
 	}
 	
-	public List<DataSeries> getSelectedSeries(String filePrequel) {
-		String[] strings = loadSelectedDataSeriesString(filePrequel);
+	public List<DataSeries> getSelectedSeries(String baseFolder, String filename) {
+		String[] strings = loadSelectedDataSeriesString(baseFolder, filename);
 		if(strings != null && strings.length > 0){
 			return DataSeries.fromString(strings, false);
 		} else return new LinkedList<DataSeries>();
 	}
 	
-	public Map<DataSeries, Map<FeatureSelectorType, Double>> extractSelectedFeatures(String filePrequel, String datasetName) {
+	public Map<DataSeries, Map<FeatureSelectorType, Double>> extractSelectedFeatures(String baseFolder, String filename, String datasetName) {
 		BufferedReader reader;
 		String readed;
 		String[] header = null;
+		String croppedDN = datasetName.substring(0, datasetName.indexOf("."));
 		Map<DataSeries, Map<FeatureSelectorType, Double>> featureMap = new HashMap<>();
-		List<DataSeries> sList = getSelectedSeries(filePrequel);
-		File file = new File(getScoresFolder() + filePrequel + File.separatorChar + "featureScores_[" + datasetName + "].csv");
+		List<DataSeries> sList = getSelectedSeries(baseFolder, filename);
+		File file = new File(baseFolder + croppedDN + File.separatorChar + "featureScores_[" + datasetName + "].csv");
 		try {
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));
@@ -1520,16 +1390,22 @@ public class InputManager {
 		return featureMap;
 	}
 	
-	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String setupFolder, String filename) {
-		List<DataSeries> ds = createDataSeries(kMap);
-		saveFilteredSeries(ds, setupFolder, filename);
+	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats, String filename) {
+		List<DataSeries> ds = createDataSeries(kMap, cats);
+		saveFilteredSeries(ds, filename);
 		return ds;
 	}
 	
-	private void saveFilteredSeries(List<DataSeries> seriesList, String setupFolder, String filename) {
+	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String filename) {
+		List<DataSeries> ds = createDataSeries(kMap);
+		saveFilteredSeries(ds, filename);
+		return ds;
+	}
+	
+	private void saveFilteredSeries(List<DataSeries> seriesList, String filename) {
 		BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(setupFolder + File.separatorChar + filename)));
+			writer = new BufferedWriter(new FileWriter(new File(filename)));
 			writer.write("data_series,type\n");
 			for(DataSeries ds : seriesList){
 				writer.write(ds.toString() + "\n");			
@@ -1544,112 +1420,9 @@ public class InputManager {
 		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), getDataTypes());
 	}
 	
-	/*public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
-		double pearsonSimple;
-		DataCategory[] dataTypes = getDataTypes(); 
-		String dsDomain = getDataSeriesDomain();
-		if(dsDomain.equals("ALL")){
-			return DataSeries.allCombinations(Knowledge.getIndicators(kMap), dataTypes);
-		} else if(dsDomain.equals("UNION")){
-			return DataSeries.unionCombinations(Knowledge.getIndicators(kMap));
-		} else if(dsDomain.equals("SIMPLE")){
-			return DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
-			pearsonCorrelation(kMap, DataSeries.simpleCombinations(Knowledge.getIndicators(kMap), dataTypes), pearsonSimple, getComplexPearsonThreshold());
-			return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPearsonCombinations(Double.parseDouble(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")))));
-		} else return DataSeries.selectedCombinations(Knowledge.getIndicators(kMap), dataTypes, readPossibleIndCombinations());
-	}*/
-	
-	/*private void pearsonCorrelation(Map<KnowledgeType, List<Knowledge>> kMap, List<DataSeries> list, double pearsonSimple, double pearsonComplex) {
-		PearsonCombinationManager pcManager;
-		File pearsonFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, list, kMap.get(kMap.keySet().iterator().next()));
-		pcManager.calculatePearsonIndexes(pearsonSimple);
-		pcManager.flush();
+	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats) {
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), cats);
 	}
-	
-	private List<List<String>> readPossibleIndCombinations(){
-		return readIndCombinations("indicatorCouples.csv");	
-	}
-	
-	private List<List<String>> readIndCombinations(String filename){
-		return readIndCombinations(new File(getSetupFolder() + filename));
-	}
-	
-	private List<List<String>> readIndCombinations(File indCoupleFile){
-		List<List<String>> comb = new LinkedList<List<String>>();
-		List<String> nList;
-		BufferedReader reader;
-		String readed;
-		try {
-			if(indCoupleFile.exists()){
-				reader = new BufferedReader(new FileReader(indCoupleFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(";")){
-							if(readed.split(",").length > 0){
-								if(readed.split(",")[0].contains("@")){
-									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
-									for(String sName : readed.split(",")[0].split("@")){
-										nList.add(sName.trim());
-									}
-								} else {
-									nList = new ArrayList<String>(1);
-									nList.add(readed.split(",")[0].trim());
-								}
-								comb.add(nList);
-							}
-						}
-					}
-				}
-				reader.close();
-			} 
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
-		}
-		return comb;
-	}
-	
-	private List<List<String>> readPearsonCombinations(double treshold){
-		List<List<String>> comb = new LinkedList<List<String>>();
-		File pFile = new File(getSetupFolder() + "pearsonCombinations.csv");
-		List<String> nList;
-		BufferedReader reader;
-		String readed;
-		try {
-			if(pFile.exists()){
-				reader = new BufferedReader(new FileReader(pFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							if(readed.split(",").length > 0 && Math.abs(Double.valueOf(readed.split(",")[1].trim())) >= treshold){
-								if(readed.split(",")[0].contains("@")){
-									nList = new ArrayList<String>(readed.split(",")[0].split("@").length);
-									for(String sName : readed.split(",")[0].split("@")){
-										nList.add(sName.trim());
-									}
-								} else {
-									nList = new ArrayList<String>(1);
-									nList.add(readed.split(",")[0].trim());
-								}
-								comb.add(nList);
-							}
-						}
-					}
-				}
-				reader.close();
-			} 
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read indicator couples");
-		}
-		return comb;
-	}*/
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
 		return new FeatureSelectionInfo(new File(outFilePrequel));
@@ -1657,6 +1430,135 @@ public class InputManager {
 
 	public TrainInfo loadTrainInfo(String outFilePrequel) {
 		return new TrainInfo(new File(outFilePrequel));
+	}
+	
+	public ValidationInfo loadValidationInfo(String outFilePrequel) {
+		return new ValidationInfo(new File(outFilePrequel));
+	}
+
+	public BasicConfiguration getMetaConfigurationFor(String datasetName, String mlName) {
+		String readed;
+		String[] header = null;
+		BasicConfiguration acOut = null;
+		BufferedReader reader = null;
+		File mcFile = new File(getMetaFolder() + "meta_" + datasetName.trim() + "_" + mlName.trim() + "_scores.csv");
+		try {
+			if(mcFile.exists()){
+				reader = new BufferedReader(new FileReader(mcFile));
+				// Eats the header
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null && readed.trim().length() > 0 && !readed.trim().startsWith("*")){
+						header = readed.split(",");
+						break;
+					}
+				}
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();		
+						if(readed.length() > 0 && !readed.startsWith("*")){
+							int i = 0;
+							acOut = BasicConfiguration.buildConfiguration(LearnerType.fromString(mlName.trim()), readed.split("§")[6]);
+							for(String element : readed.split("§")){
+								acOut.addItem(header[i++].trim(), element.trim());
+							}
+							break;
+						}
+					}
+				}
+				reader.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read Meta-Configuration");
+		} 
+		return acOut;
+	}
+
+	private String getMetaFolder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean hasMetaLearning() {
+		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
+		BufferedReader reader;
+		String readed;
+		try {
+			if(voterFile.exists()){
+				reader = new BufferedReader(new FileReader(voterFile));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
+							try {
+								AlgorithmType.valueOf(readed.split(",")[1].trim());
+								return true;
+							} catch(Exception ex){ }
+						}
+					}
+				}
+				reader.close();
+			} 
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read voting preferences");
+		}
+		return false;
+	}
+
+	public Reputation getReputation(Metric met) {
+		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met, prefManager.getPreference(VALID_AFTER_INJECTION).equals("no") ? false : true);
+	}
+
+	public boolean getForceBaseLearnersFlag() {
+		if(prefManager.hasPreference(FORCE_TRAINING_BASELEARNERS))
+			return !prefManager.getPreference(FORCE_TRAINING_BASELEARNERS).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FORCE_TRAINING_BASELEARNERS + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
+
+	public boolean getForceTrainingFlag() {
+		if(prefManager.hasPreference(FORCE_TRAINING))
+			return !prefManager.getPreference(FORCE_TRAINING).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					FORCE_TRAINING + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
+
+	public static void copyScores(String fromFolder, String toFolder) {
+		File from = new File(fromFolder);
+		if(fromFolder != null && from.isDirectory()){
+			File to = new File(toFolder);
+			if(!to.exists())
+				to.mkdirs();
+			for(File sourceFile : from.listFiles()){
+				copyFileUsingStream(sourceFile, new File(toFolder + File.separatorChar + sourceFile.getName()));
+			}
+		}
 	}	
+	
+	private static void copyFileUsingStream(File source, File dest){
+	    InputStream is = null;
+	    OutputStream os = null;
+	    try {
+	        is = new FileInputStream(source);
+	        os = new FileOutputStream(dest);
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = is.read(buffer)) > 0) {
+	            os.write(buffer, 0, length);
+	        }
+	        is.close();
+	        os.close();
+	    } catch (IOException e) {
+			AppLogger.logException(InputManager.class, e, "Unable to copy from " + source);
+		} 
+	}
 	
 }

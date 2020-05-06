@@ -4,6 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class DoubleThresholdExtern. Sets two thresholds, evaluates data point as anomalous
@@ -25,8 +26,8 @@ public class DoubleThresholdExtern extends DecisionFunction {
 	 * @param lowerThreshold the lower threshold
 	 * @param upperThreshold the upper threshold
 	 */
-	protected DoubleThresholdExtern(double lowerThreshold, double upperThreshold) {
-		super("DoubleThresholdExtern", DecisionFunctionType.DOUBLE_THRESHOLD_EXTERN, false);
+	protected DoubleThresholdExtern(double lowerThreshold, double upperThreshold, ValueSeries algorithmScores) {
+		super("DoubleThresholdExtern", DecisionFunctionType.DOUBLE_THRESHOLD_EXTERN, false, algorithmScores);
 		this.lowerThreshold = lowerThreshold;
 		this.upperThreshold = upperThreshold;
 	}

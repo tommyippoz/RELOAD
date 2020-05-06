@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class IQRFunction. Sets the IQR as q3-q1, evaluating data point as anomalous if
@@ -30,15 +31,14 @@ public class IQRFunction extends DecisionFunction {
 	 * @param q1 the q1
 	 * @param q3 the q3
 	 */
-	protected IQRFunction(double ratio, double q1, double q3, boolean revertFlag) {
-		super("IQR", DecisionFunctionType.IQR, revertFlag);
+	protected IQRFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("IQR", DecisionFunctionType.IQR, revertFlag, algorithmScores);
 		this.ratio = ratio;
-		if(q1 <= q3) {
-			this.q1 = q1;
-			this.q3 = q3;
-		} else {
-			this.q1 = q3;
-			this.q3 = q1;
+		q1 = algorithmScores.getQ1();
+		q3 = algorithmScores.getQ3();
+		if(q1 > q3) {
+			q3 = algorithmScores.getQ1();
+			q1 = algorithmScores.getQ3();
 		}
 	}
 

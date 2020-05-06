@@ -3,15 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomISOS;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -41,7 +40,7 @@ public class ISOSELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public ISOSELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public ISOSELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -55,19 +54,10 @@ public class ISOSELKI extends DataSeriesELKIAlgorithm {
 	    				conf.hasItem(PHI) ? Double.parseDouble(conf.getItem(PHI)) : DEFAULT_PHI,
 	    						HillEstimator.STATIC);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar = null;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomISOS)getAlgorithm()).calculateSingleISOS(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomISOS)getAlgorithm()).calculateSingleISOS(v), null);
 	}
 
 	/* (non-Javadoc)

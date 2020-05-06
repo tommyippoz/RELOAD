@@ -4,6 +4,7 @@
 package ippoz.reload.commons.knowledge;
 
 import ippoz.reload.commons.algorithm.AlgorithmType;
+import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
@@ -14,8 +15,7 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
-import ippoz.reload.commons.service.ServiceStat;
-import ippoz.reload.commons.service.StatPair;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.util.ArrayList;
@@ -38,6 +38,11 @@ public abstract class Knowledge implements Cloneable {
 		this.baseData = baseData;
 	}
 	
+	@Override
+	public String toString() {
+		return "Knowledge [baseData=" + baseData.size() + "]";
+	}
+
 	public Indicator[] getIndicators(){
 		return baseData.getIndicators();
 	}
@@ -50,10 +55,10 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public List<Snapshot> buildSnapshotsFor(AlgorithmType algType, DataSeries dataSeries, int from, int to){
+	public List<Snapshot> buildSnapshotsFor(DataSeries dataSeries, int from, int to){
 		List<Snapshot> outList = new ArrayList<Snapshot>(to-from);
 		for(int i=from;i<to;i++){
-			outList.add(buildSnapshotFor(algType, i, dataSeries));
+			outList.add(buildSnapshotFor(i, dataSeries));
 		}
 		return outList;
 	}
@@ -70,12 +75,12 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.get(index).getTimestamp();
 	}
 	
-	public Snapshot get(AlgorithmType algType, int index, DataSeries dataSeries) {
-		return buildSnapshotFor(algType, index, dataSeries);
+	public Snapshot get(int index, DataSeries dataSeries) {
+		return buildSnapshotFor(index, dataSeries);
 	}	
 	
-	public Snapshot buildSnapshotFor(AlgorithmType algType, int index){
-		return buildSnapshotFor(algType, index, null);
+	public Snapshot buildSnapshotFor(int index){
+		return buildSnapshotFor(index, null);
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(int index,	MultipleDataSeries invDs) {
@@ -83,15 +88,15 @@ public abstract class Knowledge implements Cloneable {
 	}
 	
 	public Snapshot buildSnapshotFor(int index, DataSeries dataSeries){
+		if(dataSeries == null)
+			return null;
 		if(dataSeries.size() == 1)
 			return baseData.generateDataSeriesSnapshot(dataSeries, index);
 		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
 	}
 	
-	public Snapshot buildSnapshotFor(AlgorithmType algType, int index, DataSeries dataSeries){
-		if(dataSeries.size() == 1)
-			return baseData.generateDataSeriesSnapshot(dataSeries, index);
-		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
+	public SnapshotValue getDataSeriesValue(DataSeries ds, int i){
+		return ds.getSeriesValue(baseData.get(i));
 	}
 
 	public List<SnapshotValue> getDataSeriesValues(DataSeries ds){
@@ -102,14 +107,6 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public Map<String, ServiceStat> getStats(){
-		return baseData.getStats();
-	}
-	
-	public ServiceStat getStat(String serviceName){
-		return baseData.getStats().get(serviceName);
-	}
-	
 	public int size(){
 		return baseData.size();
 	}
@@ -118,8 +115,8 @@ public abstract class Knowledge implements Cloneable {
 		return baseData.getInjections().size();
 	}
 	
-	public String getTag(){
-		return baseData.getDataTag();
+	public LoaderBatch getID(){
+		return baseData.getDataID();
 	}
 	
 	public abstract List<Snapshot> toArray(DataSeries dataSeries);
@@ -128,24 +125,6 @@ public abstract class Knowledge implements Cloneable {
 
 	public InjectedElement getInjection(int obIndex) {
 		return baseData.getInjection(obIndex);
-	}
-	
-	/**
-	 * Gets the service obs stat.
-	 *
-	 * @return the service obs stat
-	 */
-	public StatPair getServiceObsStat(String serviceName){
-		return getStats().get(serviceName).getObsStat();
-	}
-	
-	/**
-	 * Gets the service timing stat.
-	 *
-	 * @return the service timing stat
-	 */
-	public StatPair getServiceTimingStat(String serviceName){
-		return getStats().get(serviceName).getTimeStat();
 	}
 	
 	public static int goldenPointsSize(List<Snapshot> knowledgeSnapshots) {
@@ -274,6 +253,32 @@ public abstract class Knowledge implements Cloneable {
 			} else return null;
 		} else return null;
 
+	}
+	
+	public void addIndicatorData(int obId, String indName, String indData, DataCategory dataTag){
+		baseData.get(obId).addIndicatorData(indName, indData, dataTag);
+	}
+
+	public boolean hasIndicatorData(int obId, String indicatorName, DataCategory categoryTag) {
+		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
+	}
+	
+	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Object expName) {
+		for(Knowledge know : knowledgeList){
+			if(know.getID().equals(expName))
+				return know;
+		}
+		return null;
+	}
+
+	public Knowledge sample(double ratio) {
+		MonitoredData sampled = new MonitoredData();
+		for(int i=0;i<baseData.size();i++){
+			if(Math.random() < ratio){
+				sampled.addItem(baseData.get(i), baseData.getInjection(i));
+			}
+		}
+		return new SingleKnowledge(sampled);
 	}
 
 }

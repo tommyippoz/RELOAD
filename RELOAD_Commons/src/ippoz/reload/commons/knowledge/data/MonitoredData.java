@@ -10,12 +10,12 @@ import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.layers.LayerType;
-import ippoz.reload.commons.service.ServiceCall;
-import ippoz.reload.commons.service.ServiceStat;
+import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,31 +28,13 @@ import java.util.Map;
 public class MonitoredData {
 	
 	/** The experiment name. */
-	private String expName; 
-	
-	/** The service call list. */
-	private List<ServiceCall> callList;
+	private LoaderBatch expBatch; 
 	
 	/** The injections list. */
 	private Map<Date, InjectedElement> injMap;
 	
-	/** The service statistics list. */
-	private Map<String, ServiceStat> ssList;
-	
 	/** The observations list. */
 	private List<Observation> obsList;
-	
-	/**
-	 * Instantiates a new experiment data without stats.
-	 *
-	 * @param expID the experiment id
-	 * @param obsList the observation list
-	 * @param injList the injections list
-	 * @param timings the timings
-	 */
-	public MonitoredData(String expID, List<Observation> obsList, List<InjectedElement> injList){
-		this(expID, obsList, null, injList, null);
-	}
 	
 	/**
 	 * Instantiates a new experiment data.
@@ -64,14 +46,18 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(String expID, List<Observation> obsList, List<ServiceCall> callList, List<InjectedElement> injList, Map<String, ServiceStat> ssList){
-		this.callList = callList;
-		this.ssList = ssList;
+	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, List<InjectedElement> injList){
 		this.obsList = obsList;
-		expName = "exp" + expID;
+		this.expBatch = expBatch;
 		if(obsList != null && obsList.size() > 0)
 			injMap = generateInjMap(injList, obsList.get(0).getTimestamp());
 		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
+	}
+	
+	public MonitoredData(){
+		obsList = new LinkedList<>();
+		injMap = new HashMap<>();
+		expBatch = null;
 	}
 
 	private Map<Date, InjectedElement> generateInjMap(List<InjectedElement> injList, Date refTime) {
@@ -118,15 +104,6 @@ public class MonitoredData {
 	}*/
 
 	/**
-	 * Gets the service stats.
-	 *
-	 * @return the service stats
-	 */
-	public Map<String, ServiceStat> getServiceStats(){
-		return ssList;
-	}
-
-	/**
 	 * Gets the injections for this experiment.
 	 *
 	 * @return the injections
@@ -156,24 +133,20 @@ public class MonitoredData {
 		return obsList.get(0).getIndicators();
 	}
 
-	public String getDataTag() {
-		return expName;
-	}
-
-	public Map<String, ServiceStat> getStats() {
-		return ssList;
+	public LoaderBatch getDataID() {
+		return expBatch;
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
+		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
 	}
 	
 	public MultipleSnapshot generateMultipleSnapshot(List<DataSeries> dss, int index) {
-		return new MultipleSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dss);
+		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dss);
 	}
 
 	public DataSeriesSnapshot generateDataSeriesSnapshot(DataSeries dataSeries, int index) {
-		return new DataSeriesSnapshot(obsList.get(index), callList, injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
+		return new DataSeriesSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
 	}
 
 	public Observation get(int i) {
@@ -184,6 +157,13 @@ public class MonitoredData {
 		if(obIndex >= 0 && obIndex < size() && injMap.containsKey(obsList.get(obIndex).getTimestamp()))
 			return injMap.get(obsList.get(obIndex).getTimestamp());
 		else return null;
+	}
+
+	public void addItem(Observation obs, InjectedElement injection) {
+		obsList.add(obs);
+		if(injection != null)
+			injMap.put(obs.getTimestamp(), injection);
+		
 	}
 	
 }

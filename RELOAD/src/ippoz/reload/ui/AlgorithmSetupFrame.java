@@ -4,8 +4,8 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
-import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
 import ippoz.reload.manager.InputManager;
@@ -59,16 +59,19 @@ public class AlgorithmSetupFrame {
 	
 	private InputManager iManager;
 	
-	private List<AlgorithmConfiguration> confList;
+	private List<BasicConfiguration> confList;
 	
-	private AlgorithmType algType;
+	private LearnerType algType;
 	
 	private String[] algParams;
 	
-	public AlgorithmSetupFrame( InputManager iManager, AlgorithmType algType, List<AlgorithmConfiguration> confList) {
+	public AlgorithmSetupFrame(InputManager iManager, LearnerType at, List<BasicConfiguration> confList) {
 		this.iManager = iManager;
-		this.algType = algType;
+		this.algType = at;
 		this.confList = confList;
+		if(confList == null){
+			//iManager.
+		}
 		if(confList != null && confList.size() > 0){
 			algParams = confList.get(0).listLabels().toArray(new String[confList.get(0).listLabels().size()]);
 		}
@@ -161,7 +164,7 @@ public class AlgorithmSetupFrame {
 		
 		headerPanel.add(lbl);
 		
-		lbl = new JLabel(String.valueOf(confList.size()));
+		lbl = new JLabel(String.valueOf(confList != null ? confList.size() : 0));
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		
@@ -189,30 +192,33 @@ public class AlgorithmSetupFrame {
 		
 		// MAIN
 		
-		JTable table = new JTable(new MyTableModel());
-        table.setFillsViewportHeight(true);
-        JComboBox<DecisionFunctionType> cb = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
-        for(int i=0;i<algParams.length;i++){
-        	if(algParams[i].equals("threshold")){
-        		table.getColumnModel().getColumn(i).setCellEditor(new DefaultCellEditor(cb));
-        		break;
-        	}
-        }
-        table.getColumn("Add Item").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Add Item").setCellEditor(new ButtonEditor(new JCheckBox(), table));
-        table.getColumn("Remove Item").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Remove Item").setCellEditor(new ButtonEditor(new JCheckBox(), table));
-
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for(int x=0;x<table.getColumnCount();x++){
-        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
-        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
-        }
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-
-        JScrollPane scroll = new JScrollPane(table);
-        containerPanel.add(scroll);
+		if(algParams != null && confList != null){
+			JTable table = new JTable(new MyTableModel());
+	        table.setFillsViewportHeight(true);
+	        JComboBox<DecisionFunctionType> cb = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
+	        for(int i=0;i<algParams.length;i++){
+	        	if(algParams[i].equals("threshold")){
+	        		table.getColumnModel().getColumn(i).setCellEditor(new DefaultCellEditor(cb));
+	        		break;
+	        	}
+	        }
+	        table.getColumn("Add Item").setCellRenderer(new ButtonRenderer());
+	        table.getColumn("Add Item").setCellEditor(new ButtonEditor(new JCheckBox(), table));
+	        table.getColumn("Remove Item").setCellRenderer(new ButtonRenderer());
+	        table.getColumn("Remove Item").setCellEditor(new ButtonEditor(new JCheckBox(), table));
+	
+	        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+	        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+	        for(int x=0;x<table.getColumnCount();x++){
+	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
+	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
+	        }
+	        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+	        
+	        JScrollPane scroll = new JScrollPane(table);
+	        containerPanel.add(scroll);
+	        
+        } else containerPanel.add(new JLabel(""));
 		
 		// FOOTER
         
@@ -423,7 +429,7 @@ public class AlgorithmSetupFrame {
 		    	int index = Integer.parseInt(label.split(" ")[1]);
 		    	if(label.contains("Add")){
 		    		try {
-						confList.add(index+1, (AlgorithmConfiguration) confList.get(index).clone());
+						confList.add(index+1, (BasicConfiguration) confList.get(index).clone());
 						
 					} catch (CloneNotSupportedException e) {
 						// TODO Auto-generated catch block

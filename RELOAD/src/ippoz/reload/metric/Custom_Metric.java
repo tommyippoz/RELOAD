@@ -28,15 +28,10 @@ public class Custom_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
-		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+		double ce = new ConfidenceErrorMetric(isValidAfter(), 0.5).evaluateAnomalyResults(anomalyEvaluations);
 		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		fpr = 1 - fpr;
-		if (fpr + r > 0)
-			return acc * acc * 5 * fpr * r / (fpr + 4 * r);
-		else
-			return 0.0;
+		return Math.abs(ce)*acc;
 	}
 
 	/*

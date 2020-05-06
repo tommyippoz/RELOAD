@@ -3,26 +3,21 @@
  */
 package ippoz.reload.executable;
 
+import ippoz.reload.algorithm.type.BaseLearner;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.info.FeatureSelectionInfo;
-import ippoz.reload.info.TrainInfo;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
-import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,7 +30,7 @@ import java.util.List;
  */
 public class DetectorMain { 
 	
-	private static final String DEFAULT_REPORT_FILE = "reloadreport.csv";
+	public static final String DEFAULT_REPORT_FILE = "reloadreport.csv";
 	
 	public static final String DEFAULT_PREF_FILE = "reload.preferences";
 	
@@ -52,22 +47,22 @@ public class DetectorMain {
 				dmList = new LinkedList<DetectionManager>();
 				iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
 				for(PreferencesManager loaderPref : iManager.readLoaders()){
-					for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
-						if(hasSliding(aList)){
+					for(LearnerType lt : readAlgorithmCombinations(iManager)){
+						if(hasSliding(lt)){
 							for(Integer windowSize : readWindowSizes(iManager)){
 								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
-									dmList.add(new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy));
+									dmList.add(new DetectionManager(iManager, lt, loaderPref, windowSize, sPolicy));
 								}
 							}
 						} else {
-							dmList.add(new DetectionManager(iManager, aList, loaderPref));
+							dmList.add(new DetectionManager(iManager, lt, loaderPref));
 						}
 					}
 				}
 				AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 				for(int i=0;i<dmList.size();i++){
 					AppLogger.logInfo(DetectorMain.class, "Running RELOAD [" + (i+1) + "/" + dmList.size() + "]: '" + dmList.get(i).getTag() + "'");
-					runMADneSs(dmList.get(i), iManager);
+					runRELOAD(dmList.get(i), iManager);
 				}
 			} else {
 				AppLogger.logError(DetectorMain.class, "PreferencesError", "Unable to properly load '" + DEFAULT_PREF_FILE + "' preferences.");
@@ -79,8 +74,8 @@ public class DetectorMain {
 	
 	public static int getMADneSsIterations(InputManager iManager){
 		int count = 0;
-		for(List<AlgorithmType> aList : readAlgorithmCombinations(iManager)){
-			if(hasSliding(aList)){
+		for(LearnerType lt : readAlgorithmCombinations(iManager)){
+			if(hasSliding(lt)){
 				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
 			} else {
 				count++;
@@ -147,9 +142,9 @@ public class DetectorMain {
 		return lList;
 	}*/
 	
-	public static List<List<AlgorithmType>> readAlgorithmCombinations(InputManager iManager) {
+	public static List<LearnerType> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");
-		List<List<AlgorithmType>> alList = new LinkedList<List<AlgorithmType>>();
+		List<LearnerType> alList = new LinkedList<>();
 		BufferedReader reader;
 		String readed;
 		try {
@@ -160,16 +155,14 @@ public class DetectorMain {
 					if(readed != null){
 						readed = readed.trim();
 						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
-							for(String s : readed.trim().split(",")){
-								try {
-									aList.add(AlgorithmType.valueOf(s.trim()));
-								} catch(Exception ex){
-									AppLogger.logError(DetectorMain.class, "ParsingError", "Algorithm '" + s + "' unrecognized");
-								}
+							LearnerType lt = null;
+							try {
+								lt = LearnerType.fromString(readed.trim());
+							} catch(Exception ex){
+								AppLogger.logError(DetectorMain.class, "ParsingError", "Algorithm '" + readed + "' unrecognized");
 							}
-							if(aList.size() > 0)
-								alList.add(aList);
+							if(lt != null)
+								alList.add(lt);
 						}
 					}
 				}
@@ -177,9 +170,7 @@ public class DetectorMain {
 			} else {
 				AppLogger.logError(DetectorMain.class, "MissingPreferenceError", "File " + 
 						algTypeFile.getPath() + " not found. Will be generated. Using default value of 'ELKI_KMEANS'");
-				List<AlgorithmType> aList = new LinkedList<AlgorithmType>();
-				aList.add(AlgorithmType.ELKI_KMEANS);
-				alList.add(aList);
+				alList.add(new BaseLearner(AlgorithmType.ELKI_KMEANS));
 				iManager.generateDefaultAlgorithmPreferences();
 			}
 		} catch(Exception ex){
@@ -188,44 +179,54 @@ public class DetectorMain {
 		return alList;
 	}
 
-	public static boolean hasSliding(List<AlgorithmType> aList) {
-		for(AlgorithmType at : aList){
-			if(at.toString().toUpperCase().contains("SLIDING"))
-				return true;
-		}
+	public static boolean hasSliding(LearnerType at) {
+		if(at instanceof BaseLearner && ((BaseLearner)at).toString().toUpperCase().contains("SLIDING"))
+			return true;
 		return false;
 	}
 
-	public static DetectorOutput[] runMADneSs(DetectionManager dManager, InputManager iManager){
-		DetectorOutput oOut = null, dOut = null;
+	public static DetectorOutput runRELOAD(DetectionManager dManager, InputManager iManager){
+		DetectorOutput dOut = null;
 		if(dManager.checkAssumptions()){
 			if(dManager.needFiltering()){
-				AppLogger.logInfo(DetectorMain.class, "Starting Filtering Process");
-				dManager.filterIndicators();
+				AppLogger.logInfo(DetectorMain.class, "Starting Feature Selection Process");
+				dManager.featureSelection();
 			}
 			if(dManager.needTraining()) {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 
-			if(dManager.needOptimization()){
-				AppLogger.logInfo(DetectorMain.class, "Starting Optimization Process");
-				oOut = dManager.optimize();
-			}
+			/*if(dManager.needOptimization()){
+				AppLogger.logInfo(DetectorMain.class, "Starting Voting/Optimization Process");
+				checkMetaLearning(dManager, iManager);
+				oOut = dManager.optimizeVoting();
+			}*/
 			if(dManager.needEvaluation()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
-				dOut = dManager.evaluate(oOut);
+				dOut = dManager.evaluate();
+				dManager.report();
 			}
-			report(dOut, iManager);
+			//report(dOut, iManager);
 			AppLogger.logInfo(DetectorMain.class, "Done.");
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();
 		dManager = null;
-		if(oOut != null || dOut != null)
-			return new DetectorOutput[]{oOut, dOut};
-		else return null;
+		return dOut;
 	}
 
-	private static void report(DetectorOutput dOut, InputManager iManager){
+	/*private static void checkMetaLearning(DetectionManager dManager, InputManager iManager) {
+		MetaLearningManager mlm;
+		if(dManager.hasMetaLearning()){
+			AppLogger.logInfo(DetectorMain.class, "Starting Meta-Learning...");
+			for(AlgorithmVoter av : iManager.getMetaLearners(dManager.buildOutFilePrequel())){
+				AppLogger.logInfo(DetectorMain.class, "Meta-Learning for " + av.getAlgorithmType() + "(" + av.getCheckerSelection() + ")");
+				mlm = new MetaLearningManager(iManager, av.getAlgorithmType(), iManager.getMetaLearningPreferences(av, dManager.getModelsPath(), dManager.getMetaLearningCSV(), dManager.buildOutFilePrequel()));
+				mlm.metaLearning();
+			}
+		} else AppLogger.logInfo(DetectorMain.class, "No Meta-Learning is required");
+	}*/
+
+	/*private static void report(DetectorOutput dOut, InputManager iManager){
 		File drFile = new File(DEFAULT_REPORT_FILE);
 		FeatureSelectionInfo fsInfo;
 		TrainInfo tInfo;
@@ -249,12 +250,12 @@ public class DetectorMain {
 				}
 				writer.write(fsInfo.toFileString() + ",");
 				writer.write(tInfo.toFileString() + ",");
-				writer.write(dOut.getBestSeriesString() + "," + dOut.getWritableTag() + "," + dOut.getBestSetup() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
+				writer.write(dOut.getBestSeriesString() + "," + dOut.getWritableTag() + "," + dOut.getVoter() + "," + dOut.getBestScore() + "," + dOut.getEvaluationMetricsScores() + "\n");
 				writer.close();
 			}
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");
 		}
-	}
+	}*/
 	
 }

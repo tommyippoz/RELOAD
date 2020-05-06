@@ -3,6 +3,7 @@
  */
 package ippoz.reload.performance;
 
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.trainer.AlgorithmTrainer;
@@ -11,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tommy
@@ -21,15 +23,15 @@ public class TrainingTiming {
 	private static final String[] trainingAttr = {TrainingStat.AVERAGE, TrainingStat.MEDIAN, TrainingStat.STD, TrainingStat.CONFIGURATIONS, TrainingStat.AVERAGE_TOT, TrainingStat.MEDIAN_TOT, TrainingStat.STD_TOT, TrainingStat.EXPERIMENTS, TrainingStat.AVERAGE_EXP, TrainingStat.MEDIAN_EXP, TrainingStat.STD_EXP, TrainingStat.AVERAGE_EXP_TOT, TrainingStat.MEDIAN_EXP_TOT, TrainingStat.STD_EXP_TOT};
 	private static final String[] scoresAttr = {TrainingStat.RATING_POSITION, TrainingStat.RATING_SCORE, TrainingStat.PRESENCE_FIRST_10, TrainingStat.PRESENCE_FIRST_30, TrainingStat.PRESENCE_FIRST_50, TrainingStat.PRESENCE_FIRST_100};
 	
-	private LinkedList<TrainingResult> resList;
-	private HashMap<AlgorithmType, TrainingStat> statMap;
-	private HashMap<AlgorithmType, LinkedList<TrainingDetail>> algTrainingTimes;
+	private List<TrainingResult> resList;
+	private Map<LearnerType, TrainingStat> statMap;
+	private Map<LearnerType, LinkedList<TrainingDetail>> algTrainingTimes;
 	
 	public TrainingTiming(){
-		algTrainingTimes = new HashMap<AlgorithmType, LinkedList<TrainingDetail>>();
+		algTrainingTimes = new HashMap<>();
 	}
 
-	public synchronized void addTrainingTime(AlgorithmType algType, long time, int confNumber) {
+	public synchronized void addTrainingTime(LearnerType algType, long time, int confNumber) {
 		if(algTrainingTimes.get(algType) == null)
 			algTrainingTimes.put(algType, new LinkedList<TrainingDetail>());
 		algTrainingTimes.get(algType).add(new TrainingDetail(confNumber, time));
@@ -75,17 +77,17 @@ public class TrainingTiming {
 	}
 	
 	private void computeStats(int nExp){
-		statMap = new HashMap<AlgorithmType, TrainingStat>();
+		statMap = new HashMap<>();
 		calculateTrainingStats(nExp);
 		calculateScoresStats();
 	}
 	
 	private void calculateScoresStats() {
 		int i = 1;
-		HashMap<AlgorithmType, Integer> algCount = new HashMap<AlgorithmType, Integer>(); 
-		HashMap<AlgorithmType, Double> ratingMap = new HashMap<AlgorithmType, Double>();
-		HashMap<AlgorithmType, Double> scoreMap = new HashMap<AlgorithmType, Double>();
-		for(AlgorithmType algType : algTrainingTimes.keySet()){
+		Map<LearnerType, Integer> algCount = new HashMap<>(); 
+		Map<LearnerType, Double> ratingMap = new HashMap<>();
+		Map<LearnerType, Double> scoreMap = new HashMap<>();
+		for(LearnerType algType : algTrainingTimes.keySet()){
 			algCount.put(algType, 0);
 			ratingMap.put(algType, 0.0);
 			scoreMap.put(algType, 0.0);
@@ -96,25 +98,25 @@ public class TrainingTiming {
 			ratingMap.put(td.getAlgType(), ratingMap.get(td.getAlgType()) + (resList.size() - i + 1));
 			scoreMap.put(td.getAlgType(), scoreMap.get(td.getAlgType()) + (resList.size() - i + 1)*td.getScore());
 			if(i == 10){
-				for(AlgorithmType algType : algTrainingTimes.keySet()){
+				for(LearnerType algType : algTrainingTimes.keySet()){
 					statMap.get(algType).addStat(TrainingStat.PRESENCE_FIRST_10, 1.0*algCount.get(algType)/10.0);
 				}
 			} else if(i == 30){
-				for(AlgorithmType algType : algTrainingTimes.keySet()){
+				for(LearnerType algType : algTrainingTimes.keySet()){
 					statMap.get(algType).addStat(TrainingStat.PRESENCE_FIRST_30, 1.0*algCount.get(algType)/30.0);
 				}
 			} else if(i == 50){
-				for(AlgorithmType algType : algTrainingTimes.keySet()){
+				for(LearnerType algType : algTrainingTimes.keySet()){
 					statMap.get(algType).addStat(TrainingStat.PRESENCE_FIRST_50, 1.0*algCount.get(algType)/50.0);
 				}
 			} else if(i == 100){
-				for(AlgorithmType algType : algTrainingTimes.keySet()){
+				for(LearnerType algType : algTrainingTimes.keySet()){
 					statMap.get(algType).addStat(TrainingStat.PRESENCE_FIRST_100, 1.0*algCount.get(algType)/100.0);
 				}
 			}
 			i++;
 		}
-		for(AlgorithmType algType : algTrainingTimes.keySet()){
+		for(LearnerType algType : algTrainingTimes.keySet()){
 			statMap.get(algType).addStat(TrainingStat.RATING_POSITION, ratingMap.get(algType));
 			statMap.get(algType).addStat(TrainingStat.RATING_SCORE, scoreMap.get(algType));
 		}
@@ -126,7 +128,7 @@ public class TrainingTiming {
 		Double[] timeTotExp;
 		Double[] timeSingle;
 		Double[] timeTot;
-		for(AlgorithmType algType : algTrainingTimes.keySet()){
+		for(LearnerType algType : algTrainingTimes.keySet()){
 			n = algTrainingTimes.get(algType).size();
 			timeSingleExp = new Double[n];
 			timeTotExp = new Double[n];
@@ -158,16 +160,16 @@ public class TrainingTiming {
 
 	private class TrainingResult implements Comparable<TrainingResult> {
 		
-		private AlgorithmType algType;
+		private LearnerType algType;
 		private double score;
 		
-		public TrainingResult(AlgorithmType algType, double score) {
+		public TrainingResult(LearnerType algType, double score) {
 			super();
 			this.algType = algType;
 			this.score = score;
 		}
 
-		public AlgorithmType getAlgType() {
+		public LearnerType getAlgType() {
 			return algType;
 		}
 

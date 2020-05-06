@@ -4,8 +4,7 @@
 package ippoz.reload.algorithm.elki;
 
 import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -18,6 +17,7 @@ import ippoz.reload.externalutils.ELKIUtils;
 import java.io.File;
 import java.util.List;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -28,7 +28,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  * @author Tommy
  */
 public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm {
-	
+
 	/** The flag to decide on outliers in training. */
 	private boolean outliersInTraining;
 	
@@ -43,7 +43,7 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @param outliersInTraining the flag to decide on outliers in training
 	 * @param needNormalization the flag to define if algorithm needs normalization
 	 */
-	public DataSeriesELKIAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
+	public DataSeriesELKIAlgorithm(DataSeries dataSeries, BasicConfiguration conf, boolean outliersInTraining, boolean needNormalization) {
 		super(dataSeries, conf, needNormalization);
 		this.outliersInTraining = outliersInTraining;
 		customELKI = generateELKIAlgorithm();
@@ -79,10 +79,10 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @see ippoz.reload.algorithm.AutomaticTrainingAlgorithm#automaticInnerTraining(java.util.List, boolean)
 	 */
 	@Override
-	public boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		Database db = translateKnowledge(kList, outliersInTraining);
 		if(db != null){
-			return automaticElkiTraining(db, kList, createOutput);
+			return automaticElkiTraining(db, kList);
 		}
 		else {
 			AppLogger.logError(getClass(), "WrongDatabaseError", "Database must contain at least 1 valid instances");
@@ -97,31 +97,27 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 * @param createOutput the create output flag
 	 * @return true, if training is successful
 	 */
-	protected boolean automaticElkiTraining(Database db, List<Knowledge> kList, boolean createOutput){
+	protected boolean automaticElkiTraining(Database db, List<Knowledge> kList){
 		Object trainOut = customELKI.run(db, db.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
-		if(trainOut != null){		    
-		    if(createOutput){
-		    	customELKI.printFile(new File(getFilename()));
-		    }
-		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
 		return trainOut != null;
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.DataSeriesDetectionAlgorithm#evaluateDataSeriesSnapshot(ippoz.reload.commons.knowledge.Knowledge, ippoz.reload.commons.knowledge.snapshot.Snapshot, int)
-	 */
-	@Override
-	protected AlgorithmResult evaluateDataSeriesSnapshot(Knowledge knowledge, Snapshot sysSnapshot, int currentIndex) {
-		return evaluateElkiSnapshot(sysSnapshot);
-	}
 	
-	/**
-	 * Evaluates the ELKI snapshot using the trained model.
-	 *
-	 * @param sysSnapshot the system snapshot
-	 * @return the algorithm result
-	 */
-	protected abstract AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot);
+	@Override
+	public void saveLoggedScores() {
+		super.saveLoggedScores();
+		if(customELKI != null)
+			customELKI.printFile(new File(getFilename()));
+	}
+
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return getELKIScore(new Vector(snapArray));
+	}
+
+	@Override
+	protected boolean checkCalculationCondition(double[] snapValue) {
+		return getELKIEvaluationFlag(new Vector(snapValue));
+	}
 	
 	/**
 	 * Translates the knowledge list into an ELKI Database object.
@@ -158,6 +154,12 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 			}
 		}
 		return vec;
+	}
+	
+	public abstract Pair<Double, Object> getELKIScore(Vector v);
+	
+	public boolean getELKIEvaluationFlag(Vector v){
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null;
 	}
 
 }

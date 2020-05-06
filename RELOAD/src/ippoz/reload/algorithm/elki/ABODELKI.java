@@ -3,15 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomABOD;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -29,7 +28,7 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public ABODELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public ABODELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -40,20 +39,11 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 	protected ELKIAlgorithm<?> generateELKIAlgorithm() {
 		return new CustomABOD<NumberVector>(HellingerDistanceFunction.STATIC);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@SuppressWarnings("unchecked")
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomABOD<NumberVector>)getAlgorithm()).calculateSingleABOF(v), null);
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +61,6 @@ public class ABODELKI extends DataSeriesELKIAlgorithm {
 		//defPar.put("threshold", new String[]{"LEFT_IQR(1)", "LEFT_IQR(0.5)", "LEFT_CONFIDENCE_INTERVAL(1)", "LEFT_CONFIDENCE_INTERVAL(0.5)"});
 		return defPar;
 	}
-
 
 }
 

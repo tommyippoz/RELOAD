@@ -4,12 +4,23 @@
 package ippoz.reload.evaluation;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
+import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import javafx.util.Pair;
 
 /**
  * The Class AlgorithmVoter.
@@ -46,7 +57,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 */
 	@Override
 	protected AlgorithmModel clone() throws CloneNotSupportedException {
-		return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(alg.getAlgorithmType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
+		return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(alg.getLearnerType(), alg.getDataSeries(), alg.getConfiguration()), metricScore, reputationScore);
 	}
 
 	/**
@@ -57,6 +68,10 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 */
 	public AlgorithmResult voteKnowledgeSnapshot(Knowledge knowledge, int i) {
 		return alg.snapshotAnomalyRate(knowledge, i);
+	}
+	
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray){
+		return alg.calculateSnapshotScore(null, 0, null, snapArray);
 	}
 
 	/**
@@ -104,8 +119,8 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 *
 	 * @return the algorithm type
 	 */
-	public AlgorithmType getAlgorithmType() {
-		return alg.getAlgorithmType();
+	public LearnerType getAlgorithmType() {
+		return alg.getLearnerType();
 	}
 
 	/* (non-Javadoc)
@@ -120,18 +135,12 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		return alg.getDataSeries();
 	}
 
-	public AlgorithmConfiguration getAlgorithmConfiguration() {
+	public BasicConfiguration getAlgorithmConfiguration() {
 		return alg.getConfiguration();
 	}
 	
 	public boolean usesSeries(DataSeries serie) {
 		return alg.usesSeries(serie);
-	}
-	
-	public double getAUC(){
-		if(alg.getConfiguration() != null && alg.getConfiguration().hasItem(AlgorithmConfiguration.AUC_SCORE))
-			return Double.valueOf(alg.getConfiguration().getItem(AlgorithmConfiguration.AUC_SCORE));
-		else return -1.0;
 	}
 
 	@Override
@@ -139,6 +148,67 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		if(getAlgorithmType().equals(other.getAlgorithmType()) && getDataSeries().equals(other.getDataSeries()))
 			return 0;
 		else return -1;
+	}
+
+	public static AlgorithmModel fromString(String amString) {
+		if(amString != null && amString.length() > 0 && amString.indexOf("§") != -1){
+			String[] splitted = AppUtility.splitAndPurify(amString, "§");
+			if(splitted.length > 5){
+				BasicConfiguration conf = BasicConfiguration.buildConfiguration(LearnerType.fromString(splitted[1]), (splitted.length > 6 ? splitted[6] : null));
+				if(conf != null){
+					conf.addItem(BasicConfiguration.WEIGHT, splitted[2]);
+					conf.addItem(BasicConfiguration.AVG_SCORE, splitted[3]);
+					conf.addItem(BasicConfiguration.STD_SCORE, splitted[4]);
+					conf.addItem(BasicConfiguration.DATASET_NAME, splitted[5]);
+				}
+				// TODO
+				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0], true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+			}
+		}
+		return null;
+	}
+	
+	public static List<AlgorithmModel> fromFile(String fileString){
+		return fromFile(fileString, true);
+	}
+	
+	public static List<AlgorithmModel> fromFile(String fileString, boolean alertFlag) {
+		File asFile = new File(fileString);
+		BufferedReader reader;
+		LinkedList<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
+		String readed;
+		try {
+			if(asFile.exists()){
+				reader = new BufferedReader(new FileReader(asFile));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						AlgorithmModel am = AlgorithmModel.fromString(readed);
+						if(am != null)
+							modelList.add(am);
+					}
+				}
+				reader.close();
+			} else if(alertFlag)
+				AppLogger.logError(AlgorithmModel.class, "FileNotFound", "Unable to find '" + fileString + "'");
+		} catch(Exception ex){
+			AppLogger.logException(AlgorithmModel.class, ex, "Unable to read scores");
+		}
+		Collections.sort(modelList);
+		return modelList;
+	}
+
+	public DetectionAlgorithm getAlgorithm() {
+		return alg;
+	}
+	
+	public static boolean trainResultExists(String scoresFile) {
+		List<AlgorithmModel> algVoters = AlgorithmModel.fromFile(scoresFile, false);
+		if(algVoters != null && algVoters.size() > 0)
+			return true;
+		else return false;
 	}
 
 }

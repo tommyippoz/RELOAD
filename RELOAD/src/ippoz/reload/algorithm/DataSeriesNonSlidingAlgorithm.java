@@ -3,8 +3,8 @@
  */
 package ippoz.reload.algorithm;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -19,15 +19,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import javafx.util.Pair;
+
 /**
  * @author Tommy
  *
  */
 public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionAlgorithm implements AutomaticTrainingAlgorithm {
 	
-	public DataSeriesNonSlidingAlgorithm(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public DataSeriesNonSlidingAlgorithm(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf);
-		if(conf.hasItem(TMP_FILE)){
+		if(conf != null && conf.hasItem(TMP_FILE)){
 			clearLoggedScores();
 			loadLoggedScores();
 		}
@@ -38,7 +40,7 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		String readed;
 		try {
 			loggedScores = new ValueSeries();		
-			loggedAnomalyScores = new ValueSeries();		
+			loggedAnomalyScores = new ValueSeries();	
 			if(new File(getScoresFilename()).exists()){
 				reader = new BufferedReader(new FileReader(new File(getScoresFilename())));
 				reader.readLine();
@@ -56,13 +58,14 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					}
 				}
 				reader.close();
-			}
+			} else AppLogger.logError(getClass(), "NoLoggedScoresError", "Unable to find logged scores in '" + getScoresFilename() + "'");
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read logged scores file");
 		} 
 	}
 	
-	private void saveLoggedScores() {
+	@Override
+	public void saveLoggedScores() {
 		BufferedWriter writer;
 		try {
 			writer = new BufferedWriter(new FileWriter(getScoresFilename()));
@@ -83,22 +86,22 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		} 
 	}
 	
-	private String getScoresFilename(){
+	protected String getScoresFilename(){
 		String base = getFilename();
 		base = base.substring(0, base.indexOf("."));
-		base = base + "_logged_scores." + getAlgorithmType().toString().toLowerCase();
+		base = base + "_logged_scores." + getLearnerType().toString().toLowerCase();
 		return base;
 	}
 
 	@Override
-	public boolean automaticTraining(List<Knowledge> kList, boolean createOutput) {
+	public boolean automaticTraining(List<Knowledge> kList) {
 		boolean trainOut;
-		if(createOutput && !new File(getDefaultTmpFolder()).exists())
-			new File(getDefaultTmpFolder()).mkdirs();
-		trainOut = automaticInnerTraining(kList, createOutput);
+		trainOut = automaticInnerTraining(kList);
 		if(trainOut){
-			
-			setDecisionFunction("IQR", new ValueSeries(getTrainScores()), false);
+			ValueSeries vs = new ValueSeries(getTrainScores());
+			if(vs.size() > 0)
+				setDecisionFunction("IQR", vs, false);
+			else setDecisionFunction("STATIC_THRESHOLD_GREATERTHAN(1)", vs, false);
 			
 			clearLoggedScores();
 			for(Knowledge know : kList){
@@ -108,16 +111,20 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 					logScore(ar.getScore(), snap.isAnomalous());
 				}
 			}
-			if(createOutput){
-		    	saveLoggedScores();
-		    }
 			
 			conf.addItem(TMP_FILE, getFilename());		    
 		    storeAdditionalPreferences();
 		    
-		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getAlgorithmType() + " to dataseries " + getDataSeries().getName());
+		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getLearnerType() + " to dataseries " + getDataSeries().getName());
 		return trainOut;
 	}
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
+		return calculateSnapshotScore(snapArray);
+	}
+
+	public abstract Pair<Double, Object> calculateSnapshotScore(double[] snapArray);
 
 	/**
 	 * Stores additional preferences (if any).
@@ -126,6 +133,6 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	
 	public abstract List<Double> getTrainScores();
 	
-	public abstract boolean automaticInnerTraining(List<Knowledge> kList, boolean createOutput);	
+	public abstract boolean automaticInnerTraining(List<Knowledge> kList);	
 
 }

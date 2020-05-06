@@ -3,9 +3,8 @@
  */
 package ippoz.reload.algorithm.weka;
 
-import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.weka.support.CustomIsolationForest;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -15,6 +14,7 @@ import ippoz.reload.commons.support.AppUtility;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -44,32 +44,17 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public IsolationForestSlidingWEKA(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public IsolationForestSlidingWEKA(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false);
 		nTrees = loadNTrees();
 		sampleSize = loadSampleSize();
 	}
 
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.weka.DataSeriesSlidingWEKAAlgorithm#evaluateSlidingWEKASnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, weka.core.Instances, weka.core.Instance, ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
+
 	@Override
-	protected AlgorithmResult evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
-		CustomIsolationForest iForest;
-		AlgorithmResult ar;
-		try {
-			if(windowInstances.size() > sampleSize)
-				iForest = new CustomIsolationForest(nTrees, sampleSize);
-			else iForest = new CustomIsolationForest(1, windowInstances.size());
-			iForest.buildClassifier(windowInstances);
-			ar = new AlgorithmResult(
-					dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), iForest.classifyInstance(newInstance));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} catch (Exception ex) {
-			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
-		}
-		return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+	protected boolean checkCalculationCondition(double[] snapArray) {
+		return true;
 	}
 	
 	/**
@@ -100,6 +85,21 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 		defPar.put("n_trees", new String[]{"1", "2", "3", "5"});
 		defPar.put("sample_size", new String[]{"10", "20", "50", "100"});
 		return defPar;
+	}
+
+	@Override
+	protected Pair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
+		CustomIsolationForest iForest;
+		try {
+			if(windowInstances.size() > sampleSize)
+				iForest = new CustomIsolationForest(nTrees, sampleSize);
+			else iForest = new CustomIsolationForest(1, windowInstances.size());
+			iForest.buildClassifier(windowInstances);
+			return new Pair<Double, Object>(iForest.classifyInstance(newInstance), null);
+		} catch (Exception ex) {
+			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
+			return new Pair<Double, Object>(Double.NaN, null);
+		}
 	}
 	
 }

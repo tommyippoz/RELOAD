@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * @author Tommy
@@ -28,10 +29,10 @@ public class ModeIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public ModeIntervalFunction(double ratio, double mode, double std, boolean revertFlag) {
-		super("mode_interval", DecisionFunctionType.MODE_INTERVAL, revertFlag);
-		this.mode = mode;
-		this.std = std;
+	public ModeIntervalFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("mode_interval", DecisionFunctionType.MODE_INTERVAL, revertFlag, algorithmScores);
+		this.mode = algorithmScores.getMode();
+		this.std = algorithmScores.getStd();
 		this.ratio = ratio;
 	}
 

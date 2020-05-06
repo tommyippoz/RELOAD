@@ -4,6 +4,7 @@
 package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class StaticThresholdGreaterThanDecision. Data point is anomalous if value > threshold.
@@ -20,8 +21,8 @@ public class StaticThresholdGreaterThanDecision extends DecisionFunction {
 	 *
 	 * @param threshold the threshold
 	 */
-	public StaticThresholdGreaterThanDecision(double threshold) {
-		super("StaticGreaterThanClassifier", DecisionFunctionType.STATIC_THRESHOLD_GREATERTHAN, false);
+	public StaticThresholdGreaterThanDecision(double threshold, ValueSeries algorithmScores) {
+		super("StaticGreaterThanClassifier", DecisionFunctionType.STATIC_THRESHOLD_GREATERTHAN, false, algorithmScores);
 		this.threshold = threshold;
 	}
 

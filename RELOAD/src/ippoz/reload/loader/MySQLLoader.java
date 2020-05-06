@@ -7,6 +7,9 @@ import ippoz.reload.commons.datafetcher.DataFetcher;
 import ippoz.reload.commons.datafetcher.DatabaseFetcher;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.LoaderBatch;
+import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.commons.support.ThreadScheduler;
@@ -138,7 +141,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	protected void initRun() {
 		List<DataFetcher> fetchList = new ArrayList<DataFetcher>(expIDs.size());
 		for(Integer runId : expIDs){
-			fetchList.add(new DatabaseFetcher(runId.toString(), dbName, dbUsername, dbPassword, selectedLayers));
+			fetchList.add(new DatabaseFetcher(new LoaderBatch(runId, runId, runId), dbName, dbUsername, dbPassword, selectedLayers));
 		}
 		setThreadList(fetchList);
 	}
@@ -187,12 +190,6 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	}
 
 	@Override
-	public Object[] getSampleValuesFor(String featureName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public int getRowNumber() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -217,7 +214,7 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	}
 
 	@Override
-	public List<Integer> getLoaderRuns() {
+	public List<LoaderBatch> getLoaderRuns() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -232,6 +229,18 @@ public class MySQLLoader extends ThreadScheduler implements Loader {
 	public int getDataPoints() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public String getCompactName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean hasBatches(String preferenceString) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

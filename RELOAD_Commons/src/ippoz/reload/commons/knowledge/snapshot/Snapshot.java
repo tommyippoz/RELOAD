@@ -6,7 +6,6 @@ package ippoz.reload.commons.knowledge.snapshot;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.service.ServiceCall;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -20,9 +19,6 @@ import java.util.List;
  */
 public abstract class Snapshot {
 	
-	/** The list of services called at that time instant. */
-	private List<ServiceCall> sCall;
-	
 	/** The injection at that time instant. */
 	private InjectedElement injEl;
 	
@@ -32,24 +28,11 @@ public abstract class Snapshot {
 	/**
 	 * Instantiates a new snapshot.
 	 *
-	 * @param currentCalls the current calls
 	 * @param injEl the injection
 	 */
-	public Snapshot(Date timestamp, List<ServiceCall> currentCalls, InjectedElement injEl) {
+	public Snapshot(Date timestamp, InjectedElement injEl) {
 		this.timestamp = timestamp;
-		this.sCall = filterCalls(currentCalls);
 		this.injEl = injEl;
-	}
-	
-	private List<ServiceCall> filterCalls(List<ServiceCall> currentCalls) {
-		List<ServiceCall> okCalls = new LinkedList<ServiceCall>();
-		if(currentCalls != null){
-			for(ServiceCall sCall : currentCalls){
-				if(sCall.isAliveAt(timestamp))
-					okCalls.add(sCall);
-			}
-		}
-		return okCalls;
 	}
 
 	/**
@@ -59,15 +42,6 @@ public abstract class Snapshot {
 	 */
 	public Date getTimestamp(){
 		return timestamp;
-	}
-	
-	/**
-	 * Gets the service calls.
-	 *
-	 * @return the service calls
-	 */
-	public List<ServiceCall> getServiceCalls() {
-		return sCall;
 	}
 	
 	/**

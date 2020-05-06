@@ -3,13 +3,11 @@
  */
 package ippoz.reload.algorithm.elki.sliding;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.DataSeriesSlidingELKIAlgorithm;
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
 import ippoz.reload.algorithm.elki.support.CustomKMeans;
 import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.result.KMeansResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
@@ -18,6 +16,7 @@ import ippoz.reload.commons.support.AppUtility;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.database.Database;
@@ -44,7 +43,7 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public KMeansSlidingELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public KMeansSlidingELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false);
 	}
 	
@@ -62,16 +61,11 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	/* (non-Javadoc)
 	 * @see ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm#evaluateSlidingELKISnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, de.lmu.ifi.dbs.elki.database.Database, de.lmu.ifi.dbs.elki.math.linearalgebra.Vector)
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	protected AlgorithmResult evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
-		AlgorithmResult ar;
-		if(newInstance.getDimensionality() > 0 && Double.isFinite(newInstance.doubleValue(0))){
-			KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
-			ar = new KMeansResult(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement(), of);
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(dsSnapshot.listValues(true), dsSnapshot.getInjectedElement());
+	protected Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		@SuppressWarnings("unchecked")
+		KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
+		return new Pair<Double, Object>(of.getDistance(), of.getCluster());
 	}
 
 	/* (non-Javadoc)

@@ -5,6 +5,7 @@ package ippoz.reload.decisionfunction;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.support.ValueSeries;
 
 /**
  * The Class LeftConfidenceIntervalFunction. Defines anomalies if
@@ -30,10 +31,10 @@ public class LeftConfidenceIntervalFunction extends DecisionFunction {
 	 * @param avg the avg
 	 * @param std the std
 	 */
-	public LeftConfidenceIntervalFunction(double ratio, double avg, double std, boolean revertFlag) {
-		super("left_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag);
-		this.avg = avg;
-		this.std = std;
+	public LeftConfidenceIntervalFunction(double ratio, ValueSeries algorithmScores, boolean revertFlag) {
+		super("left_confidence_interval", DecisionFunctionType.CONFIDENCE_INTERVAL, revertFlag, algorithmScores);
+		this.avg = algorithmScores.getAvg();
+		this.std = algorithmScores.getStd();
 		this.ratio = ratio;
 	}
 

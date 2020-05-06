@@ -4,9 +4,7 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.failure.InjectedElement;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,30 +24,22 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	 * @param absolute
 	 *            the validAfter flag
 	 */
-	public ClassificationMetric(MetricType mType, boolean absolute,
-			boolean validAfter) {
+	public ClassificationMetric(MetricType mType, boolean absolute,	boolean validAfter) {
 		super(mType, validAfter);
 		this.absolute = absolute;
 	}
-	
-	
-	
+		
 	@Override
-	public double evaluateAnomalyResults(List<? extends AlgorithmResult> anomalyEvaluations) {
+	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
-		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
-			if (anomalyEvaluations.get(i).getInjection() != null) {
-				overallInj.add(anomalyEvaluations.get(i).getInjection());
-			}
-			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
+			//System.out.println(i + "," + anomalyEvaluations.get(i).getScore() + "," + (anomalyEvaluations.get(i).getInjection() != null ? 1 : 0));
 			int d = classifyMetric(anomalyEvaluations.get(i));
 			detectionHits = detectionHits + d;
 		}
 		if (anomalyEvaluations.size() > 0) {
 			if (!absolute){
-				// getUndetectable?
-				return 1.0 * detectionHits / anomalyEvaluations.size();
+				return 100.0 * detectionHits / anomalyEvaluations.size();
 			} else return detectionHits;
 		} else return 0.0;
 	}

@@ -21,7 +21,11 @@ public abstract class BetterBigMetric extends ScoringMetric {
 	 */
 	@Override
 	public int compareResults(double currentMetricValue, double bestMetricValue) {
-		return Double.valueOf(Math.abs(currentMetricValue)).compareTo(Math.abs(bestMetricValue));
+		if(!Double.isFinite(bestMetricValue))
+			return 1;
+		else if(!Double.isFinite(currentMetricValue))
+			return -1;
+		else return Double.valueOf(Math.abs(currentMetricValue)).compareTo(Math.abs(bestMetricValue));
 	}
 	
 }

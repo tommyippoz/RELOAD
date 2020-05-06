@@ -37,7 +37,7 @@ public abstract class DataManager extends ThreadScheduler {
 		for(Knowledge k : kMap.get(kMap.keySet().iterator().next())){
 			injSum = injSum + k.getInjectionCount();
 			itemSum = itemSum + k.size();
-			AppLogger.logInfo(getClass(), "'" + k.getTag() + "' has " + (100.0*k.getInjectionCount()/k.size()) + "% of Faults/Attack Ratio");
+			//AppLogger.logInfo(getClass(), "'" + k.getTag() + "' has " + (100.0*k.getInjectionCount()/k.size()) + "% of Faults/Attack Ratio");
 		}
 		return 100.0 * injSum / itemSum;
 	}

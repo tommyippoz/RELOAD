@@ -3,15 +3,14 @@
  */
 package ippoz.reload.algorithm.elki;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomODIN;
-import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.commons.configuration.AlgorithmConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -34,7 +33,7 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 	 * @param dataSeries the data series
 	 * @param conf the configuration
 	 */
-	public ODINELKI(DataSeries dataSeries, AlgorithmConfiguration conf) {
+	public ODINELKI(DataSeries dataSeries, BasicConfiguration conf) {
 		super(dataSeries, conf, false, false);
 	}
 	
@@ -46,19 +45,15 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 		return new CustomODIN(SquaredEuclideanDistanceFunction.STATIC, 
 	    		conf.hasItem(K) ? Integer.parseInt(conf.getItem(K)) : DEFAULT_K);
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.elki.DataSeriesELKIAlgorithm#evaluateElkiSnapshot(ippoz.reload.commons.knowledge.snapshot.Snapshot)
-	 */
+	
 	@Override
-	protected AlgorithmResult evaluateElkiSnapshot(Snapshot sysSnapshot) {
-		AlgorithmResult ar;
-		Vector v = convertSnapToVector(sysSnapshot);
-		if(v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0))){
-			ar = new AlgorithmResult(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement(), ((CustomODIN)getAlgorithm()).calculateSingleODIN(v));
-			getDecisionFunction().assignScore(ar, true);
-			return ar;
-		} else return AlgorithmResult.unknown(sysSnapshot.listValues(true), sysSnapshot.getInjectedElement());
+	public Pair<Double, Object> getELKIScore(Vector v) {
+		return new Pair<Double, Object>(((CustomODIN)getAlgorithm()).calculateSingleODIN(v), null);
+	}
+
+	@Override
+	public boolean getELKIEvaluationFlag(Vector v) {
+		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0));
 	}
 
 	/* (non-Javadoc)
