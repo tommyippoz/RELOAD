@@ -33,6 +33,8 @@ import javafx.util.Pair;
  */
 public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorithm {
 	
+	public static final String BASE_LEARNERS = "BASE_LEARNERS";
+	
 	private MetaLearnerType mlType;
 	
 	protected MetaData data;

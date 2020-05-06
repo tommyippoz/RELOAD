@@ -48,6 +48,7 @@ public class MetaLearner extends LearnerType {
 			case DELEGATING:
 				break;
 			case STACKING:
+			case STACKING_FULL:
 				if(atList != null)
 					addPreference(StackingMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
 				break;
@@ -92,6 +93,7 @@ public class MetaLearner extends LearnerType {
 					case DELEGATING:
 						break;
 					case STACKING:
+					case STACKING_FULL:
 						if(toDecode.contains("@")){
 							addPreference(StackingMetaLearner.STACKING_LEARNER, toDecode.split("@")[1].trim());
 							toDecode = toDecode.split("@")[0].trim();
@@ -144,7 +146,7 @@ public class MetaLearner extends LearnerType {
 				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
 			}
 			atList = lList.toArray(new BaseLearner[lList.size()]);
-		} else if(prefString.equals(StackingMetaLearner.BASE_LEARNERS) && mlType == MetaLearnerType.STACKING){
+		} else if(prefString.equals(StackingMetaLearner.BASE_LEARNERS) && (mlType == MetaLearnerType.STACKING || mlType == MetaLearnerType.STACKING_FULL)){
 			List<BaseLearner> lList = new LinkedList<>();
 			for(String item : prefValue.split(",")){
 				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
@@ -161,6 +163,8 @@ public class MetaLearner extends LearnerType {
 				toRet = toRet + bl.getAlgType() + ",";
 			}
 			toRet = toRet.substring(0, toRet.length()-1) + "]";
+			if((mlType == MetaLearnerType.STACKING || mlType == MetaLearnerType.STACKING_FULL) && hasPreference(StackingMetaLearner.STACKING_LEARNER))
+				toRet = toRet.substring(0, toRet.length()-1) + "@" + getPreference(StackingMetaLearner.STACKING_LEARNER) + "]";
 		}
 		return toRet;
 	}
@@ -173,6 +177,17 @@ public class MetaLearner extends LearnerType {
 			}
 		}
 		return false;
+	}
+	
+	public boolean hasLearner(LearnerType otherLearner) {
+		boolean base = hasBaseLearner(otherLearner);
+		if(base)
+			return true;
+		else {
+			if((mlType == MetaLearnerType.STACKING || mlType == MetaLearnerType.STACKING_FULL) && hasPreference(StackingMetaLearner.STACKING_LEARNER))
+				return getPreference(StackingMetaLearner.STACKING_LEARNER).compareTo(otherLearner.toCompactString()) == 0;
+			return false;
+		}
 	}
 	
 	@Override
@@ -197,6 +212,7 @@ public class MetaLearner extends LearnerType {
 				case DELEGATING:
 					break;
 				case STACKING:
+				case STACKING_FULL:
 					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", "@");
 					toString = toString + getPreference(StackingMetaLearner.STACKING_LEARNER) + ")";
 					break;

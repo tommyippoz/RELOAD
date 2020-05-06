@@ -12,7 +12,6 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ThreadScheduler;
 import ippoz.reload.evaluation.AlgorithmModel;
-import ippoz.reload.manager.InputManager;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
 import ippoz.reload.trainer.FakeTrainer;
@@ -42,15 +41,17 @@ public class MetaTrainer extends ThreadScheduler {
 		trainerList = new LinkedList<AlgorithmTrainer>();
 	}
 
-	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse){	
+	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse, boolean addIndex){	
 		String scoresFile = data.extractScoresFolder(algTag.toCompactString() + File.separatorChar + "scores.csv");
 		if(needsTraining(scoresFile, data.getForceTraining(), enableReuse)){
 			List<BasicConfiguration> cList = data.getConfigurationsFor(algTag);
-			cList = updateConfigurations(cList, algTag);
+			cList = updateConfigurations(cList, algTag, addIndex);
 			trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList, data.getValidationMetrics()));
 		} else {
 			//InputManager.copyScores(data.extractScoresFolder(algTag.toCompactString()), data.extractScoresFolder(learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
-			trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
+			if(addIndex)
+				trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
+			else trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString()));
 			AppLogger.logInfo(getClass(), "Train result for " + algTag.toString() + " is being re-used. No need to train again.");
 		}
 	}
@@ -63,13 +64,15 @@ public class MetaTrainer extends ThreadScheduler {
 		}
 	}
 
-	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag){
+	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag, boolean addIndex){
 		List<BasicConfiguration> list = new ArrayList<BasicConfiguration>(cList.size());
 		try {
 			for(BasicConfiguration conf : cList){
 				BasicConfiguration ac = (BasicConfiguration) conf.clone();
 				ac.addItem(BasicConfiguration.DATASET_NAME, data.getDatasetName());
-				ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size());
+				if(addIndex)
+					ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size());
+				else ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString());
 				list.add(ac);
 			}
 		} catch (CloneNotSupportedException ex) {

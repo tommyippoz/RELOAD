@@ -37,8 +37,6 @@ import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
 import ippoz.reload.reputation.Reputation;
-import ippoz.reload.voter.AlgorithmVoter;
-import ippoz.reload.voter.ScoresVoter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -381,46 +379,6 @@ public class InputManager {
 		return "";
 	}
 	
-	public List<ScoresVoter> getScoresVoters(String datasetName) {
-		File voterFile = new File(getInputFolder() + getDetectionPreferencesFile());
-		List<ScoresVoter> voterList = new LinkedList<ScoresVoter>();
-		BufferedReader reader;
-		String readed;
-		try {
-			if(voterFile.exists()){
-				reader = new BufferedReader(new FileReader(voterFile));
-				// Eats the header
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null && readed.trim().length() > 0 && !readed.trim().startsWith("*")){
-						break;
-					}
-				}
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*") && readed.contains(",")){
-							ScoresVoter voter = ScoresVoter.generateVoter(readed.split(",")[0].trim(), readed.split(",")[1].trim(), this, datasetName);
-							if(voter != null)
-								voterList.add(voter);
-						}
-					}
-				}
-				reader.close();
-			} 
-			if(!voterFile.exists() || (voterList != null && voterList.size() == 0)){
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						voterFile.getPath() + " not found. Using default value of 'BEST 1 - 1'");
-				voterList.add(ScoresVoter.generateVoter("BEST  1", "1"));
-				generateDefaultScoringPreferences();
-			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read data types");
-		}
-		return voterList;
-	}
-	
 	/**
 	 * Gets the data types.
 	 *
@@ -564,7 +522,7 @@ public class InputManager {
 					try {
 						fileLearner = LearnerType.fromString(confFile.getName().substring(0, confFile.getName().indexOf(".")));
 						if(fileLearner != null && (mainLearner.compareTo(fileLearner) == 0 
-								|| (mConf != null && ((MetaLearner)mainLearner).hasBaseLearner(fileLearner)))) {
+								|| (mConf != null && ((MetaLearner)mainLearner).hasLearner(fileLearner)))) {
 							BufferedReader reader = new BufferedReader(new FileReader(confFile));
 							// Eats the header
 							while(reader.ready()){
@@ -1328,44 +1286,6 @@ public class InputManager {
 		if(vList != null)
 			return vList.size();
 		else return 0;
-	}
-	
-	/**
-	 * Loads train scores.
-	 * This is the outcome of some previous training phases.
-	 *
-	 * @return the list of AlgorithmVoters resulting from the read scores
-	 */
-	public static List<AlgorithmModel> loadAlgorithmModelsFor(String scoresFileString, ScoresVoter voter) {
-		File asFile = new File(scoresFileString);
-		BufferedReader reader;
-		String[] splitted;
-		List<AlgorithmModel> modelList = new LinkedList<AlgorithmModel>();
-		String readed;
-		try {
-			if(asFile.exists()){
-				reader = new BufferedReader(new FileReader(asFile));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.indexOf("§") != -1){
-							splitted = AppUtility.splitAndPurify(readed, "§");
-							if(splitted.length > 4 && voter.checkAnomalyTreshold(Double.valueOf(splitted[3]))){
-								AlgorithmModel am = AlgorithmModel.fromString(readed);
-								if(am != null && voter.checkModel(am, modelList))
-									modelList.add(am);
-							} 
-						}
-					}
-				}
-				reader.close();
-			} else AppLogger.logError(InputManager.class, "FileNotFound", "Unable to find '" + scoresFileString + "'");
-		} catch(Exception ex){
-			AppLogger.logException(InputManager.class, ex, "Unable to read scores");
-		}
-		return modelList;
 	}
 	
 	public static AlgorithmModel loadAlgorithmModel(String scoresFileString) {

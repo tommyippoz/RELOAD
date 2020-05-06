@@ -5,6 +5,7 @@ package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
@@ -27,7 +28,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
@@ -105,8 +105,8 @@ public class MetaLearnerFrame {
 		mlFrame = new JFrame();
 		mlFrame.setTitle("Meta-Learning Setup of '" + lType.toString() + "'");
 		if(screenSize.getWidth() > 1600)
-			mlFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.4), (int)(screenSize.getHeight()*0.6));
-		else mlFrame.setBounds(0, 0, 400, 600);
+			mlFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.6));
+		else mlFrame.setBounds(0, 0, 600, 600);
 		mlFrame.setBackground(Color.WHITE);
 	}
 	
@@ -149,7 +149,7 @@ public class MetaLearnerFrame {
 		
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(Color.WHITE);
-		mainPanel.setLayout(new GridLayout(MetaLearnerType.values().length, 2, 5, 5));
+		mainPanel.setLayout(new GridLayout(MetaLearnerType.values().length, 3, 5, 5));
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Meta-Learning Options", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		mainPanel.setBorder(tb);
 
@@ -177,7 +177,7 @@ public class MetaLearnerFrame {
 			});
 			bGroup.add(jrb);
 			mainPanel.add(jrb);
-			mainPanel.add(buildMetaOptions(mlt, jrb.isSelected()));
+			buildMetaOptions(mainPanel, mlt, jrb.isSelected());
 		}
 		
 		containerPanel.add(mainPanel, BorderLayout.CENTER);
@@ -225,24 +225,28 @@ public class MetaLearnerFrame {
 		return containerPanel;
 	}
 	
-	private JPanel buildMetaOptions(MetaLearnerType mlt, boolean enabled) {
-		JPanel panel = new JPanel();
-		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, 1));
+	private void buildMetaOptions(JPanel mainPanel, MetaLearnerType mlt, boolean enabled) {
 		switch(mlt){
 			case BAGGING:
-				panel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES)));
+				mainPanel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES)));
+				mainPanel.add(new JLabel("-"));
+				break;
+			case STACKING:
+			case STACKING_FULL:
+				mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.BASE_LEARNERS, lType.getPreference(StackingMetaLearner.BASE_LEARNERS), "base-learners to build stacking upon", enabled, true));
+				mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.STACKING_LEARNER, lType.getPreference(StackingMetaLearner.STACKING_LEARNER), "base-learners to build stacking upon", enabled, false));
 				break;
 			case VOTING:
-				panel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled));
+				mainPanel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled, true));
+				mainPanel.add(new JLabel("-"));
 				break;
 			default:
-				panel.add(new JLabel("-"));
+				mainPanel.add(new JLabel("-"));
+				mainPanel.add(new JLabel("-"));
 		}
-		return panel;
 	}
 
-	private Component showPreferenceAlgorithms(String prefName, String textFieldText, String description, boolean enabled) {
+	private Component showPreferenceAlgorithms(String prefName, String textFieldText, String description, boolean enabled, boolean multipleSelection) {
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		panel.setLayout(new GridLayout(1, 2));
@@ -258,6 +262,7 @@ public class MetaLearnerFrame {
 		JLabel textField = new JLabel(textFieldText);
 		textField.setFont(labelFont);
 		textField.setEnabled(enabled);
+		textField.setHorizontalAlignment(SwingConstants.CENTER);
 		textField.addMouseListener(new MouseAdapter()  
 		{  
 		    public void mouseClicked(MouseEvent e) { 
@@ -273,13 +278,15 @@ public class MetaLearnerFrame {
                 JOptionPane.showMessageDialog(
                         null, 
                         gui,
-                        "Choose Base Learner(s). Hold CTRL for multiple",
+                        multipleSelection ? "Choose Base Learner(s). Hold CTRL for multiple" : "Select Meta-Learner algorithm",
                         JOptionPane.QUESTION_MESSAGE);
                 List<String> items = possibilities.getSelectedValuesList();
                 
                 String returnValue = "";
                 for (Object item : items) {
                     returnValue = returnValue + item + ",";
+                    if(!multipleSelection)
+                    	break;
                 }
                 returnValue = returnValue.length() > 0 ? returnValue.substring(0, returnValue.length()-1) : returnValue;
 				if (returnValue != null && returnValue.length() > 0) {
@@ -310,6 +317,7 @@ public class MetaLearnerFrame {
 		JTextField textField = new JTextField();
 		textField.setFont(labelFont);
 		textField.setEnabled(enabled);
+		textField.setHorizontalAlignment(SwingConstants.CENTER);
 		if(enabled){
 			textField.setColumns(10);
 			if(textFieldText != null && AppUtility.isInteger(textFieldText))

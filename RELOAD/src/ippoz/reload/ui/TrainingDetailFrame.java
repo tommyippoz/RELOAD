@@ -90,7 +90,7 @@ public class TrainingDetailFrame {
 
 		JPanel outPanel = new JPanel();
 		outPanel.setBackground(Color.WHITE);
-		outPanel.setBorder(new EmptyBorder(5, tdFrame.getWidth()/10, 5, tdFrame.getWidth()/10));
+		outPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
 		
 		JPanel fPanel = new JPanel();
 		fPanel.setBackground(Color.WHITE);
@@ -131,6 +131,7 @@ public class TrainingDetailFrame {
 		JTable table = new JTable(new MyTableModel());
 		table.setFillsViewportHeight(true);
 		table.setAutoCreateRowSorter(true);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment(JLabel.CENTER);

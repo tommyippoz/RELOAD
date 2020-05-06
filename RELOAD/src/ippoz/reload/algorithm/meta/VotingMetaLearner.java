@@ -45,7 +45,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
 			for(BaseLearner base : getBaseLearners()){
-				mTrainer.addTrainer(base, dataSeries, kList, true);
+				mTrainer.addTrainer(base, dataSeries, kList, true, true);
 			}
 			mTrainer.start();
 			mTrainer.join();

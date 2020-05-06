@@ -312,7 +312,7 @@ public class AppUtility {
 	
 	public static double calcNorm(Double[] data, double[] ds) {
 		if(data != null){
-			if(ds != null || data.length != ds.length){
+			if(ds != null && data.length == ds.length){
 				double[] d = new double[data.length];
 				for(int i=0;i<data.length;i++){
 					d[i] = data[i]*ds[i];
@@ -324,7 +324,7 @@ public class AppUtility {
 
 	public static double calcNorm(double[] data, double[] ds) {
 		if(data != null){
-			if(ds != null || data.length != ds.length){
+			if(ds != null && data.length == ds.length){
 				double[] d = new double[data.length];
 				for(int i=0;i<data.length;i++){
 					d[i] = data[i]*ds[i];

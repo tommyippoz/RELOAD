@@ -37,6 +37,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  * @author Tommy
@@ -111,8 +113,8 @@ public class OutputFrame {
 		outFrame = new JFrame();
 		outFrame.setTitle("Summary");
 		if(screenSize.getWidth() > 1000)
-			outFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.5));
-		else outFrame.setBounds(0, 0, 600, 500);
+			outFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.55), (int)(screenSize.getHeight()*0.6));
+		else outFrame.setBounds(0, 0, 600, 600);
 		outFrame.setBackground(Color.WHITE);
 	}
 	
@@ -134,8 +136,9 @@ public class OutputFrame {
 		
 		JPanel contentPanel = new JPanel();
 		contentPanel.setBackground(Color.WHITE);
+		
 		//contentPanel.setBounds(0, 0, summaryPanel.getWidth(), outList.size()*labelSpacing);
-		contentPanel.setLayout(new GridLayout(outList.size()+1, 1));
+		contentPanel.setLayout(new GridLayout(1, 1));
 		
 		contentPanel.add(buildOutputSummaryPanel(null, summaryPanel, 0, fPanel.getHeight() + labelSpacing), BorderLayout.CENTER);
 		int i = 0;
@@ -143,12 +146,41 @@ public class OutputFrame {
 			contentPanel.add(buildOutputSummaryPanel(dOut, contentPanel, i++, 0));
 		}
 		
-		JScrollPane scroll = new JScrollPane(contentPanel);
+		JScrollPane scroll = new JScrollPane(buildOutputSummaryPanel(outList));
         //scroll.setBounds(0, fPanel.getHeight() + 2*labelSpacing, contentPanel.getWidth(), summaryPanel.getHeight() - fPanel.getHeight() - 3*labelSpacing);
-		
+		scroll.setBorder(new EmptyBorder(20, 20, 20, 20));
 		summaryPanel.add(scroll, BorderLayout.CENTER);
 		
 		tabbedPane.add("Summary", summaryPanel);
+	}
+	
+	private JTable buildOutputSummaryPanel(List<DetectorOutput> outList){
+		String[] header = {"Dataset", "Algorithm", "Features", "Anomaly %", "Score"};
+		String[][] data = new String[outList.size()][5];
+		for(int i=0;i<outList.size();i++){
+			data[i][0] = outList.get(i).getDataset();
+			data[i][1] = outList.get(i).getAlgorithm();
+			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
+			data[i][3] = outList.get(i).getFaultsRatioString();
+			data[i][4] = outList.get(i).getFormattedBestScore();
+		}
+		JTable table = new JTable(data, header);
+		table.setFont(labelFont);
+		table.setRowHeight(labelFont.getSize() + 5);
+		table.setDefaultEditor(Object.class, null);
+		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
+		table.setRowSorter(sorter);
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+        table.setFillsViewportHeight(true);
+        for(int x=0;x<table.getColumnCount();x++){
+        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
+        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
+        }
+		table.getColumnModel().getColumn(0).setPreferredWidth(outFrame.getWidth()/5);
+		table.getColumnModel().getColumn(1).setPreferredWidth(outFrame.getWidth()*2/5);
+		table.getColumnModel().setColumnMargin(5);
+		return table;
 	}
 	
 	private JPanel buildOutputSummaryPanel(DetectorOutput dOut, JPanel root, int i, int tabY){
@@ -213,8 +245,8 @@ public class OutputFrame {
 		
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(Color.WHITE);
-		headerPanel.setLayout(new GridLayout(1, 2));
-		headerPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+		headerPanel.setLayout(new GridLayout(2, 1));
+		headerPanel.setBorder(new EmptyBorder(5, 50, 5, 50));
 		
 		JPanel miscPanel = new JPanel();
 		miscPanel.setBackground(Color.WHITE);
@@ -286,7 +318,7 @@ public class OutputFrame {
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
 	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
 	        }
-	        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+	        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 	        refWidth = resizeColumnWidth(table, -1);
 	
 	        scroll1 = new JScrollPane(table);
@@ -318,7 +350,7 @@ public class OutputFrame {
 	        	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
 	        	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
 	        }
-	        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+	        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 	        resizeColumnWidth(table, refWidth);
 	        
 	        scroll3 = new JScrollPane(table);

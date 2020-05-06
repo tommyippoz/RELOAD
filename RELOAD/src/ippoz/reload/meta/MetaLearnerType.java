@@ -19,6 +19,8 @@ public enum MetaLearnerType {
 	
 	STACKING, 
 	
+	STACKING_FULL,
+	
 	DELEGATING, 
 	
 	ARBITRATING, 

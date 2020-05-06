@@ -11,20 +11,14 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
-import ippoz.reload.commons.support.TimedResult;
 import ippoz.reload.commons.support.ValueSeries;
-import ippoz.reload.decisionfunction.AnomalyResult;
-import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +33,7 @@ import javafx.util.Pair;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	private static int LINEAR_SEARCH_MAX_ITERATIONS = 8;
+	//private static int LINEAR_SEARCH_MAX_ITERATIONS = 8;
 
 	/** The possible configurations. */
 	private List<BasicConfiguration> configurations;
@@ -193,7 +187,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		return new Pair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
 	}
 	
-	private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
+	/*private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
 		double thrValue = (thrRight + thrLeft)/2;
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
@@ -209,6 +203,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				else return rightBest;
 			} 
 		} else return new Pair<String, Double>(threshold, mScore);
-	}
+	}*/
 	
 }

@@ -16,6 +16,7 @@ import ippoz.reload.commons.dataseries.IndicatorDataSeries;
 import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.meta.MetaLearnerType;
@@ -35,8 +36,6 @@ import javafx.util.Pair;
  */
 public class StackingMetaLearner extends DataSeriesMetaLearner {
 	
-	public static final String BASE_LEARNERS = "BASE_LEARNERS";
-	
 	public static final String STACKING_LEARNER = "STACKING_LEARNER";
 	
 	public static final BaseLearner DEFAULT_META_LEARNER = new BaseLearner(AlgorithmType.ELKI_ODIN);
@@ -46,14 +45,18 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	private MetaTrainer sTrainer;
 
 	public StackingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, MetaLearnerType.STACKING);
+		this(dataSeries, conf, MetaLearnerType.STACKING);
+	}
+	
+	public StackingMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlType) {
+		super(dataSeries, conf, mlType);
 		if(conf.hasItem(TMP_FILE)){
 			List<DataSeriesNonSlidingAlgorithm> mlList = loadLearners(conf.getItem(TMP_FILE) + "stackingPreferences.csv");
 			if(mlList != null && mlList.size() > 0)
 				metaLearner = mlList.get(0);
 		}
 	}
-	
+
 	private BaseLearner getStackingLearner(){
 		return getLearnerType() instanceof MetaLearner && 
 				((MetaLearner)getLearnerType()).hasPreference(STACKING_LEARNER) ? 
@@ -69,7 +72,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
 			for(BaseLearner base : getBaseLearners()){
-				mTrainer.addTrainer(base, dataSeries, kList, true);
+				mTrainer.addTrainer(base, dataSeries, kList, true, true);
 			}
 			mTrainer.start();
 			mTrainer.join();
@@ -80,7 +83,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			
 			// Train Meta-Learner
 			sTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
-			sTrainer.addTrainer(getStackingLearner(), getStackingDataSeries(), getStackingKnowledge(kList), true);
+			sTrainer.addTrainer(getStackingLearner(), getStackingDataSeries(), getStackingKnowledge(kList), false, false);
 			sTrainer.start();
 			sTrainer.join();
 			for(AlgorithmTrainer at : sTrainer.getTrainers()){
@@ -94,11 +97,19 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	private List<Knowledge> getStackingKnowledge(List<Knowledge> kList) {
-		// TODO Auto-generated method stub
-		return null;
+		for(Knowledge know : kList){
+			List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
+			for(int i=0;i<know.size();i++){
+				double[] snapArray = getSnapValueArray(snapList.get(i));
+				for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(snapArray).getKey()), DataCategory.PLAIN);
+				}
+			}
+		}
+		return kList;
 	}
 
-	private DataSeries getStackingDataSeries() {
+	protected DataSeries getStackingDataSeries() {
 		List<DataSeries> sList = new LinkedList<>();
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			sList.add(new IndicatorDataSeries(new Indicator(alg.getLearnerType().toCompactString(), LayerType.NO_LAYER, Double.class), DataCategory.PLAIN));
@@ -120,7 +131,11 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 		}
-		return new Pair<Double, Object>(metaLearner.calculateSnapshotScore(scores).getKey(), scores);
+		return new Pair<Double, Object>(metaLearner.calculateSnapshotScore(getMetaArray(scores, snapArray)).getKey(), scores);
+	}
+	
+	protected double[] getMetaArray(double[] meta, double[] snap){
+		return meta;
 	}
 
 	@Override

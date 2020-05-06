@@ -737,7 +737,7 @@ public class OutputDetailFrame {
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm().replace("[", "").replace("]", "") + "' on '" + dOut.getDataset() + "'" +
+				"Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
 				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
