@@ -57,12 +57,14 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return dataCategory;
 	}
 	
-	public LinkedList<DataSeries> listSubSeries(){
-		LinkedList<DataSeries> outList = new LinkedList<DataSeries>();
+	public List<DataSeries> listSubSeries(){
+		List<DataSeries> outList = new LinkedList<DataSeries>();
 		if(this instanceof ComplexDataSeries){
 			outList.addAll(((ComplexDataSeries)this).getFirstOperand().listSubSeries());
 			outList.addAll(((ComplexDataSeries)this).getSecondOperand().listSubSeries());
-		} else outList.add(this); 
+		} else if(this instanceof MultipleDataSeries)
+			outList.addAll(((MultipleDataSeries)this).getSeriesList());
+		else outList.add(this); 
 		return outList;
 	}
 	
@@ -78,11 +80,9 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	public int compareTo(DataSeries other) {
 		if(seriesName.equals(other.getName()) && dataCategory.equals(other.getDataCategory()))
 			return 0;
-		else if(dsRank != Double.NaN && other.getRank() != Double.NaN){
-			return dsRank > other.getRank() ? -1 : 1;
-		} else if(dsRank != Double.NaN)
-			return -1;
-		else return 1;
+		else if(seriesName.equals(other.getName())){
+			return dataCategory.compareTo(other.getDataCategory());
+		} else return seriesName.compareTo(other.getName());
 	}
 	
 	public SnapshotValue getSeriesValue(Observation obs){
@@ -351,7 +351,6 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				if(!selectedFeatures.get(i).getName().equals(selectedFeatures.get(j).getName())){
 					combinedFeatures.add(new SumDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
 					combinedFeatures.add(new FractionDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
-					combinedFeatures.add(new MultipleDataSeries(selectedFeatures.get(i), selectedFeatures.get(j)));
 				}
 			}
 		}

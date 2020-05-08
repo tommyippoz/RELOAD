@@ -12,7 +12,9 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
@@ -33,7 +35,7 @@ import javafx.util.Pair;
  */
 public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	
-	//private static int LINEAR_SEARCH_MAX_ITERATIONS = 8;
+	private static int LINEAR_SEARCH_MAX_ITERATIONS = 3;
 
 	/** The possible configurations. */
 	private List<BasicConfiguration> configurations;
@@ -114,11 +116,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 							bestScore = value.getValue();
 							bestConf = currentConf;
 						}
-						
 					}
-					
 				} else {
-					
 					for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
 						BasicConfiguration currentConf = (BasicConfiguration)conf.clone();
 						DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
@@ -141,7 +140,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 							}
 							
 							Pair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
-							if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+							if(value != null && value.getKey() != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 								currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 								algorithm.setDecisionFunction(value.getKey());
 								bestAlgorithm = algorithm;
@@ -153,27 +152,31 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				} /* end else */
 			} /* end conf for */
 			
-			/*Pair<String, Double> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-			if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-				bestScore = value.getValue();
-				bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-				bestAlgorithm.setDecisionFunction(value.getKey());
+			if(getAlgType() instanceof MetaLearner){
+				Pair<String, Double> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+					bestScore = value.getValue();
+					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
+					bestAlgorithm.setDecisionFunction(value.getKey());
+				}
+				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+					bestScore = value.getValue();
+					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
+					bestAlgorithm.setDecisionFunction(value.getKey());
+				}
 			}
-			value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-			if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-				bestScore = value.getValue();
-				bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-				bestAlgorithm.setDecisionFunction(value.getKey());
-			}*/
 			
 			// Final Operations, assume 'algorithm', 'vs' and 'bestConf' are set
-			bestConf.addItem(BasicConfiguration.TRAIN_AVG, vs.getAvg());
-			bestConf.addItem(BasicConfiguration.TRAIN_STD, vs.getStd());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q0, vs.getMin());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q1, vs.getQ1());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q2, vs.getMedian());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q3, vs.getQ3());
-			bestConf.addItem(BasicConfiguration.TRAIN_Q4, vs.getMax());
+			if(vs != null) {
+				bestConf.addItem(BasicConfiguration.TRAIN_AVG, vs.getAvg());
+				bestConf.addItem(BasicConfiguration.TRAIN_STD, vs.getStd());
+				bestConf.addItem(BasicConfiguration.TRAIN_Q0, vs.getMin());
+				bestConf.addItem(BasicConfiguration.TRAIN_Q1, vs.getQ1());
+				bestConf.addItem(BasicConfiguration.TRAIN_Q2, vs.getMedian());
+				bestConf.addItem(BasicConfiguration.TRAIN_Q3, vs.getQ3());
+				bestConf.addItem(BasicConfiguration.TRAIN_Q4, vs.getMax());
+			}
 			
 			bestAlgorithm.saveLoggedScores();
 			
@@ -187,7 +190,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		return new Pair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
 	}
 	
-	/*private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
+	private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
 		double thrValue = (thrRight + thrLeft)/2;
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
@@ -203,6 +206,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				else return rightBest;
 			} 
 		} else return new Pair<String, Double>(threshold, mScore);
-	}*/
+	}
 	
 }

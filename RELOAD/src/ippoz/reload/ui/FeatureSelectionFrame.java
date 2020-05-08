@@ -84,8 +84,8 @@ public class FeatureSelectionFrame {
 		fsFrame = new JFrame();
 		fsFrame.setTitle("Feature Selection Strategies");
 		if(screenSize.getWidth() > 1000)
-			fsFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.5), (int)(screenSize.getHeight()*0.6));
-		else fsFrame.setBounds(0, 0, 400, 600);
+			fsFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.8), (int)(screenSize.getHeight()*0.6));
+		else fsFrame.setBounds(0, 0, 800, 600);
 		fsFrame.setBackground(Color.WHITE);
 		//fsFrame.setResizable(true);
 	}

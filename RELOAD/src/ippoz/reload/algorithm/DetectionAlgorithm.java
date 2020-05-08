@@ -26,6 +26,9 @@ import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.BoostingMetaLearner;
+import ippoz.reload.algorithm.meta.CascadingMetaLearner;
+import ippoz.reload.algorithm.meta.DelegatingMetaLearner;
 import ippoz.reload.algorithm.meta.FullStackingMetaLearner;
 import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
@@ -235,15 +238,15 @@ public abstract class DetectionAlgorithm {
 			case BAGGING:
 				return new BaggingMetaLearner(dataSeries, conf);
 			case BOOSTING:
-				break;
+				return new BoostingMetaLearner(dataSeries, conf);
 			case CASCADE_GENERALIZATION:
 				break;
 			case CASCADING:
-				break;
+				return new CascadingMetaLearner(dataSeries, conf);
 			case ARBITRATING:
 				break;
 			case DELEGATING:
-				break;
+				return new DelegatingMetaLearner(dataSeries, conf);
 			case STACKING:
 				return new StackingMetaLearner(dataSeries, conf);
 			case STACKING_FULL:
@@ -726,7 +729,12 @@ public abstract class DetectionAlgorithm {
 	public double getConfidence(double algorithmScore){
 		if(decisionFunction != null)
 			return decisionFunction.calculateConfidence(algorithmScore);
-		else return Double.NaN;
+		else {
+			setDecisionFunction();
+			if(decisionFunction != null)
+				return decisionFunction.calculateConfidence(algorithmScore);
+			else return Double.NaN;
+		}
 	}
 	
 	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {

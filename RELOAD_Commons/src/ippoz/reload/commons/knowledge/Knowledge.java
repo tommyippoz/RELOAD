@@ -280,5 +280,15 @@ public abstract class Knowledge implements Cloneable {
 		}
 		return new SingleKnowledge(sampled);
 	}
+	
+	public Knowledge sample(List<Double> ratios) {
+		MonitoredData sampled = new MonitoredData();
+		for(int i=0;i<baseData.size();i++){
+			if(Math.random() < ratios.get(i)){
+				sampled.addItem(baseData.get(i), baseData.getInjection(i));
+			}
+		}
+		return new SingleKnowledge(sampled);
+	}
 
 }

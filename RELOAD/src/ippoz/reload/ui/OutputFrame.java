@@ -91,7 +91,7 @@ public class OutputFrame {
 	public void addOutput(DetectorOutput dOut) {
 		if(dOut != null) {
 			JPanel outPanel = buildOutputPanel(dOut);
-			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm(), outPanel);
+			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getFullAlgorithm(), outPanel);
 		}
 	}
 
@@ -159,7 +159,7 @@ public class OutputFrame {
 		String[][] data = new String[outList.size()][5];
 		for(int i=0;i<outList.size();i++){
 			data[i][0] = outList.get(i).getDataset();
-			data[i][1] = outList.get(i).getAlgorithm();
+			data[i][1] = outList.get(i).getFullAlgorithm();
 			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
 			data[i][3] = outList.get(i).getFaultsRatioString();
 			data[i][4] = outList.get(i).getFormattedBestScore();

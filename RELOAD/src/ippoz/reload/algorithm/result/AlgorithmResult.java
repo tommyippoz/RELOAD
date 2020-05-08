@@ -197,4 +197,12 @@ public class AlgorithmResult {
 		return additionalScore;
 	}
 
+	public boolean isCorrect() {
+		return getBooleanScore() == hasInjection();
+	}
+
+	public boolean hasInjection() {
+		return injection != null;
+	}
+
 }

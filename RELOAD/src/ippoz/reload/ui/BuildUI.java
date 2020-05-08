@@ -410,7 +410,7 @@ public class BuildUI {
 					jb.setHorizontalAlignment(SwingConstants.CENTER);
 					jb.addActionListener(new ActionListener() { 
 						public void actionPerformed(ActionEvent e) { 
-							if(!option.contains(".")) {
+							if(!option.contains(".loader")) {
 								try {
 									LearnerType at = fromOption(option);
 									MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
@@ -465,7 +465,7 @@ public class BuildUI {
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
-						if(option.contains(".")){
+						if(option.contains(".loader")){
 							iManager.removeDataset(option);
 						} else {
 							iManager.removeAlgorithm(fromOption(option));

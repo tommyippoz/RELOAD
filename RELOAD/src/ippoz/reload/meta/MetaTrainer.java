@@ -40,20 +40,24 @@ public class MetaTrainer extends ThreadScheduler {
 		this.learner = learner;
 		trainerList = new LinkedList<AlgorithmTrainer>();
 	}
-
-	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse, boolean addIndex){	
+	
+	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse, boolean addIndex, String tag) {
 		String scoresFile = data.extractScoresFolder(algTag.toCompactString() + File.separatorChar + "scores.csv");
 		if(needsTraining(scoresFile, data.getForceTraining(), enableReuse)){
 			List<BasicConfiguration> cList = data.getConfigurationsFor(algTag);
-			cList = updateConfigurations(cList, algTag, addIndex);
+			cList = updateConfigurations(cList, algTag, addIndex, tag);
 			trainerList.add(new ConfigurationSelectorTrainer(algTag, dataSeries, kList, data, cList, data.getValidationMetrics()));
 		} else {
 			//InputManager.copyScores(data.extractScoresFolder(algTag.toCompactString()), data.extractScoresFolder(learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
 			if(addIndex)
-				trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size()));
+				trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + tag));
 			else trainerList.add(new FakeTrainer(algTag, dataSeries, kList, data, scoresFile, learner.toCompactString() + File.separatorChar + algTag.toString()));
 			AppLogger.logInfo(getClass(), "Train result for " + algTag.toString() + " is being re-used. No need to train again.");
 		}
+	}
+
+	public void addTrainer(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse, boolean addIndex){	
+		addTrainer(algTag, dataSeries, kList, enableReuse, addIndex, String.valueOf(trainerList.size()));
 	}
 	
 	private boolean needsTraining(String scoresFile, boolean forceTraining, boolean enableReuse) {
@@ -64,14 +68,14 @@ public class MetaTrainer extends ThreadScheduler {
 		}
 	}
 
-	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag, boolean addIndex){
+	protected List<BasicConfiguration> updateConfigurations(List<BasicConfiguration> cList, LearnerType algTag, boolean addIndex, String tag){
 		List<BasicConfiguration> list = new ArrayList<BasicConfiguration>(cList.size());
 		try {
 			for(BasicConfiguration conf : cList){
 				BasicConfiguration ac = (BasicConfiguration) conf.clone();
 				ac.addItem(BasicConfiguration.DATASET_NAME, data.getDatasetName());
 				if(addIndex)
-					ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + trainerList.size());
+					ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + tag);
 				else ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString());
 				list.add(ac);
 			}
@@ -102,5 +106,16 @@ public class MetaTrainer extends ThreadScheduler {
 	public List<AlgorithmTrainer> getTrainers() {
 		return trainerList;
 	}
+
+	public AlgorithmTrainer getBestTrainer() {
+		AlgorithmTrainer best = null;
+		for(AlgorithmTrainer at : trainerList){
+			if(best == null || data.getTargetMetric().compareResults(at.getMetricAvgScore(), best.getMetricAvgScore()) > 0)
+				best = at;
+		}
+		return best;
+	}
+
+	
 
 }

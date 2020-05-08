@@ -271,6 +271,10 @@ public class DetectorOutput {
 	public String getAlgorithm(){
 		return algorithms.toCompactString();
 	}
+	
+	public String getFullAlgorithm(){
+		return algorithms.toString();
+	}
 
 	private String[][] getGrid(String scoresString) {
 		List<String> gridRows = new LinkedList<>();

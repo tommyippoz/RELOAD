@@ -42,7 +42,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	protected MetaTrainer trainMetaLearner(List<Knowledge> kList) {
+	protected List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList) {
 		List<List<Knowledge>> sampledKnowledge = null;
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
@@ -56,10 +56,11 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
 			}
+			return mTrainer.getTrainers();
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
 		}
-		return mTrainer;
+		return null;
 	}
 
 	private List<List<Knowledge>> baggingOf(List<Knowledge> kList, int samplesNumber) {
@@ -74,7 +75,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		return outList;
 	}
 
-	@Override
+	/*@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		int count = 0, i = 0;
 		double sum = 0;
@@ -90,6 +91,11 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		if(count > 0)
 			return new Pair<Double, Object>(sum / count, scores);
 		else return new Pair<Double, Object>(0.0, null);
+	}*/
+	
+	@Override
+	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return calculateDefaultSnapshotScore(snapArray);
 	}
 
 	@Override

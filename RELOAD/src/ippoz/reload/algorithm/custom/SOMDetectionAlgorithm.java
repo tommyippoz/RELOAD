@@ -160,7 +160,8 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	            // Update the weights on the winning unit.
 	            for(int i = 0; i < getDataSeries().size(); i++)
 	            {
-	                w[DMin][i] = w[DMin][i] + (baseAlpha * (snapValues[i] - w[DMin][i]));
+	                if(Double.isFinite(snapValues[i]))
+	                	w[DMin][i] = w[DMin][i] + (baseAlpha * (snapValues[i] - w[DMin][i]));
 	                //System.out.println(" w(" + i + ")= " + w[DMin][i]);
 	            }
 	        }

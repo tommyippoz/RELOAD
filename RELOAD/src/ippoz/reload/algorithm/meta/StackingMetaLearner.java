@@ -68,7 +68,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	protected MetaTrainer trainMetaLearner(List<Knowledge> kList) {
+	protected List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList) {
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
 			for(BaseLearner base : getBaseLearners()){
@@ -90,10 +90,12 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 				metaLearner = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), at.getDataSeries(), at.getBestConfiguration());
 			}
 			
+			return mTrainer.getTrainers();
+			
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
 		}
-		return mTrainer;
+		return null;
 	}
 
 	private List<Knowledge> getStackingKnowledge(List<Knowledge> kList) {

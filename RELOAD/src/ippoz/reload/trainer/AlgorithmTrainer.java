@@ -421,6 +421,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 					}
 				}
 			}
+			
 		}
 		return new Pair<String, Double>(bestFunction, bestScore);
 	}

@@ -28,12 +28,14 @@ import javafx.util.Pair;
  * @author Tommy
  *
  */
-public class VotingMetaLearner extends DataSeriesMetaLearner {
+public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 	
-	public static final String BASE_LEARNERS = "BASE_LEARNERS";
+	public static final String CONFIDENCE_THRESHOLD = "CONFIDENCE_THRESHOLD";
+	
+	public static final double DEFAULT_CONFIDENCE_THRESHOLD = 0.99;
 
-	public VotingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, MetaLearnerType.VOTING);
+	public DelegatingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
+		super(dataSeries, conf, MetaLearnerType.DELEGATING);
 	}
 	
 	private BaseLearner[] getBaseLearners(){
@@ -62,17 +64,30 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		double count = 0;
 		int i = 0;
+		double score = Double.NaN;
+		double thr = getStopThreshold();
 		double[] scores = new double[baseLearners.size()];
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
-			double score = alg.calculateSnapshotScore(snapArray).getKey();
+			score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(snapArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
-				count++;
+			System.out.println(alg.getConfidence(score));
+			if(alg.getConfidence(score) >= thr || i >= baseLearners.size()){
+				if(alg.getDecisionFunction().classify(new AlgorithmResult(snapArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
+					score = 0.5 + alg.getConfidence(score)*0.5;
+				} else {
+					score = (1-alg.getConfidence(score))*0.5;
+				}
+				break;
 			}
 		}
-		return new Pair<Double, Object>(count, scores);
+		return new Pair<Double, Object>(score, scores);
+	}
+	
+	private double getStopThreshold() {
+		return getLearnerType() instanceof MetaLearner && 
+				((MetaLearner)getLearnerType()).hasPreference(CONFIDENCE_THRESHOLD) ? 
+						Double.parseDouble(((MetaLearner)getLearnerType()).getPreference(CONFIDENCE_THRESHOLD)) : DEFAULT_CONFIDENCE_THRESHOLD;
 	}
 
 	@Override
@@ -88,5 +103,6 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		return defPar;
 	}
+
 
 }
