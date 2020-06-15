@@ -10,11 +10,11 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -88,17 +88,17 @@ public class IsolationForestSlidingWEKA extends DataSeriesSlidingWEKAAlgorithm {
 	}
 
 	@Override
-	protected Pair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
+	protected ObjectPair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot) {
 		CustomIsolationForest iForest;
 		try {
 			if(windowInstances.size() > sampleSize)
 				iForest = new CustomIsolationForest(nTrees, sampleSize);
 			else iForest = new CustomIsolationForest(1, windowInstances.size());
 			iForest.buildClassifier(windowInstances);
-			return new Pair<Double, Object>(iForest.classifyInstance(newInstance), null);
+			return new ObjectPair<Double, Object>(iForest.classifyInstance(newInstance), null);
 		} catch (Exception ex) {
 			AppLogger.logException(getClass(), ex, "Unable to train and evaluate SlidingIsolationForest");
-			return new Pair<Double, Object>(Double.NaN, null);
+			return new ObjectPair<Double, Object>(Double.NaN, null);
 		}
 	}
 	

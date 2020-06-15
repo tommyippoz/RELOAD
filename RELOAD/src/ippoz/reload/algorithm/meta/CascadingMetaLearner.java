@@ -13,6 +13,7 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
@@ -22,8 +23,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -101,7 +100,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		double count = 0.0;
 		int i = 0;
 		double threshold = getStopThreshold();
@@ -119,7 +118,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 			if(alg.getConfidence(score) >= threshold)
 				break;
 		}
-		return new Pair<Double, Object>(count/i, scores);
+		return new ObjectPair<Double, Object>(count/i, scores);
 	}
 
 	protected double[] updateScoreArray(double[] snapArray, double score) {

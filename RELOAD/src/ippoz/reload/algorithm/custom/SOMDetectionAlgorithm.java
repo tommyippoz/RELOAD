@@ -9,6 +9,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,8 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -176,8 +175,8 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		return new Pair<Double, Object>(calculateSOM(snapArray), null);
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new ObjectPair<Double, Object>(calculateSOM(snapArray), null);
 	}
 
 	@Override

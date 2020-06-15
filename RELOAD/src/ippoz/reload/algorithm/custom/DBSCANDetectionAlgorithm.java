@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,8 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
@@ -112,12 +111,12 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		GenericCluster uc = calculateCluster(snapArray);
 		if(uc != null){
 			double score = uc.distanceFrom(snapArray);
-			return new Pair<Double, Object>(score, uc.getVar());
-		} else return new Pair<Double, Object>(Double.NaN, null);
+			return new ObjectPair<Double, Object>(score, uc.getVar());
+		} else return new ObjectPair<Double, Object>(Double.NaN, null);
 	}
 
 	@Override

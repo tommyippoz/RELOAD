@@ -11,6 +11,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,8 +22,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommaso Capecchi, Tommaso Zoppi
@@ -101,8 +100,8 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		return new Pair<Double, Object>(calculateLDCOF(snapArray), null);
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new ObjectPair<Double, Object>(calculateLDCOF(snapArray), null);
 	}
 
 	@Override

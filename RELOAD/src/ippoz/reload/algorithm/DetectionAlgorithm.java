@@ -52,6 +52,7 @@ import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
@@ -59,8 +60,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * The Class DetectionAlgorithm.
@@ -768,7 +767,7 @@ public abstract class DetectionAlgorithm {
 		}
 	}
 	
-	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
+	public abstract ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
 
 	public abstract void saveLoggedScores();
 	

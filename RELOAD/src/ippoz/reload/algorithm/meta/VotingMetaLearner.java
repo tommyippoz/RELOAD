@@ -12,6 +12,7 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
@@ -21,8 +22,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -65,7 +64,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		double count = 0;
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
@@ -76,7 +75,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 				count++;
 			}
 		}
-		return new Pair<Double, Object>(count, scores);
+		return new ObjectPair<Double, Object>(count, scores);
 	}
 
 	@Override

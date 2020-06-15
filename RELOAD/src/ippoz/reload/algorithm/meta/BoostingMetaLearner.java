@@ -12,6 +12,7 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
 import ippoz.reload.trainer.AlgorithmTrainer;
@@ -21,8 +22,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -129,7 +128,7 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		return calculateDefaultSnapshotScore(snapArray);
 	}
 

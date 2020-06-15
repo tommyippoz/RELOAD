@@ -12,13 +12,13 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.externalutils.WEKAUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -74,7 +74,7 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	}
 
 	@Override
-	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected ObjectPair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		return evaluateSlidingWEKASnapshot(sKnowledge, translateSnapList(snapList, true, getDataSeries()), snapshotToInstance(dsSnapshot), dsSnapshot); 
 	}
 	
@@ -102,6 +102,6 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 	 * @param dsSnapshot the ds snapshot
 	 * @return the algorithm result
 	 */
-	protected abstract Pair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
+	protected abstract ObjectPair<Double, Object> evaluateSlidingWEKASnapshot(SlidingKnowledge sKnowledge, Instances windowInstances, Instance newInstance, Snapshot dsSnapshot);
 
 }

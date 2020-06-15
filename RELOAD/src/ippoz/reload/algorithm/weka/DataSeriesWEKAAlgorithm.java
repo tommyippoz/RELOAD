@@ -8,6 +8,7 @@ import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.externalutils.WEKAUtils;
 
 import java.io.File;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import javafx.util.Pair;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -112,12 +112,12 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	protected abstract boolean automaticWEKATraining(Instances db);
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		try {
 			return calculateWEKAScore(snapArray);
 		} catch (Exception e) {
 			AppLogger.logException(getClass(), e, "Unabl to calculate WEKA score for " + snapArray);
-			return new Pair<Double, Object>(Double.NaN, null);
+			return new ObjectPair<Double, Object>(Double.NaN, null);
 		}
 	}
 
@@ -128,7 +128,7 @@ public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorith
 	 * @return the algorithm result
 	 * @throws Exception 
 	 */
-	protected abstract Pair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception;
+	protected abstract ObjectPair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception;
 	
 	/**
 	 * Gets the filename used to store data about scores and histograms.

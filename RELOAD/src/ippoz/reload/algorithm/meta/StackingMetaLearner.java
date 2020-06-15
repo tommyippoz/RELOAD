@@ -19,6 +19,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
 import ippoz.reload.trainer.AlgorithmTrainer;
@@ -27,8 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -126,14 +125,14 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 		}
-		return new Pair<Double, Object>(metaLearner.calculateSnapshotScore(getMetaArray(scores, snapArray)).getKey(), scores);
+		return new ObjectPair<Double, Object>(metaLearner.calculateSnapshotScore(getMetaArray(scores, snapArray)).getKey(), scores);
 	}
 	
 	protected double[] getMetaArray(double[] meta, double[] snap){

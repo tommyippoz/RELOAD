@@ -13,6 +13,7 @@ import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
 import java.util.Date;
@@ -20,8 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.special.Erf;
@@ -99,15 +98,15 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.DataSeriesSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.madness.detector.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected ObjectPair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		DataVector[] thresholds = calculateTreshold(parseBlocks(snapList));
 		DataVector snapValue = snapToDataVector(dsSnapshot);
 		double d1 = snapValue.calculateDistance(thresholds[1]);
 		double d0 = snapValue.calculateDistance(thresholds[0]);
 		double dt = thresholds[0].calculateDistance(thresholds[1]);
 		if(Double.isFinite(dt)){
-			return new Pair<Double, Object>(d1 + d0 - dt, null);
-		} else return new Pair<Double, Object>(Double.NaN, null);
+			return new ObjectPair<Double, Object>(d1 + d0 - dt, null);
+		} else return new ObjectPair<Double, Object>(Double.NaN, null);
 	}
 
 	/**

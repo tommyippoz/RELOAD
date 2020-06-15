@@ -15,10 +15,10 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.File;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 
 // TODO: Auto-generated Javadoc
@@ -101,7 +101,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	@Override
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		AlgorithmResult ar;
-		Pair<Double, Object> score;
+		ObjectPair<Double, Object> score;
 		Snapshot dsSnap = knowledge.get(currentIndex, getDataSeries());
 		double[] snapArray = getSnapValueArray(dsSnap);
 		if(dsSnap != null && snapArray != null && checkCalculationCondition(snapArray)){
