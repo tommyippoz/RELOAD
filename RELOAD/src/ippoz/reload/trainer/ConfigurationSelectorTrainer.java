@@ -14,6 +14,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.Metric;
@@ -80,7 +81,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected Pair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
+	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
 		ValueSeries vs = null;
 		List<AlgorithmResult> resultList = null;
@@ -108,7 +109,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						for(Knowledge know : kList){
 							resultList.addAll(calculateResults(algorithm, know));
 						}
-						Pair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
+						ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
 						if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 							currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 							algorithm.setDecisionFunction(value.getKey());
@@ -139,7 +140,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 								resultList.addAll(calculateResults(algorithm, know));
 							}
 							
-							Pair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
+							ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
 							if(value != null && value.getKey() != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 								currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 								algorithm.setDecisionFunction(value.getKey());
@@ -187,7 +188,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
-		return new Pair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
+		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
 	}
 	
 	private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){

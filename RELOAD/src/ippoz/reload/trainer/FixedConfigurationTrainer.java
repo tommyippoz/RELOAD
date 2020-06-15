@@ -12,6 +12,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 
@@ -19,8 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * The Class FixedConfigurationTrainer.
@@ -50,7 +49,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected Pair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
+	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
 		double bestScore = Double.NaN;
 		ValueSeries vs = null;
 		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
@@ -67,7 +66,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 			for(Knowledge know : kList){
 				resultList.addAll(calculateResults(algorithm, know));
 			}
-			Pair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
+			ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
 			bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 			algorithm.setDecisionFunction(value.getKey());
 			bestScore = value.getValue();
@@ -89,7 +88,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 			trainResult.put(know, calculateResults(algorithm, know));
 		}
 		
-		return new Pair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
+		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
 	}
 	
 }

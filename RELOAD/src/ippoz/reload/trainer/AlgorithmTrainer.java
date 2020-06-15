@@ -13,6 +13,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
@@ -25,8 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * The Class AlgorithmTrainer.
@@ -128,7 +127,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
-		Pair<Map<Knowledge, List<AlgorithmResult>>, Double> confResults;
+		ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> confResults;
 		trainingTime = System.currentTimeMillis();
 		confResults = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
@@ -191,7 +190,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @return the algorithm configuration
 	 */
-	protected abstract Pair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration();
+	protected abstract ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration();
 
 	/**
 	 * Evaluates metric score on a specified set of experiments.
@@ -404,7 +403,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		kList = null;
 	}
 	
-	protected Pair<String, Double> electBestDecisionFunction(DetectionAlgorithm algorithm, List<AlgorithmResult> resultList, ValueSeries vs){
+	protected ObjectPair<String, Double> electBestDecisionFunction(DetectionAlgorithm algorithm, List<AlgorithmResult> resultList, ValueSeries vs){
 		double bestScore = Double.NaN;
 		String bestFunction = null;
 		if(resultList != null){
@@ -423,7 +422,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			}
 			
 		}
-		return new Pair<String, Double>(bestFunction, bestScore);
+		return new ObjectPair<String, Double>(bestFunction, bestScore);
 	}
 	
 	protected static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, List<AlgorithmResult> oldList){
