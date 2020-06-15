@@ -4,7 +4,6 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.commons.loader.LoaderBatch;
-import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
@@ -26,22 +25,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -56,7 +45,6 @@ import javax.swing.event.DocumentListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -65,7 +53,6 @@ import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.xy.IntervalXYDataset;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleAnchor;
@@ -76,15 +63,15 @@ import org.jfree.ui.TextAnchor;
  * @author Tommy
  *
  */
-public class OutputDetailFrame {
+public class PlotConfidenceFrame {
 	
 	private static int NUM_INTERVALS = 100;
+	
+	private JPanel mainPanel;
 	
 	private JFrame detFrame;
 	
 	private DetectorOutput dOut;
-	
-	private JPanel mainPanel;
 	
 	private Font labelFont;
 	
@@ -100,87 +87,32 @@ public class OutputDetailFrame {
 	
 	private boolean isUpdating;
 	
-	private double minValue;
-	
-	private double maxValue;
-	
-	private double minRefValue;
-	
-	private double maxRefValue;
-	
 	private boolean logScale;
 	
-	private boolean norm;
-	
 	private boolean decisionFunctionFlag;
-	
-	private boolean anomalyNormalFlag;
 	
 	private int numIntervals;
 	
 	private DecisionFunction dFunction;
 	
-	public OutputDetailFrame(DetectorOutput dOut) {
+	public PlotConfidenceFrame(DetectorOutput dOut) {
 		this.dOut = dOut;
 		
-		norm = false;
 		logScale = false;
 		decisionFunctionFlag = false;
 		
 		numIntervals = NUM_INTERVALS;
 		algorithmScores = createScoresValueSeries();
 		anomalyScores = createAnomalyValueSeries();
-		
-		if(anomalyScores != null && anomalyScores.size() > 0)
-			anomalyNormalFlag = true;
-		else anomalyNormalFlag = false;
 
-		dFunction = createDefaultDecisionFunction();
-		
-		setMinMaxValues();
-		minValue = minRefValue;
-		maxValue = maxRefValue;
+		dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, "SGTHR(0.5)", false);
 		
 		buildFrame();
 		
 		double rate = 18*Toolkit.getDefaultToolkit().getScreenSize().getHeight()/1080;
 		labelFont = new Font("Times", Font.PLAIN, (int)((16 + rate)/2));
 		labelBoldFont = new Font("Times", Font.BOLD, (int)((15 + rate)/2));
-	}
-	
-	private void setMinMaxValues() {
-		minRefValue = Double.POSITIVE_INFINITY;
-		maxRefValue = Double.NEGATIVE_INFINITY;
-		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
-			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			//if(containsPostiveLabel(list)) {
-				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore())){
-						if(lr.getValue().getScore() > maxRefValue)
-							maxRefValue = lr.getValue().getScore();
-						if(lr.getValue().getScore() < minRefValue)
-							minRefValue = lr.getValue().getScore();
-					}
-						
-				}
-			//}
-		}
-	}
-	
-	private DecisionFunction createDefaultDecisionFunction() {
-		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
-			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(list != null && list.size() > 0){
-				for(int i=0;i<list.size();i++){
-					if(list.get(i) != null && list.get(i).getValue() != null && list.get(i).getValue().getDecisionFunction() != null){
-						return list.get(i).getValue().getDecisionFunction();
-					}
-				}
-			}
-		}
-		return null;
-	}
-	
+	}	
 
 	private ValueSeries createScoresValueSeries() {
 		ValueSeries series = new ValueSeries();
@@ -188,8 +120,8 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore()))
-						series.addValue(lr.getValue().getScore());
+					if(Double.isFinite(lr.getValue().getConfidencedScore()))
+						series.addValue(lr.getValue().getConfidencedScore());
 				}
 			//}
 		}
@@ -202,8 +134,8 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore()) && lr.getLabel())
-						series.addValue(lr.getValue().getScore());
+					if(Double.isFinite(lr.getValue().getConfidencedScore()) && lr.getLabel())
+						series.addValue(lr.getValue().getConfidencedScore());
 				}
 			//}
 		}
@@ -246,7 +178,161 @@ public class OutputDetailFrame {
 		mainPanel.setBounds(0, 0, detFrame.getWidth() - 10, detFrame.getHeight() - 10);
 		mainPanel.setLayout(new BorderLayout());
 		
+		JPanel headerPanel = new JPanel();
+		headerPanel.setBackground(Color.WHITE);
+		headerPanel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Parameters", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
+		headerPanel.setLayout(new GridLayout(1, 6));
 		
+		JLabel lbl = new JLabel("Number of Rectangles");
+		lbl.setFont(labelFont);
+		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		headerPanel.add(lbl);
+		
+		intTextField = new JTextField(String.valueOf(numIntervals));
+		intTextField.setFont(labelFont);
+		headerPanel.add(intTextField);
+		intTextField.setColumns(5);
+		intTextField.getDocument().addDocumentListener(new DocumentListener() {
+			  
+			public void changedUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+			  
+			public void removeUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+			  
+			public void insertUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+
+			public void workOnUpdate() {
+				if (intTextField.getText() != null && intTextField.getText().length() > 0){
+	        		if(AppUtility.isInteger(intTextField.getText()) && Integer.parseInt(intTextField.getText()) > 0) {
+						numIntervals = Integer.parseInt(intTextField.getText());
+		        		reload();
+	        		}
+	        	}
+			}
+		});
+		
+		JCheckBox logCB = new JCheckBox("Logaritmic y-Axis");
+		logCB.setSelected(logScale);
+		logCB.setBorder(new EmptyBorder(5, 10, 5, 10));
+		logCB.setFont(labelFont);
+		logCB.setHorizontalAlignment(SwingConstants.CENTER);
+		logCB.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		    	logScale = !logScale;
+		        reload();
+		    }
+		});
+		headerPanel.add(logCB);
+		
+		DecisionFunction suggDecision = DecisionFunction.buildDecisionFunction(anomalyScores, "SGTHR(0.5)", true);
+		
+		lbl = new JLabel("Decision Function");
+		lbl.setFont(labelFont);
+		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	String desc = "Description of available Decision Functions \n";
+            	for(DecisionFunctionType dft : DecisionFunctionType.values()){
+            		desc = desc + "- " + dft.toString() + ": " + DecisionFunction.getParameterDetails(dft.toString()) + "\n";
+            	}
+            	JOptionPane.showMessageDialog(detFrame, desc,
+					    "Decision Function Detail", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        });
+		headerPanel.add(lbl);
+		
+		cbDecisionFunction = new JComboBox<DecisionFunctionType>(new DecisionFunctionType[]{DecisionFunctionType.STATIC_THRESHOLD_GREATERTHAN, DecisionFunctionType.STATIC_THRESHOLD_LOWERTHAN});
+		if(dFunction != null)
+			cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
+		else if(suggDecision != null)
+			cbDecisionFunction.setSelectedItem(suggDecision.getName());
+		cbDecisionFunction.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		        if(!isUpdating){
+		        	String newValue = cbDecisionFunction.getSelectedItem().toString();
+		        	String descriptionString = "Insert threshold parameter (any real number) for " + newValue;	
+		        	String s = (String)JOptionPane.showInputDialog(
+	        				detFrame, descriptionString, "Define Decision Function Parameter",
+		                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+					if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+						newValue = newValue + "(" + s + ")";
+					} else newValue = newValue + "(0.5)";
+						
+		        	dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, newValue, false);
+		        	if(dFunction != null){
+		        		cbDecisionFunction.setSelectedItem(dFunction.getDecisionFunctionType());
+		        		reload();
+		        	} 
+		    	}
+		    }
+		});
+		headerPanel.add(cbDecisionFunction);
+		
+		JCheckBox decisionFunctionCB = new JCheckBox("Apply Decision");
+		decisionFunctionCB.setSelected(decisionFunctionFlag);
+		decisionFunctionCB.setBorder(new EmptyBorder(0, 10, 0, 10));
+		decisionFunctionCB.setFont(labelFont);
+		decisionFunctionCB.setHorizontalAlignment(SwingConstants.CENTER);
+		decisionFunctionCB.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		    	decisionFunctionFlag = !decisionFunctionFlag;
+		        reload();
+		    }
+		});
+		
+		headerPanel.add(decisionFunctionCB);
+		
+		mainPanel.add(headerPanel, BorderLayout.NORTH);
+		
+		mainPanel.add(buildChartPanel(), BorderLayout.CENTER);
+		
+		if(dFunction != null && decisionFunctionFlag){	
+			
+			JPanel panel = new JPanel();
+			panel.setBackground(Color.WHITE);
+			panel.setLayout(new GridLayout(3, 1));
+			panel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Metric Scores", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
+			
+			JLabel label = new JLabel("Metric scores for " + dFunction.getName());
+			label.setFont(labelBoldFont);
+			label.setBorder(new EmptyBorder(0, 10, 0, 10));
+			label.setHorizontalAlignment(SwingConstants.CENTER);
+			panel.add(label);
+			
+			label = new JLabel(dFunction.toCompactStringComplete());
+			label.setFont(labelBoldFont);
+			label.setBorder(new EmptyBorder(0, 10, 0, 10));
+			label.setHorizontalAlignment(SwingConstants.CENTER);
+			panel.add(label);
+			
+			label = new JLabel(calculateMetrics());
+			label.setFont(labelFont);
+			label.setBorder(new EmptyBorder(0, 10, 0, 10));
+			label.setHorizontalAlignment(SwingConstants.CENTER);
+			panel.add(label);
+			
+			mainPanel.add(panel, BorderLayout.SOUTH);
+		}
+		
+		mainPanel.validate();
+	}
+
+	/*private JPanel buildPlotPanel(){
+		JPanel mainPanel = new JPanel();
+		mainPanel.setBackground(Color.WHITE);
+		mainPanel.setBounds(0, 0, tabbedPane.getWidth() - 10, tabbedPane.getHeight() - 10);
+		mainPanel.setLayout(new BorderLayout());
 		
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(Color.WHITE);
@@ -535,7 +621,7 @@ public class OutputDetailFrame {
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
-								double score = lr.getValue().getScore(); 
+								double score = lr.getValue().getConfidencedScore(); 
 								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
 									if(lr.getLabel()){
 										if(anList.containsKey(score))
@@ -650,36 +736,26 @@ public class OutputDetailFrame {
 		}
 		
 		mainPanel.validate();
-		
-	}
+		return mainPanel;
+	}*/
 
 	private String calculateMetrics() {	
 		String outString = null;
 		double tp = 0, fp = 0, tn = 0, fn = 0;
 		
-		double currentMax = maxValue;
-		if(containsInfiniteValues())
-			currentMax = maxValue + maxValue/(numIntervals-1.0);
-		
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
-					double currentScore;
-					if(Double.isFinite(lr.getValue().getScore()))
-						currentScore = lr.getValue().getScore();
-					else currentScore = maxValue + maxValue/(numIntervals-1.0);
-					if(currentScore >= minValue && currentScore <= currentMax){
-						AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
-						if(lr.getLabel()){
-							if(aRes == AnomalyResult.ANOMALY)
-								tp++;
-							else fn++;
-						} else {
-							if(aRes == AnomalyResult.ANOMALY)
-								fp++;
-							else tn++;
-						}
+					AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
+					if(lr.getLabel()){
+						if(aRes == AnomalyResult.ANOMALY)
+							tp++;
+						else fn++;
+					} else {
+						if(aRes == AnomalyResult.ANOMALY)
+							fp++;
+						else tn++;
 					}
 				}
 			//}
@@ -712,15 +788,13 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
-					if(lr.getValue().getScore() >= minValue && (maxValue == maxRefValue || lr.getValue().getScore() <= maxValue)){
-						if(lr.getLabel()){
-							anList.add(lr.getValue().getScore());
-						} else {
-							okList.add(lr.getValue().getScore());
-						}
-						if(!Double.isFinite(lr.getValue().getScore()))
-							countInf++;
-					} else countErr++;
+					if(lr.getLabel()){								
+						anList.add(lr.getValue().getConfidencedScore());
+					} else {
+						okList.add(lr.getValue().getConfidencedScore());
+					}
+					if(!Double.isFinite(lr.getValue().getConfidencedScore()))
+						countInf++;
 				}
 			/*} else countErr = countErr + list.size();*/
 		}
@@ -732,8 +806,8 @@ public class OutputDetailFrame {
 		boolean infiniteFlag = containsInfiniteValues();
 		IntervalXYDataset dataset;
 		if(dFunction != null && decisionFunctionFlag)
-			dataset = (IntervalXYDataset)createConfusionMatrixSeries(minValue, maxValue, infiniteFlag);
-		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, infiniteFlag);
+			dataset = (IntervalXYDataset)createConfusionMatrixSeries(infiniteFlag);
+		else dataset = (IntervalXYDataset)createSeries(infiniteFlag);
 		
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
@@ -754,7 +828,7 @@ public class OutputDetailFrame {
 			double[] thresholds = dFunction.getThresholds();
 			if(thresholds != null){
 				for(int i=0;i<thresholds.length;i++){
-					ValueMarker domainMarker = new ValueMarker(norm ? 1 + (thresholds[i] - minValue) /(maxValue - minValue) : thresholds[i]);
+					ValueMarker domainMarker = new ValueMarker(thresholds[i]);
 					domainMarker.setPaint(Color.black);
 					domainMarker.setLabel("THR (" + (i+1) + ")"); 
 					domainMarker.setLabelFont(domainMarker.getLabelFont().deriveFont(domainMarker.getLabelFont().getStyle(), 16));
@@ -769,13 +843,7 @@ public class OutputDetailFrame {
 		
 		// Setting x axis range
 		NumberAxis domain = (NumberAxis) ((XYPlot) chart.getPlot()).getDomainAxis();
-	    if(!norm){
-	    	if(minValue == maxValue){
-	    		if(minValue != 0)
-	    			domain.setRange(minValue*0.99, minValue*1.01);
-	    		else domain.setRange((minValue-0.1)*0.99, (minValue+0.1)*1.01);
-	    	} else domain.setRange(minValue > 0 ? minValue*0.99 : minValue*1.01, infiniteFlag ? maxValue + maxValue/(numIntervals > 1 ? numIntervals-1.0 : 0.9) : maxValue);
-	    }	
+	    domain.setRange(-0.01, 1.01);
 		// Set bar size
 		double scaling = 1.0 - domain.getRange().getLength() / numIntervals;
 		XYPlot categoryPlot = (XYPlot) chart.getPlot();
@@ -800,7 +868,7 @@ public class OutputDetailFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
-					if(Double.isInfinite(lr.getValue().getScore()) || lr.getValue().getScore() > Double.MAX_VALUE - 10){
+					if(Double.isInfinite(lr.getValue().getConfidencedScore()) || lr.getValue().getConfidencedScore() > Double.MAX_VALUE - 10){
 						infiniteFlag = true;
 					}
 				}
@@ -809,52 +877,38 @@ public class OutputDetailFrame {
 		return infiniteFlag;
 	}
 	
-	private XYSeriesCollection createSeries(double minValue, double maxValue, boolean infiniteFlag){
+	private XYSeriesCollection createSeries(boolean infiniteFlag){
 		double[] normalCount = new double[numIntervals];
 		double[] anomalyCount = new double[numIntervals];
-		
-		double currentMax = maxValue;
-		if(infiniteFlag)
-			currentMax = maxValue + maxValue/(numIntervals-1.0);
 		// infiniti si vedono anche se tronchi la rappresentazione
 		//a
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
-					double currentScore;
-					if(Double.isFinite(lr.getValue().getScore()))
-						currentScore = lr.getValue().getScore();
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
-						currentScore = maxValue + maxValue/(numIntervals-1.0);
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
-						currentScore = minValue - minValue/(numIntervals-1.0);
-					else currentScore = lr.getValue().getScore();
-					if(currentScore >= minValue && currentScore <= currentMax){
-						double normalizedScore = (lr.getValue().getScore() - minValue) / (currentMax - minValue);
-						int dataIndex = (int) (normalizedScore*numIntervals);
-						if(dataIndex >= numIntervals)
-							dataIndex = numIntervals - 1;
-						if(lr.getLabel()){
-							anomalyCount[dataIndex]++;
-						} else {
-							normalCount[dataIndex]++;
-						}
+					double currentScore = lr.getValue().getConfidencedScore();
+					int dataIndex = (int) (currentScore*numIntervals);
+					if(dataIndex >= numIntervals)
+						dataIndex = numIntervals - 1;
+					if(lr.getLabel()){
+						anomalyCount[dataIndex]++;
+					} else {
+						normalCount[dataIndex]++;
 					}
 				}
 			//}
 		}
 		
-		XYSeries trueSeries = new XYSeries(norm ? "Anomaly Series (Normalized)" : "Anomaly Series");
-		XYSeries falseSeries = new XYSeries(norm ? "Normal Series (Normalized)" : "Normal Series");
+		XYSeries trueSeries = new XYSeries("Anomaly Series");
+		XYSeries falseSeries = new XYSeries("Normal Series");
 		
-		double intervalSize = maxValue != minValue ? (maxValue - minValue) / numIntervals : 0.2 / numIntervals;
+		double intervalSize = 1.0 / numIntervals;
 		
 		for(int i=0;i<numIntervals;i++){
 			if(normalCount[i] > 0)
-				falseSeries.add(norm ? (i+0.5) : minValue + intervalSize/2 + i*intervalSize, normalCount[i] + anomalyCount[i]);
+				falseSeries.add(intervalSize/2 + i*intervalSize, normalCount[i] + anomalyCount[i]);
 			if(anomalyCount[i] > 0)
-				trueSeries.add(norm ? (i+0.5) : minValue + intervalSize/2 + i*intervalSize, anomalyCount[i]);
+				trueSeries.add(intervalSize/2 + i*intervalSize, anomalyCount[i]);
 		}
 		
 		// Add the series to your data set
@@ -866,64 +920,48 @@ public class OutputDetailFrame {
 		return dataset;
 	}
 	
-	private XYSeriesCollection createConfusionMatrixSeries(double minValue, double maxValue, boolean infiniteFlag){
+	private XYSeriesCollection createConfusionMatrixSeries(boolean infiniteFlag){
 		double[] tpCount = new double[numIntervals];
 		double[] fpCount = new double[numIntervals];
 		double[] tnCount = new double[numIntervals];
 		double[] fnCount = new double[numIntervals];
-		
-		double currentMax = maxValue;
-		if(infiniteFlag)
-			currentMax = maxValue + maxValue/(numIntervals-1.0);
-		
+	
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			//if(containsPostiveLabel(list)){
-				for(LabelledResult lr : list){
-					double currentScore;
-					if(Double.isFinite(lr.getValue().getScore()))
-						currentScore = lr.getValue().getScore();
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
-						currentScore = maxValue + maxValue/(numIntervals-1.0);
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
-						currentScore = minValue - minValue/(numIntervals-1.0);
-					else currentScore = lr.getValue().getScore();
-					if(currentScore >= minValue && currentScore <= currentMax){
-						double normalizedScore = (currentScore - minValue) / (currentMax - minValue);
-						AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
-						int dataIndex = (int) (normalizedScore*numIntervals);
-						if(dataIndex == numIntervals)
-							dataIndex--;
-						if(lr.getLabel()){
-							if(aRes == AnomalyResult.ANOMALY)
-								tpCount[dataIndex]++;
-							else fnCount[dataIndex]++;
-						} else {
-							if(aRes == AnomalyResult.ANOMALY)
-								fpCount[dataIndex]++;
-							else tnCount[dataIndex]++;
-						}
-					}
+			for(LabelledResult lr : list){
+				double currentScore = lr.getValue().getConfidencedScore();
+				AnomalyResult aRes = dFunction.classify(lr.getValue());
+				int dataIndex = (int) (currentScore*numIntervals);
+				if(dataIndex == numIntervals)
+					dataIndex--;
+				if(lr.getLabel()){
+					if(aRes == AnomalyResult.ANOMALY)
+						tpCount[dataIndex]++;
+					else fnCount[dataIndex]++;
+				} else {
+					if(aRes == AnomalyResult.ANOMALY)
+						fpCount[dataIndex]++;
+					else tnCount[dataIndex]++;
 				}
-			//}
+			}
 		}
 		
-		XYSeries tpSeries = new XYSeries(norm ? "TP Series (Normalized)" : "TP Series");
-		XYSeries fpSeries = new XYSeries(norm ? "FP Series (Normalized)" : "FP Series");
-		XYSeries tnSeries = new XYSeries(norm ? "TN Series (Normalized)" : "TN Series");
-		XYSeries fnSeries = new XYSeries(norm ? "FN Series (Normalized)" : "FN Series");
+		XYSeries tpSeries = new XYSeries("TP Series");
+		XYSeries fpSeries = new XYSeries("FP Series");
+		XYSeries tnSeries = new XYSeries("TN Series");
+		XYSeries fnSeries = new XYSeries("FN Series");
 		
-		double intervalSize = (currentMax - minValue) / numIntervals;
+		double intervalSize = 1.0 / numIntervals;
 		
 		for(int i=0;i<numIntervals;i++){
 			if(tpCount[i] > 0)
-				tpSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i]);
+				tpSeries.add(intervalSize/2 + i*intervalSize, tpCount[i]);
 			if(tpCount[i] + fnCount[i] > 0)
-				fnSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i]);
+				fnSeries.add(intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] > 0)
-				fpSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i]);
+				fpSeries.add(intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i]);
 			if(tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i] > 0)
-				tnSeries.add(norm ? (i + 0.5) : minValue + intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
+				tnSeries.add(intervalSize/2 + i*intervalSize, tpCount[i] + fnCount[i] + fpCount[i] + tnCount[i]);
 		}
 		
 		// Add the series to your data set

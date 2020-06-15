@@ -175,7 +175,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 	
 	public static List<DataSeries> basicCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
-		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
+		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
 		for(Indicator ind : indicators){
 			for(DataCategory dCat : dataTypes){
 				simpleInd.add(new IndicatorDataSeries(ind, dCat));

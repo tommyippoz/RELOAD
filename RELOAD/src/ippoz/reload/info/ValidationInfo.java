@@ -186,6 +186,19 @@ public class ValidationInfo {
 	public String getMetricsString() {
 		return metricsString;
 	}
+	
+	public String getMetricsValues(){
+		String gridRows = "";
+		if(metricsString != null && metricsString.trim().length() > 0){
+			for(String splitItem : metricsString.trim().split(",")){
+				if(splitItem.contains(":")){
+					gridRows = gridRows + splitItem.split(":")[1].trim() + ",";
+				}
+			}
+			return gridRows.substring(0, gridRows.length() - 1);
+		}
+		return "";
+	}
 
 	public void setMetricsString(String metricsString) {
 		this.metricsString = metricsString;

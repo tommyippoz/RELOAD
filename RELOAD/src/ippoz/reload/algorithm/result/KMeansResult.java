@@ -3,14 +3,13 @@
  */
 package ippoz.reload.algorithm.result;
 
-import ippoz.reload.commons.failure.InjectedElement;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * @author Tommy
  *
  */
-public class KMeansResult extends ClusteringResult{
+public class KMeansResult extends ClusteringResult {
 	
 	/** The kmm. */
 	private Vector mean;
@@ -24,8 +23,8 @@ public class KMeansResult extends ClusteringResult{
 	 * @param injection the injection
 	 * @param of the of
 	 */
-	public KMeansResult(double[] dataValues, InjectedElement injection, double score, Vector vector, double var, double confidence) {
-		super(dataValues, injection, score, confidence);
+	public KMeansResult(boolean hasInjection, double score, Vector vector, double var, double confidence) {
+		super(hasInjection, score, confidence);
 		this.mean = vector;
 		this.var = var;
 	}
@@ -46,13 +45,5 @@ public class KMeansResult extends ClusteringResult{
 	public double getClusterVariance(){
 		return var;
 	}
-
-	/* (non-Javadoc)
-	 * @see ippoz.reload.algorithm.result.AlgorithmResult#toFileString(java.lang.String)
-	 */
-	@Override
-	public String toFileString(String sep) {
-		return super.toFileString(sep) + sep + "{" + mean + "}" + sep + var;
-	}	
 
 }

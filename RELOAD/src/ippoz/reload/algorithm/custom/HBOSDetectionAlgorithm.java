@@ -293,7 +293,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 */
 	public void loadFile(String filename) {
 		loadHistogramsFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**

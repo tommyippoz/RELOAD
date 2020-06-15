@@ -40,7 +40,11 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 	public static final double DEFAULT_CONFIDENCE_THRESHOLD = 0.99;
 
 	public CascadingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, MetaLearnerType.CASCADING);
+		this(dataSeries, conf, MetaLearnerType.CASCADING);
+	}
+
+	protected CascadingMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlt) {
+		super(dataSeries, conf, mlt);
 	}
 
 	@Override
@@ -48,17 +52,19 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		List<AlgorithmTrainer> trainers = new LinkedList<>();
 		Map<Knowledge, List<Double>> weights = new HashMap<>();
 		BaseLearner[] lList = getWeakLearners();
+		DataSeries currentDs = getDataSeries();
 		baseLearners = new LinkedList<>();
 		try {
 			int i = 0;
 			while (lList != null && i < lList.length){
 				List<Knowledge> boostedKnowledge = BoostingMetaLearner.deriveKnowledge(kList, weights, lList.length);
-				AlgorithmTrainer at = trainWeakLearner(lList[i], boostedKnowledge, i);
+				AlgorithmTrainer at = trainWeakLearner(lList[i], boostedKnowledge, currentDs, i);
 				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
 					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(lList[i], at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
+					updateKnowledge(kList, alg, currentDs);
 					weights = BoostingMetaLearner.updateWeights(alg, weights, getLearningSpeed());
 				}
 				i++;
@@ -70,13 +76,19 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		return null;
 	}
 	
+	protected void updateKnowledge(List<Knowledge> kList, DataSeriesNonSlidingAlgorithm alg, DataSeries currentDs) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private BaseLearner[] getWeakLearners() {
 		return ((MetaLearner)getLearnerType()).getBaseLearners();
 	}
 
-	private AlgorithmTrainer trainWeakLearner(LearnerType learner, List<Knowledge> kList, int iteration){
+	private AlgorithmTrainer trainWeakLearner(LearnerType learner, List<Knowledge> kList, DataSeries currentDs, int iteration){
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
-		for(DataSeries ds : dataSeries.listSubSeries()){
+		mTrainer.addTrainer(learner, currentDs, kList, false, true, String.valueOf(iteration));
+		for(DataSeries ds : currentDs.listSubSeries()){
 			mTrainer.addTrainer(learner, ds, kList, false, true, String.valueOf(iteration));
 		}
 		try {
@@ -98,15 +110,20 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(algArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
-				count = count + 0.5 + alg.getConfidence(score)*0.5;
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+				count = count + (0.5 + alg.getConfidence(score)*0.5);
 			} else {
-				count = count + (1-alg.getConfidence(score))*0.5;
+				count = count + (0.5 - alg.getConfidence(score)*0.5);
 			}
+			snapArray = updateScoreArray(snapArray, score);
 			if(alg.getConfidence(score) >= threshold)
 				break;
 		}
 		return new Pair<Double, Object>(count/i, scores);
+	}
+
+	protected double[] updateScoreArray(double[] snapArray, double score) {
+		return snapArray;
 	}
 
 	@Override

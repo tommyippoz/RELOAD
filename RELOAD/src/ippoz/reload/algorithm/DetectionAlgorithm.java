@@ -27,11 +27,13 @@ import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
 import ippoz.reload.algorithm.meta.BoostingMetaLearner;
+import ippoz.reload.algorithm.meta.CascadeGeneralizationMetaLearner;
 import ippoz.reload.algorithm.meta.CascadingMetaLearner;
 import ippoz.reload.algorithm.meta.DelegatingMetaLearner;
 import ippoz.reload.algorithm.meta.FullStackingMetaLearner;
 import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
+import ippoz.reload.algorithm.meta.WeightedVotingMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -240,11 +242,9 @@ public abstract class DetectionAlgorithm {
 			case BOOSTING:
 				return new BoostingMetaLearner(dataSeries, conf);
 			case CASCADE_GENERALIZATION:
-				break;
+				return new CascadeGeneralizationMetaLearner(dataSeries, conf);
 			case CASCADING:
 				return new CascadingMetaLearner(dataSeries, conf);
-			case ARBITRATING:
-				break;
 			case DELEGATING:
 				return new DelegatingMetaLearner(dataSeries, conf);
 			case STACKING:
@@ -253,6 +253,8 @@ public abstract class DetectionAlgorithm {
 				return new FullStackingMetaLearner(dataSeries, conf);
 			case VOTING:
 				return new VotingMetaLearner(dataSeries, conf);
+			case WEIGHTED_VOTING:
+				return new WeightedVotingMetaLearner(dataSeries, conf);
 			default:
 				break;
 		}
@@ -769,6 +771,8 @@ public abstract class DetectionAlgorithm {
 	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
 
 	public abstract void saveLoggedScores();
+	
+	public abstract void loadLoggedScores();
 	
 
 }

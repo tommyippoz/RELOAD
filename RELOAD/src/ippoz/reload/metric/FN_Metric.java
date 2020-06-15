@@ -39,7 +39,7 @@ public class FN_Metric extends ClassificationMetric {
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (tResult.getInjection() != null && !tResult.getBooleanScore()) {
+		if (tResult.hasInjection() && !tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

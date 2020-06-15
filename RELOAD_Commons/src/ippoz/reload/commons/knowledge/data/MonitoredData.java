@@ -54,10 +54,10 @@ public class MonitoredData {
 		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
 	}
 	
-	public MonitoredData(){
+	public MonitoredData(LoaderBatch expBatch){
 		obsList = new LinkedList<>();
 		injMap = new HashMap<>();
-		expBatch = null;
+		this.expBatch = expBatch;
 	}
 
 	private Map<Date, InjectedElement> generateInjMap(List<InjectedElement> injList, Date refTime) {

@@ -42,7 +42,7 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		AlgorithmResult ar = super.evaluateSnapshot(knowledge, currentIndex);
 		if(currentIndex >= getWindowSize()){
-			logScore(ar.getScore(), ar.getInjection() != null);
+			logScore(ar.getScore(), ar.hasInjection());
 		}
 		return ar;
 	}
@@ -52,6 +52,14 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 		
 	}
 	
+	
+	
+	@Override
+	public void loadLoggedScores() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
 		List<Snapshot> snapList;

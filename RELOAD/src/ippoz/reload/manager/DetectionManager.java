@@ -358,7 +358,7 @@ public class DetectionManager {
 					getWritableTag() + "," + 
 					vInfo.getVoter() + "," + 
 					vInfo.getBestScore() + "," + 
-					vInfo.getMetricsString() + "\n");
+					vInfo.getMetricsValues() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

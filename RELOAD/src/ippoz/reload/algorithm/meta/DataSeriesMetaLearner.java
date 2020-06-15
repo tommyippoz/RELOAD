@@ -192,10 +192,10 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(algArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
-				count = count + 0.5 + alg.getConfidence(score)*0.5;
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+				count = count + (0.5 + alg.getConfidence(score)*0.5);
 			} else {
-				count = count + (1-alg.getConfidence(score))*0.5;
+				count = count + (0.5 - alg.getConfidence(score)*0.5);
 			}
 		}
 		return new Pair<Double, Object>(count/i, scores);

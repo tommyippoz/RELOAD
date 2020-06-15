@@ -28,7 +28,7 @@ public class ThresholdAmount_Metric extends BetterMinMetric {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.getInjection() != null)
+			if(tr.hasInjection())
 				faultyList.add(tr.getScore());
 			else normalList.add(tr.getScore());
 		}

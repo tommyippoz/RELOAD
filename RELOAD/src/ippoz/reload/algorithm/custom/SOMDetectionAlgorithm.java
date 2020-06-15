@@ -204,7 +204,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 */
 	public void loadFile(String filename) {
 		loadWeightsFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**

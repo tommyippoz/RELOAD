@@ -75,6 +75,7 @@ public abstract class Metric implements Comparable<Metric> {
 				return new FalsePositiveRate_Metric(validAfter);
 			case "MCC":
 			case "MATTHEWS":
+			case "MATTHEWSCORRELATIONCOEFFICIENT":
 				return new Matthews_Coefficient(validAfter);
 			case "AUC":
 				return new AUC_Metric(validAfter);
@@ -99,6 +100,18 @@ public abstract class Metric implements Comparable<Metric> {
 			case "THRESHOLDS":
 			case "THRESHOLDS_AMOUNT":
 				return new ThresholdAmount_Metric(validAfter);
+			case "TPCONF":
+			case "TP_CONFIDENCE":
+				return new TPConfidence_Metric(validAfter);
+			case "TNCONF":
+			case "TN_CONFIDENCE":
+				return new TNConfidence_Metric(validAfter);
+			case "FPCONF":
+			case "FP_CONFIDENCE":
+				return new FPConfidence_Metric(validAfter);
+			case "FNCONF":
+			case "FN_CONFIDENCE":
+				return new FNConfidence_Metric(validAfter);
 			case "CONFIDENCE_ERROR":
 			case "CONFERROR":
 				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))

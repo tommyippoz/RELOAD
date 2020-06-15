@@ -201,12 +201,14 @@ public class EvaluatorManager extends DataManager {
 		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
 			for(int i=0;i<getThreadList().size();i++){
 				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
-				outMap.put(ev.getExperimentID(), new LinkedList<>());
-				if(i < detailedEvaluations.size()){
-					List<AlgorithmResult> map = detailedEvaluations.get(i);
-					outMap.get(ev.getExperimentID()).addAll(map);
-				} else {
-					System.out.println(ev.getExperimentID());
+				if(ev.getExperimentID() != null) {
+					outMap.put(ev.getExperimentID(), new LinkedList<>());
+					if(i < detailedEvaluations.size()){
+						List<AlgorithmResult> map = detailedEvaluations.get(i);
+						outMap.get(ev.getExperimentID()).addAll(map);
+					} else {
+						System.out.println(ev.getExperimentID());
+					}
 				}
 			}
 		}
@@ -263,7 +265,7 @@ public class EvaluatorManager extends DataManager {
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
-							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.getInjection() != null ? res.getInjection().getDescription() : "") + ",,");
+							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.hasInjection() ? "anomaly" : "") + ",,");
 							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
 									res.getScore() + "," + (res.getDecisionFunction() != null ? res.getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){

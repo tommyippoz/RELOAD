@@ -32,10 +32,14 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		if(conf != null && conf.hasItem(TMP_FILE)){
 			clearLoggedScores();
 			loadLoggedScores();
+			if(getDecisionFunction() != null){
+				clearLoggedScores();
+			}
 		}
 	}
 
-	private void loadLoggedScores() {
+	@Override
+	public void loadLoggedScores() {
 		BufferedReader reader;
 		String readed;
 		try {

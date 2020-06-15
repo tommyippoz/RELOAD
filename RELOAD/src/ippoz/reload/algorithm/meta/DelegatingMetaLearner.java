@@ -71,12 +71,12 @@ public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			System.out.println(alg.getConfidence(score));
+			//System.out.println(alg.getConfidence(score));
 			if(alg.getConfidence(score) >= thr || i >= baseLearners.size()){
-				if(alg.getDecisionFunction().classify(new AlgorithmResult(snapArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
+				if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
 					score = 0.5 + alg.getConfidence(score)*0.5;
 				} else {
-					score = (1-alg.getConfidence(score))*0.5;
+					score = 0.5 - alg.getConfidence(score)*0.5;
 				}
 				break;
 			}

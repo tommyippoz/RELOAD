@@ -37,6 +37,7 @@ public class FakeTrainer extends AlgorithmTrainer {
 	@Override
 	protected Pair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
+		aModel.getAlgorithm().loadLoggedScores();
 		aModel.getAlgorithm().getConfiguration().addItem(DataSeriesDetectionAlgorithm.TAG, confTmp);
 		bestConf = aModel.getAlgorithmConfiguration(); 
 		aModel.getAlgorithm().saveLoggedScores();

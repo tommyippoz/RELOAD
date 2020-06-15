@@ -33,7 +33,11 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 	public static final String BASE_LEARNERS = "BASE_LEARNERS";
 
 	public VotingMetaLearner(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, MetaLearnerType.VOTING);
+		this(dataSeries, conf, MetaLearnerType.VOTING);
+	}
+	
+	protected VotingMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlt) {
+		super(dataSeries, conf, mlt);
 	}
 	
 	private BaseLearner[] getBaseLearners(){
@@ -68,7 +72,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(snapArray, null, score, 0.0, null)) == AnomalyResult.ANOMALY){
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
 				count++;
 			}
 		}

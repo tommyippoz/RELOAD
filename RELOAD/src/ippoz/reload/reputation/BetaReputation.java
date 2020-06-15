@@ -31,7 +31,7 @@ public class BetaReputation extends Reputation {
 	private int countInjections(List<AlgorithmResult> anomalyEvaluations){
 		int count = 0;
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.getInjection() != null)
+			if(tr.hasInjection())
 				count++;
 		}
 		return count;

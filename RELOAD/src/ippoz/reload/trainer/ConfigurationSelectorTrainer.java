@@ -191,21 +191,27 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	}
 	
 	private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
-		double thrValue = (thrRight + thrLeft)/2;
+		try {
+			double thrValue = (thrRight + thrLeft)/2;
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
 		double mScore = getMetric().evaluateAnomalyResults(updatedList);
 		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
 			Pair<String, Double> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
 			Pair<String, Double> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
-			if(getMetric().compareResults(mScore, leftBest.getValue()) > 0  && getMetric().compareResults(mScore, rightBest.getValue()) > 0){
-				return new Pair<String, Double>(threshold, mScore);
-			} else {
-				if(getMetric().compareResults(leftBest.getValue(), rightBest.getValue()) > 0)
-					return leftBest;
-				else return rightBest;
-			} 
+			if(leftBest != null && rightBest != null){
+				if(getMetric().compareResults(mScore, leftBest.getValue()) > 0  && getMetric().compareResults(mScore, rightBest.getValue()) > 0){
+					return new Pair<String, Double>(threshold, mScore);
+				} else {
+					if(getMetric().compareResults(leftBest.getValue(), rightBest.getValue()) > 0)
+						return leftBest;
+					else return rightBest;
+				} 
+			} else return null;
 		} else return new Pair<String, Double>(threshold, mScore);
+		} catch(Exception ex){
+			return null;
+		}
 	}
 	
 }

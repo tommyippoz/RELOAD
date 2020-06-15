@@ -65,9 +65,12 @@ public class ExperimentEvaluator extends Thread {
 		this.evalKnowledge = evalKnowledge;
 		if(evalKnowledge != null)
 			expBatch = evalKnowledge.getID();
+		else expBatch = null;
 	}
 	
 	public LoaderBatch getExperimentID(){
+		if(expBatch == null)
+			return null;
 		return expBatch;
 	}
 	

@@ -3,6 +3,7 @@
  */
 package ippoz.reload.commons.loader;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,7 +65,7 @@ public class LoaderBatch implements Comparable<LoaderBatch>{
 	}
 
 	public static List<LoaderBatch> compactBatches(List<LoaderBatch> outList) {
-		// TODO Auto-generated method stub
+		Collections.sort(outList);
 		return outList;
 	}
 

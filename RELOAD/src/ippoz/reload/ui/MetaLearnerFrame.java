@@ -243,6 +243,7 @@ public class MetaLearnerFrame {
 					mainPanel.add(showPreferenceLabels(BoostingMetaLearner.LEARNING_SPEED, lType.getPreference(BoostingMetaLearner.LEARNING_SPEED), "learning speed of the ensemble. The higher, the more weights of data points are affected by each weak learner to build train splits", enabled, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED)));
 					break;
 				case CASCADING:
+				case CASCADE_GENERALIZATION:
 				case DELEGATING:
 					mainPanel.add(showPreferenceAlgorithms(DataSeriesMetaLearner.BASE_LEARNERS, lType.getPreference(DataSeriesMetaLearner.BASE_LEARNERS), "base-learners to build casacading upon", enabled, true));
 					mainPanel.add(showPreferenceLabels(CascadingMetaLearner.CONFIDENCE_THRESHOLD, lType.getPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD), "confidence threshold to stop evaluation", enabled, String.valueOf(CascadingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD)));
@@ -252,6 +253,7 @@ public class MetaLearnerFrame {
 					mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.BASE_LEARNERS, lType.getPreference(StackingMetaLearner.BASE_LEARNERS), "base-learners to build stacking upon", enabled, true));
 					mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.STACKING_LEARNER, lType.getPreference(StackingMetaLearner.STACKING_LEARNER), "meta-learner to build stacking upon", enabled, false));
 					break;
+				case WEIGHTED_VOTING:
 				case VOTING:
 					mainPanel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled, true));
 					mainPanel.add(new JLabel("-"));

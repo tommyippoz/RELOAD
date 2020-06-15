@@ -104,7 +104,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			for(int i=0;i<know.size();i++){
 				double[] snapArray = getSnapValueArray(snapList.get(i));
 				for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
-					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(snapArray).getKey()), DataCategory.PLAIN);
+					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()), DataCategory.PLAIN);
 				}
 			}
 		}

@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.result;
 
-import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
@@ -14,11 +13,8 @@ import ippoz.reload.decisionfunction.DecisionFunction;
  */
 public class AlgorithmResult {
 	
-	/** The data point values. */
-	private double[] dataValues; 
-	
 	/** The fault (if any) corresponding to each data point. */
-	private InjectedElement injection;
+	private boolean hasInjection;
 	
 	/** The evaluated score. */
 	private double score;
@@ -42,9 +38,8 @@ public class AlgorithmResult {
 	 * @param score the score
 	 * @param object 
 	 */
-	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, double confidence, Object additionalScore) {
-		this.dataValues = dataValues;
-		this.injection = injection;
+	public AlgorithmResult(boolean hasInjection, double score, double confidence, Object additionalScore) {
+		this.hasInjection = hasInjection;
 		this.score = score;
 		this.confidence = confidence;
 		this.additionalScore = additionalScore;
@@ -59,9 +54,8 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(double[] dataValues, InjectedElement injection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
-		this.dataValues = dataValues;
-		this.injection = injection;
+	public AlgorithmResult(boolean hasInjection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
+		this.hasInjection = hasInjection;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
 		this.dFunction = dFunction;
@@ -75,15 +69,6 @@ public class AlgorithmResult {
 	 */
 	public double getScore() {
 		return score;
-	}
-	
-	/**
-	 * Gets the evaluation score.
-	 *
-	 * @return the score
-	 */
-	public double[] getData() {
-		return dataValues;
 	}
 
 	/**
@@ -129,8 +114,8 @@ public class AlgorithmResult {
 	 * @param injection the injection
 	 * @return the algorithm result
 	 */
-	public static AlgorithmResult error(double[] dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.ERROR, null, 1);
+	public static AlgorithmResult error(boolean hasInjection) {
+		return new AlgorithmResult(hasInjection, Double.NaN, AnomalyResult.ERROR, null, 1);
 	}
 
 	/**
@@ -140,8 +125,8 @@ public class AlgorithmResult {
 	 * @param injection the injection
 	 * @return the algorithm result
 	 */
-	public static AlgorithmResult unknown(double[] dataValues, InjectedElement injection) {
-		return new AlgorithmResult(dataValues, injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
+	public static AlgorithmResult unknown(boolean injection) {
+		return new AlgorithmResult(injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
 	}	
 	
 	/**
@@ -157,20 +142,6 @@ public class AlgorithmResult {
 				"score evaluation" + sep +
 				"decision function";
 	}
-	
-	/**
-	 * Converts results to file string.
-	 *
-	 * @param sep the separator
-	 * @return the string
-	 */
-	public String toFileString(String sep){
-		return "{" +  dataValues.toString() + "}" + sep + 
-				injection.getDescription() + sep +
-				score + sep + 
-				scoreEvaluation.toString() + sep +
-				dFunction.getDecisionFunctionType();
-	}
 
 	/**
 	 * Sets the score.
@@ -179,10 +150,6 @@ public class AlgorithmResult {
 	 */
 	public void setScore(double value) {
 		score = value;		
-	}
-
-	public InjectedElement getInjection() {
-		return injection;
 	}
 
 	public boolean getBooleanScore() {
@@ -202,7 +169,13 @@ public class AlgorithmResult {
 	}
 
 	public boolean hasInjection() {
-		return injection != null;
+		return hasInjection;
+	}
+
+	public double getConfidencedScore() {
+		if(getScoreEvaluation() == AnomalyResult.ANOMALY)
+			return 0.5 + getConfidence()*0.5;
+		else return 0.5 - getConfidence()*0.5;
 	}
 
 }

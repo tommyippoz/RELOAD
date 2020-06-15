@@ -84,7 +84,7 @@ public class TrainInfo {
 					kFold = Integer.parseInt(preferences.get(TRAIN_KFOLD).trim());
 				}
 				if(preferences.containsKey(TRAIN_RUNS) && preferences.get(TRAIN_RUNS) != null){
-					runs = preferences.get(TRAIN_RUNS).trim();
+					runs = preferences.get(TRAIN_RUNS).trim().replace(",", ";");
 				}
 				if(preferences.containsKey(TRAIN_NDATAPOINTS) && preferences.get(TRAIN_NDATAPOINTS) != null && AppUtility.isInteger(preferences.get(TRAIN_NDATAPOINTS).trim())){
 					nDataPoints = Integer.parseInt(preferences.get(TRAIN_NDATAPOINTS).trim());
@@ -197,12 +197,12 @@ public class TrainInfo {
 	public String toFileString(){
 		return (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (kFold != null ? kFold : "") + ","
-				+ (runs != null ? runs : "") + ","
+				+ (runs != null ? runs.replace(",", ";") : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
 				+ (trainTimeMs != null ? trainTimeMs : "") + ","
-				+ (metricsString != null ? metricsString : "");
+				+ (metricsString != null ? metricsString.replace(",", ";") : "");
 	}
 	
 	public static String getFileHeader(){

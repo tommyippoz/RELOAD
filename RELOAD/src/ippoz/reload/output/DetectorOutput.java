@@ -337,7 +337,7 @@ public class DetectorOutput {
 				for(int i=0;i<votingScores.get(expName).size();i++){
 					AlgorithmResult ar = votingScores.get(expName).get(i);
 					if(i < votingScores.get(expName).size()){
-						outMap.get(expName).add(new LabelledResult(ar.getInjection() != null, ar));
+						outMap.get(expName).add(new LabelledResult(ar.hasInjection(), ar));
 					}
 				}
 			}

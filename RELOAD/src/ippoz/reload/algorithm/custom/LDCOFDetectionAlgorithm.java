@@ -227,7 +227,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	 */
 	public void loadFile(String filename) {
 		loadClustersFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**
