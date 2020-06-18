@@ -298,4 +298,8 @@ public abstract class SimpleLoader implements Loader {
 		return batches;
 	}
 
+	public static boolean isValid(Loader loader) {
+		return loader != null && Double.isFinite(loader.getAnomalyRate()) && loader.getAnomalyRate() > 0;
+	}
+
 }

@@ -4,6 +4,7 @@
 package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.support.PreferencesManager;
 
 import java.util.List;
 

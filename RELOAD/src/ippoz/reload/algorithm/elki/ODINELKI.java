@@ -6,11 +6,11 @@ package ippoz.reload.algorithm.elki;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomODIN;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -47,8 +47,8 @@ public class ODINELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> getELKIScore(Vector v) {
-		return new Pair<Double, Object>(((CustomODIN)getAlgorithm()).calculateSingleODIN(v), null);
+	public ObjectPair<Double, Object> getELKIScore(Vector v) {
+		return new ObjectPair<Double, Object>(((CustomODIN)getAlgorithm()).calculateSingleODIN(v), null);
 	}
 
 	@Override

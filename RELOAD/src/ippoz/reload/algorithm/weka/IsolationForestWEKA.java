@@ -8,6 +8,7 @@ import ippoz.reload.algorithm.weka.support.CustomIsolationForest;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.util.Pair;
 import weka.core.Instances;
 
 /**
@@ -168,8 +168,8 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	}
 
 	@Override
-	protected Pair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception {
-		return new Pair<Double, Object>(iForest.classifyInstance(snapshotToInstance(snapArray)), null);
+	protected ObjectPair<Double, Object> calculateWEKAScore(double[] snapArray) throws Exception {
+		return new ObjectPair<Double, Object>(iForest.classifyInstance(snapshotToInstance(snapArray)), null);
 	}
 
 	@Override

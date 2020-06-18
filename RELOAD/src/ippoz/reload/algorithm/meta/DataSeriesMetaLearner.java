@@ -7,14 +7,16 @@ import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.configuration.MetaConfiguration;
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
+import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.meta.MetaLearnerType;
-import ippoz.reload.meta.MetaTrainer;
 import ippoz.reload.trainer.AlgorithmTrainer;
 
 import java.io.BufferedWriter;
@@ -24,8 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -43,7 +43,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	
 	private List<MetaScore> scores;
 	
-	private MetaTrainer mTrainer;
+	private List<AlgorithmTrainer> mTrainer;
 
 	protected DataSeriesMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlType) {
 		super(dataSeries, conf);
@@ -86,7 +86,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		
 		scores = new LinkedList<MetaScore>();
 		for(Snapshot snap : snapList){
-			Pair<Double, Object> res = calculateSnapshotScore(getSnapValueArray(snap));
+			ObjectPair<Double, Object> res = calculateSnapshotScore(getSnapValueArray(snap));
 			scores.add(new MetaScore(Snapshot.snapToString(snap, getDataSeries()), res.getKey()));
 		}
 		
@@ -98,7 +98,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	@Override
 	public void saveLoggedScores() {
 		super.saveLoggedScores();
-		printFile(getFilename(), "metaPreferences.csv", mTrainer.getTrainers());
+		printFile(getFilename(), "metaPreferences.csv", mTrainer);
 	}
 
 	@Override
@@ -107,6 +107,23 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		if(!new File(folder).exists())
 			new File(folder).mkdirs();
 		return folder;
+	}
+	
+	protected double[] parseArray(double[] snapArray, DataSeries dataSeries) {
+		int index = 0;
+		List<DataSeries> algDs = dataSeries.listSubSeries();
+		List<DataSeries> mainDs = getDataSeries().listSubSeries();
+		double[] items = new double[algDs.size()];
+		for(DataSeries ds : dataSeries.listSubSeries()){
+			for(int i=0;i<mainDs.size();i++){
+				if(ds.compareTo(mainDs.get(i)) == 0){
+					items[index] = snapArray[i];
+					break;
+				}
+			}
+			index++;
+		}
+		return items;
 	}
 
 	protected void printFile(String filefolder, String filename, List<AlgorithmTrainer> tList){
@@ -139,7 +156,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		return getFilename() + "logged_scores.metascores";
 	}
 
-	protected abstract MetaTrainer trainMetaLearner(List<Knowledge> kList);
+	protected abstract List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList);
 
 	@Override
 	protected void storeAdditionalPreferences() {
@@ -164,6 +181,23 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	@Override
 	protected void printTextResults(String outFolderName, String expTag) {
 		// TODO Auto-generated method stub	
+	}
+	
+	protected ObjectPair<Double, Object> calculateDefaultSnapshotScore(double[] snapArray) {
+		double count = 0.0;
+		int i = 0;
+		double[] scores = new double[baseLearners.size()];
+		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+			double[] algArray = parseArray(snapArray, alg.getDataSeries());
+			double score = alg.calculateSnapshotScore(algArray).getKey();
+			scores[i++] = score;
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+				count = count + (0.5 + alg.getConfidence(score)*0.5);
+			} else {
+				count = count + (0.5 - alg.getConfidence(score)*0.5);
+			}
+		}
+		return new ObjectPair<Double, Object>(count/i, scores);
 	}
 	
 	/**

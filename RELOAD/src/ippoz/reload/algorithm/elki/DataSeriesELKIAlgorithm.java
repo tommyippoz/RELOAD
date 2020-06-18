@@ -12,12 +12,12 @@ import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.externalutils.ELKIUtils;
 
 import java.io.File;
 import java.util.List;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -110,7 +110,7 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	}
 
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		return getELKIScore(new Vector(snapArray));
 	}
 
@@ -156,7 +156,7 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 		return vec;
 	}
 	
-	public abstract Pair<Double, Object> getELKIScore(Vector v);
+	public abstract ObjectPair<Double, Object> getELKIScore(Vector v);
 	
 	public boolean getELKIEvaluationFlag(Vector v){
 		return v.getDimensionality() > 0 && Double.isFinite(v.doubleValue(0)) && getDecisionFunction() != null;

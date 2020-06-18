@@ -4,6 +4,10 @@
 package ippoz.reload.algorithm.type;
 
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.BoostingMetaLearner;
+import ippoz.reload.algorithm.meta.CascadingMetaLearner;
+import ippoz.reload.algorithm.meta.DataSeriesMetaLearner;
+import ippoz.reload.algorithm.meta.DelegatingMetaLearner;
 import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
@@ -25,38 +29,15 @@ public class MetaLearner extends LearnerType {
 	
 	private BaseLearner[] atList;
 	
+	private MetaLearner(MetaLearnerType mlType){
+		this(mlType, null);
+	}
+	
 	public MetaLearner(MetaLearnerType mlType, BaseLearner[] atList) {
 		super();
 		this.mlType = mlType;
 		this.atList = atList;
 		setDefaultMetaFreferences();
-	}
-
-	private void setDefaultMetaFreferences() {
-		switch(mlType){
-			case ARBITRATING:
-				break;
-			case BAGGING:
-				addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));
-				break;
-			case BOOSTING:
-				break;
-			case CASCADE_GENERALIZATION:
-				break;
-			case CASCADING:
-				break;
-			case DELEGATING:
-				break;
-			case STACKING:
-			case STACKING_FULL:
-				if(atList != null)
-					addPreference(StackingMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
-				break;
-			case VOTING:
-				if(atList != null)
-					addPreference(VotingMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
-				break;
-		}
 	}
 
 	public MetaLearner(MetaLearnerType mlType, BaseLearner[] atList, Map<String, String> learnerPreferences) {
@@ -65,68 +46,164 @@ public class MetaLearner extends LearnerType {
 		this.atList = atList;
 	}
 	
-	public MetaLearner(String mlString){
+	public static MetaLearner buildMetaLearner(String mlString){
+		MetaLearner ml = null;
 		if(mlString != null && mlString.trim().length() > 0){
 			mlString = mlString.trim();
 			if(mlString.contains("(") && mlString.contains(")")){
-				mlType = MetaLearnerType.valueOf(mlString.substring(0, mlString.indexOf("(")).trim());
+				ml = new MetaLearner(MetaLearnerType.valueOf(mlString.substring(0, mlString.indexOf("(")).trim()));
 				String toDecode = mlString.substring(mlString.indexOf("(")+1, mlString.length()-1).trim();
-				switch(mlType){
-					case ARBITRATING:
-						break;
+				switch(ml.getMetaType()){
 					case BAGGING:
 						if(toDecode.contains(","))
-							addPreference(BaggingMetaLearner.N_SAMPLES, toDecode.split(",")[1].trim());
-						else addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));	 
+							ml.addPreference(BaggingMetaLearner.N_SAMPLES, toDecode.split(",")[1].trim());
+						else ml.addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));	 
 						try {
-							atList = new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode.split(",")[0].trim()))};
+							ml.setBaseLearners(new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode.split(",")[0].trim()))});
 						} catch(Exception ex){
-							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
 						}
 						break;
 					case BOOSTING:
+						if(toDecode.contains(",")){
+							String[] splitted = toDecode.split(",");
+							ml.addPreference(BoostingMetaLearner.N_ENSEMBLES, toDecode.split(",")[1].trim());
+							if(splitted.length > 2){
+								ml.addPreference(BoostingMetaLearner.LEARNING_SPEED, toDecode.split(",")[2].trim());
+							} else ml.addPreference(BoostingMetaLearner.LEARNING_SPEED, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED));
+						} else {
+							ml.addPreference(BoostingMetaLearner.N_ENSEMBLES, String.valueOf(BoostingMetaLearner.DEFAULT_ENSEMBLES));
+							ml.addPreference(BoostingMetaLearner.LEARNING_SPEED, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED));
+						}
+						try {
+							ml.setBaseLearners(new BaseLearner[]{new BaseLearner(AlgorithmType.valueOf(toDecode.split(",")[0].trim()))});
+						} catch(Exception ex){
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
+						}
 						break;
 					case CASCADE_GENERALIZATION:
-						break;
 					case CASCADING:
+						if(toDecode.contains("@")){
+							String[] splitted = toDecode.split("@");
+							ml.addPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD, splitted[1].trim());
+							toDecode = splitted[0].trim();
+						} else ml.addPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD, String.valueOf(CascadingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD));
+						ml.addPreference(BoostingMetaLearner.LEARNING_SPEED, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED));
+						ml.addPreference(DataSeriesMetaLearner.BASE_LEARNERS, toDecode.trim());
+						try {
+							List<BaseLearner> lList = new LinkedList<>();
+							for(String item : toDecode.split(",")){
+								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+							}
+							ml.setBaseLearners(lList.toArray(new BaseLearner[lList.size()]));
+						} catch(Exception ex){
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
+						}
 						break;
 					case DELEGATING:
+						if(toDecode.contains("@")){
+							String[] splitted = toDecode.split("@");
+							ml.addPreference(DelegatingMetaLearner.CONFIDENCE_THRESHOLD, splitted[1].trim());
+							toDecode = splitted[0].trim();
+						} else ml.addPreference(DelegatingMetaLearner.CONFIDENCE_THRESHOLD, String.valueOf(DelegatingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD));
+						ml.addPreference(DataSeriesMetaLearner.BASE_LEARNERS, toDecode.trim());
+						try {
+							List<BaseLearner> lList = new LinkedList<>();
+							for(String item : toDecode.split(",")){
+								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
+							}
+							ml.setBaseLearners(lList.toArray(new BaseLearner[lList.size()]));
+						} catch(Exception ex){
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
+						}
 						break;
 					case STACKING:
 					case STACKING_FULL:
 						if(toDecode.contains("@")){
-							addPreference(StackingMetaLearner.STACKING_LEARNER, toDecode.split("@")[1].trim());
+							ml.addPreference(StackingMetaLearner.STACKING_LEARNER, toDecode.split("@")[1].trim());
 							toDecode = toDecode.split("@")[0].trim();
-						} else addPreference(StackingMetaLearner.STACKING_LEARNER, StackingMetaLearner.DEFAULT_META_LEARNER.toCompactString());
-						addPreference(StackingMetaLearner.BASE_LEARNERS, toDecode.trim());
+						} else ml.addPreference(StackingMetaLearner.STACKING_LEARNER, StackingMetaLearner.DEFAULT_META_LEARNER.toCompactString());
+						ml.addPreference(StackingMetaLearner.BASE_LEARNERS, toDecode.trim());
 						try {
 							List<BaseLearner> lList = new LinkedList<>();
 							for(String item : toDecode.split(",")){
 								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
 							}
-							atList = lList.toArray(new BaseLearner[lList.size()]);
+							ml.setBaseLearners(lList.toArray(new BaseLearner[lList.size()]));
 						} catch(Exception ex){
-							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
 						}
 						break;
+					case WEIGHTED_VOTING:
 					case VOTING:
-						addPreference(VotingMetaLearner.BASE_LEARNERS, toDecode.trim());
+						ml.addPreference(VotingMetaLearner.BASE_LEARNERS, toDecode.trim());
 						try {
 							List<BaseLearner> lList = new LinkedList<>();
 							for(String item : toDecode.split(",")){
 								 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
 							}
-							atList = lList.toArray(new BaseLearner[lList.size()]);
+							ml.setBaseLearners(lList.toArray(new BaseLearner[lList.size()]));
 						} catch(Exception ex){
-							AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+							AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+							return null;
 						}
 						break;
 					default:
-						AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
-						break;
+						AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+						return null;
 				}
-			} else AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
-		} else AppLogger.logInfo(getClass(), "Unable to decode '" + mlString + "' learner");
+			} else {
+				AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+				return null;
+			}
+		} else {
+			AppLogger.logInfo(MetaLearner.class, "Unable to decode '" + mlString + "' learner");
+			return null;
+		}
+		return ml;
+	}
+	
+	private void setBaseLearners(BaseLearner[] baseLearners) {
+		this.atList = baseLearners;
+	}
+
+	private void setDefaultMetaFreferences() {
+		switch(mlType){
+			case BAGGING:
+				addPreference(BaggingMetaLearner.N_SAMPLES, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES));
+				break;
+			case BOOSTING:
+				addPreference(BoostingMetaLearner.N_ENSEMBLES, String.valueOf(BoostingMetaLearner.DEFAULT_ENSEMBLES));
+				addPreference(BoostingMetaLearner.LEARNING_SPEED, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED));
+				break;
+			case CASCADE_GENERALIZATION:
+			case CASCADING:
+				if(atList != null)
+					addPreference(DataSeriesMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
+				addPreference(BoostingMetaLearner.LEARNING_SPEED, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED));
+				addPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD, String.valueOf(CascadingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD));
+				break;
+			case DELEGATING:
+				if(atList != null)
+					addPreference(DataSeriesMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
+				addPreference(DelegatingMetaLearner.CONFIDENCE_THRESHOLD, String.valueOf(DelegatingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD));
+				break;
+			case STACKING:
+			case STACKING_FULL:
+				if(atList != null)
+					addPreference(DataSeriesMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
+				break;
+			case WEIGHTED_VOTING:
+			case VOTING:
+				if(atList != null)
+					addPreference(DataSeriesMetaLearner.BASE_LEARNERS, Arrays.toString(atList).replace("[", "").replace("]", ""));
+				break;
+		}
 	}
 
 	public MetaLearnerType getMetaType() {
@@ -140,19 +217,16 @@ public class MetaLearner extends LearnerType {
 	@Override
 	public void addPreference(String prefString, String prefValue) {
 		super.addPreference(prefString, prefValue);
-		if(prefString.equals(VotingMetaLearner.BASE_LEARNERS) && mlType == MetaLearnerType.VOTING){
+		if(prefString.equals(DataSeriesMetaLearner.BASE_LEARNERS) && 
+				(mlType == MetaLearnerType.WEIGHTED_VOTING || mlType == MetaLearnerType.STACKING || 
+					mlType == MetaLearnerType.DELEGATING || mlType == MetaLearnerType.CASCADING || mlType == MetaLearnerType.CASCADE_GENERALIZATION ||
+						mlType == MetaLearnerType.STACKING_FULL || mlType == MetaLearnerType.VOTING)){
 			List<BaseLearner> lList = new LinkedList<>();
 			for(String item : prefValue.split(",")){
 				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
 			}
 			atList = lList.toArray(new BaseLearner[lList.size()]);
-		} else if(prefString.equals(StackingMetaLearner.BASE_LEARNERS) && (mlType == MetaLearnerType.STACKING || mlType == MetaLearnerType.STACKING_FULL)){
-			List<BaseLearner> lList = new LinkedList<>();
-			for(String item : prefValue.split(",")){
-				 lList.add(new BaseLearner(AlgorithmType.valueOf(item.trim())));
-			}
-			atList = lList.toArray(new BaseLearner[lList.size()]);
-		}
+		} 
 	}
 
 	public String toCompactString(){
@@ -197,30 +271,34 @@ public class MetaLearner extends LearnerType {
 			toString = toString + mlType.toString();
 			if(atList != null && atList.length > 0){
 				switch(mlType){
-				case ARBITRATING:
+					case BAGGING:
+						toString = toString + "(" + Arrays.toString(atList).replace("[", "").replace("]", "") 
+							+ "," + getPreference(BaggingMetaLearner.N_SAMPLES) + ")";
+						break;
+					case BOOSTING:
+						toString = toString + "(" + Arrays.toString(atList).replace("[", "").replace("]", "") 
+							+ "," + getPreference(BoostingMetaLearner.N_ENSEMBLES) + "," + getPreference(BoostingMetaLearner.LEARNING_SPEED) + ")";
+						break;
+					case CASCADE_GENERALIZATION:
+					case CASCADING:
+						toString = toString + "(" + Arrays.toString(atList).replace("[", "").replace("]", "") 
+							+ "@" + getPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD) + "@" + getPreference(BoostingMetaLearner.LEARNING_SPEED) + ")";
+						break;
+					case DELEGATING:
+						toString = toString + "(" + Arrays.toString(atList).replace("[", "").replace("]", "") 
+						+ "@" + getPreference(DelegatingMetaLearner.CONFIDENCE_THRESHOLD) + ")";
 					break;
-				case BAGGING:
-					toString = toString + "(" + Arrays.toString(atList).replace("[", "").replace("]", "") 
-						+ "," + getPreference(BaggingMetaLearner.N_SAMPLES) + ")";
-					break;
-				case BOOSTING:
-					break;
-				case CASCADE_GENERALIZATION:
-					break;
-				case CASCADING:
-					break;
-				case DELEGATING:
-					break;
-				case STACKING:
-				case STACKING_FULL:
-					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", "@");
-					toString = toString + getPreference(StackingMetaLearner.STACKING_LEARNER) + ")";
-					break;
-				case VOTING:
-					toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");
-					break;
-				default:
-					break;
+					case STACKING:
+					case STACKING_FULL:
+						toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", "@");
+						toString = toString + getPreference(StackingMetaLearner.STACKING_LEARNER) + ")";
+						break;
+					case WEIGHTED_VOTING:
+					case VOTING:
+						toString = toString + Arrays.toString(atList).replace("[", "(").replace("]", ")");
+						break;
+					default:
+						break;
 				}
 			}
 		}
@@ -229,7 +307,7 @@ public class MetaLearner extends LearnerType {
 	
 	@Override
 	public int compareTo(LearnerType other) {
-		if(other != null && other instanceof MetaLearner &&((MetaLearner)other).getMetaType() == mlType){
+		/*if(other != null && other instanceof MetaLearner &&((MetaLearner)other).getMetaType() == mlType){
 			if(atList != null && ((MetaLearner)other).getBaseLearners() != null){
 				LearnerType[] otherList = ((MetaLearner)other).getBaseLearners();
 				if(otherList.length != atList.length)
@@ -240,15 +318,43 @@ public class MetaLearner extends LearnerType {
 				}
 				return 0;
 			} else return -1;
-		} else return -1;
+		} else return -1;*/
+		if(other != null)
+			return toString().compareTo(other.toString());
+		else return -1;
 	}
 
 	public static String describe(MetaLearnerType type) {
 		switch(type){
 			case BAGGING:
-				return "Samples training set into " + BaggingMetaLearner.N_SAMPLES + " groups and creates many copies of the same learner that are trained using different groups";
+				return "Samples training set into " + BaggingMetaLearner.N_SAMPLES + 
+						" groups and creates many copies of the same learner that are trained using "
+						+ "different groups";
+			case BOOSTING:
+				return "Uses the chosen learner to build " + BoostingMetaLearner.N_ENSEMBLES + " weak learners "
+						+ "(stumps), which are going to be averaged, weighted using confidence, for final score.";
+			case CASCADING:
+				return "Uses the chosen learner to build " + BoostingMetaLearner.N_ENSEMBLES + " weak learners "
+					+ "(stumps), which are going to be averaged, weighted using confidence, for final score."
+					+ "If a single weak learner reached a confidence " + CascadingMetaLearner.CONFIDENCE_THRESHOLD 
+					+ ", evaluation ends and outputs partial score.";
+			case DELEGATING:
+				return "Independently runs " + DataSeriesMetaLearner.BASE_LEARNERS + " and then chooses the first algorithm"
+					+ "which is confident enough, according to " + DelegatingMetaLearner.CONFIDENCE_THRESHOLD + " for final evaluation."; 
+			case STACKING:
+				return "Independently runs " + DataSeriesMetaLearner.BASE_LEARNERS + " and aggregates them through "
+					+ StackingMetaLearner.STACKING_LEARNER + ", which provides the final score.";
+			case STACKING_FULL:
+				return "Independently runs " + DataSeriesMetaLearner.BASE_LEARNERS + " and aggregates them - alongside with "
+						+ "relevant datasets features -  through " + StackingMetaLearner.STACKING_LEARNER + ", which provides the final score.";
+			case VOTING:
+				return "Independently runs " + DataSeriesMetaLearner.BASE_LEARNERS + " and then counts "
+						+ "how many of them raised anomalies. Final score sums anomalies raised by each algorithm."; 
+			case WEIGHTED_VOTING:
+				return "Independently runs " + DataSeriesMetaLearner.BASE_LEARNERS + " and then counts "
+					+ "how many of them raised anomalies. Final score weights anomalies raised by each algorithm.";
 			default:
-				return "ToBe Defined";
+				return "Not Implemented yet";	
 		}
 	}	
 	

@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,8 +20,6 @@ import java.io.FileReader;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
-import javafx.util.Pair;
 
 /**
  * The Class AlgorithmVoter.
@@ -70,7 +69,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		return alg.snapshotAnomalyRate(knowledge, i);
 	}
 	
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray){
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray){
 		return alg.calculateSnapshotScore(null, 0, null, snapArray);
 	}
 

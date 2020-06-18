@@ -11,11 +11,11 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.externalutils.ELKIUtils;
 
 import java.util.List;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.type.TypeUtil;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
@@ -62,13 +62,13 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 * @see ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm#evaluateSlidingSnapshot(ippoz.reload.commons.knowledge.SlidingKnowledge, java.util.List, ippoz.reload.commons.knowledge.snapshot.Snapshot)
 	 */
 	@Override
-	protected Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
+	protected ObjectPair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot) {
 		Database windowDb = translateSnapList(snapList, true);
 		if(windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD).getDBIDs().size() >= 5){
 			customELKI = generateELKIAlgorithm();
 			customELKI.run(windowDb, windowDb.getRelation(TypeUtil.NUMBER_VECTOR_FIELD));
 			return evaluateSlidingELKISnapshot(sKnowledge, windowDb, convertSnapToVector(dsSnapshot), dsSnapshot);			
-		} else return new Pair<Double, Object>(Double.NaN, null);
+		} else return new ObjectPair<Double, Object>(Double.NaN, null);
 	}
 
 	/**
@@ -80,7 +80,7 @@ public abstract class DataSeriesSlidingELKIAlgorithm extends DataSeriesExternalS
 	 * @param dsSnapshot the snapshot to be evaluated
 	 * @return the algorithm result
 	 */
-	protected abstract Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
+	protected abstract ObjectPair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot);
 
 	/**
 	 * Translates a snapshot list into an ELKI Database object.

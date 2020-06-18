@@ -13,6 +13,7 @@ import ippoz.reload.commons.service.ServiceStat;
 import ippoz.reload.commons.service.StatPair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -22,11 +23,12 @@ import java.util.List;
  */
 public class MultipleDataSeries extends DataSeries {
 	
-	private List<DataSeries> dsList;
+	private List<DataSeries> dsList; 
 
 	public MultipleDataSeries(List<? extends DataSeries> pList) {
 		super(aggregateSeriesName(pList), DataCategory.PLAIN);
 		dsList = new ArrayList<DataSeries>(pList.size());
+		Collections.sort(pList);
 		for(DataSeries is : pList){
 			dsList.add(is);
 		}
@@ -34,18 +36,10 @@ public class MultipleDataSeries extends DataSeries {
 			dsList = null;
 	}
 	
-	public MultipleDataSeries(DataSeries ds1, DataSeries ds2) {
-		super(ds1.toString() + "@" + ds2.toString(), DataCategory.PLAIN);
-		dsList = new ArrayList<DataSeries>(2);
-		dsList.add(ds1);
-		dsList.add(ds2);
-		if(dsList.size() == 0)
-			dsList = null;
-	}
-	
 	private static String aggregateSeriesName(List<? extends DataSeries> pList){
 		String aggName = "";
 		if(pList != null && pList.size() >= 2){
+			Collections.sort(pList);
 			for(DataSeries id : pList){
 				aggName = aggName + id.toString() + "@";
 			}

@@ -7,11 +7,11 @@ import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomGMeans;
 import ippoz.reload.algorithm.elki.support.CustomKMeans.KMeansScore;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
@@ -57,9 +57,9 @@ public class GMeansELKI extends DataSeriesELKIAlgorithm {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public Pair<Double, Object> getELKIScore(Vector v) {
+	public ObjectPair<Double, Object> getELKIScore(Vector v) {
 		KMeansScore of = ((CustomGMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(v);
-		return new Pair<Double, Object>(of.getDistance(), of.getCluster());
+		return new ObjectPair<Double, Object>(of.getDistance(), of.getCluster());
 	}
 	
 	@Override

@@ -8,6 +8,7 @@ import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
+import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -407,10 +408,18 @@ public class LoaderFrame {
 		if(!loaderPref.hasPreference(FileLoader.TRAIN_PARTITION) || 
 				loaderPref.getPreference(FileLoader.TRAIN_PARTITION).trim().length() == 0){
 			output = output + "Wrong TRAIN_RUN_PREFERENCE value: remember to specify runs for training.\n";
+		} else {
+			tLoader = buildLoader("train");
+			if(!SimpleLoader.isValid(tLoader))
+				output = output + "Portion specified for training is either empty or does not specify a mixture of normal/anomaly data that is needed to tune parameters of algorithms.\n";
 		}
 		if(!loaderPref.hasPreference(FileLoader.VALIDATION_PARTITION) || 
 				loaderPref.getPreference(FileLoader.VALIDATION_PARTITION).trim().length() == 0){
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
+		} else {
+			vLoader = buildLoader("validation");
+			if(!SimpleLoader.isValid(vLoader))
+				output = output + "Portion specified for training is either empty or does not specify a mixture of normal/anomaly data that is needed to correctly calculate confusion matrix.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
 	}

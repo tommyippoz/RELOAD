@@ -10,6 +10,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommaso Capecchi, Tommaso Zoppi
@@ -114,8 +113,8 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		return new Pair<Double, Object>(calculateSDO(new Point(snapArray)), null);
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new ObjectPair<Double, Object>(calculateSDO(new Point(snapArray)), null);
 	}
 
 	@Override
@@ -274,7 +273,7 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 */
 	public void loadFile(String filename) {
 		loadObserversFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**

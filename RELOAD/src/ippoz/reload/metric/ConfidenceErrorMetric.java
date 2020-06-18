@@ -34,11 +34,11 @@ public class ConfidenceErrorMetric extends BetterMaxMetric {
 		AlgorithmResult tResult;
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
 			tResult = anomalyEvaluations.get(i);
-			if (tResult.getInjection() == null && tResult.getBooleanScore()) {
+			if (!tResult.hasInjection() && tResult.getBooleanScore()) {
 				fpHits++;
 				fpScore = fpScore + (tResult.getConfidence() > 1 ? 1.0 : tResult.getConfidence());
 			}
-			else if (tResult.getInjection() != null && !tResult.getBooleanScore()) {
+			else if (tResult.hasInjection() && !tResult.getBooleanScore()) {
 				fnHits++;
 				fnScore = fnScore + (tResult.getConfidence() > 1 ? 1.0 : tResult.getConfidence());
 			} else {

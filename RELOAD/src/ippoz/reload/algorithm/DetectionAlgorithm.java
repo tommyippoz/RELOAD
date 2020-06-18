@@ -26,9 +26,14 @@ import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
 import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.BoostingMetaLearner;
+import ippoz.reload.algorithm.meta.CascadeGeneralizationMetaLearner;
+import ippoz.reload.algorithm.meta.CascadingMetaLearner;
+import ippoz.reload.algorithm.meta.DelegatingMetaLearner;
 import ippoz.reload.algorithm.meta.FullStackingMetaLearner;
 import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
+import ippoz.reload.algorithm.meta.WeightedVotingMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.sliding.SPSSlidingAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -47,6 +52,7 @@ import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
@@ -54,8 +60,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * The Class DetectionAlgorithm.
@@ -235,21 +239,21 @@ public abstract class DetectionAlgorithm {
 			case BAGGING:
 				return new BaggingMetaLearner(dataSeries, conf);
 			case BOOSTING:
-				break;
+				return new BoostingMetaLearner(dataSeries, conf);
 			case CASCADE_GENERALIZATION:
-				break;
+				return new CascadeGeneralizationMetaLearner(dataSeries, conf);
 			case CASCADING:
-				break;
-			case ARBITRATING:
-				break;
+				return new CascadingMetaLearner(dataSeries, conf);
 			case DELEGATING:
-				break;
+				return new DelegatingMetaLearner(dataSeries, conf);
 			case STACKING:
 				return new StackingMetaLearner(dataSeries, conf);
 			case STACKING_FULL:
 				return new FullStackingMetaLearner(dataSeries, conf);
 			case VOTING:
 				return new VotingMetaLearner(dataSeries, conf);
+			case WEIGHTED_VOTING:
+				return new WeightedVotingMetaLearner(dataSeries, conf);
 			default:
 				break;
 		}
@@ -726,7 +730,12 @@ public abstract class DetectionAlgorithm {
 	public double getConfidence(double algorithmScore){
 		if(decisionFunction != null)
 			return decisionFunction.calculateConfidence(algorithmScore);
-		else return Double.NaN;
+		else {
+			setDecisionFunction();
+			if(decisionFunction != null)
+				return decisionFunction.calculateConfidence(algorithmScore);
+			else return Double.NaN;
+		}
 	}
 	
 	public static String[] extractLabels(boolean includeFaulty, List<Snapshot> kSnapList) {
@@ -758,9 +767,11 @@ public abstract class DetectionAlgorithm {
 		}
 	}
 	
-	public abstract Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
+	public abstract ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
 
 	public abstract void saveLoggedScores();
+	
+	public abstract void loadLoggedScores();
 	
 
 }

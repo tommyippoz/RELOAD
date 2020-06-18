@@ -15,6 +15,7 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.loader.Loader;
+import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -193,11 +194,13 @@ public class DetectionManager {
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
 				loader = buildLoader("train");
-				kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
-				fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
-				fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
-				fsm.addLoaderInfo(loader);
-				fsm.saveSelectedFeatures(scoresFolderName, getDatasetName() + "_filtered.csv");
+				if(SimpleLoader.isValid(loader)){
+					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
+					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
+					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
+					fsm.addLoaderInfo(loader);
+					fsm.saveSelectedFeatures(scoresFolderName, getDatasetName() + "_filtered.csv");
+				} else AppLogger.logError(getClass(), "UnvalidLoaderError", "Loader '" + (loader != null ? loader.getLoaderName() :"") + "' not specified correctly. Check if it is reachable and if train partition is specified correctly to include some anomalies to be used to calculate feature scores");
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to filter indicators");
@@ -222,28 +225,31 @@ public class DetectionManager {
 		try {
 			if(needTraining()) {
 				loader = buildLoader("train");
-				kMap = generateKnowledge(loader.fetch());
-				if(!new File(buildScoresFolder()).exists())
-					new File(buildScoresFolder()).mkdirs();
-				if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
-					iManager.generateDataSeries(kMap, iManager.getScoresFolder() + getDatasetName() + File.separatorChar + getDatasetName() + "_filtered.csv");
-				}
-				tManager = new TrainerManager(iManager.getSetupFolder(), 
-						iManager.getScoresFolder(), 
-						loaderPref.getCompactFilename(), 
-						iManager.getOutputFolder(), 
-						kMap, 
-						iManager.loadConfigurations(mainLearner, getDatasetName(), windowSize, sPolicy, true), 
-						metric, 
-						reputation, 
-						dataTypes, 
-						mainLearner, 
-						iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
-						iManager.getKFoldCounter(),
-						iManager.loadValidationMetrics());
-				tManager.addLoaderInfo(loader);
-				tManager.train(buildScoresFolder());
-				tManager.flush();
+				if(SimpleLoader.isValid(loader)){
+					kMap = generateKnowledge(loader.fetch());
+					if(!new File(buildScoresFolder()).exists())
+						new File(buildScoresFolder()).mkdirs();
+					if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
+						iManager.generateDataSeries(kMap, iManager.getScoresFolder() + getDatasetName() + File.separatorChar + getDatasetName() + "_filtered.csv");
+					}
+					tManager = new TrainerManager(iManager.getSetupFolder(), 
+							iManager.getScoresFolder(), 
+							loaderPref.getCompactFilename(), 
+							iManager.getOutputFolder(), 
+							kMap, 
+							iManager.loadConfigurations(mainLearner, getDatasetName(), windowSize, sPolicy, true), 
+							metric, 
+							reputation, 
+							dataTypes, 
+							mainLearner, 
+							iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
+							iManager.getKFoldCounter(),
+							iManager.loadValidationMetrics());
+					tManager.addLoaderInfo(loader);
+					tManager.train(buildScoresFolder());
+					tManager.flush();
+				} else AppLogger.logError(getClass(), "UnvalidLoaderError", "Loader '" + (loader != null ? loader.getLoaderName() : "") + "' not specified correctly. Check if it is reachable and if train partition is specified correctly to include some anomalies to be used to calculate optimal parameters values");
+			
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to train detector");
@@ -292,36 +298,39 @@ public class DetectionManager {
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
 		Loader l = buildLoader("validation");
-		String scoresFileString = buildScoresFolder();
-		if(iManager.countAvailableModels(scoresFileString) > 0){
-			eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);
-			if(eManager.detectAnomalies()){
-				score = eManager.getMetricsValues().get(metric.getMetricName());
-				AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
+		if(SimpleLoader.isValid(l)){
+			String scoresFileString = buildScoresFolder();
+			if(iManager.countAvailableModels(scoresFileString) > 0){
+				eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);
+				if(eManager.detectAnomalies()){
+					score = eManager.getMetricsValues().get(metric.getMetricName());
+					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
+				}
+				ValidationInfo vInfo = new ValidationInfo();
+				vInfo.setDataPoints(l.getDataPoints());
+				vInfo.setRuns(l.getRuns());
+				vInfo.setFaultRatio(eManager.getInjectionsRatio());
+				vInfo.setModels(eManager.getModels());
+				vInfo.setBestScore(score);
+				vInfo.setMetricsString(eManager.getMetricsString());
+				vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()));
+				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
+				return new DetectorOutput(iManager, mainLearner, score, 
+						InputManager.loadAlgorithmModel(buildScoresFolder()),
+						l,
+						eManager.getDetailedEvaluations(),
+						iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
+						iManager.extractSelectedFeatures(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName(), loaderPref.getFilename()),		
+						getWritableTag(),
+						eManager.getInjectionsRatio(), 
+						iManager.loadTrainInfo(buildScoresFolder() + File.separatorChar + "trainInfo.info"),
+						vInfo);
+			
+			} else {
+				AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather models as result of train phase.");
 			}
-			ValidationInfo vInfo = new ValidationInfo();
-			vInfo.setDataPoints(l.getDataPoints());
-			vInfo.setRuns(l.getRuns());
-			vInfo.setFaultRatio(eManager.getInjectionsRatio());
-			vInfo.setModels(eManager.getModels());
-			vInfo.setBestScore(score);
-			vInfo.setMetricsString(eManager.getMetricsString());
-			vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()));
-			vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
-			return new DetectorOutput(iManager, mainLearner, score, 
-					InputManager.loadAlgorithmModel(buildScoresFolder()),
-					l,
-					eManager.getDetailedEvaluations(),
-					iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
-					iManager.extractSelectedFeatures(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName(), loaderPref.getFilename()),		
-					getWritableTag(),
-					eManager.getInjectionsRatio(), 
-					iManager.loadTrainInfo(buildScoresFolder() + File.separatorChar + "trainInfo.info"),
-					vInfo);
-		} else {
-			AppLogger.logError(getClass(), "NoVotersFound", "Unable to gather models as result of train phase.");
-			return null;
-		}
+		} else AppLogger.logError(getClass(), "UnvalidLoaderError", "Loader '" + (l != null ? l.getLoaderName() : "") + "' not specified correctly. Check if it is reachable and if validation partition is specified correctly to include some anomalies to be used to calculate metric scores");
+		return null;
 	}
 
 	public String getModelsPath() {
@@ -358,7 +367,7 @@ public class DetectionManager {
 					getWritableTag() + "," + 
 					vInfo.getVoter() + "," + 
 					vInfo.getBestScore() + "," + 
-					vInfo.getMetricsString() + "\n");
+					vInfo.getMetricsValues() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

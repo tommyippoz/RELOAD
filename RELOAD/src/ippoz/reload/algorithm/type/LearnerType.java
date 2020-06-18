@@ -48,7 +48,7 @@ public abstract class LearnerType implements Comparable<LearnerType> {
 				AlgorithmType at = AlgorithmType.valueOf(learnerString);
 				return new BaseLearner(at);
 			} catch(Exception ex){
-				return new MetaLearner(learnerString);
+				return MetaLearner.buildMetaLearner(learnerString);
 			}
 		} else return null;
 	}

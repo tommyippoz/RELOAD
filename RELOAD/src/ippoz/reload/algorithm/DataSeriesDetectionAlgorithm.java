@@ -15,10 +15,10 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.File;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 
 // TODO: Auto-generated Javadoc
@@ -101,7 +101,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	@Override
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		AlgorithmResult ar;
-		Pair<Double, Object> score;
+		ObjectPair<Double, Object> score;
 		Snapshot dsSnap = knowledge.get(currentIndex, getDataSeries());
 		double[] snapArray = getSnapValueArray(dsSnap);
 		if(dsSnap != null && snapArray != null && checkCalculationCondition(snapArray)){
@@ -109,15 +109,15 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 			if(getLearnerType() instanceof BaseLearner){
 				AlgorithmType at = ((BaseLearner)getLearnerType()).getAlgType(); 
 				if(at == AlgorithmType.DBSCAN) {
-					ar = new DBSCANResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), (Double)score.getValue(), getConfidence(score.getKey()));
+					ar = new DBSCANResult(dsSnap.getInjectedElement() != null, score.getKey(), (Double)score.getValue(), getConfidence(score.getKey()));
 				} else if(score.getValue() != null && score.getValue() instanceof KMeansModel){
 					KMeansModel kms = (KMeansModel)score.getValue();
-					ar = new KMeansResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), kms.getMean(), kms.getVarianceContribution(), getConfidence(score.getKey()));
-				} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()), score.getValue());
-			} else ar = new AlgorithmResult(snapArray, dsSnap.getInjectedElement(), score.getKey(), getConfidence(score.getKey()), score.getValue());
+					ar = new KMeansResult(dsSnap.getInjectedElement() != null, score.getKey(), kms.getMean(), kms.getVarianceContribution(), getConfidence(score.getKey()));
+				} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue());
+			} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue());
 			getDecisionFunction().assignScore(ar, true);
 			return ar;
-		} else return AlgorithmResult.error(snapArray, dsSnap.getInjectedElement());
+		} else return AlgorithmResult.error(dsSnap.getInjectedElement() != null);
 	}
 	
 	protected double[] getSnapValueArray(Snapshot snap){

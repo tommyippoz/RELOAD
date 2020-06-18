@@ -75,11 +75,13 @@ public abstract class DecisionFunction {
 					}
 				} else if(thresholdTag.contains("THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
 					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
-					if(thresholdTag.contains("STATIC")){
-						if(thresholdTag.contains("GREATER"))
-							return new StaticThresholdGreaterThanDecision(Double.valueOf(partial.trim()), algorithmScores);
-						else return new StaticThresholdLowerThanDecision(Double.valueOf(partial.trim()), algorithmScores);
-					} else return new ThresholdDecision(Double.valueOf(partial.trim()), algorithmScores);
+					if(AppUtility.isNumber(partial)){
+						if(thresholdTag.contains("STATIC")){
+							if(thresholdTag.contains("GREATER"))
+								return new StaticThresholdGreaterThanDecision(Double.valueOf(partial.trim()), algorithmScores);
+							else return new StaticThresholdLowerThanDecision(Double.valueOf(partial.trim()), algorithmScores);
+						} else return new ThresholdDecision(Double.valueOf(partial.trim()), algorithmScores);
+					} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create THRESHOLD decision function '" + thresholdTag + "'");
 				} else if(thresholdTag.endsWith("%")) {
 					partial = thresholdTag.replace("%", "");
 					return new ThresholdDecision(Double.valueOf(partial.trim())/100.0, algorithmScores);

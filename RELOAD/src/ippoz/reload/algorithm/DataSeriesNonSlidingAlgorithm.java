@@ -10,6 +10,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,8 +19,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -32,10 +31,14 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 		if(conf != null && conf.hasItem(TMP_FILE)){
 			clearLoggedScores();
 			loadLoggedScores();
+			if(getDecisionFunction() != null){
+				clearLoggedScores();
+			}
 		}
 	}
 
-	private void loadLoggedScores() {
+	@Override
+	public void loadLoggedScores() {
 		BufferedReader reader;
 		String readed;
 		try {
@@ -120,11 +123,11 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	}
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
+	public ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
 		return calculateSnapshotScore(snapArray);
 	}
 
-	public abstract Pair<Double, Object> calculateSnapshotScore(double[] snapArray);
+	public abstract ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray);
 
 	/**
 	 * Stores additional preferences (if any).

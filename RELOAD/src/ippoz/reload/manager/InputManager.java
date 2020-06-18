@@ -24,6 +24,7 @@ import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
+import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -1126,6 +1127,27 @@ public class InputManager {
 			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
 			return null;
 		} 
+	}
+	
+	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag){
+		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
+		String runIdsString = lPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
+		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
+			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
+		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+			return new CSVLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
+		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
+			return new ARFFLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
+		else {
+			AppLogger.logError(getClass(), "LoaderError", "Unable to parse loader '" + loaderType + "'");
+			return null;
+		} 
+	}
+	
+	public boolean isValid(PreferencesManager lPref){
+		Loader lt = buildSingleLoader(lPref, "train");
+		Loader lv = buildSingleLoader(lPref, "validation");
+		return SimpleLoader.isValid(lt) && SimpleLoader.isValid(lv);	
 	}
 	
 	/**

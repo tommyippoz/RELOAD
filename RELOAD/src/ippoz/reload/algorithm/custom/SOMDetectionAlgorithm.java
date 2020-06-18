@@ -9,6 +9,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,8 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -160,7 +159,8 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	            // Update the weights on the winning unit.
 	            for(int i = 0; i < getDataSeries().size(); i++)
 	            {
-	                w[DMin][i] = w[DMin][i] + (baseAlpha * (snapValues[i] - w[DMin][i]));
+	                if(Double.isFinite(snapValues[i]))
+	                	w[DMin][i] = w[DMin][i] + (baseAlpha * (snapValues[i] - w[DMin][i]));
 	                //System.out.println(" w(" + i + ")= " + w[DMin][i]);
 	            }
 	        }
@@ -175,8 +175,8 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		return new Pair<Double, Object>(calculateSOM(snapArray), null);
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new ObjectPair<Double, Object>(calculateSOM(snapArray), null);
 	}
 
 	@Override
@@ -203,7 +203,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 */
 	public void loadFile(String filename) {
 		loadWeightsFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**

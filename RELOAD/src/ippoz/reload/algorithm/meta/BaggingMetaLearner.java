@@ -11,6 +11,7 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.meta.MetaLearnerType;
 import ippoz.reload.meta.MetaTrainer;
 import ippoz.reload.trainer.AlgorithmTrainer;
@@ -20,8 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -42,7 +41,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	@Override
-	protected MetaTrainer trainMetaLearner(List<Knowledge> kList) {
+	protected List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList) {
 		List<List<Knowledge>> sampledKnowledge = null;
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		try {
@@ -56,10 +55,11 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
 			}
+			return mTrainer.getTrainers();
 		} catch (InterruptedException e) {
 			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
 		}
-		return mTrainer;
+		return null;
 	}
 
 	private List<List<Knowledge>> baggingOf(List<Knowledge> kList, int samplesNumber) {
@@ -74,7 +74,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		return outList;
 	}
 
-	@Override
+	/*@Override
 	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		int count = 0, i = 0;
 		double sum = 0;
@@ -90,6 +90,11 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		if(count > 0)
 			return new Pair<Double, Object>(sum / count, scores);
 		else return new Pair<Double, Object>(0.0, null);
+	}*/
+	
+	@Override
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return calculateDefaultSnapshotScore(snapArray);
 	}
 
 	@Override

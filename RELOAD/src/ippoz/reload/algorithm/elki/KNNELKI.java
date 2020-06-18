@@ -6,11 +6,11 @@ package ippoz.reload.algorithm.elki;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomKNN;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.minkowski.SquaredEuclideanDistanceFunction;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
@@ -49,8 +49,8 @@ public class KNNELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> getELKIScore(Vector v) {
-		return new Pair<Double, Object>(((CustomKNN)getAlgorithm()).calculateSingleKNN(v), null);
+	public ObjectPair<Double, Object> getELKIScore(Vector v) {
+		return new ObjectPair<Double, Object>(((CustomKNN)getAlgorithm()).calculateSingleKNN(v), null);
 	}
 
 	/* (non-Javadoc)

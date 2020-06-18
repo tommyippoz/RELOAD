@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
+import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -332,11 +333,12 @@ public class BuildUI {
 							tot++;
 						}
 					}
-					tot = tot*iManager.readLoaders().size();
+					List<PreferencesManager> activeLoaders = iManager.readLoaders();
+					tot = tot*activeLoaders.size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
 					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(tot);
 					long startTime = System.currentTimeMillis();
-					for(PreferencesManager loaderPref : iManager.readLoaders()){
+					for(PreferencesManager loaderPref : activeLoaders){
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
@@ -386,12 +388,11 @@ public class BuildUI {
 		} else return null;
 	}
 	
-	private JPanel printOptions(boolean isAlg, JPanel panel, String[] options, int fromX, int fromY, int space){
-		JLabel lbl;
+	private JPanel printOptions(boolean isAlg, JPanel panel, String[] algorithms, int fromX, int tabY, int space) {
+		JLabel lbl; 
 		JButton jb;
-		if(options != null && options.length > 0){
-			for(String option : options){
-				
+		if(algorithms != null && algorithms.length > 0){
+			for(String option : algorithms){
 				JPanel innerPanel = new JPanel();
 				innerPanel.setBackground(Color.WHITE);
 				innerPanel.setLayout(new GridBagLayout());
@@ -399,7 +400,6 @@ public class BuildUI {
 				lbl = new JLabel(option);
 				lbl.setFont(smallLabelFont);
 				lbl.setHorizontalAlignment(SwingConstants.CENTER);
-				
 				
 				JPanel innerInnerPanel = new JPanel();
 				innerInnerPanel.setBackground(Color.WHITE);
@@ -410,7 +410,7 @@ public class BuildUI {
 					jb.setHorizontalAlignment(SwingConstants.CENTER);
 					jb.addActionListener(new ActionListener() { 
 						public void actionPerformed(ActionEvent e) { 
-							if(!option.contains(".")) {
+							if(!option.contains(".loader")) {
 								try {
 									LearnerType at = fromOption(option);
 									MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
@@ -465,7 +465,119 @@ public class BuildUI {
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
-						if(option.contains(".")){
+						if(option.contains(".loader")){
+							iManager.removeDataset(option);
+						} else {
+							iManager.removeAlgorithm(fromOption(option));
+						}
+						reload();
+					} } );
+				innerInnerPanel.add(jb);
+				
+				GridBagConstraints c = new GridBagConstraints();
+			    c.insets = new Insets(2, 2, 2, 2);
+			    c.weighty = 1.0;
+			    c.weightx = 1.0;
+			    c.gridx = 0;
+			    c.gridy = 0;
+			    c.gridheight = 2;
+			    c.fill = GridBagConstraints.BOTH; // Use both horizontal & vertical
+			    innerPanel.add(lbl, c);
+			    c.gridx = 1;
+			    c.gridheight = 1;
+			    c.gridwidth = 2;
+			    c.fill = GridBagConstraints.HORIZONTAL; // Horizontal only
+			    innerPanel.add(innerInnerPanel, c);
+			    c.gridy = 1;
+			    c.gridwidth = 1;
+			    c.fill = GridBagConstraints.NONE; // Remember to reset to none
+				
+				panel.add(innerPanel);
+			}
+		}
+		return panel;
+	}
+	
+	private JPanel printOptions(boolean isAlg, JPanel panel, Map<String, Boolean> dsMap, int fromX, int fromY, int space){
+		JLabel lbl; 
+		JButton jb;
+		if(dsMap != null && dsMap.size() > 0){
+			for(String option : dsMap.keySet()){
+				JPanel innerPanel = new JPanel();
+				innerPanel.setBackground(Color.WHITE);
+				innerPanel.setLayout(new GridBagLayout());
+				
+				lbl = new JLabel(option);
+				lbl.setFont(smallLabelFont);
+				lbl.setHorizontalAlignment(SwingConstants.CENTER);
+				if(dsMap.get(option) != Boolean.TRUE)
+					lbl.setEnabled(false);
+				
+				JPanel innerInnerPanel = new JPanel();
+				innerInnerPanel.setBackground(Color.WHITE);
+				innerInnerPanel.setLayout(new GridLayout(1, (isAlg?3:2), 5, 0));
+				
+				if(isAlg){
+					jb = new JButton("Meta");
+					jb.setHorizontalAlignment(SwingConstants.CENTER);
+					jb.addActionListener(new ActionListener() { 
+						public void actionPerformed(ActionEvent e) { 
+							if(!option.contains(".loader")) {
+								try {
+									LearnerType at = fromOption(option);
+									MetaLearnerFrame mlf = new MetaLearnerFrame(iManager, at, BuildUI.this);
+									mlf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
+								}
+							} else {
+								LoaderFrame lf;
+								String type = option.split("@")[0].trim();
+								String loaderName = option.split("@")[1].trim();
+								try {
+									lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
+									lf.setVisible(true);
+								} catch(Exception ex){
+									AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
+								}
+							}
+							
+						} } );
+					innerInnerPanel.add(jb);
+				}
+				
+				jb = new JButton("#");
+				jb.setHorizontalAlignment(SwingConstants.CENTER);
+				jb.addActionListener(new ActionListener() { 
+					public void actionPerformed(ActionEvent e) { 
+						if(!option.contains(".")) {
+							try {
+								LearnerType at = fromOption(option);
+								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+								asf.setVisible(true);
+							} catch(Exception ex){
+								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
+							}
+						} else {
+							LoaderFrame lf;
+							String type = option.split("@")[0].trim();
+							String loaderName = option.split("@")[1].trim();
+							try {
+								lf = new LoaderFrame(iManager, iManager.getLoaderPreferencesByName(loaderName), LoaderType.valueOf(type));
+								lf.setVisible(true);
+							} catch(Exception ex){
+								AppLogger.logException(getClass(), ex, "Unable to open loader '" + loaderName + "' preferences");
+							}
+						}
+						
+					} } );
+				innerInnerPanel.add(jb);
+					
+				jb = new JButton("-");
+				jb.setHorizontalAlignment(SwingConstants.CENTER);
+				jb.addActionListener(new ActionListener() { 
+					public void actionPerformed(ActionEvent e) { 
+						if(option.contains(".loader")){
 							iManager.removeDataset(option);
 						} else {
 							iManager.removeAlgorithm(fromOption(option));
@@ -505,19 +617,20 @@ public class BuildUI {
 	}
 	
 	private JPanel buildAlgorithmsDatasetsTab(int tabY){
-		
 		dataAlgPanel.setBackground(Color.WHITE);
+		
+		Map<String, Boolean> dsMap = getDatasets();
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Data Analysis", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY);
 		dataAlgPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		dataAlgPanel.setLayout(new GridLayout(4 + getAlgorithms().length + getDatasets().length, 1, 10, 0));
+		dataAlgPanel.setLayout(new GridLayout(4 + getAlgorithms().length + dsMap.size(), 1, 10, 0));
 		
 		JLabel mainLabel = new JLabel("Loaders");
 		mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		mainLabel.setFont(titleFont);
 		dataAlgPanel.add(mainLabel, BorderLayout.NORTH);
 		
-		printOptions(false, dataAlgPanel, getDatasets(), dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
+		printOptions(false, dataAlgPanel, dsMap, dataAlgPanel.getWidth()/30, 2*labelSpacing, labelSpacing);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -608,7 +721,7 @@ public class BuildUI {
 		
 		dataAlgPanel.add(seePrefPanel);
 		
-		tabY = labelSpacing*(getDatasets().length) + 2*bigLabelSpacing + seePrefPanel.getHeight();
+		tabY = labelSpacing*(dsMap.size()) + 2*bigLabelSpacing + seePrefPanel.getHeight();
 		
 		mainLabel = new JLabel("Algorithms");
 		//mainLabel.setBounds(dataAlgPanel.getWidth()/4, tabY, dataAlgPanel.getWidth()/2, labelSpacing);
@@ -682,21 +795,21 @@ public class BuildUI {
 		
 		return dataAlgPanel;
 	}
-	
-	private String[] getDatasets() {
-		int i = 0;
+
+	private Map<String, Boolean> getDatasets() {
 		List<PreferencesManager> lList = iManager.readLoaders();
-		String[] dsStrings = new String[lList.size()];
+		Map<String, Boolean> dsMap = new HashMap<>();
 		for(PreferencesManager lPref : lList){
+			boolean isValid = true; // iManager.isValid(lPref);
 			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
-				dsStrings[i++] = "MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME);
+				dsMap.put("MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME), isValid);
 			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
-				dsStrings[i++] = "CSV @ " + lPref.getFilename();
+				dsMap.put("CSV @ " + lPref.getFilename(), isValid);
 			} else {
-				dsStrings[i++] = lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename();
+				dsMap.put(lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename(), isValid);
 			}
 		}
-		return dsStrings;
+		return dsMap;
 	}
 
 	private String[] getAlgorithms(){

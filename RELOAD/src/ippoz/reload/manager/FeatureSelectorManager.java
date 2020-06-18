@@ -15,6 +15,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class FeatureSelectorManager {
 		BufferedWriter writer = null;
 		try {
 			baselineSeries = generateBaselineSeries(kList);
-			selectedFeatures = baselineSeries;
+			selectedFeatures = new ArrayList<DataSeries>(baselineSeries);
 			writer = new BufferedWriter(new FileWriter(new File(setupFolder + "featureScores_[" + datasetName + "].csv")));
 			writer.write("* This file reports on the scores of each feature selection technique applied to the initial set of features\n");
 			writer.write("\nfeature_selection_strategy,threshold,");

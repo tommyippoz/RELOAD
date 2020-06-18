@@ -12,11 +12,11 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.algorithm.clustering.kmeans.initialization.RandomlyGeneratedInitialMeans;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.database.Database;
@@ -62,10 +62,10 @@ public class KMeansSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 * @see ippoz.madness.detector.algorithm.elki.DataSeriesSlidingELKIAlgorithm#evaluateSlidingELKISnapshot(ippoz.madness.detector.commons.knowledge.SlidingKnowledge, de.lmu.ifi.dbs.elki.database.Database, de.lmu.ifi.dbs.elki.math.linearalgebra.Vector)
 	 */
 	@Override
-	protected Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+	protected ObjectPair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
 		@SuppressWarnings("unchecked")
 		KMeansScore of = ((CustomKMeans<NumberVector>)getAlgorithm()).getMinimumClustersDistance(newInstance);
-		return new Pair<Double, Object>(of.getDistance(), of.getCluster());
+		return new ObjectPair<Double, Object>(of.getDistance(), of.getCluster());
 	}
 
 	/* (non-Javadoc)

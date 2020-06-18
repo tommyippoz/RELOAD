@@ -5,6 +5,9 @@ package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
+import ippoz.reload.algorithm.meta.BoostingMetaLearner;
+import ippoz.reload.algorithm.meta.CascadingMetaLearner;
+import ippoz.reload.algorithm.meta.DataSeriesMetaLearner;
 import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -226,23 +229,39 @@ public class MetaLearnerFrame {
 	}
 	
 	private void buildMetaOptions(JPanel mainPanel, MetaLearnerType mlt, boolean enabled) {
-		switch(mlt){
-			case BAGGING:
-				mainPanel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES)));
-				mainPanel.add(new JLabel("-"));
-				break;
-			case STACKING:
-			case STACKING_FULL:
-				mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.BASE_LEARNERS, lType.getPreference(StackingMetaLearner.BASE_LEARNERS), "base-learners to build stacking upon", enabled, true));
-				mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.STACKING_LEARNER, lType.getPreference(StackingMetaLearner.STACKING_LEARNER), "base-learners to build stacking upon", enabled, false));
-				break;
-			case VOTING:
-				mainPanel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled, true));
-				mainPanel.add(new JLabel("-"));
-				break;
-			default:
-				mainPanel.add(new JLabel("-"));
-				mainPanel.add(new JLabel("-"));
+		if(!enabled){
+			mainPanel.add(new JLabel("-"));
+			mainPanel.add(new JLabel("-"));
+		} else {
+			switch(mlt){
+				case BAGGING:
+					mainPanel.add(showPreferenceLabels(BaggingMetaLearner.N_SAMPLES, lType.getPreference(BaggingMetaLearner.N_SAMPLES), "number of samples of Bagging meta-learner", enabled, String.valueOf(BaggingMetaLearner.DEFAULT_SAMPLES)));
+					mainPanel.add(new JLabel("-"));
+					break;
+				case BOOSTING:
+					mainPanel.add(showPreferenceLabels(BoostingMetaLearner.N_ENSEMBLES, lType.getPreference(BoostingMetaLearner.N_ENSEMBLES), "number of weak learners / stumps of the Boosting meta-learner", enabled, String.valueOf(BoostingMetaLearner.DEFAULT_ENSEMBLES)));
+					mainPanel.add(showPreferenceLabels(BoostingMetaLearner.LEARNING_SPEED, lType.getPreference(BoostingMetaLearner.LEARNING_SPEED), "learning speed of the ensemble. The higher, the more weights of data points are affected by each weak learner to build train splits", enabled, String.valueOf(BoostingMetaLearner.DEFAULT_SPEED)));
+					break;
+				case CASCADING:
+				case CASCADE_GENERALIZATION:
+				case DELEGATING:
+					mainPanel.add(showPreferenceAlgorithms(DataSeriesMetaLearner.BASE_LEARNERS, lType.getPreference(DataSeriesMetaLearner.BASE_LEARNERS), "base-learners to build casacading upon", enabled, true));
+					mainPanel.add(showPreferenceLabels(CascadingMetaLearner.CONFIDENCE_THRESHOLD, lType.getPreference(CascadingMetaLearner.CONFIDENCE_THRESHOLD), "confidence threshold to stop evaluation", enabled, String.valueOf(CascadingMetaLearner.DEFAULT_CONFIDENCE_THRESHOLD)));
+					break;
+				case STACKING:
+				case STACKING_FULL:
+					mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.BASE_LEARNERS, lType.getPreference(StackingMetaLearner.BASE_LEARNERS), "base-learners to build stacking upon", enabled, true));
+					mainPanel.add(showPreferenceAlgorithms(StackingMetaLearner.STACKING_LEARNER, lType.getPreference(StackingMetaLearner.STACKING_LEARNER), "meta-learner to build stacking upon", enabled, false));
+					break;
+				case WEIGHTED_VOTING:
+				case VOTING:
+					mainPanel.add(showPreferenceAlgorithms(VotingMetaLearner.BASE_LEARNERS, lType.getPreference(VotingMetaLearner.BASE_LEARNERS), "algorithms to vote", enabled, true));
+					mainPanel.add(new JLabel("-"));
+					break;
+				default:
+					mainPanel.add(new JLabel("-"));
+					mainPanel.add(new JLabel("-"));
+			}
 		}
 	}
 
@@ -341,7 +360,7 @@ public class MetaLearnerFrame {
 			}
 
 			public void workOnUpdate() {
-				if(textField.getText() != null && AppUtility.isInteger(textField.getText())){
+				if(textField.getText() != null && AppUtility.isNumber(textField.getText())){
 					lType.addPreference(prefName, textField.getText());
 				} else lType.addPreference(prefName, defaultValue);
 			}

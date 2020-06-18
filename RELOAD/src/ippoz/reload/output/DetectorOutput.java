@@ -271,6 +271,10 @@ public class DetectorOutput {
 	public String getAlgorithm(){
 		return algorithms.toCompactString();
 	}
+	
+	public String getFullAlgorithm(){
+		return algorithms.toString();
+	}
 
 	private String[][] getGrid(String scoresString) {
 		List<String> gridRows = new LinkedList<>();
@@ -333,7 +337,7 @@ public class DetectorOutput {
 				for(int i=0;i<votingScores.get(expName).size();i++){
 					AlgorithmResult ar = votingScores.get(expName).get(i);
 					if(i < votingScores.get(expName).size()){
-						outMap.get(expName).add(new LabelledResult(ar.getInjection() != null, ar));
+						outMap.get(expName).add(new LabelledResult(ar.hasInjection(), ar));
 					}
 				}
 			}

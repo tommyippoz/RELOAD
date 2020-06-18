@@ -91,7 +91,7 @@ public class OutputFrame {
 	public void addOutput(DetectorOutput dOut) {
 		if(dOut != null) {
 			JPanel outPanel = buildOutputPanel(dOut);
-			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getAlgorithm(), outPanel);
+			tabbedPane.addTab("DB: " + dOut.getDataset() + " - Alg: " + dOut.getFullAlgorithm(), outPanel);
 		}
 	}
 
@@ -159,7 +159,7 @@ public class OutputFrame {
 		String[][] data = new String[outList.size()][5];
 		for(int i=0;i<outList.size();i++){
 			data[i][0] = outList.get(i).getDataset();
-			data[i][1] = outList.get(i).getAlgorithm();
+			data[i][1] = outList.get(i).getFullAlgorithm();
 			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
 			data[i][3] = outList.get(i).getFaultsRatioString();
 			data[i][4] = outList.get(i).getFormattedBestScore();
@@ -368,7 +368,7 @@ public class OutputFrame {
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Detailed Outputs ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		//fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(new GridLayout(1, 4, 20, 0));
+		fPanel.setLayout(new GridLayout(1, 5, 20, 10));
 		
 		JButton button = new JButton("Output Folder");
 		button.setVisible(true);
@@ -402,11 +402,21 @@ public class OutputFrame {
 			} } );	
 		fPanel.add(button);
 		
-		button = new JButton("Plot Results");
+		button = new JButton("Plot Scores");
 		button.setVisible(true);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				OutputDetailFrame odf = new OutputDetailFrame(dOut);
+				PlotOutputFrame odf = new PlotOutputFrame(dOut);
+				odf.buildMainPanel();
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
+		button = new JButton("Plot Confidence");
+		button.setVisible(true);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				PlotConfidenceFrame odf = new PlotConfidenceFrame(dOut);
 				odf.buildMainPanel();
 				odf.setVisible(true);
 			} } );	

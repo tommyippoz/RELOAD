@@ -10,11 +10,11 @@ import ippoz.reload.algorithm.elki.support.CustomABOD;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.data.NumberVector;
 import de.lmu.ifi.dbs.elki.database.Database;
 import de.lmu.ifi.dbs.elki.distance.distancefunction.probabilistic.HellingerDistanceFunction;
@@ -42,8 +42,8 @@ public class ABODSlidingELKI extends DataSeriesSlidingELKIAlgorithm {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	protected Pair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
-		return new Pair<Double, Object>(((CustomABOD<NumberVector>) getAlgorithm()).calculateSingleABOF(newInstance), null);
+	protected ObjectPair<Double, Object> evaluateSlidingELKISnapshot(SlidingKnowledge sKnowledge, Database windowDb, Vector newInstance, Snapshot dsSnapshot) {
+		return new ObjectPair<Double, Object>(((CustomABOD<NumberVector>) getAlgorithm()).calculateSingleABOF(newInstance), null);
 	}
 
 	/* (non-Javadoc)

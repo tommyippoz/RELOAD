@@ -7,11 +7,11 @@ import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.elki.support.CustomSVM;
 import ippoz.reload.algorithm.elki.support.CustomSVM.SVMKernel;
 import ippoz.reload.commons.dataseries.DataSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.util.Pair;
 import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
@@ -83,8 +83,8 @@ public class SVMELKI extends DataSeriesELKIAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> getELKIScore(Vector v) {
-		return new Pair<Double, Object>(((CustomSVM)getAlgorithm()).calculateSVM(v), null);
+	public ObjectPair<Double, Object> getELKIScore(Vector v) {
+		return new ObjectPair<Double, Object>(((CustomSVM)getAlgorithm()).calculateSVM(v), null);
 	}
 
 	@Override

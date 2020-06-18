@@ -124,7 +124,7 @@ public class FeatureSelectionInfo {
 					aggrStrategy = preferences.get(FS_AGGR_STRATEGY).trim();
 				}
 				if(preferences.containsKey(FS_RUNS) && preferences.get(FS_RUNS) != null){
-					runs = preferences.get(FS_RUNS).trim();
+					runs = preferences.get(FS_RUNS).trim().replace(",", ";");
 				}
 				if(preferences.containsKey(FS_DATAPOINTS) && preferences.get(FS_DATAPOINTS) != null && AppUtility.isInteger(preferences.get(FS_DATAPOINTS).trim())){
 					nDataPoints = Integer.parseInt(preferences.get(FS_DATAPOINTS).trim());

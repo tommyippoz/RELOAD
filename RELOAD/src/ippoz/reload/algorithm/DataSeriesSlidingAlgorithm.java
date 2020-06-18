@@ -10,10 +10,9 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.commons.utils.ObjectPair;
 
 import java.util.List;
-
-import javafx.util.Pair;
 
 /**
  * @author Tommy
@@ -42,7 +41,7 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		AlgorithmResult ar = super.evaluateSnapshot(knowledge, currentIndex);
 		if(currentIndex >= getWindowSize()){
-			logScore(ar.getScore(), ar.getInjection() != null);
+			logScore(ar.getScore(), ar.hasInjection());
 		}
 		return ar;
 	}
@@ -52,8 +51,16 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 		
 	}
 	
+	
+	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
+	public void loadLoggedScores() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
 		List<Snapshot> snapList;
 		if(knowledge instanceof SlidingKnowledge){
 			windowSize = ((SlidingKnowledge)knowledge).getWindowSize();
@@ -61,10 +68,10 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 			if(snapList.size() >= DEFAULT_MINIMUM_ITEMS && snapList.size() >= windowSize)
 				return evaluateSlidingSnapshot((SlidingKnowledge)knowledge, snapList, sysSnapshot);
 		} 
-		return new Pair<Double, Object>(Double.NaN, null);
+		return new ObjectPair<Double, Object>(Double.NaN, null);
 	}
 	
-	protected abstract Pair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
+	protected abstract ObjectPair<Double, Object> evaluateSlidingSnapshot(SlidingKnowledge sKnowledge, List<Snapshot> snapList, Snapshot dsSnapshot);
 
 	@Override
 	protected void printImageResults(String outFolderName, String expTag) {

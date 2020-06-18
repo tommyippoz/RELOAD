@@ -14,6 +14,7 @@ import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.LogThresholdDecision;
 
@@ -27,8 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javafx.util.Pair;
 
 /**
  * The Class HBOSDetectionAlgorithm. Implements the Histogram-Based Outlier Score algorithm.
@@ -226,8 +225,8 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	@Override
-	public Pair<Double, Object> calculateSnapshotScore(double[] snapArray) {
-		return new Pair<Double, Object>(calculateHBOS(snapArray), null);
+	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
+		return new ObjectPair<Double, Object>(calculateHBOS(snapArray), null);
 	}
 
 	@Override
@@ -293,7 +292,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	 */
 	public void loadFile(String filename) {
 		loadHistogramsFile(new File(filename));
-		loadScoresFile(new File(filename + "scores"));		
+		//loadScoresFile(new File(filename + "scores"));		
 	}
 	
 	/**
