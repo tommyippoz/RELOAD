@@ -429,7 +429,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
 		for(AlgorithmResult ar : oldList){
 			AnomalyResult anr = dFunction.classify(ar);
-			newList.add(new AlgorithmResult(ar.hasInjection(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, dFunction, ar.getConfidence()));
+			newList.add(new AlgorithmResult(ar.hasInjection(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, ar.getConfidence()));
 		}
 		return newList;
 	}

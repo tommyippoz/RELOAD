@@ -105,7 +105,7 @@ public class FeaturesFrame {
 				" Features Detail ", TitledBorder.CENTER, TitledBorder.CENTER,
 				new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(new GridLayout(2, 2));
+		fPanel.setLayout(new GridLayout(3, 2));
 
 		JLabel lbl = new JLabel("Available Features: " + String.valueOf(fScores.size()));
 		lbl.setFont(labelFont);
@@ -124,6 +124,16 @@ public class FeaturesFrame {
 		fPanel.add(lbl);
 		
 		lbl = new JLabel("Aggregated Features: " + dOut.getSelectedSeries().size());
+		lbl.setFont(labelFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		fPanel.add(lbl);
+		
+		lbl = new JLabel("Predicted F1: " + dOut.getPredictedF1());
+		lbl.setFont(labelFont);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		fPanel.add(lbl);
+		
+		lbl = new JLabel("Predicted MCC: " + dOut.getPredictedMCC());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);

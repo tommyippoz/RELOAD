@@ -302,4 +302,15 @@ public abstract class SimpleLoader implements Loader {
 		return loader != null && Double.isFinite(loader.getAnomalyRate()) && loader.getAnomalyRate() > 0;
 	}
 
+	@Override
+	public void flush() {
+		if(dataList != null)
+			dataList.clear();
+		if(header != null)
+			header.clear();
+		if(batches != null)
+			batches.clear();
+		if(relevantFeatures != null)
+			relevantFeatures.clear();
+	}
 }

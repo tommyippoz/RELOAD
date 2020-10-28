@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.util.Pair;
-
 /**
  * The Class ConfigurationSelectorTrainer.
  * This is used from algorithms which can select the best configuration out of a set of possible ones.
@@ -91,6 +89,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			/* Iterates for Configurations */
 			for(BasicConfiguration conf : configurations){
 				
+				AppLogger.logInfo(getClass(), "Analyzing configuration: '" + conf.toString() + "'");
+				
 				/* Iterates for K-Fold. Not needed for meta-learning, which internally k-folds base learners. */
 				if(getAlgType() instanceof MetaLearner){
 					BasicConfiguration currentConf = (BasicConfiguration)conf.clone();
@@ -154,7 +154,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			} /* end conf for */
 			
 			if(getAlgType() instanceof MetaLearner){
-				Pair<String, Double> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				ObjectPair<String, Double> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 					bestScore = value.getValue();
 					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
@@ -191,25 +191,25 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
 	}
 	
-	private Pair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
+	private ObjectPair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
 		try {
 			double thrValue = (thrRight + thrLeft)/2;
 		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
 		double mScore = getMetric().evaluateAnomalyResults(updatedList);
 		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
-			Pair<String, Double> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
-			Pair<String, Double> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
+			ObjectPair<String, Double> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
+			ObjectPair<String, Double> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
 			if(leftBest != null && rightBest != null){
 				if(getMetric().compareResults(mScore, leftBest.getValue()) > 0  && getMetric().compareResults(mScore, rightBest.getValue()) > 0){
-					return new Pair<String, Double>(threshold, mScore);
+					return new ObjectPair<String, Double>(threshold, mScore);
 				} else {
 					if(getMetric().compareResults(leftBest.getValue(), rightBest.getValue()) > 0)
 						return leftBest;
 					else return rightBest;
 				} 
 			} else return null;
-		} else return new Pair<String, Double>(threshold, mScore);
+		} else return new ObjectPair<String, Double>(threshold, mScore);
 		} catch(Exception ex){
 			return null;
 		}

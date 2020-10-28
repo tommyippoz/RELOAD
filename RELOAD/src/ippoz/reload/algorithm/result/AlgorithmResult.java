@@ -5,6 +5,7 @@ package ippoz.reload.algorithm.result;
 
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.output.LabelledResult;
 
 /**
  * The Class AlgorithmResult. Stores results of an evaluation of a Knowledge item by an algorithm.
@@ -23,7 +24,7 @@ public class AlgorithmResult {
 	private AnomalyResult scoreEvaluation;
 	
 	/** The decision function used. */
-	private DecisionFunction dFunction;
+	//private DecisionFunction dFunction;
 	
 	/** The confidence on the result. */
 	private double confidence;
@@ -42,7 +43,12 @@ public class AlgorithmResult {
 		this.hasInjection = hasInjection;
 		this.score = score;
 		this.confidence = confidence;
-		this.additionalScore = additionalScore;
+		this.additionalScore = null;
+	}
+	
+	public AlgorithmResult(LabelledResult lr) {
+		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null);
+		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -54,11 +60,11 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(boolean hasInjection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
+	public AlgorithmResult(boolean hasInjection, double score, AnomalyResult scoreEvaluation, double confidence) {
 		this.hasInjection = hasInjection;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
-		this.dFunction = dFunction;
+		//this.dFunction = dFunction;
 		this.confidence = confidence;
 	}
 
@@ -84,10 +90,10 @@ public class AlgorithmResult {
 	 * Sets the decision function.
 	 *
 	 * @param dFunction the new decision function
-	 */
+	 
 	public void setDecisionFunction(DecisionFunction dFunction) {
 		this.dFunction = dFunction;
-	}
+	}*/
 	
 	/**
 	 * Sets the score evaluation.
@@ -102,10 +108,10 @@ public class AlgorithmResult {
 	 * Gets the decision function.
 	 *
 	 * @return the decision function
-	 */
+	 
 	public DecisionFunction getDecisionFunction() {
 		return dFunction;
-	}
+	}*/
 
 	/**
 	 * Outputs the default AlgorithmResult for an erroneous evaluation e.g., data is missing.
@@ -115,7 +121,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult error(boolean hasInjection) {
-		return new AlgorithmResult(hasInjection, Double.NaN, AnomalyResult.ERROR, null, 1);
+		return new AlgorithmResult(hasInjection, Double.NaN, AnomalyResult.ERROR, 1);
 	}
 
 	/**
@@ -126,7 +132,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult unknown(boolean injection) {
-		return new AlgorithmResult(injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
+		return new AlgorithmResult(injection, Double.NaN, AnomalyResult.UNKNOWN, 0);
 	}	
 	
 	/**

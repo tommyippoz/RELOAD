@@ -186,10 +186,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		else {
 			double odin = 0;
 			double inc = 1. / (k - 1);
-			List<ODINScore> extList = new ArrayList<ODINScore>(resList.size()+1);
-			for(ODINScore os : resList){
-				extList.add(os);
-			}
+			List<ODINScore> extList = new ArrayList<ODINScore>(resList);
 			extList.add(new ODINScore(newInstance, 0.0));
 			for(ODINScore os : resList){
 				if(!os.getVector().equals(newInstance) && isKNN(newInstance, os))

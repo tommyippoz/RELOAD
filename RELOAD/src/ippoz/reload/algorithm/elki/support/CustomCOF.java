@@ -517,9 +517,10 @@ public class CustomCOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					}
 				}
 				reader.close();
+				resList = new ArrayList<>(resList);
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
+			AppLogger.logException(getClass(), ex, "Unable to read COF file");
 		} 
 	}
 

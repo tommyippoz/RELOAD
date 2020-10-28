@@ -95,6 +95,9 @@ public abstract class Metric implements Comparable<Metric> {
 			case "OVERLAPDETAIL":
 			case "OVERLAP_DETAIL":
 			case "NOPREDICTION":
+			case "NO_PREDICTION":
+			case "NOP":
+			case "NPR":
 				return new NoPredictionArea_Metric(validAfter);
 			case "THRESHOLD":
 			case "THRESHOLDS":
@@ -118,8 +121,8 @@ public abstract class Metric implements Comparable<Metric> {
 					return new ConfidenceErrorMetric(validAfter, Double.valueOf(param));
 				else return new ConfidenceErrorMetric(validAfter, 1.0);
 			default:
-				AppLogger.logError(Metric.class, "MissingPreferenceError", "Metric '" + mType + "'cannot be defined");
-				return null;
+				AppLogger.logError(Metric.class, "MissingPreferenceError", "Metric '" + metricType + "' cannot be defined. Default FMeasure will be used");
+				return new FMeasure_Metric(validAfter);
 		}
 	}
 

@@ -220,9 +220,10 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	    	if(nn.size() > i) {
 		    	ofs = resList.get(nn.get(i).getIndex());
 		    	if(!newInstance.equals(ofs.getVector())) {
-		    	  List<KNNValue> nnList = getKNNs(ofs.getVector(), false);
+		    	  //List<KNNValue> nnList = getKNNs(ofs.getVector(), false);
 		    	  double nd = nn.get(i).getScore();
-		    	  double nnd = (nnList.size() >= k-1) ? nnList.get(k -2).getScore() : Double.POSITIVE_INFINITY;
+		    	  //double nnd = (nnList.size() >= k-1) ? nnList.get(k -2).getScore() : Double.POSITIVE_INFINITY;
+		    	  double nnd = ofs.getKNN();
 		    	  sum += MathUtil.max(nd, nnd);
 			      count++;
 		    	}
@@ -552,6 +553,7 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					}
 					reader.close();
 					Collections.sort(resList);
+					resList = new ArrayList<>(resList);
 				}
 			} catch (IOException ex) {
 				AppLogger.logException(getClass(), ex, "Unable to read LOF file");

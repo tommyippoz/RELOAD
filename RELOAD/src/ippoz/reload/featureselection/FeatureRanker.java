@@ -30,6 +30,17 @@ public abstract class FeatureRanker extends FeatureSelector {
 	}
 
 	@Override
+	public double getHighestScore() {
+		return getRankedScore(1);
+	}
+
+	public double getRankedScore(int index) {
+		if(sortedScores != null && sortedScores.size() > 0 && index-1 < sortedScores.size()){
+			return sortedScores.get(index-1);
+		} else return 0.0;
+	}
+
+	@Override
 	protected boolean checkSelection(DataSeries ds, Double toCheck, double threshold) {
 		if(isRankedThreshold() && threshold >= 1 && sortedScores != null && sortedScores.size() > 0){
 			for(int i=0;i<threshold;i++){

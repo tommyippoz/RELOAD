@@ -4,7 +4,6 @@
 package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.support.PreferencesManager;
 
 import java.util.List;
 
@@ -79,5 +78,7 @@ public interface Loader {
 	public abstract List<LoaderBatch> getLoaderRuns();
 	
 	public abstract boolean hasBatches(String preferenceString);
+
+	public abstract void flush();
 	
 }

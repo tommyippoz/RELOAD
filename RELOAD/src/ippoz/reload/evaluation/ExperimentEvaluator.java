@@ -97,10 +97,11 @@ public class ExperimentEvaluator extends Thread {
 	 */
 	@Override
 	public void run() {
+		int n = evalKnowledge.size();
 		modelResults = new TreeMap<>();
 		failureScores = new LinkedList<AlgorithmResult>();
 		if(evalModel != null) {
-			for(int i=0;i<evalKnowledge.size();i++){
+			for(int i=0;i<n;i++){
 				AlgorithmResult modelResult = evalModel.voteKnowledgeSnapshot(evalKnowledge, i);
 				modelResults.put(evalKnowledge.getTimestamp(i), modelResult);
 				if(evalKnowledge.getInjection(i) != null){
@@ -109,6 +110,8 @@ public class ExperimentEvaluator extends Thread {
 				if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
 					((SlidingKnowledge)evalKnowledge).slide(i, modelResult.getScore());
 				}
+				if(i > 0 && i % ((int)(n/10)) == 0)
+					AppLogger.logInfo(getClass(), ((int)(i / ((int)(n/10))))*10 + "% of test set is already evaluated.");
 			}
 			if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
 				((SlidingKnowledge)evalKnowledge).reset();

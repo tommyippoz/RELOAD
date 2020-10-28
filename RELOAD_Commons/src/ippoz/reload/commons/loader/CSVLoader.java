@@ -236,7 +236,7 @@ public class CSVLoader extends FileLoader {
 					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 					reader.close();
 				}
-				dataList = new ArrayList<>(dataList);
+				//dataList = new ArrayList<>(dataList);
 				
 				// Setting up key variables
 				setTotalDataPoints(rowIndex);

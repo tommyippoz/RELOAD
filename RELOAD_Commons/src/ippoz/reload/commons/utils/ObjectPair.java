@@ -3,7 +3,6 @@
  */
 package ippoz.reload.commons.utils;
 
-import java.io.Serializable;
 
 /**
  * @author Tommy

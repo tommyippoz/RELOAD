@@ -353,5 +353,33 @@ public class AppUtility {
 		}
 		return Math.sqrt(count);
 	}
+
+	public static int getLimExp(double d) {
+		String strValue = String.valueOf(d).trim();
+		if(strValue != null && strValue.length() > 0){
+			if(strValue.contains(".") && !strValue.contains("E")){
+				while(strValue.endsWith("0")){
+					strValue = strValue.substring(0, strValue.length() - 1);
+				}
+				return -1*strValue.substring(strValue.indexOf(".")+1).length();
+			} else if(strValue.contains("E") && AppUtility.isNumber(strValue.split("E")[1])){
+				int exp = Integer.parseInt(strValue.split("E")[1]);
+				if(strValue.split("E")[0].contains(".")){
+					int off = strValue.split("E")[0].substring(strValue.split("E")[0].indexOf(".")+1).length();
+					if(exp > 0)
+						return exp - off;
+					else return exp + off;
+				} else return exp;
+			} if(!strValue.contains(".")){
+				int exp = 0;
+				while(strValue.endsWith("0")){
+					strValue = strValue.substring(0, strValue.length() - 1);
+					exp++;
+				}
+				return exp;
+			} else return 0;
+		}
+		return 0;
+	}
 	
 }

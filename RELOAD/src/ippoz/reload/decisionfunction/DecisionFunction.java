@@ -3,6 +3,9 @@
  */
 package ippoz.reload.decisionfunction;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
@@ -10,6 +13,7 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.output.LabelledResult;
 
 
 /**
@@ -181,6 +185,24 @@ public abstract class DecisionFunction {
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 						return new ClusterDecision(partial, flag, algorithmScores);
 					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
+				} else if (thresholdTag.contains("VALUES")){
+					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.trim().length() > 0){
+							if(partial.contains(",")){
+								List<Double> list = new LinkedList<>();
+								for(String st : partial.split(",")){
+									list.add(Double.valueOf(st));
+								}
+								return new ValuesDecision(list.toArray(new Double[list.size()]), algorithmScores);
+							} else if(AppUtility.isNumber(partial.trim()))
+								return new ValuesDecision(new Double[]{Double.valueOf(partial.trim())}, algorithmScores);
+							else AppLogger.logInfo(DecisionFunction.class, "Parameters of values '" + thresholdTag + "' cannot be parsed");
+						}
+						
+						
+						return new ClusterDecision(partial, flag, algorithmScores);
+					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
 				} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create decision function '" + thresholdTag + "'");
 			} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "null tag for decision function");
 		}
@@ -282,6 +304,11 @@ public abstract class DecisionFunction {
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 						return true;
 					}
+				} else if (thresholdTag.contains("VALUES")){
+					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						return true;
+					}
 				} else return false;
 			} else return false;
 		}
@@ -323,12 +350,17 @@ public abstract class DecisionFunction {
 	public AnomalyResult assignScore(AlgorithmResult aResult, boolean updateResult){
 		AnomalyResult anRes = null;
 		if(aResult != null){
-			aResult.setDecisionFunction(this);
+			//aResult.setDecisionFunction(this);
 			anRes = classify(aResult);
 			if(updateResult)
 				aResult.setScoreEvaluation(anRes);
 		}
 		return anRes;
+	}
+	
+	public AnomalyResult assignScore(LabelledResult lr, boolean updateResult) {
+		AlgorithmResult ar = new AlgorithmResult(lr);
+		return assignScore(ar, updateResult);
 	}
 
 	/**
@@ -338,6 +370,10 @@ public abstract class DecisionFunction {
 	 * @return the anomaly result
 	 */
 	public abstract AnomalyResult classify(AlgorithmResult aResult);
+	
+	public AnomalyResult classify(LabelledResult lr) {
+		return classify(new AlgorithmResult(lr));
+	}
 
 	/**
 	 * Gets the parameter details. Used by GUIs.

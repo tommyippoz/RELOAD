@@ -155,14 +155,15 @@ public class OutputFrame {
 	}
 	
 	private JTable buildOutputSummaryPanel(List<DetectorOutput> outList){
-		String[] header = {"Dataset", "Algorithm", "Features", "Anomaly %", "Score"};
-		String[][] data = new String[outList.size()][5];
+		String[] header = {"Dataset", "Algorithm", "Features", "Anomaly %", "Score", "Predicted MCC"};
+		String[][] data = new String[outList.size()][6];
 		for(int i=0;i<outList.size();i++){
 			data[i][0] = outList.get(i).getDataset();
 			data[i][1] = outList.get(i).getFullAlgorithm();
 			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
 			data[i][3] = outList.get(i).getFaultsRatioString();
 			data[i][4] = outList.get(i).getFormattedBestScore();
+			data[i][5] = String.valueOf(outList.get(i).getPredictedMCC());
 		}
 		JTable table = new JTable(data, header);
 		table.setFont(labelFont);
@@ -177,8 +178,8 @@ public class OutputFrame {
         	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
         	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
         }
-		table.getColumnModel().getColumn(0).setPreferredWidth(outFrame.getWidth()/5);
-		table.getColumnModel().getColumn(1).setPreferredWidth(outFrame.getWidth()*2/5);
+		table.getColumnModel().getColumn(0).setPreferredWidth(outFrame.getWidth()/6);
+		table.getColumnModel().getColumn(1).setPreferredWidth(outFrame.getWidth()/3);
 		table.getColumnModel().setColumnMargin(5);
 		return table;
 	}
@@ -187,7 +188,7 @@ public class OutputFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, 5, 10, 5));
+		panel.setLayout(new GridLayout(1, 6, 10, 5));
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
@@ -232,6 +233,15 @@ public class OutputFrame {
 		//lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl.setToolTipText("Metric score on the Evaluation Set");
+		panel.add(lbl);
+		
+		lbl = new JLabel(dOut != null ? String.valueOf(dOut.getPredictedMCC()) : "Predicted MCC");
+		if(dOut == null)
+			lbl.setFont(labelBoldFont);
+		else lbl.setFont(smallLabelFont);
+		//lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.setToolTipText("Predicted MCC according only to Feature Selection");
 		panel.add(lbl);
 		
 		return panel;

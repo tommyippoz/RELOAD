@@ -105,7 +105,7 @@ public class PlotConfidenceFrame {
 		algorithmScores = createScoresValueSeries();
 		anomalyScores = createAnomalyValueSeries();
 
-		dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, "SGTHR(0.5)", false);
+		dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, "STATIC_THRESHOLD_GREATER_THAN(0.5)", false);
 		
 		buildFrame();
 		
@@ -120,8 +120,8 @@ public class PlotConfidenceFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getConfidencedScore()))
-						series.addValue(lr.getValue().getConfidencedScore());
+					if(Double.isFinite(lr.getConfidencedScore()))
+						series.addValue(lr.getConfidencedScore());
 				}
 			//}
 		}
@@ -134,8 +134,8 @@ public class PlotConfidenceFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getConfidencedScore()) && lr.getLabel())
-						series.addValue(lr.getValue().getConfidencedScore());
+					if(Double.isFinite(lr.getConfidencedScore()) && lr.getLabel())
+						series.addValue(lr.getConfidencedScore());
 				}
 			//}
 		}
@@ -231,7 +231,7 @@ public class PlotConfidenceFrame {
 		});
 		headerPanel.add(logCB);
 		
-		DecisionFunction suggDecision = DecisionFunction.buildDecisionFunction(anomalyScores, "SGTHR(0.5)", true);
+		DecisionFunction suggDecision = DecisionFunction.buildDecisionFunction(anomalyScores, "STATIC_THRESHOLD_GREATER_THAN(0.5)", true);
 		
 		lbl = new JLabel("Decision Function");
 		lbl.setFont(labelFont);
@@ -747,7 +747,7 @@ public class PlotConfidenceFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
-					AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
+					AnomalyResult aRes = dFunction.assignScore(lr, false);
 					if(lr.getLabel()){
 						if(aRes == AnomalyResult.ANOMALY)
 							tp++;
@@ -789,11 +789,11 @@ public class PlotConfidenceFrame {
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
 					if(lr.getLabel()){								
-						anList.add(lr.getValue().getConfidencedScore());
+						anList.add(lr.getConfidencedScore());
 					} else {
-						okList.add(lr.getValue().getConfidencedScore());
+						okList.add(lr.getConfidencedScore());
 					}
-					if(!Double.isFinite(lr.getValue().getConfidencedScore()))
+					if(!Double.isFinite(lr.getConfidencedScore()))
 						countInf++;
 				}
 			/*} else countErr = countErr + list.size();*/
@@ -868,7 +868,7 @@ public class PlotConfidenceFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
-					if(Double.isInfinite(lr.getValue().getConfidencedScore()) || lr.getValue().getConfidencedScore() > Double.MAX_VALUE - 10){
+					if(Double.isInfinite(lr.getConfidencedScore()) || lr.getConfidencedScore() > Double.MAX_VALUE - 10){
 						infiniteFlag = true;
 					}
 				}
@@ -886,7 +886,7 @@ public class PlotConfidenceFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
-					double currentScore = lr.getValue().getConfidencedScore();
+					double currentScore = lr.getConfidencedScore();
 					int dataIndex = (int) (currentScore*numIntervals);
 					if(dataIndex >= numIntervals)
 						dataIndex = numIntervals - 1;
@@ -929,8 +929,8 @@ public class PlotConfidenceFrame {
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			for(LabelledResult lr : list){
-				double currentScore = lr.getValue().getConfidencedScore();
-				AnomalyResult aRes = dFunction.classify(lr.getValue());
+				double currentScore = lr.getConfidencedScore();
+				AnomalyResult aRes = dFunction.classify(lr);
 				int dataIndex = (int) (currentScore*numIntervals);
 				if(dataIndex == numIntervals)
 					dataIndex--;

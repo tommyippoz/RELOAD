@@ -35,6 +35,7 @@ import de.lmu.ifi.dbs.elki.database.ids.DBIDs;
 import de.lmu.ifi.dbs.elki.database.ids.DoubleDBIDListIter;
 import de.lmu.ifi.dbs.elki.database.ids.KNNHeap;
 import de.lmu.ifi.dbs.elki.database.ids.KNNList;
+import de.lmu.ifi.dbs.elki.database.query.distance.DistanceQuery;
 import de.lmu.ifi.dbs.elki.database.query.similarity.SimilarityQuery;
 import de.lmu.ifi.dbs.elki.database.relation.DoubleRelation;
 import de.lmu.ifi.dbs.elki.database.relation.MaterializedDoubleRelation;
@@ -289,7 +290,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		return Double.NaN;
 	}
 	
-	public double calculateSingleABOF(V newInstance) {
+	/*public double calculateSingleABOF(V newInstance) {
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
@@ -340,6 +341,62 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 					}
 					
 					double simBC = getSimilarity(sq, resList.get(nn.get(j).getIndex()).getVector(), resList.get(nn.get(x).getIndex()).getVector());
+					double numerator = simBC - simAB - simAC + simAA;
+					double div = 1. / (sqdAB * sqdAC);
+					
+					s.put(numerator * div, Math.sqrt(div));
+					
+				}
+				
+			}
+			
+			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
+			return s.getNaiveVariance();
+		}
+	}*/
+	
+	public double calculateSingleABOF(V newInstance) {
+		double partialResult;
+		if(resList == null || resList.size() == 0) 
+			return Double.MAX_VALUE;
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
+			return partialResult;
+		else {			
+			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
+			List<KNNValue> distances = new ArrayList<>(resList.size());
+			int i=0;
+			for(ABODResult ks : resList){
+				if(ks != null)
+					distances.add(new KNNValue(getSimilarity(sq, newInstance, ks.getVector()), i));
+				i++;
+			}
+			Collections.sort(distances);
+			distances = new ArrayList<>(distances.subList(0, k));
+					
+			MeanVariance s = new MeanVariance();
+			final double simAA = getSimilarity(sq, newInstance, newInstance);
+			
+			for(int j=0;j<(distances.size()<k ? distances.size() : k);j++) {
+				
+				double simBB = getSimilarity(sq, resList.get(distances.get(j).getIndex()).getVector(), resList.get(distances.get(j).getIndex()).getVector());
+				double simAB = getSimilarity(sq, newInstance, resList.get(distances.get(j).getIndex()).getVector());
+				double sqdAB = simAA + simBB - simAB - simAB;
+				
+				if(!(sqdAB > 0.)) {
+					continue;
+				}
+				
+				for(int x=j+1;x<(distances.size()<k ? distances.size() : k);x++) {
+					
+					double sqdAC = distances.get(x).getScore();
+					double simAC = getSimilarity(sq, newInstance, resList.get(distances.get(x).getIndex()).getVector());
+					
+					if(!(sqdAC > 0.)) {
+						continue;
+					
+					}
+					
+					double simBC = getSimilarity(sq, resList.get(distances.get(j).getIndex()).getVector(), resList.get(distances.get(x).getIndex()).getVector());
 					double numerator = simBC - simAB - simAC + simAA;
 					double div = 1. / (sqdAB * sqdAC);
 					
@@ -464,7 +521,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 		@Override
 		public int compareTo(KNNValue o) {
-			return score < o.getScore() ? -1 : score == o.getScore() ? 0 : 1;
+			return Double.compare(score, o.getScore());
 		}
 
 		@Override

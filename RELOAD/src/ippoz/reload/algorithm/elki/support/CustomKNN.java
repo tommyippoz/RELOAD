@@ -284,6 +284,7 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					}
 					reader.close();
 					Collections.sort(resList);
+					resList = new ArrayList<>(resList);
 				}
 			} catch (IOException ex) {
 				AppLogger.logException(getClass(), ex, "Unable to read LOF file");
@@ -304,7 +305,7 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 					writer.close();
 				}
 			} catch (IOException ex) {
-				AppLogger.logException(getClass(), ex, "Unable to write ODIB file");
+				AppLogger.logException(getClass(), ex, "Unable to write KNN file");
 			} 
 		}
 

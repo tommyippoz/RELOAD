@@ -12,6 +12,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -56,6 +57,14 @@ public class FeatureSelectionInfo {
 	
 	private Integer nDataPoints;
 	
+	private static final String FS_PREDMCC = "Predicted MCC";
+	
+	private double mccPred;
+	
+	private static final String FS_PREDF1 = "Predicted F1";
+	
+	private double f1Pred;
+	
 	public FeatureSelectionInfo() {
 		selectorsList = null;
 		seriesList = null;
@@ -65,6 +74,8 @@ public class FeatureSelectionInfo {
 		aggrStrategy = null;
 		runs = null;
 		nDataPoints = null;
+		mccPred = Double.NaN;
+		f1Pred = Double.NaN;
 	}
 	
 	public FeatureSelectionInfo(List<FeatureSelector> list) {
@@ -129,6 +140,12 @@ public class FeatureSelectionInfo {
 				if(preferences.containsKey(FS_DATAPOINTS) && preferences.get(FS_DATAPOINTS) != null && AppUtility.isInteger(preferences.get(FS_DATAPOINTS).trim())){
 					nDataPoints = Integer.parseInt(preferences.get(FS_DATAPOINTS).trim());
 				}
+				if(preferences.containsKey(FS_PREDF1) && preferences.get(FS_PREDF1) != null && AppUtility.isNumber(preferences.get(FS_PREDF1).trim())){
+					f1Pred = Double.parseDouble(preferences.get(FS_PREDF1).trim());
+				}
+				if(preferences.containsKey(FS_PREDMCC) && preferences.get(FS_PREDMCC) != null && AppUtility.isNumber(preferences.get(FS_PREDMCC).trim())){
+					mccPred = Double.parseDouble(preferences.get(FS_PREDMCC).trim());
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading feature selection info");
@@ -143,12 +160,13 @@ public class FeatureSelectionInfo {
 				(nComFeatures != null ? nComFeatures : "") + "," + 
 				(nFinFeatures != null ? nFinFeatures : "") + "," + 
 				(runs != null ? runs : "") + "," +
-				(nDataPoints != null ? nDataPoints : "");
+				(nDataPoints != null ? nDataPoints : "") + "," + f1Pred + "," + mccPred;
 	}
 	
 	public static String getFileHeader(){
 		return FS_SELECTORS + "," + FS_SELECTED + "," + FS_NUM_SEL  + "," + 
-				FS_AGGR_STRATEGY + "," + FS_NUM_COM + "," + FS_NUM_FIN + "," + FS_RUNS + "," + FS_DATAPOINTS;
+				FS_AGGR_STRATEGY + "," + FS_NUM_COM + "," + FS_NUM_FIN + "," + FS_RUNS + "," + 
+				FS_DATAPOINTS + "," + FS_PREDF1 + "," + FS_PREDMCC;
 	}
 
 	public void setAggregationStrategy(String aggrStrat) {
@@ -182,6 +200,8 @@ public class FeatureSelectionInfo {
 			writer.write("\n* Number of DataSeries\n" + FS_NUM_FIN + " = " + (nFinFeatures != null ? nFinFeatures : "") + "\n");
 			writer.write("\n* Runs used for Feature Selection \n" + FS_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for Feature Selection\n" + FS_DATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
+			writer.write("\n* Predicted F1\n" + FS_PREDF1 + " = " + new DecimalFormat("#0.00").format(f1Pred) + "\n");
+			writer.write("\n* Predicted MCC\n" + FS_PREDMCC + " = " + new DecimalFormat("#0.00").format(mccPred) + "\n");
 			writer.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write feature selection INFO");
@@ -194,5 +214,21 @@ public class FeatureSelectionInfo {
 
 	public void setRuns(String runs) {
 		this.runs = runs;
+	}
+
+	public void setMCCPrediction(double scoreInstance) {
+		this.mccPred = scoreInstance;
+	}
+
+	public double getMCCPrediction() {
+		return mccPred;
+	}
+	
+	public void setF1Prediction(double scoreInstance) {
+		this.f1Pred = scoreInstance;
+	}
+
+	public double getF1Prediction() {
+		return f1Pred;
 	}
 }

@@ -8,6 +8,7 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
+import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -47,17 +48,21 @@ public class DetectorMain {
 				dmList = new LinkedList<DetectionManager>();
 				iManager = new InputManager(new PreferencesManager(DEFAULT_PREF_FILE));
 				for(PreferencesManager loaderPref : iManager.readLoaders()){
+					Loader trainLoader = iManager.buildLoader("train", loaderPref);
+					Loader evalLoader = iManager.buildLoader("validation", loaderPref);
 					for(LearnerType lt : readAlgorithmCombinations(iManager)){
 						if(hasSliding(lt)){
 							for(Integer windowSize : readWindowSizes(iManager)){
 								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
-									dmList.add(new DetectionManager(iManager, lt, loaderPref, windowSize, sPolicy));
+									dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, windowSize, sPolicy));
 								}
 							}
 						} else {
-							dmList.add(new DetectionManager(iManager, lt, loaderPref));
+							dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader));
 						}
 					}
+					trainLoader.flush();
+					evalLoader.flush();
 				}
 				AppLogger.logInfo(DetectorMain.class, dmList.size() + " RELOAD instances found.");
 				for(int i=0;i<dmList.size();i++){

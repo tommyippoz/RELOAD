@@ -68,22 +68,28 @@ public class DetectionManager {
 	
 	protected SlidingPolicy sPolicy;
 	
+	private Loader trainLoader;
+	
+	private Loader evalLoader;
+	
 	/**
 	 * Instantiates a new detection manager.
 	 * @param loaderPref 
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref){
-		this(iManager, algTypes, loaderPref, null, null);
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader){
+		this(iManager, algTypes, loaderPref, trainLoader, evalLoader, null, null);
 	}
 	
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, Integer windowSize, SlidingPolicy sPolicy) {
 		this.iManager = iManager;
 		this.mainLearner = algTypes;
 		this.loaderPref = loaderPref;
 		this.windowSize = windowSize;
 		this.sPolicy = sPolicy;
+		this.trainLoader = trainLoader;
+		this.evalLoader = evalLoader;
 		metric = iManager.getTargetMetric();
 		reputation = iManager.getReputation(metric);
 		dataTypes = iManager.getDataTypes();
@@ -124,20 +130,6 @@ public class DetectionManager {
 		if(sPolicy != null)
 			tag = tag + sPolicy.toString();
 		return tag;
-	}
-	
-	protected Loader buildLoader(String loaderTag){
-		if(loaderPref != null){
-			return buildLoader(loaderTag, iManager.getAnomalyWindow());
-		} else return null;
-	}
-	
-	private Loader buildLoader(String loaderTag, int anomalyWindow){
-		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
-		if(runsString != null && runsString.length() > 0){
-			return iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
-		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
-		return null;
 	}
 	
 	/**
@@ -193,10 +185,12 @@ public class DetectionManager {
 				scoresFolderName = iManager.getScoresFolder() + getDatasetName() + File.separatorChar;
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				loader = buildLoader("train");
+				if(trainLoader == null)
+					loader = iManager.buildLoader("train", loaderPref);
+				else loader = trainLoader;
 				if(SimpleLoader.isValid(loader)){
 					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
-					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
+					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes, iManager.getPredictMisclassificationsFlag());
 					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 					fsm.addLoaderInfo(loader);
 					fsm.saveSelectedFeatures(scoresFolderName, getDatasetName() + "_filtered.csv");
@@ -224,7 +218,9 @@ public class DetectionManager {
 		Loader loader;
 		try {
 			if(needTraining()) {
-				loader = buildLoader("train");
+				if(trainLoader == null)
+					loader = iManager.buildLoader("train", loaderPref);
+				else loader = trainLoader;
 				if(SimpleLoader.isValid(loader)){
 					kMap = generateKnowledge(loader.fetch());
 					if(!new File(buildScoresFolder()).exists())
@@ -249,7 +245,6 @@ public class DetectionManager {
 					tManager.train(buildScoresFolder());
 					tManager.flush();
 				} else AppLogger.logError(getClass(), "UnvalidLoaderError", "Loader '" + (loader != null ? loader.getLoaderName() : "") + "' not specified correctly. Check if it is reachable and if train partition is specified correctly to include some anomalies to be used to calculate optimal parameters values");
-			
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to train detector");
@@ -297,7 +292,9 @@ public class DetectionManager {
 		EvaluatorManager eManager;
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
-		Loader l = buildLoader("validation");
+		Loader l = evalLoader;
+		if(evalLoader == null)
+			l = iManager.buildLoader("validation", loaderPref);
 		if(SimpleLoader.isValid(l)){
 			String scoresFileString = buildScoresFolder();
 			if(iManager.countAvailableModels(scoresFileString) > 0){
@@ -317,12 +314,12 @@ public class DetectionManager {
 				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 				return new DetectorOutput(iManager, mainLearner, score, 
 						InputManager.loadAlgorithmModel(buildScoresFolder()),
-						l,
 						eManager.getDetailedEvaluations(),
 						iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
 						iManager.extractSelectedFeatures(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName(), loaderPref.getFilename()),		
 						getWritableTag(),
 						eManager.getInjectionsRatio(), 
+						iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + getDatasetName() + File.separatorChar + "featureSelectionInfo.info"),
 						iManager.loadTrainInfo(buildScoresFolder() + File.separatorChar + "trainInfo.info"),
 						vInfo);
 			

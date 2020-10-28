@@ -330,7 +330,9 @@ public class InputManager {
 	}
 	
 	public MetricType getMetricType() {
-		return getTargetMetric().getMetricType();
+		if(getTargetMetric() != null)
+			return getTargetMetric().getMetricType();
+		else return MetricType.FMEASURE;
 	}
 
 	/**
@@ -405,8 +407,8 @@ public class InputManager {
 				reader.close();
 			} else {
 				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						dataTypeFile.getPath() + " not found. Using default value of 'PLAIN, DIFFERENCE'");
-				return new DataCategory[]{DataCategory.PLAIN, DataCategory.DIFFERENCE};
+						dataTypeFile.getPath() + " not found. Using default value of 'PLAIN'");
+				return new DataCategory[]{DataCategory.PLAIN};
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to read data types");
@@ -427,7 +429,7 @@ public class InputManager {
 	 */
 	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
 		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
-		if(confList == null && createMissing && alg != null && alg instanceof BaseLearner){
+		if((confList == null || confList.size() == 0) && createMissing && alg != null && alg instanceof BaseLearner){
 			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
 			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
 			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
@@ -1581,6 +1583,24 @@ public class InputManager {
 	    } catch (IOException e) {
 			AppLogger.logException(InputManager.class, e, "Unable to copy from " + source);
 		} 
+	}
+	
+	public Loader buildLoader(String loaderTag, PreferencesManager loaderPref){
+		if(loaderPref != null){
+			return buildLoader(loaderTag, loaderPref, getAnomalyWindow());
+		} else return null;
+	}
+	
+	private Loader buildLoader(String loaderTag, PreferencesManager loaderPref, int anomalyWindow){
+		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
+		if(runsString != null && runsString.length() > 0){
+			return buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
+		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
+		return null;
+	}
+
+	public boolean getPredictMisclassificationsFlag() {
+		return true;
 	}
 	
 }

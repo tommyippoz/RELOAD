@@ -298,5 +298,7 @@ public abstract class FeatureSelector {
 	public void updateRankedThreshold(boolean b) {
 		rankThresholdFlag = b;
 	}
+	
+	public abstract double getHighestScore();
 
 }

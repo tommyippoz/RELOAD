@@ -267,7 +267,7 @@ public class EvaluatorManager extends DataManager {
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
 							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.hasInjection() ? "anomaly" : "") + ",,");
 							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
-									res.getScore() + "," + (res.getDecisionFunction() != null ? res.getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
+									res.getScore() + "," + (evalModel.getAlgorithm().getDecisionFunction() != null ? evalModel.getAlgorithm().getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){
 								Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
 								if(evalModel.getDataSeries().size() == 1){
