@@ -188,9 +188,9 @@ public class FeatureSelectorManager {
 		
 		private RandomForest rf;
 		
-		private final String F1File = "resources" + File.separatorChar + "AllDataToModel_F1_3Att.arff";
+		private final String F1File = "/AllDataToModel_F1_3Att.arff";
 		
-		private final String MCCFile = "resources" + File.separatorChar + "AllDataToModel_MCC_3Att.arff";
+		private final String MCCFile = "/AllDataToModel_MCC_3Att.arff";
 		
 		public MisclassificationPrediction(boolean targetF1) throws Exception{
 			rf = buildMetaClassifier();
