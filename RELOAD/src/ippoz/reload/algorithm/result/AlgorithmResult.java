@@ -4,7 +4,6 @@
 package ippoz.reload.algorithm.result;
 
 import ippoz.reload.decisionfunction.AnomalyResult;
-import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.output.LabelledResult;
 
 /**

@@ -5,17 +5,13 @@ package ippoz.reload.manager;
 
 import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
-import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.externalutils.WEKAUtils;
 import ippoz.reload.featureselection.ChiSquaredFeatureRanker;
 import ippoz.reload.featureselection.FeatureSelector;
 import ippoz.reload.featureselection.InformationGainSelector;
+import ippoz.reload.featureselection.J48Ranker;
 import ippoz.reload.featureselection.OneRRanker;
 import ippoz.reload.info.FeatureSelectionInfo;
 
@@ -29,14 +25,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
-import weka.attributeSelection.InfoGainAttributeEval;
 import weka.classifiers.trees.RandomForest;
-import weka.core.DenseInstance;
-import weka.core.Instances;
 import weka.core.Instance;
+import weka.core.Instances;
 
 /**
  * @author Tommy
@@ -97,19 +90,17 @@ public class FeatureSelectorManager {
 		return selectedFeatures;
 	}
 	
-	
-	
 	private void reshapeSelectorsListForPrediction() {
 		boolean hasChi = false;
 		boolean hasInfo = false;
-		boolean hasOneR = false;
+		boolean hasJ48 = false;
 		for(FeatureSelector fs : selectorsList){
 			if(fs instanceof ChiSquaredFeatureRanker)
 				hasChi = true;
 			if(fs instanceof InformationGainSelector)
 				hasInfo = true;
-			if(fs instanceof OneRRanker)
-				hasOneR = true;
+			if(fs instanceof J48Ranker)
+				hasJ48 = true;
 		}
 		if(!hasInfo){
 			selectorsList.add(0, new InformationGainSelector(1000, true));
@@ -119,14 +110,14 @@ public class FeatureSelectorManager {
 			selectorsList.add(0, new ChiSquaredFeatureRanker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'ChiSquared' was added to predict misclassifications");
 		}
-		if(!hasOneR){
-			selectorsList.add(0, new OneRRanker(1000, true));
-			AppLogger.logInfo(getClass(), "Feature Selector 'OneR' was added to predict misclassifications");
+		if(!hasJ48){
+			selectorsList.add(0, new J48Ranker(1000, true));
+			AppLogger.logInfo(getClass(), "Feature Selector 'J48' was added to predict misclassifications");
 		}
 	}
 
 	private void calculatePrediction() {
-		double bestChiSQ = 0.0, bestInfoGain = 0.0, bestOneR = 0.0;
+		double bestChiSQ = 0.0, bestInfoGain = 0.0, bestJ48 = 0.0;
 		for(FeatureSelector fs : selectorsList){
 			if(fs instanceof ChiSquaredFeatureRanker){
 				bestChiSQ = fs.getHighestScore();
@@ -134,16 +125,20 @@ public class FeatureSelectorManager {
 			if(fs instanceof InformationGainSelector){
 				bestInfoGain = fs.getHighestScore();
 			}
-			if(fs instanceof OneRRanker){
-				bestOneR = fs.getHighestScore();
+			if(fs instanceof J48Ranker){
+				bestJ48 = fs.getHighestScore();
 			}
 		}
 		try {
-			MisclassificationPrediction mp = new MisclassificationPrediction(true);
-			fsInfo.setF1Prediction(mp.scoreInstance(bestChiSQ, bestInfoGain, bestOneR));
-			AppLogger.logInfo(getClass(), "Predicted F1 is " + fsInfo.getF1Prediction());
-			mp = new MisclassificationPrediction(false);
-			fsInfo.setMCCPrediction(mp.scoreInstance(bestChiSQ, bestInfoGain, bestOneR));
+			fsInfo.setValuesToPredict(bestChiSQ + "," + bestInfoGain + "," + bestJ48);
+			MisclassificationPrediction mp = new MisclassificationPrediction(0);
+			fsInfo.setRPrediction(mp.scoreInstance(bestChiSQ, bestInfoGain, bestJ48));
+			AppLogger.logInfo(getClass(), "Predicted R is " + fsInfo.getRPrediction());
+			mp = new MisclassificationPrediction(1);
+			fsInfo.setF2Prediction(mp.scoreInstance(bestChiSQ, bestInfoGain, bestJ48));
+			AppLogger.logInfo(getClass(), "Predicted F2 is " + fsInfo.getF2Prediction());
+			mp = new MisclassificationPrediction(2);
+			fsInfo.setMCCPrediction(mp.scoreInstance(bestChiSQ, bestInfoGain, bestJ48));
 			AppLogger.logInfo(getClass(), "Predicted MCC is " + fsInfo.getMCCPrediction());
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Error wile predicting misclassifications");
@@ -190,12 +185,18 @@ public class FeatureSelectorManager {
 		
 		private final String F1File = "/AllDataToModel_F1_3Att.arff";
 		
+		private final String F2File = "/AllDataToModel_F2_3Att.arff";
+		
 		private final String MCCFile = "/AllDataToModel_MCC_3Att.arff";
 		
-		public MisclassificationPrediction(boolean targetF1) throws Exception{
+		private final String RFile = "/AllDataToModel_R_3Att.arff";
+		
+		public MisclassificationPrediction(int targetMetric) throws Exception{
 			rf = buildMetaClassifier();
-			if(targetF1)
-				rf.buildClassifier(getData(F1File));
+			if(targetMetric == 0)
+				rf.buildClassifier(getData(RFile));
+			else if(targetMetric == 1)
+				rf.buildClassifier(getData(F2File));
 			else rf.buildClassifier(getData(MCCFile));
 		}
 		
@@ -226,7 +227,7 @@ public class FeatureSelectorManager {
 			return rf;
 		}
 		
-		private Instance buildInstance(double chisq, double infoGain, double oner){
+		private Instance buildInstance(double chisq, double infoGain, double j48){
 			String st = "";
 			Instances iList;
 			try {
@@ -234,7 +235,7 @@ public class FeatureSelectorManager {
 				st = st + "\n\n@data\n";
 				st = st + chisq + ",";
 				st = st + infoGain + ",";
-				st = st + oner + ",0.0";
+				st = st + j48 + ",0.0";
 				iList = new Instances(new StringReader(st));
 				iList.setClassIndex(3);
 				if(iList != null && iList.size() > 0)
@@ -246,8 +247,8 @@ public class FeatureSelectorManager {
 			}
 		}
 		
-		public double scoreInstance(double chisq, double infoGain, double oner) throws Exception{
-			return rf.classifyInstance(buildInstance(chisq, infoGain, oner));
+		public double scoreInstance(double chisq, double infoGain, double j48) throws Exception{
+			return rf.classifyInstance(buildInstance(chisq, infoGain, j48));
 		}
 		
 	}

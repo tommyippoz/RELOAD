@@ -3,13 +3,13 @@
  */
 package ippoz.reload.decisionfunction;
 
-import java.util.Arrays;
-
-import org.apache.commons.lang3.ArrayUtils;
-
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+
+import java.util.Arrays;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * @author Tommy

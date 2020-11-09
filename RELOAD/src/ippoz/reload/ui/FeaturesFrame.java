@@ -128,7 +128,7 @@ public class FeaturesFrame {
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Predicted F1: " + dOut.getPredictedF1());
+		lbl = new JLabel("Predicted R: " + dOut.getPredictedR());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);

@@ -61,9 +61,17 @@ public class FeatureSelectionInfo {
 	
 	private double mccPred;
 	
-	private static final String FS_PREDF1 = "Predicted F1";
+	private static final String FS_PREDF2 = "Predicted F2";
 	
-	private double f1Pred;
+	private double f2Pred;
+	
+	private static final String FS_PREDR = "Predicted R";
+	
+	private double rPred;
+	
+	private static final String FS_PRED = "Values used to Predict";
+	
+	private String predString;
 	
 	public FeatureSelectionInfo() {
 		selectorsList = null;
@@ -75,7 +83,9 @@ public class FeatureSelectionInfo {
 		runs = null;
 		nDataPoints = null;
 		mccPred = Double.NaN;
-		f1Pred = Double.NaN;
+		f2Pred = Double.NaN;
+		rPred = Double.NaN;
+		predString = null;
 	}
 	
 	public FeatureSelectionInfo(List<FeatureSelector> list) {
@@ -140,11 +150,17 @@ public class FeatureSelectionInfo {
 				if(preferences.containsKey(FS_DATAPOINTS) && preferences.get(FS_DATAPOINTS) != null && AppUtility.isInteger(preferences.get(FS_DATAPOINTS).trim())){
 					nDataPoints = Integer.parseInt(preferences.get(FS_DATAPOINTS).trim());
 				}
-				if(preferences.containsKey(FS_PREDF1) && preferences.get(FS_PREDF1) != null && AppUtility.isNumber(preferences.get(FS_PREDF1).trim())){
-					f1Pred = Double.parseDouble(preferences.get(FS_PREDF1).trim());
+				if(preferences.containsKey(FS_PREDF2) && preferences.get(FS_PREDF2) != null && AppUtility.isNumber(preferences.get(FS_PREDF2).trim())){
+					f2Pred = Double.parseDouble(preferences.get(FS_PREDF2).trim());
 				}
 				if(preferences.containsKey(FS_PREDMCC) && preferences.get(FS_PREDMCC) != null && AppUtility.isNumber(preferences.get(FS_PREDMCC).trim())){
 					mccPred = Double.parseDouble(preferences.get(FS_PREDMCC).trim());
+				}
+				if(preferences.containsKey(FS_PREDR) && preferences.get(FS_PREDR) != null && AppUtility.isNumber(preferences.get(FS_PREDR).trim())){
+					rPred = Double.parseDouble(preferences.get(FS_PREDR).trim());
+				}
+				if(preferences.containsKey(FS_PRED) && preferences.get(FS_PRED) != null){
+					predString = preferences.get(FS_PRED).trim();
 				}
 			}
 		} catch (IOException ex) {
@@ -160,13 +176,14 @@ public class FeatureSelectionInfo {
 				(nComFeatures != null ? nComFeatures : "") + "," + 
 				(nFinFeatures != null ? nFinFeatures : "") + "," + 
 				(runs != null ? runs : "") + "," +
-				(nDataPoints != null ? nDataPoints : "") + "," + f1Pred + "," + mccPred;
+				(nDataPoints != null ? nDataPoints : "") + "," + rPred + "," + f2Pred + "," + mccPred + "," + 
+				(predString != null ? predString : "");
 	}
 	
 	public static String getFileHeader(){
 		return FS_SELECTORS + "," + FS_SELECTED + "," + FS_NUM_SEL  + "," + 
 				FS_AGGR_STRATEGY + "," + FS_NUM_COM + "," + FS_NUM_FIN + "," + FS_RUNS + "," + 
-				FS_DATAPOINTS + "," + FS_PREDF1 + "," + FS_PREDMCC;
+				FS_DATAPOINTS + "," + FS_PREDR + "," + FS_PREDF2 + "," + FS_PREDMCC + "," + FS_PRED + ",,";
 	}
 
 	public void setAggregationStrategy(String aggrStrat) {
@@ -200,8 +217,10 @@ public class FeatureSelectionInfo {
 			writer.write("\n* Number of DataSeries\n" + FS_NUM_FIN + " = " + (nFinFeatures != null ? nFinFeatures : "") + "\n");
 			writer.write("\n* Runs used for Feature Selection \n" + FS_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for Feature Selection\n" + FS_DATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
-			writer.write("\n* Predicted F1\n" + FS_PREDF1 + " = " + new DecimalFormat("#0.00").format(f1Pred) + "\n");
-			writer.write("\n* Predicted MCC\n" + FS_PREDMCC + " = " + new DecimalFormat("#0.00").format(mccPred) + "\n");
+			writer.write("\n* Predicted R\n" + FS_PREDR + " = " + new DecimalFormat("#0.00").format(rPred).replace(",", ".") + "\n");
+			writer.write("\n* Predicted F2\n" + FS_PREDF2 + " = " + new DecimalFormat("#0.00").format(f2Pred).replace(",", ".") + "\n");
+			writer.write("\n* Predicted MCC\n" + FS_PREDMCC + " = " + new DecimalFormat("#0.00").format(mccPred).replace(",", ".") + "\n");
+			writer.write("\n* Values Used to Predict\n" + FS_PRED + " = " + predString + "\n");
 			writer.close();
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write feature selection INFO");
@@ -224,11 +243,29 @@ public class FeatureSelectionInfo {
 		return mccPred;
 	}
 	
-	public void setF1Prediction(double scoreInstance) {
-		this.f1Pred = scoreInstance;
+	public void setF2Prediction(double scoreInstance) {
+		this.f2Pred = scoreInstance;
 	}
 
-	public double getF1Prediction() {
-		return f1Pred;
+	public double getF2Prediction() {
+		return f2Pred;
 	}
+	
+	public void setRPrediction(double scoreInstance) {
+		this.rPred = scoreInstance;
+	}
+
+	public double getRPrediction() {
+		return rPred;
+	}
+	
+	public void setValuesToPredict(String str){
+		predString = str;
+	}
+	
+	public String getValuesToPredict(){
+		return predString;
+	}
+
+	
 }

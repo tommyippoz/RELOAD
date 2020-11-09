@@ -7,7 +7,6 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.decisionfunction.DecisionFunction;
@@ -421,8 +420,12 @@ public class DetectorOutput {
 		return fsInfo.getMCCPrediction();
 	}
 
-	public double getPredictedF1() {
-		return fsInfo.getF1Prediction();
+	public double getPredictedF2() {
+		return fsInfo.getF2Prediction();
+	}
+
+	public double getPredictedR() {
+		return fsInfo.getRPrediction();
 	}
 
 	/*public TrainInfo getTrainInfo() {

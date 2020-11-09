@@ -3,9 +3,6 @@
  */
 package ippoz.reload.decisionfunction;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
@@ -14,6 +11,9 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.output.LabelledResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
