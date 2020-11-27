@@ -183,7 +183,7 @@ public class FeatureSelectionInfo {
 	public static String getFileHeader(){
 		return FS_SELECTORS + "," + FS_SELECTED + "," + FS_NUM_SEL  + "," + 
 				FS_AGGR_STRATEGY + "," + FS_NUM_COM + "," + FS_NUM_FIN + "," + FS_RUNS + "," + 
-				FS_DATAPOINTS + "," + FS_PREDR + "," + FS_PREDF2 + "," + FS_PREDMCC + "," + FS_PRED + ",,";
+				FS_DATAPOINTS + "," + FS_PREDR + "," + FS_PREDF2 + "," + FS_PREDMCC + "," + FS_PRED + ",,,,,,,";
 	}
 
 	public void setAggregationStrategy(String aggrStrat) {

@@ -169,7 +169,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			}
 			
 			// Final Operations, assume 'algorithm', 'vs' and 'bestConf' are set
-			if(vs != null) {
+			if(vs != null && bestConf != null) {
 				bestConf.addItem(BasicConfiguration.TRAIN_AVG, vs.getAvg());
 				bestConf.addItem(BasicConfiguration.TRAIN_STD, vs.getStd());
 				bestConf.addItem(BasicConfiguration.TRAIN_Q0, vs.getMin());

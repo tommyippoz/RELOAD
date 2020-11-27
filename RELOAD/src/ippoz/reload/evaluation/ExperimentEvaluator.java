@@ -110,7 +110,7 @@ public class ExperimentEvaluator extends Thread {
 				if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
 					((SlidingKnowledge)evalKnowledge).slide(i, modelResult.getScore());
 				}
-				if(i > 0 && i % ((int)(n/10)) == 0)
+				if(((int)(n/10)) > 0 && i > 0 && i % ((int)(n/10)) == 0)
 					AppLogger.logInfo(getClass(), ((int)(i / ((int)(n/10))))*10 + "% of test set is already evaluated.");
 			}
 			if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
