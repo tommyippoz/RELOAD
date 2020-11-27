@@ -113,6 +113,8 @@ public class BuildUI {
 	
 	private static final String SETUP_FORCE_TRAINING = "Force Training";
 	
+	private static final String SETUP_PREDICT = "Predict Misclassifications";
+	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
 	private Map<String, JPanel> setupMap, pathMap;
@@ -901,7 +903,7 @@ public class BuildUI {
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(12, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
@@ -924,11 +926,15 @@ public class BuildUI {
 					AppLogger.logException(getClass(), ex, "Unable to open feature selection preferences");
 				}
 			} } );
-		seePrefPanel.setVisible(iManager.getFilteringFlag());
 		seePrefPanel.add(button);
+		seePrefPanel.setVisible(iManager.getFilteringFlag());		
 		
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed.", true, true), setupMap);
 		setupPanel.add(seePrefPanel);
+		
+		comp = createLCKPanel(SETUP_PREDICT, setupPanel, 2*optionSpacing, iManager.getPredictMisclassificationsFlag(), new JPanel[]{}, InputManager.PREDICT_MISCLASSIFICATIONS, "Specifies if Misclassification Prediction should be applied.", true, false);
+		comp.setVisible(iManager.getFilteringFlag());
+		addToPanel(setupPanel, SETUP_PREDICT, comp, setupMap);
 		
 		//comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'MULTIPLE_UNION' considers j-dimensional subspaces (0 &lt j &lt= n), constituted by the j top-ranked features, <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
 		//comp.setVisible(iManager.getTrainingFlag());
@@ -1132,26 +1138,27 @@ public class BuildUI {
 		cb.setEnabled(isEnabled);
 		//cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
-		if(tooltipText != null)
+		if(tooltipText != null){
 			cb.setToolTipText(tooltipText);
+		}
 		
-		if(comp != null ){
-			cb.addActionListener(new ActionListener() {
-			    @Override
-			    public void actionPerformed(ActionEvent event) {
-			        JCheckBox cb = (JCheckBox) event.getSource();
+		cb.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		        JCheckBox cb = (JCheckBox) event.getSource();
+		        if(comp != null && comp.length > 0){
 			        for(JPanel linkedPanel : comp){
 			        	if(linkedPanel != null)
 			        		linkedPanel.setVisible(cb.isSelected());
 			        }
-			        if(!isUpdating){
-			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true, true);
-			        	reload();
-			        }
-			        	
-			    }
-			});
-		}
+		        }
+		        if(!isUpdating){
+		        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true, true);
+		        	reload();
+		        }
+		        	
+		    }
+		});
 		
 		panel.add(cb);
 		

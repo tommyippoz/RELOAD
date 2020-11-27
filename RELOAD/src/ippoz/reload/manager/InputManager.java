@@ -146,6 +146,8 @@ public class InputManager {
 	public static final String FORCE_TRAINING_BASELEARNERS = "FORCE_TRAINING_BASELEARNERS";
 	
 	public static final String FORCE_TRAINING = "FORCE_TRAINING";
+
+	public static final String PREDICT_MISCLASSIFICATIONS = "PREDICT_MISCLASSIFICATIONS";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -169,7 +171,7 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue,boolean createNew,  boolean updateFile){
+	public boolean updatePreference(String tag, String newValue, boolean createNew,  boolean updateFile){
 		if(tag != null && (createNew || prefManager.hasPreference(tag))){
 			prefManager.updatePreference(tag, newValue, createNew, updateFile);
 			return true;
@@ -621,6 +623,16 @@ public class InputManager {
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					FILTERING_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
+	}
+	
+	public boolean getPredictMisclassificationsFlag() {
+		if(prefManager.hasPreference(PREDICT_MISCLASSIFICATIONS))
+			return !prefManager.getPreference(PREDICT_MISCLASSIFICATIONS).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PREDICT_MISCLASSIFICATIONS + " not found. Using default value of 'yes'");
 			return true;
 		}
 	}
@@ -1597,10 +1609,6 @@ public class InputManager {
 			return buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
 		return null;
-	}
-
-	public boolean getPredictMisclassificationsFlag() {
-		return true;
 	}
 	
 }
