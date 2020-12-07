@@ -39,6 +39,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	/** The possible configurations. */
 	private List<BasicConfiguration> configurations;
 	
+	private DetectionAlgorithm bestAlgorithm;
+	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -83,7 +85,6 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
 		ValueSeries vs = null;
 		List<AlgorithmResult> resultList = null;
-		DetectionAlgorithm bestAlgorithm = null;
 		double bestScore = Double.NaN;
 		try {			
 			/* Iterates for Configurations */
@@ -178,12 +179,12 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				bestConf.addItem(BasicConfiguration.TRAIN_Q3, vs.getQ3());
 				bestConf.addItem(BasicConfiguration.TRAIN_Q4, vs.getMax());
 			}
-			
-			bestAlgorithm.saveLoggedScores();
-			
-			for(Knowledge know : kList){
-				trainResult.put(know, calculateResults(bestAlgorithm, know));
-			}
+			if(bestAlgorithm != null){
+				for(Knowledge know : kList){
+					trainResult.put(know, calculateResults(bestAlgorithm, know));
+				}
+			} else
+				bestAlgorithm = null;
 					
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
@@ -213,6 +214,12 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		} catch(Exception ex){
 			return null;
 		}
+	}
+	
+	public void saveAlgorithmScores(){
+		if(bestAlgorithm != null)
+			bestAlgorithm.saveLoggedScores();
+		else AppLogger.logError(getClass(), "ConfSaveError", "Unable to save Train Result");
 	}
 	
 }

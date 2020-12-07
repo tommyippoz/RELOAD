@@ -31,7 +31,7 @@ public class FeatureSelectionInfo {
 	
 	private static final String FS_SELECTED = "FS Selected Features";
 
-	private List<DataSeries> seriesList;
+	private DataSeries dataSeries;
 	
 	private static final String FS_NUM_SEL = "FS N Selected Features";
 	
@@ -75,7 +75,7 @@ public class FeatureSelectionInfo {
 	
 	public FeatureSelectionInfo() {
 		selectorsList = null;
-		seriesList = null;
+		dataSeries = null;
 		nSelFeatures = null;
 		nComFeatures = null;
 		nFinFeatures = null;
@@ -114,19 +114,18 @@ public class FeatureSelectionInfo {
 					} else selectorsList.add(preferences.get(FS_SELECTORS).trim().replace("[", "").replace("]", ""));
 				}
 				if(preferences.containsKey(FS_SELECTED) && preferences.get(FS_SELECTED) != null && preferences.get(FS_SELECTED).trim().length() > 0){
-					seriesList = new LinkedList<DataSeries>();
 					if(preferences.get(FS_SELECTED).contains(",")){
 						String[] splitted = preferences.get(FS_SELECTED).trim().split(",");
 						for(String algString : splitted){
 							try {
-								seriesList.add(DataSeries.fromString(algString.trim(), false));
+								dataSeries = DataSeries.fromString(algString.trim());
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + algString + "'");
 							}
 						}
 					} else {
 						try {
-							seriesList.add(DataSeries.fromString(preferences.get(FS_SELECTED).trim(), false));
+							dataSeries = DataSeries.fromString(preferences.get(FS_SELECTED).trim());
 						} catch(Exception ex){
 							AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + preferences.get(FS_SELECTED) + "'");
 						}
@@ -170,7 +169,7 @@ public class FeatureSelectionInfo {
 
 	public String toFileString(){
 		return (selectorsList != null ? Arrays.toString(selectorsList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + "," + 
-				(seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + "," + 
+				(dataSeries != null ? dataSeries.getName() : "").replace(",", ";").replace("[", "").replace("]", "") + "," + 
 				(nSelFeatures != null ? nSelFeatures : "") + "," + 
 				(aggrStrategy != null ? aggrStrategy : "") + "," + 
 				(nComFeatures != null ? nComFeatures : "") + "," + 
@@ -198,10 +197,10 @@ public class FeatureSelectionInfo {
 		this.nFinFeatures = size;
 	}
 
-	public void setSelectedFeatures(List<DataSeries> selectedFeatures) {
-		this.seriesList = selectedFeatures;
-		if(seriesList != null)
-			this.nSelFeatures = seriesList.size();
+	public void setSelectedFeatures(DataSeries selectedFeatures) {
+		this.dataSeries = selectedFeatures;
+		if(dataSeries != null)
+			this.nSelFeatures = dataSeries.size();
 	}
 	
 	public void printFile(File file) {
@@ -210,7 +209,7 @@ public class FeatureSelectionInfo {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on feature selection details\n"); 
 			writer.write("\n* Feature selection strategies used\n" + FS_SELECTORS + " = " + (selectorsList != null ? Arrays.toString(selectorsList.toArray()) : "") + "\n");
-			writer.write("\n* Selected Features\n" + FS_SELECTED + " = " + (seriesList != null ? Arrays.toString(seriesList.toArray()) : "") + "\n");
+			writer.write("\n* Selected Features\n" + FS_SELECTED + " = " + (dataSeries != null ? dataSeries.getName() : "") + "\n");
 			writer.write("\n* Number of Selected Features\n" + FS_NUM_SEL + " = " + (nSelFeatures != null ? nSelFeatures : "") + "\n");
 			writer.write("\n* Feature Aggregation Strategy (NONE, SIMPLE, PEARSON, UNION, ALL)\n" + FS_AGGR_STRATEGY + " = " + (aggrStrategy != null ? aggrStrategy : "") + "\n");
 			writer.write("\n* Number of Combined Features\n" + FS_NUM_COM + " = " + (nComFeatures != null ? nComFeatures : "") + "\n");

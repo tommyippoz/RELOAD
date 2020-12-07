@@ -4,22 +4,16 @@
 package ippoz.reload.commons.knowledge;
 
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
+import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.loader.LoaderBatch;
-import ippoz.reload.commons.support.AppLogger;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,15 +26,22 @@ public abstract class Knowledge implements Cloneable {
 	
 	private static int MAX_RANGE = 100;
 	
+	private DataSeries dataSeries;
+	
 	protected MonitoredData baseData;
 	
 	public Knowledge(MonitoredData baseData){
 		this.baseData = baseData;
+		dataSeries = new DataSeries(baseData.getIndicators());
 	}
 	
 	@Override
 	public String toString() {
 		return "Knowledge [baseData=" + baseData.size() + "]";
+	}
+	
+	public DataSeries getDataSeries(){
+		return dataSeries;
 	}
 
 	public Indicator[] getIndicators(){
@@ -71,8 +72,8 @@ public abstract class Knowledge implements Cloneable {
 		return outList;
 	}
 	
-	public Date getTimestamp(int index){
-		return baseData.get(index).getTimestamp();
+	public DatasetIndex getIndex(int index){
+		return baseData.get(index).getIndex();
 	}
 	
 	public Snapshot get(int index, DataSeries dataSeries) {
@@ -83,28 +84,10 @@ public abstract class Knowledge implements Cloneable {
 		return buildSnapshotFor(index, null);
 	}
 	
-	public MultipleSnapshot generateMultipleSnapshot(int index,	MultipleDataSeries invDs) {
-		return baseData.generateMultipleSnapshot(invDs, index);
-	}
-	
 	public Snapshot buildSnapshotFor(int index, DataSeries dataSeries){
 		if(dataSeries == null)
 			return null;
-		if(dataSeries.size() == 1)
-			return baseData.generateDataSeriesSnapshot(dataSeries, index);
-		else return baseData.generateMultipleSnapshot((MultipleDataSeries)dataSeries, index);
-	}
-	
-	public SnapshotValue getDataSeriesValue(DataSeries ds, int i){
-		return ds.getSeriesValue(baseData.get(i));
-	}
-
-	public List<SnapshotValue> getDataSeriesValues(DataSeries ds){
-		List<SnapshotValue> outList = new ArrayList<SnapshotValue>(baseData.size());
-		for(int i=0;i<baseData.size();i++){
-			outList.add(ds.getSeriesValue(baseData.get(i)));
-		}
-		return outList;
+		else return baseData.generateSnapshot(dataSeries, index);
 	}
 	
 	public int size(){
@@ -123,8 +106,12 @@ public abstract class Knowledge implements Cloneable {
 	
 	public abstract KnowledgeType getKnowledgeType();
 
-	public InjectedElement getInjection(int obIndex) {
-		return baseData.getInjection(obIndex);
+	public InjectedElement getInjection(DatasetIndex obIndex) {
+		return baseData.getInjectionAt(obIndex);
+	}
+	
+	public InjectedElement getInjection(int i) {
+		return baseData.getInjectionAt(i);
 	}
 	
 	public static int goldenPointsSize(List<Snapshot> knowledgeSnapshots) {
@@ -175,34 +162,20 @@ public abstract class Knowledge implements Cloneable {
 			dataMatrix = new double[kSnapList.size()][ds.size()];
 		else dataMatrix = new double[Knowledge.goldenPointsSize(kSnapList)][ds.size()]; 
 		if(dataMatrix.length > 0) {
+			Indicator[] indList = ds.getIndicators();
 			for(int i=0;i<kSnapList.size();i++){
-				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
-					if(ds.size() == 1){
-						dataMatrix[insertIndex][0] = ((DataSeriesSnapshot)kSnapList.get(i)).getSnapValue().getFirst();
+				Snapshot snap = kSnapList.get(i);
+				if(includeFaulty || !includeFaulty && !snap.isAnomalous()) {
+					for(int j=0;j<ds.size();j++){
+						dataMatrix[insertIndex][j] = snap.getDoubleValueFor(indList[j]);
 						if(insertIndex == 0){
-							minmax[0][0] = dataMatrix[insertIndex][0];
-							minmax[0][1] = dataMatrix[insertIndex][0];
+							minmax[j][0] = dataMatrix[insertIndex][0];
+							minmax[j][1] = dataMatrix[insertIndex][0];
 						} else {
-							if(dataMatrix[insertIndex][0] < minmax[0][0])
-								minmax[0][0] = dataMatrix[insertIndex][0];
-							if(dataMatrix[insertIndex][0] > minmax[0][1])
-								minmax[0][1] = dataMatrix[insertIndex][0];
-						}
-					} else {
-						for(int j=0;j<ds.size();j++){
-							if(((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue() == null){
-								AppLogger.logError(Knowledge.class, "UnrecognizableSnapshot", ((MultipleDataSeries)ds).getSeries(j).getName() + " - " + i + " - " + j);
-								dataMatrix[insertIndex][j] = 0.0;
-							} else dataMatrix[insertIndex][j] = ((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue().getFirst();
-							if(insertIndex == 0){
+							if(dataMatrix[insertIndex][0] < minmax[j][0])
 								minmax[j][0] = dataMatrix[insertIndex][0];
+							if(dataMatrix[insertIndex][0] > minmax[j][1])
 								minmax[j][1] = dataMatrix[insertIndex][0];
-							} else {
-								if(dataMatrix[insertIndex][0] < minmax[j][0])
-									minmax[j][0] = dataMatrix[insertIndex][0];
-								if(dataMatrix[insertIndex][0] > minmax[j][1])
-									minmax[j][1] = dataMatrix[insertIndex][0];
-							}
 						}
 					}
 					insertIndex++;
@@ -255,12 +228,8 @@ public abstract class Knowledge implements Cloneable {
 
 	}
 	
-	public void addIndicatorData(int obId, String indName, String indData, DataCategory dataTag){
-		baseData.get(obId).addIndicatorData(indName, indData, dataTag);
-	}
-
-	public boolean hasIndicatorData(int obId, String indicatorName, DataCategory categoryTag) {
-		return baseData.get(obId).hasIndicator(indicatorName, categoryTag);
+	public void addIndicatorData(int obId, String indName, Object indData){
+		baseData.addIndicatorData(obId, indName, indData);
 	}
 	
 	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Object expName) {
@@ -272,23 +241,27 @@ public abstract class Knowledge implements Cloneable {
 	}
 
 	public Knowledge sample(double ratio) {
-		MonitoredData sampled = new MonitoredData(getID());
+		MonitoredData sampled = new MonitoredData(getID(), baseData.getIndicators());
 		for(int i=0;i<baseData.size();i++){
 			if(Math.random() < ratio){
-				sampled.addItem(baseData.get(i), baseData.getInjection(i));
+				sampled.addObservation(baseData.get(i), baseData.getInjectionAt(i));
 			}
 		}
 		return new SingleKnowledge(sampled);
 	}
 	
 	public Knowledge sample(List<Double> ratios) {
-		MonitoredData sampled = new MonitoredData(getID());
+		MonitoredData sampled = new MonitoredData(getID(), baseData.getIndicators());
 		for(int i=0;i<baseData.size();i++){
 			if(Math.random() < ratios.get(i)){
-				sampled.addItem(baseData.get(i), baseData.getInjection(i));
+				sampled.addObservation(baseData.get(i), baseData.getInjectionAt(i));
 			}
 		}
 		return new SingleKnowledge(sampled);
+	}
+
+	public void addIndicator(Indicator indicator) {
+		baseData.addIndicator(indicator);
 	}
 
 }

@@ -3,16 +3,12 @@
  */
 package ippoz.reload.algorithm.result;
 
-import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * @author Tommy
  *
  */
 public class KMeansResult extends ClusteringResult {
-	
-	/** The kmm. */
-	private Vector mean;
 	
 	private double var;
 
@@ -23,9 +19,8 @@ public class KMeansResult extends ClusteringResult {
 	 * @param injection the injection
 	 * @param of the of
 	 */
-	public KMeansResult(boolean hasInjection, double score, Vector vector, double var, double confidence) {
+	public KMeansResult(boolean hasInjection, double score, double var, double confidence) {
 		super(hasInjection, score, confidence);
-		this.mean = vector;
 		this.var = var;
 	}
 

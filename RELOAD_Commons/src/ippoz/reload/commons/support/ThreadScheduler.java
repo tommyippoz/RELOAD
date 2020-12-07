@@ -26,7 +26,7 @@ public abstract class ThreadScheduler extends Thread {
 	 * Instantiates a new thread scheduler with a default load factor (2*logical cores).
 	 */
 	public ThreadScheduler(){
-		this(null, 2*Runtime.getRuntime().availableProcessors());
+		this(null, (int) (2*Runtime.getRuntime().availableProcessors()));
 	}
 	
 	/**

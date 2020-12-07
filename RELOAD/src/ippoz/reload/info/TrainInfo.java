@@ -12,11 +12,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @author Tommy
@@ -26,7 +23,7 @@ public class TrainInfo {
 	
 	private static final String TRAIN_SERIES = "TRAIN DataSeries";
 
-	private List<DataSeries> seriesList;
+	private DataSeries dataSeries;
 	
 	private static final String TRAIN_KFOLD = "TRAIN KFold";
 	
@@ -57,7 +54,7 @@ public class TrainInfo {
 	private String metricsString;
 	
 	public TrainInfo(){
-		seriesList = null;
+		dataSeries = null;
 		kFold = null;
 		runs = null;
 		nDataPoints = null;
@@ -90,19 +87,18 @@ public class TrainInfo {
 					nDataPoints = Integer.parseInt(preferences.get(TRAIN_NDATAPOINTS).trim());
 				}
 				if(preferences.containsKey(TRAIN_SERIES) && preferences.get(TRAIN_SERIES) != null && preferences.get(TRAIN_SERIES).trim().length() > 0){
-					seriesList = new LinkedList<DataSeries>();
 					if(preferences.get(TRAIN_SERIES).contains(",")){
 						String[] splitted = preferences.get(TRAIN_SERIES).trim().split(",");
 						for(String algString : splitted){
 							try {
-								seriesList.add(DataSeries.fromString(algString.trim(), false));
+								dataSeries = DataSeries.fromString(algString.trim());
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + algString + "'");
 							}
 						}
 					} else {
 						try {
-							seriesList.add(DataSeries.fromString(preferences.get(TRAIN_SERIES).trim(), false));
+							dataSeries = DataSeries.fromString(preferences.get(TRAIN_SERIES).trim());
 						} catch(Exception ex){
 							AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + preferences.get(TRAIN_SERIES) + "'");
 						}
@@ -127,8 +123,8 @@ public class TrainInfo {
 		return runs;
 	}
 
-	public void setSeries(List<DataSeries> seriesList) {
-		this.seriesList = seriesList;
+	public void setSeries(DataSeries dataSeries) {
+		this.dataSeries = dataSeries;
 	}
 	
 	public void setKFold(int kFold) {
@@ -151,8 +147,8 @@ public class TrainInfo {
 		this.trainTimeMs = trainTimeMs;
 	}
 
-	public List<DataSeries> getSeriesList() {
-		return seriesList;
+	public DataSeries getSeriesList() {
+		return dataSeries;
 	}
 
 	public Integer getkFold() {
@@ -184,7 +180,7 @@ public class TrainInfo {
 			writer.write("\n* K-Fold value used\n" + TRAIN_KFOLD + " = " + (kFold != null ? kFold : "") + "\n");
 			writer.write("\n* Runs used for training\n" + TRAIN_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + TRAIN_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
-			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (seriesList != null ? Arrays.toString(seriesList.toArray()) : "") + "\n");
+			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (dataSeries != null ? dataSeries.toString() : "") + "\n");
 			writer.write("\n* % of Faults/attacks in training set\n" + TRAIN_FAULT_RATIO + " = " + (faultRatio != null ? faultRatio : "") + "\n");
 			writer.write("\n* Training time in ms\n" + TRAIN_TIME + " = " + (trainTimeMs != null ? trainTimeMs : "") + "\n");
 			writer.write("\n* Metric values for training\n" + TRAIN_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
@@ -199,7 +195,7 @@ public class TrainInfo {
 				+ (kFold != null ? kFold : "") + ","
 				+ (runs != null ? runs.replace(",", ";") : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
-				+ (seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+				+ (dataSeries != null ? dataSeries.toString().replace(",", ";").replace("[", "").replace("]", "") : "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
 				+ (trainTimeMs != null ? trainTimeMs : "") + ","
 				+ (metricsString != null ? metricsString.replace(",", ";") : "");

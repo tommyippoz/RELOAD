@@ -313,4 +313,8 @@ public abstract class SimpleLoader implements Loader {
 		if(relevantFeatures != null)
 			relevantFeatures.clear();
 	}
+	
+	public int getIndicatorNumber(){
+		return getFeatureNames().length;
+	}
 }

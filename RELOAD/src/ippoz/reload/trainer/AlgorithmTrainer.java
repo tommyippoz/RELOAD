@@ -7,11 +7,9 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
@@ -131,7 +129,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		trainingTime = System.currentTimeMillis();
 		confResults = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
-		if(confResults != null){
+		if(confResults != null && bestConf != null){
 			
 			valMetricsString = calculateMetrics(validationMetrics, confResults.getKey());
 			//printTrainingResults();
@@ -306,7 +304,9 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @return the metric score
 	 */
 	public double getMetricAvgScore() {
-		return Double.valueOf(bestConf.getItem(BasicConfiguration.AVG_SCORE));
+		if(bestConf != null)
+			return Double.valueOf(bestConf.getItem(BasicConfiguration.AVG_SCORE));
+		else return Double.NaN;
 	}
 	
 	/**
@@ -315,7 +315,9 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @return the metric score
 	 */
 	public double getMetricStdScore() {
-		return Double.valueOf(bestConf.getItem(BasicConfiguration.STD_SCORE));
+		if(bestConf != null)
+			return Double.valueOf(bestConf.getItem(BasicConfiguration.STD_SCORE));
+		else return Double.NaN;
 	}
 	
 	/**
@@ -344,28 +346,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public String getSeriesName(){
 		if(dataSeries != null)
 			return dataSeries.getName();
-		else return null;
-	}
-	
-	/**
-	 * Gets the layer.
-	 *
-	 * @return the layer
-	 */
-	public LayerType getLayerType(){
-		if(dataSeries != null)
-			return dataSeries.getLayerType();
-		else return null;
-	}
-	
-	/**
-	 * Gets the series name.
-	 *
-	 * @return the series name
-	 */
-	public DataCategory getDataCategory(){
-		if(dataSeries != null)
-			return dataSeries.getDataCategory();
 		else return null;
 	}
 
@@ -406,7 +386,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	protected ObjectPair<String, Double> electBestDecisionFunction(DetectionAlgorithm algorithm, List<AlgorithmResult> resultList, ValueSeries vs){
 		double bestScore = Double.NaN;
 		String bestFunction = null;
-		if(resultList != null){
+		if(resultList != null && vs != null && vs.size() > 0){
 			for(String decFunctString : DECISION_FUNCTIONS){
 				if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
 					DecisionFunction df = algorithm.setDecisionFunction(decFunctString);
@@ -437,5 +417,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public String getMetricsString() {
 		return valMetricsString;
 	}
+	
+	public abstract void saveAlgorithmScores();
 	
 }

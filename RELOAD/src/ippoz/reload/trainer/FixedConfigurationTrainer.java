@@ -29,6 +29,8 @@ import java.util.Map;
  */
 public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	
+	private DetectionAlgorithm algorithm;
+	
 	/**
 	 * Instantiates a new algorithm trainer.
 	 *
@@ -52,7 +54,7 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
 		double bestScore = Double.NaN;
 		ValueSeries vs = null;
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
+		algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 		
 		/* Automatic Training */
 		boolean trainingResult = false;
@@ -72,7 +74,8 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 			bestScore = value.getValue();
 		}
 		
-		algorithm.saveLoggedScores();
+		// here
+		
 		
 		// Final Operations, assume 'algorithm', 'vs' and 'bestConf' are set
 		bestConf.addItem(BasicConfiguration.TRAIN_AVG, vs.getAvg());
@@ -89,6 +92,11 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 		}
 		
 		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
+	}
+
+	@Override
+	public void saveAlgorithmScores() {
+		algorithm.saveLoggedScores();
 	}
 	
 }

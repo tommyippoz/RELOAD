@@ -25,10 +25,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.lmu.ifi.dbs.elki.data.NumberVector;
-import de.lmu.ifi.dbs.elki.database.query.similarity.SimilarityQuery;
 import de.lmu.ifi.dbs.elki.math.MathUtil;
-import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
 
 /**
  * An efficient well-optimized kd-tree

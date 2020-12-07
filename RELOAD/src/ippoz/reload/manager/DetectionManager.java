@@ -6,7 +6,6 @@ package ippoz.reload.manager;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -56,9 +55,6 @@ public class DetectionManager {
 	/** The chosen reputation metric. */
 	protected Reputation reputation;
 	
-	/** The used data types (plain, diff...). */
-	protected DataCategory[] dataTypes;
-	
 	/** The algorithm types (SPS, Historical...). */
 	protected LearnerType mainLearner;
 	
@@ -92,7 +88,6 @@ public class DetectionManager {
 		this.evalLoader = evalLoader;
 		metric = iManager.getTargetMetric();
 		reputation = iManager.getReputation(metric);
-		dataTypes = iManager.getDataTypes();
 		if(new File(getDetectorOutputFolder()).exists()){
 			for(File f : new File(getDetectorOutputFolder()).listFiles()){
 				if(f.isFile())
@@ -115,13 +110,13 @@ public class DetectionManager {
 	
 	private String getWritableTag() {
 		String tag = "";
-		if(loaderPref != null)
+		if(loaderPref != null && loaderPref.getFilename() != null)
 			tag = tag + loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'));
 		tag = tag + ",";
-		if(loaderPref != null)
+		if(loaderPref != null && loaderPref.getPreference(Loader.VALIDATION_PARTITION) != null)
 			tag = tag + loaderPref.getPreference(Loader.VALIDATION_PARTITION).replace(",", "");
 		tag = tag + ",";
-		if(mainLearner != null)
+		if(mainLearner != null && mainLearner.toString() != null)
 			tag = tag + mainLearner.toString().replace(",", "");
 		tag = tag + ",";
 		if(windowSize != null)
@@ -190,7 +185,7 @@ public class DetectionManager {
 				else loader = trainLoader;
 				if(SimpleLoader.isValid(loader)){
 					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
-					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes, iManager.getPredictMisclassificationsFlag());
+					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), iManager.getPredictMisclassificationsFlag());
 					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 					fsm.addLoaderInfo(loader);
 					fsm.saveSelectedFeatures(scoresFolderName, getDatasetName() + "_filtered.csv");
@@ -236,7 +231,6 @@ public class DetectionManager {
 							iManager.loadConfigurations(mainLearner, getDatasetName(), windowSize, sPolicy, true), 
 							metric, 
 							reputation, 
-							dataTypes, 
 							mainLearner, 
 							iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
 							iManager.getKFoldCounter(),

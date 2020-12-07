@@ -4,12 +4,12 @@
 package ippoz.reload.commons.knowledge.snapshot;
 
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.loader.DatasetIndex;
+import ippoz.reload.commons.support.AppUtility;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 
 /**
  * The Class Snapshot.
@@ -17,22 +17,24 @@ import java.util.List;
  *
  * @author Tommy
  */
-public abstract class Snapshot {
+public class Snapshot {
+	
+	private DataSeries dataSeries;
 	
 	/** The injection at that time instant. */
 	private InjectedElement injEl;
 	
-	/** The snapshot timestamp. */
-	private Date timestamp;
+	private Map<Indicator, Object> snapValues;
 	
 	/**
 	 * Instantiates a new snapshot.
 	 *
 	 * @param injEl the injection
 	 */
-	public Snapshot(Date timestamp, InjectedElement injEl) {
-		this.timestamp = timestamp;
+	public Snapshot(Map<Indicator, Object> snapValues, InjectedElement injEl, DataSeries dataSeries) {
+		this.dataSeries = dataSeries;
 		this.injEl = injEl;
+		this.snapValues = snapValues;
 	}
 
 	/**
@@ -40,8 +42,40 @@ public abstract class Snapshot {
 	 *
 	 * @return the timestamp
 	 */
-	public Date getTimestamp(){
-		return timestamp;
+	public DatasetIndex getIndex(){
+		return injEl.getIndex();
+	}
+	
+	public double[] getDoubleValues() {
+		if(dataSeries != null){
+			int index = 0;
+			double[] valArr = new double[dataSeries.size()];
+			for(Indicator ind : dataSeries.getIndicators()){
+				valArr[index++] = getDoubleValueFor(ind);
+			}
+			return valArr;
+		} else return null;
+	}
+	
+	public Object getValueFor(Indicator indicator) {
+		if(indicator != null && snapValues != null){
+			if(snapValues.keySet().contains(indicator)){
+				return snapValues.get(indicator);
+			} else {
+				for(Indicator ind : snapValues.keySet()){
+					if(indicator.getName().compareTo(ind.getName()) == 0)
+						return snapValues.get(ind);
+				}
+			}
+		}
+		return null;
+	}
+	
+	public double getDoubleValueFor(Indicator indicator) {
+		Object ob = getValueFor(indicator);
+		if(ob != null && AppUtility.isNumber(ob.toString()))
+			return Double.valueOf(ob.toString());
+		else return 0.0;
 	}
 	
 	/**
@@ -53,6 +87,7 @@ public abstract class Snapshot {
 		return injEl;
 	}
 	
+	/*
 	public List<Double> listValues(boolean first){
 		List<Double> list = new LinkedList<Double>();
 		for(SnapshotValue sv : listValues()){
@@ -61,23 +96,21 @@ public abstract class Snapshot {
 			else list.add(sv.getLast());
 		}
 		return list;
-	}
-	
-	public abstract List<SnapshotValue> listValues();
-	
+	}*/
+
 	/**
 	 * Converts a snapshot to string.
 	 *
 	 * @param snap the snapshot
 	 * @return the string
 	 */
-	public static String snapToString(Snapshot snap, DataSeries ds){
+	public String snapToString(){
 		String snapValue = "{";
-		if(ds.size() == 1){
-			snapValue = snapValue + ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-		} else if(ds.size() > 1){
-			for(int j=0;j<ds.size();j++){
-				snapValue = snapValue + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)ds).getSeries(j)).getSnapValue().getFirst() + ", ";
+		if(snapValues.size() > 0){
+			for(Indicator ind : snapValues.keySet()){
+				if(snapValues.get(ind) != null)
+					snapValue = snapValue + snapValues.get(ind).toString() + ", ";
+				else snapValue = snapValue + "0.0, ";
 			}
 			snapValue = snapValue.substring(0,  snapValue.length()-2);
 		}

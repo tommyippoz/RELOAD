@@ -43,12 +43,10 @@ import ippoz.reload.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.reload.algorithm.weka.IsolationForestWEKA;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.dataseries.ComplexDataSeries;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
@@ -350,9 +348,7 @@ public abstract class DetectionAlgorithm {
 		boolean out = false;
 		if(serie != null) {
 			for(DataSeries ds : serie.listSubSeries()){
-				if(getDataSeries() instanceof ComplexDataSeries){
-					out = out || usesSimpleSeries(((ComplexDataSeries)getDataSeries()).getFirstOperand(), ds) || usesSimpleSeries(((ComplexDataSeries)getDataSeries()).getSecondOperand(), ds);
-				} else out = out || usesSimpleSeries(getDataSeries(), ds);		
+				out = out || usesSimpleSeries(getDataSeries(), ds);		
 			}
 		}
 		return out;
@@ -423,66 +419,6 @@ public abstract class DetectionAlgorithm {
 	 * @param expTag the exp tag
 	 */
 	protected abstract void printTextResults(String outFolderName, String expTag);
-	
-	/**
-	 * Evaluates a value.
-	 *
-	 * @param value the value
-	 * @param stats the stats
-	 * @param varTimes the var times
-	 * @return the double
-	 */
-	protected double evaluateValue(Double value, StatPair stats, double varTimes){
-		if(value >= (stats.getAvg() - varTimes*stats.getStd()) && value <= (stats.getAvg() + varTimes*stats.getStd()))
-			return 0.0;
-		else return 1.0;
-	}
-	
-	/**
-	 * Evaluates absolute difference.
-	 *
-	 * @param value the value
-	 * @param stats the stats
-	 * @param varTimes the tolerance (the range is defined by std*tolerance)
-	 * @return the evaluation
-	 */
-	protected double evaluateAbsDiff(Double value, StatPair stats, double varTimes){
-		double outVal = Math.abs(value - stats.getAvg());
-		outVal = outVal - varTimes*stats.getStd();
-		if(outVal < 0)
-			return 0.0;
-		else return outVal;
-	}
-	
-	/**
-	 * Evaluate absolute difference rate.
-	 *
-	 * @param value the value
-	 * @param stats the stats
-	 * @param varTimes the tolerance (the range is defined by std*tolerance)
-	 * @return the evaluation
-	 */
-	protected double evaluateAbsDiffRate(Double value, StatPair stats, double varTimes){
-		double outVal = Math.abs(value - stats.getAvg());
-		outVal = outVal - varTimes*stats.getStd();
-		if(outVal <= 0 || stats.getAvg() == 0.0)
-			return 0.0;
-		else return outVal/stats.getAvg();
-	}
-	
-	/**
-	 * Evaluate over diff.
-	 *
-	 * @param value the value
-	 * @param stats the stats
-	 * @return the evaluation
-	 */
-	protected double evaluateOverDiff(Double value, StatPair stats){
-		double outVal = value - (stats.getAvg() + stats.getStd());
-		if(outVal < 0)
-			return 0.0;
-		else return outVal;
-	}
 	
 	/**
 	 * Gets the algorithm type.
@@ -772,6 +708,19 @@ public abstract class DetectionAlgorithm {
 	public abstract void saveLoggedScores();
 	
 	public abstract void loadLoggedScores();
-	
 
+	public static AlgorithmComplexity getMemoryComplexity(AlgorithmType algType) {
+		if(algType != null){
+			switch(algType){
+				case ELKI_ABOD:
+					return AlgorithmComplexity.CUBIC;
+				case ELKI_FASTABOD:
+				case DBSCAN:
+				case LDCOF_DBSCAN:
+					return AlgorithmComplexity.QUADRATIC;
+				default: 
+					return AlgorithmComplexity.LINEAR;
+			}
+		} else return null;
+	}
 }

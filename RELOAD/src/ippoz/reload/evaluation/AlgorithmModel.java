@@ -9,7 +9,6 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.utils.ObjectPair;
@@ -103,17 +102,6 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	}
 
 	/**
-	 * Gets the indicator layer type.
-	 *
-	 * @return the layer type
-	 */
-	public LayerType getLayerType() {
-		if(alg.getDataSeries() != null)
-			return alg.getDataSeries().getLayerType();
-		else return LayerType.NO_LAYER;
-	}
-
-	/**
 	 * Gets the algorithm type.
 	 *
 	 * @return the algorithm type
@@ -161,7 +149,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 					conf.addItem(BasicConfiguration.DATASET_NAME, splitted[5]);
 				}
 				// TODO
-				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0], true), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0]), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
 			}
 		}
 		return null;

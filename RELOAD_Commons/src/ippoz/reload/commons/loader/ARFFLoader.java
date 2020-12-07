@@ -3,13 +3,10 @@
  */
 package ippoz.reload.commons.loader;
 
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.data.IndicatorData;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.data.Observation;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -22,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class ARFFLoader. Allows loading Knowledge from ARFF Files.
@@ -99,7 +97,7 @@ public class ARFFLoader extends FileLoader {
 						if(readLine.startsWith("@data"))
 							flag = false;
 						else if(readLine.startsWith("@attribute") && readLine.split(" ").length >= 3){
-							arffHeader.add(new Indicator(readLine.split(" ")[1], LayerType.NO_LAYER, String.class));
+							arffHeader.add(new Indicator(readLine.split(" ")[1], String.class));
 						}
 						
 					}
@@ -119,8 +117,8 @@ public class ARFFLoader extends FileLoader {
 	protected void initialize(){
 		BufferedReader reader = null;
 		String readLine = null;
-		LinkedList<Observation> obList = null;
-		LinkedList<InjectedElement> injList = null ;
+		List<Observation> obList = null;
+		Map<DatasetIndex, InjectedElement> injMap = null ;
 		Observation current = null;
 		int rowIndex = 0, i;
 		double skipCount = 0;
@@ -145,6 +143,7 @@ public class ARFFLoader extends FileLoader {
 						}
 					}
 					
+					int indicatorNumber = getIndicatorNumber();
 					// Reads file
 					while(reader.ready()){
 						readLine = reader.readLine();
@@ -153,30 +152,27 @@ public class ARFFLoader extends FileLoader {
 							if(readLine.length() > 0 && !isComment(readLine)){
 								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && getBatchIndex(rowIndex) >= 0 && currentBatchIndex != getBatchIndex(rowIndex))){
 									if(obList != null && obList.size() > 0){
-										dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injList));
+										dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injMap, getHeader()));
 									}
-									injList = new LinkedList<InjectedElement>();
+									injMap = new HashMap<>();
 									obList = new LinkedList<Observation>();
 									currentBatchIndex++;
 								}
 								readLine = AppUtility.filterInnerCommas(readLine);
 								if(canRead(rowIndex)){
+									DatasetIndex dIndex = new DatasetIndex(rowIndex);
 									i = 0;
-									current = new Observation(obList.size() > 0 ? obList.getLast().getTimestamp().getTime() + 1000 : System.currentTimeMillis());
+									current = new Observation(dIndex, indicatorNumber);
 									for(String splitted : readLine.split(",")){
 										if(i < getHeader().size() && getHeader().get(i) != null){
-											HashMap<DataCategory, String> iD = new HashMap<DataCategory, String>();
+											Double indData = 0.0;
 											if(splitted != null && splitted.length() > 0){
-												splitted = splitted.replace("\"", "");
+												splitted = splitted.replace("\"", "").trim();
 												if(AppUtility.isNumber(splitted)){
-													iD.put(DataCategory.PLAIN, splitted);
-													iD.put(DataCategory.DIFFERENCE, obList.size()>0 ? String.valueOf(Double.parseDouble(splitted) - Double.parseDouble(obList.getLast().getValue(getHeader().get(i), DataCategory.PLAIN))) : "0.0");
-												} else {
-													iD.put(DataCategory.PLAIN, "0");
-													iD.put(DataCategory.DIFFERENCE, "0");
+													indData = Double.parseDouble(splitted);
 												}
 											}
-											current.addIndicator(getHeader().get(i), new IndicatorData(iD));
+											current.addIndicator(indData);
 										} 
 										i++;
 									}
@@ -186,7 +182,7 @@ public class ARFFLoader extends FileLoader {
 											obList.add(current);
 											if(readLine.split(",")[labelCol] != null && faultyTagList.contains(readLine.split(",")[labelCol])){
 												anomalyCount++;
-												injList.add(new InjectedElement(obList.getLast().getTimestamp(), readLine.split(",")[labelCol], getAnomalyWindow()));
+												injMap.put(dIndex, new InjectedElement(dIndex, readLine.split(",")[labelCol]));
 											}
 										} else skipCount++;
 									}	
@@ -196,7 +192,7 @@ public class ARFFLoader extends FileLoader {
 						}
 					}
 					if(obList != null && obList.size() > 0){
-						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injList));
+						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injMap, getHeader()));
 					}
 					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
 					reader.close();

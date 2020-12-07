@@ -17,7 +17,6 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.executable.DetectorMain;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.MetricType;
@@ -827,12 +826,12 @@ public class BuildUI {
 		Map<String, Boolean> dsMap = new HashMap<>();
 		for(PreferencesManager lPref : lList){
 			boolean isValid = true; // iManager.isValid(lPref);
-			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
-				dsMap.put("MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME), isValid);
-			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
-				dsMap.put("CSV @ " + lPref.getFilename(), isValid);
-			} else {
-				dsMap.put(lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename(), isValid);
+			if(lPref.getPreference(Loader.LOADER_TYPE) != null){
+				if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
+					dsMap.put("CSV @ " + lPref.getFilename(), isValid);
+				} else {
+					dsMap.put(lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename(), isValid);
+				}
 			}
 		}
 		return dsMap;

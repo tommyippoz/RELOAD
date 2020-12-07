@@ -10,15 +10,12 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.loader.ARFFLoader;
 import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
@@ -34,7 +31,6 @@ import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
 import ippoz.reload.reputation.Reputation;
@@ -382,40 +378,6 @@ public class InputManager {
 			AppLogger.logException(getClass(), ex, "");
 		}
 		return "";
-	}
-	
-	/**
-	 * Gets the data types.
-	 *
-	 * @return the data types
-	 */
-	public DataCategory[] getDataTypes() {
-		File dataTypeFile = new File(getSetupFolder() + "dataSeries.preferences");
-		LinkedList<DataCategory> dataList = new LinkedList<DataCategory>();
-		BufferedReader reader;
-		String readed;
-		try {
-			if(dataTypeFile.exists()){
-				reader = new BufferedReader(new FileReader(dataTypeFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							dataList.add(DataCategory.valueOf(readed.trim()));
-						}
-					}
-				}
-				reader.close();
-			} else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						dataTypeFile.getPath() + " not found. Using default value of 'PLAIN'");
-				return new DataCategory[]{DataCategory.PLAIN};
-			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read data types");
-		}
-		return dataList.toArray(new DataCategory[dataList.size()]);
 	}
 	
 	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
@@ -875,8 +837,6 @@ public class InputManager {
 				writer.write("\n FScore(2)\n");
 				writer.write("\n MATTHEWS\n");
 				writer.write("\n NoPrediction\n");
-				writer.write("\n Thresholds\n");
-				writer.write("\n SScore(3)\n");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD algorithm preferences");
@@ -1131,9 +1091,7 @@ public class InputManager {
 	
 	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag, int anomalyWindow, String runIdsString){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
 			return new CSVLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
@@ -1146,9 +1104,7 @@ public class InputManager {
 	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
 		String runIdsString = lPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
 			return new CSVLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
@@ -1394,9 +1350,8 @@ public class InputManager {
 							if(header == null){
 								header = readed.split(",");
 								for(int i=2;i<header.length;i++){
-									String name = header[i].split("#")[0].trim();
-									String dataCat = header[i].split("#")[1].trim();
-									featureMap.put(new IndicatorDataSeries(new Indicator(name, LayerType.NO_LAYER, Double.class), DataCategory.valueOf(dataCat)), new HashMap<>());
+									String name = header[i].trim();
+									featureMap.put(new DataSeries(new Indicator(name, Double.class)), new HashMap<>());
 								}
 							} else {
 								String[] splitted = readed.split(",");
@@ -1426,12 +1381,6 @@ public class InputManager {
 		return featureMap;
 	}
 	
-	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats, String filename) {
-		List<DataSeries> ds = createDataSeries(kMap, cats);
-		saveFilteredSeries(ds, filename);
-		return ds;
-	}
-	
 	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String filename) {
 		List<DataSeries> ds = createDataSeries(kMap);
 		saveFilteredSeries(ds, filename);
@@ -1453,11 +1402,7 @@ public class InputManager {
 	}
 	
 	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
-		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), getDataTypes());
-	}
-	
-	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats) {
-		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), cats);
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap));
 	}
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {

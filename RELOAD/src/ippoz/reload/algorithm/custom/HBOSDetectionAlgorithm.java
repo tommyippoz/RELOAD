@@ -6,10 +6,8 @@ package ippoz.reload.algorithm.custom;
 import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -134,7 +132,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		scores = new LinkedList<HBOSScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new HBOSScore(Snapshot.snapToString(snap, getDataSeries()), calculateHBOS(getSnapValueArray(snap))));
+			scores.add(new HBOSScore(snap.snapToString(), calculateHBOS(getSnapValueArray(snap))));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
@@ -178,38 +176,21 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	private void generateStaticHistograms(List<Snapshot> snapList, int k) {
 		double min, max;
 		double snapValue;
+		Indicator[] indList = getDataSeries().getIndicators();
 		histograms = new HashMap<String, Histograms>();
-		if(getDataSeries().size() == 1){
+		for(int j=0;j<getDataSeries().size();j++){
 			min = Double.MAX_VALUE;
 			max = Double.MIN_VALUE;
 			for(Snapshot snap : snapList){
-				snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
+				snapValue = snap.getDoubleValueFor(indList[j]);
 				if(snapValue > max)
 					max = snapValue;
 				if(snapValue < min)
 					min = snapValue;
 			}
-			histograms.put(getDataSeries().getName(), new Histograms(min, max, k));
+			histograms.put(indList[j].getName(), new Histograms(min, max, k));
 			for(Snapshot snap : snapList){
-				snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-				histograms.get(getDataSeries().getName()).add(snapValue);
-			}
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				min = Double.MAX_VALUE;
-				max = Double.MIN_VALUE;
-				for(Snapshot snap : snapList){
-					snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-					if(snapValue > max)
-						max = snapValue;
-					if(snapValue < min)
-						min = snapValue;
-				}
-				histograms.put(((MultipleDataSeries)getDataSeries()).getSeries(j).getName(), new Histograms(min, max, k));
-				for(Snapshot snap : snapList){
-					snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-					histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).add(snapValue);
-				}
+				histograms.get(indList[j].getName()).add(snap.getDoubleValueFor(indList[j]));
 			}
 		}
 	}
@@ -243,26 +224,13 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	private double calculateHBOS(double[] snapArray){
 		double hbos;
 		double temp;
-		if(getDataSeries().size() == 1){
-			if(histograms == null || histograms.get(getDataSeries().getName()) == null){
-				temp = histograms.get(histograms.keySet().iterator().next()).getScore(snapArray[0]);
-				if(temp > 0)
-					hbos = Math.log(1.0/temp);
-				else hbos = HBOS_DEFAULT_MAX;
-			} else {
-				temp = histograms.get(getDataSeries().getName()).getScore(snapArray[0]);
-				if(temp > 0)
-					hbos = Math.log(1.0/temp);
-				else hbos = HBOS_DEFAULT_MAX;
-			}
-		} else {
-			hbos = 0;
-			for(int j=0;j<getDataSeries().size();j++){
-				temp = histograms.get(((MultipleDataSeries)getDataSeries()).getSeries(j).getName()).getScore(snapArray[j]);
-				if(temp > 0)
-					hbos = hbos + Math.log(1.0/temp);
-				else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();
-			}
+		hbos = 0;
+		Indicator[] indList = getDataSeries().getIndicators();
+		for(int j=0;j<getDataSeries().size();j++){
+			temp = histograms.get(indList[j].getName()).getScore(snapArray[j]);
+			if(temp > 0)
+				hbos = hbos + Math.log(1.0/temp);
+			else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();
 		}
 		return hbos;
 	}
@@ -294,35 +262,7 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		loadHistogramsFile(new File(filename));
 		//loadScoresFile(new File(filename + "scores"));		
 	}
-	
-	/**
-	 * Load scores file.
-	 *
-	 * @param file the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if(file.exists()){
-				scores = new LinkedList<HBOSScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new HBOSScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read HBOS Scores file");
-		} 
-	}
-	
+
 	/**
 	 * Load histograms file.
 	 *

@@ -10,10 +10,7 @@ import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.utils.ObjectPair;
 
@@ -112,7 +109,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 					ar = new DBSCANResult(dsSnap.getInjectedElement() != null, score.getKey(), (Double)score.getValue(), getConfidence(score.getKey()));
 				} else if(score.getValue() != null && score.getValue() instanceof KMeansModel){
 					KMeansModel kms = (KMeansModel)score.getValue();
-					ar = new KMeansResult(dsSnap.getInjectedElement() != null, score.getKey(), kms.getMean(), kms.getVarianceContribution(), getConfidence(score.getKey()));
+					ar = new KMeansResult(dsSnap.getInjectedElement() != null, score.getKey(), kms.getVarianceContribution(), getConfidence(score.getKey()));
 				} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue());
 			} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue());
 			getDecisionFunction().assignScore(ar, true);
@@ -121,18 +118,7 @@ public abstract class DataSeriesDetectionAlgorithm extends DetectionAlgorithm {
 	}
 	
 	protected double[] getSnapValueArray(Snapshot snap){
-		double snapValue;
-		double[] result = new double[getDataSeries().size()];
-		if(getDataSeries().size() == 1){
-			snapValue = ((DataSeriesSnapshot)snap).getSnapValue().getFirst();
-			result[0] = snapValue;
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				snapValue = ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-				result[j] = snapValue;
-			}
-		}
-		return result;
+		return snap.getDoubleValues();
 	}
 
 	protected abstract boolean checkCalculationCondition(double[] snapArray);

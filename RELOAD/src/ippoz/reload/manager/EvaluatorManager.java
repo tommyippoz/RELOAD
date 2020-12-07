@@ -7,12 +7,10 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.MetaLearner;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
@@ -116,7 +114,7 @@ public class EvaluatorManager extends DataManager {
 	protected void initRun() {
 		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
 		detailedEvaluations = new ArrayList<>(voterList.size());
-		if(evalModel != null){
+		if(evalModel != null && evalModel.getAlgorithm() != null){
 			try {
 				for(int expN = 0; expN < experimentsSize(); expN++){ 
 					voterList.add(new ExperimentEvaluator(evalModel, getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN)));
@@ -124,7 +122,7 @@ public class EvaluatorManager extends DataManager {
 			} catch (CloneNotSupportedException e) {
 				AppLogger.logException(getClass(), e, "Error while loading Experiment Evaluators");
 			}
-		}
+		} else AppLogger.logError(getClass(), "NoSuchModelError", "Unable to fetch model to score evaluation data");
 		setThreadList(voterList);
 	}
 
@@ -243,7 +241,7 @@ public class EvaluatorManager extends DataManager {
 				} else {
 					for(int i=0;i<evalModel.getDataSeries().size();i++){
 						header1 = header1 + ",";
-						header2 = header2 + ((MultipleDataSeries)evalModel.getDataSeries()).getSeries(i).getSanitizedName() + ",";
+						header2 = header2 + evalModel.getDataSeries().getIndicators()[i].getName() + ",";
 					}
 				}				
 				if(evalModel.getAlgorithmType() instanceof MetaLearner){
@@ -270,12 +268,8 @@ public class EvaluatorManager extends DataManager {
 									res.getScore() + "," + (evalModel.getAlgorithm().getDecisionFunction() != null ? evalModel.getAlgorithm().getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){
 								Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
-								if(evalModel.getDataSeries().size() == 1){
-									writer.write(((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",");
-								} else {
-									for(int j=0;j<evalModel.getDataSeries().size();j++){
-										writer.write(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)evalModel.getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",");
-									}
+								for(Indicator ind : evalModel.getDataSeries().getIndicators()){
+									writer.write(snap.getDoubleValueFor(ind) + ",");
 								}
 							}
 							if(evalModel.getAlgorithmType() instanceof MetaLearner){

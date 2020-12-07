@@ -76,7 +76,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		
 		scores = new LinkedList<LDCOFScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(getSnapValueArray(snap))));
+			scores.add(new LDCOFScore(snap.snapToString(), calculateLDCOF(getSnapValueArray(snap))));
 		}
 		
 		return true;
@@ -253,34 +253,6 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN file");
-		} 
-	}
-	
-	/**
-	 * Load scores file.
-	 *
-	 * @param file the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if(file.exists()){
-				scores = new LinkedList<LDCOFScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new LDCOFScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN Scores file");
 		} 
 	}
 	

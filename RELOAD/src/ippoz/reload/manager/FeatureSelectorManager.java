@@ -3,7 +3,6 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.loader.Loader;
@@ -45,15 +44,12 @@ public class FeatureSelectorManager {
 	
 	private List<DataSeries> selectedFeatures;
 	
-	private DataCategory[] dataTypes;
-	
 	private FeatureSelectionInfo fsInfo;
 	
 	private boolean predictFlag;
 	
-	public FeatureSelectorManager(List<FeatureSelector> selectorsList, DataCategory[] dataTypes, boolean predictFlag){
+	public FeatureSelectorManager(List<FeatureSelector> selectorsList, boolean predictFlag){
 		this.selectorsList = selectorsList;
-		this.dataTypes = dataTypes;
 		this.predictFlag = predictFlag;
 		fsInfo = new FeatureSelectionInfo(selectorsList);
 	}
@@ -90,7 +86,7 @@ public class FeatureSelectorManager {
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write Feature Selection scores file");
 		}
-		fsInfo.setSelectedFeatures(selectedFeatures);
+		fsInfo.setSelectedFeatures(new DataSeries(selectedFeatures));
 		return selectedFeatures;
 	}
 	
@@ -133,11 +129,11 @@ public class FeatureSelectorManager {
 			selectorsList.add(0, new ChiSquaredFeatureRanker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'ChiSquared' was added to predict misclassifications");
 		}
-		if(!hasChi){
+		if(!hasRelief){
 			selectorsList.add(0, new ReliefFeatureSelector(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'ReliefF' was added to predict misclassifications");
 		}
-		if(!hasChi){
+		if(!hasPearson){
 			selectorsList.add(0, new PearsonFeatureSelector(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'Pearson' was added to predict misclassifications");
 		}
@@ -145,11 +141,11 @@ public class FeatureSelectorManager {
 			selectorsList.add(0, new InformationGainSelector(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'InformationGain' was added to predict misclassifications");
 		}
-		if(!hasChi){
+		if(!hasPCA){
 			selectorsList.add(0, new PrincipalComponentRanker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'PCA' was added to predict misclassifications");
 		}
-		if(!hasChi){
+		if(!hasRF){
 			selectorsList.add(0, new RandomForestFeatureRanker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'RandomForest' was added to predict misclassifications");
 		}
@@ -157,7 +153,7 @@ public class FeatureSelectorManager {
 			selectorsList.add(0, new J48Ranker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'J48' was added to predict misclassifications");
 		}
-		if(!hasChi){
+		if(!hasOneR){
 			selectorsList.add(0, new OneRRanker(1000, true));
 			AppLogger.logInfo(getClass(), "Feature Selector 'OneR' was added to predict misclassifications");
 		}
@@ -214,7 +210,7 @@ public class FeatureSelectorManager {
 
 	private List<DataSeries> generateBaselineSeries(List<Knowledge> kList) {
 		if(kList != null && kList.size() > 0){
-			return DataSeries.basicCombinations(kList.get(0).getIndicators(), dataTypes);
+			return DataSeries.basicCombinations(kList.get(0).getIndicators());
 		} else return null;
 	}
 	

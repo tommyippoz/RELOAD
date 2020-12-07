@@ -3,7 +3,7 @@
  */
 package ippoz.reload.commons.failure;
 
-import java.util.Date;
+import ippoz.reload.commons.loader.DatasetIndex;
 
 /**
  * The Class InjectedElement.
@@ -14,10 +14,7 @@ import java.util.Date;
 public class InjectedElement {
 	
 	/** The failure timestamp. */
-	private Date timestamp;
-	
-	/** The failure duration. */
-	private int duration;
+	private DatasetIndex index;
 	
 	/** The failure description. */
 	private String description;
@@ -28,9 +25,8 @@ public class InjectedElement {
 	 * @param timestamp the timestamp
 	 * @param description the description
 	 */
-	public InjectedElement(Date timestamp, String description, int duration) {
-		this.timestamp = timestamp;
-		this.duration = duration;
+	public InjectedElement(DatasetIndex index, String description) {
+		this.index = index;
 		this.description = description;
 	}
 
@@ -48,35 +44,16 @@ public class InjectedElement {
 	 *
 	 * @return the timestamp
 	 */
-	public Date getTimestamp() {
-		return timestamp;
-	}
-	
-	/**
-	 * Gets the duration of the injected element.
-	 *
-	 * @return the duration
-	 */
-	public int getDuration() {
-		return duration;
+	public DatasetIndex getIndex() {
+		return index;
 	}
 
-	public boolean compliesWith(Date refTime) {
-		return timestamp.getTime() <= refTime.getTime() && refTime.getTime() <= timestamp.getTime() + duration*1000;
+	public boolean compliesWith(DatasetIndex other) {
+		return index.compareTo(other) == 0;
 	}
 	
 	public boolean compliesWith(InjectedElement el) {
-		if(el.getTimestamp().getTime() <= timestamp.getTime()){
-			return el.compliesWith(timestamp);
-		} else return compliesWith(el.getTimestamp());
-	}
-
-	public boolean happensAt(Date refTime) {
-		return timestamp.equals(refTime);// && (timestamp.getTime() <= refTime.getTime() && refTime.getTime() <= timestamp.getTime() + duration*1000);
-	}
-
-	public Date getFinalTimestamp() {
-		return new Date(timestamp.getTime() + duration*1000);
+		return compliesWith(el.getIndex());
 	}
 
 }

@@ -12,7 +12,6 @@ import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.InputManager;
 
 import java.awt.BorderLayout;
@@ -110,9 +109,7 @@ public class LoaderFrame {
 		if(loaderTag.equals("train"))
 			runIds = loaderPref.getPreference(Loader.TRAIN_PARTITION);
 		else runIds = loaderPref.getPreference(Loader.VALIDATION_PARTITION);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, loaderPref, loaderTag, "NO_LAYER", null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
 			return new CSVLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);
 		} else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);

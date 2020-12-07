@@ -277,34 +277,6 @@ public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 	
 	/**
-	 * Load scores file.
-	 *
-	 * @param file the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if(file.exists()){
-				scores = new LinkedList<SDOScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new SDOScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read SDO Scores file");
-		} 
-	}
-	
-	/**
 	 * Load observer file.
 	 *
 	 * @param file the file

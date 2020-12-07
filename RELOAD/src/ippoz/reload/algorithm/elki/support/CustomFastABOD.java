@@ -4,10 +4,6 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
-import ippoz.reload.algorithm.utils.KdTree;
-import ippoz.reload.algorithm.utils.KdTree.ELKIEuclid;
-import ippoz.reload.algorithm.utils.KdTree.ELKIHell;
-import ippoz.reload.algorithm.utils.KdTree.SqrEuclid;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -147,7 +143,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	public OutlierResult run(Database db, Relation<V> relation) {	
 		DBIDs ids = relation.getDBIDs();
 		// Build a kernel matrix, to make O(n^3) slightly less bad.
-		SimilarityQuery<NumberVector> sq = (SimilarityQuery<NumberVector>) db.getSimilarityQuery(relation, kernelFunction);
+		SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
 		
 		//treeList = new ELKIEuclid<ABODResult>(sq);
 		resList = new ArrayList<ABODResult>(ids.size());
@@ -498,13 +494,14 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 		}
 		
+		/*
 		public double[] getPoint(){
 			double[] point = new double[data.getDimensionality()];
 			for(int i=0;i<point.length;i++){
 				point[i] = data.doubleValue(i);
 			}
 			return point;
-		}
+		}*/
 		
 		public double getABOF() {
 			return abof;

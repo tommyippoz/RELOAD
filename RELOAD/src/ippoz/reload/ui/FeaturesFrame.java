@@ -208,7 +208,7 @@ public class FeaturesFrame {
 
 		public Object getValueAt(int row, int col) {
 			if (col == 0) {
-				return rows.get(row).getName() + "(" + rows.get(row).getDataCategory().toString().substring(0, 1) + ")";
+				return rows.get(row).getName();
 			} else if(col == columns.size() + 1) {
 				return DataSeries.isIn(dOut.getUsedFeatures(), rows.get(row));
 			} else {

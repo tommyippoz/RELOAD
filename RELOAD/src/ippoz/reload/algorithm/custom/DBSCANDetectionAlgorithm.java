@@ -148,39 +148,6 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	}
 
 	/**
-	 * Load scores file.
-	 *
-	 * @param file
-	 *            the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if (file.exists()) {
-				scores = new LinkedList<DBSCANScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while (reader.ready()) {
-					readed = reader.readLine();
-					if (readed != null) {
-						readed = readed.trim();
-						if (readed.length() > 0
-								&& readed.split(";").length >= 2)
-							scores.add(new DBSCANScore(readed.split(";")[0],
-									Double.parseDouble(readed.split(";")[1]),
-									Boolean.parseBoolean(readed.split(";")[2])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex,
-					"Unable to read DBSCAN Scores file");
-		}
-	}
-
-	/**
 	 * Load clusters file.
 	 *
 	 * @param file
@@ -238,8 +205,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 
 		scores = new LinkedList<DBSCANScore>();
 		for (Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())) {
-			scores.add(new DBSCANScore(Snapshot.snapToString(snap,
-					getDataSeries()), calculateDBSCAN(snap), snap.isAnomalous()));
+			scores.add(new DBSCANScore(snap.snapToString(), calculateDBSCAN(snap), snap.isAnomalous()));
 		}
 
 		conf.addItem(TMP_FILE, getFilename());

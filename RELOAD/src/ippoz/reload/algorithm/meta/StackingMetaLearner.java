@@ -10,14 +10,10 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.meta.MetaLearnerType;
@@ -98,24 +94,30 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	}
 
 	private List<Knowledge> getStackingKnowledge(List<Knowledge> kList) {
+		List<Knowledge> updatedList = new LinkedList<>();
 		for(Knowledge know : kList){
+			Knowledge newKnow = know.cloneKnowledge();
+			for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+				newKnow.addIndicator(new Indicator(alg.getLearnerType().toCompactString(), Double.class));
+			}
 			List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
-			for(int i=0;i<know.size();i++){
+			for(int i=0;i<newKnow.size();i++){
 				double[] snapArray = getSnapValueArray(snapList.get(i));
 				for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
-					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()), DataCategory.PLAIN);
+					newKnow.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
 				}
 			}
+			updatedList.add(newKnow);
 		}
-		return kList;
+		return updatedList;
 	}
 
 	protected DataSeries getStackingDataSeries() {
 		List<DataSeries> sList = new LinkedList<>();
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
-			sList.add(new IndicatorDataSeries(new Indicator(alg.getLearnerType().toCompactString(), LayerType.NO_LAYER, Double.class), DataCategory.PLAIN));
+			sList.add(new DataSeries(new Indicator(alg.getLearnerType().toCompactString(), Double.class)));
 		}
-		return new MultipleDataSeries(sList);
+		return new DataSeries(sList);
 	}
 
 	@Override

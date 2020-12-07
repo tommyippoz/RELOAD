@@ -4,7 +4,7 @@
 package ippoz.reload.externalutils;
 
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
@@ -35,7 +35,7 @@ public class WEKAUtils {
 		DataSeries targetSeries;
 		if(seriesList.size() == 1)
 			targetSeries = seriesList.get(0);
-		else targetSeries = new MultipleDataSeries(seriesList);
+		else targetSeries = new DataSeries(seriesList);
 		double[][] dataMatrix = Knowledge.convertKnowledgeIntoMatrix(kList, targetSeries, true, false);
 		String[] label = Knowledge.extractLabels(kList, targetSeries, true);
 		if(dataMatrix.length > 0)
@@ -138,14 +138,8 @@ public class WEKAUtils {
 	 */
 	public static String getStreamHeader(DataSeries ds, boolean training){
 		String header = "@relation " + ds.getCompactString().replace(" ", "_").replace("\\", "") + "\n\n";
-		if(ds.size() == 1){
-			if(ds.getName() != null)
-				header = header + "@attribute " + ds.getName().trim().replace(" ", "_").replace("\\", "").replace("/", "") + " numeric\n";
-			else header = header + "@attribute nullAttr numeric\n";
-		} else {
-			for(DataSeries sds : ((MultipleDataSeries)ds).getSeriesList()){
-				header = header + "@attribute " + sds.toString().replace(" ", "_").replace("\\", "").replace("/", "") + " numeric\n";
-			}
+		for(Indicator ind : ds.getIndicators()){
+			header = header + "@attribute " + ind.getName().replace(" ", "_").replace("\\", "").replace("/", "") + " numeric\n";
 		}
 		if(training)
 			header = header + "@attribute class {no, yes}\n";

@@ -5,12 +5,9 @@ package ippoz.reload.algorithm;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
-import ippoz.reload.commons.support.AppLogger;
 
 import java.util.List;
 
@@ -79,34 +76,20 @@ public abstract class DataSeriesExternalAlgorithm extends DataSeriesNonSlidingAl
 			dataMatrix = new double[kSnapList.size()][getDataSeries().size()];
 		else dataMatrix = new double[Knowledge.goldenPointsSize(kSnapList)][getDataSeries().size()]; 
 		if(dataMatrix.length > 0) {
+			Indicator[] indList = getDataSeries().getIndicators();
 			for(int i=0;i<kSnapList.size();i++){
 				if(includeFaulty || !includeFaulty && kSnapList.get(i).getInjectedElement() == null) {
-					if(getDataSeries().size() == 1){
-						dataMatrix[insertIndex][0] = ((DataSeriesSnapshot)kSnapList.get(i)).getSnapValue().getFirst();
+					Snapshot snap = kSnapList.get(i);
+					for(int j=0;j<getDataSeries().size();j++){
+						dataMatrix[insertIndex][j] = snap.getDoubleValueFor(indList[j]);
 						if(insertIndex == 0){
-							minmax[0][0] = dataMatrix[insertIndex][0];
-							minmax[0][1] = dataMatrix[insertIndex][0];
+							minmax[j][0] = dataMatrix[insertIndex][0];
+							minmax[j][1] = dataMatrix[insertIndex][0];
 						} else {
-							if(dataMatrix[insertIndex][0] < minmax[0][0])
-								minmax[0][0] = dataMatrix[insertIndex][0];
-							if(dataMatrix[insertIndex][0] > minmax[0][1])
-								minmax[0][1] = dataMatrix[insertIndex][0];
-						}
-					} else {
-						for(int j=0;j<getDataSeries().size();j++){
-							if(((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue() == null){
-								AppLogger.logError(getClass(), "UnrecognizableSnapshot", ((MultipleDataSeries)getDataSeries()).getSeries(j).getName() + " - " + i + " - " + j);
-								dataMatrix[insertIndex][j] = 0.0;
-							} else dataMatrix[insertIndex][j] = ((MultipleSnapshot)kSnapList.get(i)).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst();
-							if(insertIndex == 0){
+							if(dataMatrix[insertIndex][0] < minmax[j][0])
 								minmax[j][0] = dataMatrix[insertIndex][0];
+							if(dataMatrix[insertIndex][0] > minmax[j][1])
 								minmax[j][1] = dataMatrix[insertIndex][0];
-							} else {
-								if(dataMatrix[insertIndex][0] < minmax[j][0])
-									minmax[j][0] = dataMatrix[insertIndex][0];
-								if(dataMatrix[insertIndex][0] > minmax[j][1])
-									minmax[j][1] = dataMatrix[insertIndex][0];
-							}
 						}
 					}
 					insertIndex++;

@@ -4,16 +4,15 @@
 package ippoz.reload.commons.knowledge.data;
 
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
-import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,14 +29,17 @@ public class MonitoredData {
 	/** The experiment name. */
 	private LoaderBatch expBatch; 
 	
+	private List<Indicator> indicatorList;
+	
 	/** The injections list. */
-	private Map<Date, InjectedElement> injMap;
+	private Map<DatasetIndex, InjectedElement> injMap;
 	
 	/** The observations list. */
 	private List<Observation> obsList;
 	
 	/**
 	 * Instantiates a new experiment data.
+	 * @param list 
 	 *
 	 * @param expID the experiment id
 	 * @param snapList the snapshot list
@@ -46,28 +48,31 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, List<InjectedElement> injList){
+	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, List<Indicator> indicatorList){
 		this.obsList = obsList;
 		this.expBatch = expBatch;
-		if(obsList != null && obsList.size() > 0)
-			injMap = generateInjMap(injList, obsList.get(0).getTimestamp());
-		else AppLogger.logError(getClass(), "NoSuchElementError", "Observation list is empty");
+		this.injMap = injMap;
+		this.indicatorList = sanitizeIndicators(indicatorList);
 	}
 	
-	public MonitoredData(LoaderBatch expBatch){
-		obsList = new LinkedList<>();
-		injMap = new HashMap<>();
+	public MonitoredData(LoaderBatch expBatch, Indicator[] indicatorList){
 		this.expBatch = expBatch;
+		obsList = new ArrayList<>(expBatch.getDataPoints());
+		this.indicatorList = sanitizeIndicators(Arrays.asList(indicatorList));
+		injMap = new HashMap<>();
 	}
 
-	private Map<Date, InjectedElement> generateInjMap(List<InjectedElement> injList, Date refTime) {
-		Map<Date, InjectedElement> iMap = new HashMap<Date, InjectedElement>();
-		for(InjectedElement iEl : injList){
-			iMap.put(iEl.getTimestamp(), iEl);
+	private List<Indicator> sanitizeIndicators(List<Indicator> initialList) {
+		List<Indicator> finalList = new LinkedList<>();
+		if(initialList != null){
+			for(Indicator ind : initialList){
+				if(ind != null)
+					finalList.add(ind);
+			}
 		}
-		return iMap;
+		return finalList;
 	}
-	
+
 	public int size(){
 		return obsList.size();
 	}
@@ -77,51 +82,12 @@ public class MonitoredData {
 	}
 
 	/**
-	 * Builds the snapshots of the experiment depending on the observations.
-	 */
-	/*private List<Snapshot> buildSnapshots(List<Observation> obsList) {
-		int injIndex = 0;
-		List<ServiceCall> currentCalls;
-		InjectedElement currentInj;
-		List<Snapshot> builtSnap = new ArrayList<Snapshot>(obsList.size());
-		for(Observation obs : obsList){
-			currentCalls = new LinkedList<ServiceCall>();
-			if(callList != null) {
-				for(ServiceCall call : callList){
-					if(call.isAliveAt(obs.getTimestamp()))
-						currentCalls.add(call);
-				}
-			}
-			while(injList.size() > injIndex && injList.get(injIndex).getTimestamp().before(obs.getTimestamp())){
-				injIndex++;
-			}
-			if(injList.size() > injIndex && injList.get(injIndex).getTimestamp().compareTo(obs.getTimestamp()) == 0)
-				currentInj = injList.get(injIndex);
-			else currentInj = null;		
-			builtSnap.add(new Snapshot(obs.getTimestamp(), currentCalls, currentInj));
-		}
-		return builtSnap;
-	}*/
-
-	/**
 	 * Gets the injections for this experiment.
 	 *
 	 * @return the injections
 	 */
-	public Map<Date, InjectedElement> getInjections() {
+	public Map<DatasetIndex, InjectedElement> getInjections() {
 		return injMap;
-	}
-
-	public Map<LayerType, Integer> getLayerIndicators(){
-		HashMap<LayerType, Integer> layerInd = new HashMap<LayerType, Integer>();
-		if(obsList.size() > 0){
-			for(Indicator ind : obsList.get(0).getIndicators()){
-				if(layerInd.get(ind.getLayer()) == null)
-					layerInd.put(ind.getLayer(), 0);
-				layerInd.replace(ind.getLayer(), layerInd.get(ind.getLayer())+1);
-			}
-		}
-		return layerInd;
 	}
 	
 	/**
@@ -130,40 +96,77 @@ public class MonitoredData {
 	 * @return the indicators
 	 */
 	public Indicator[] getIndicators() {
-		return obsList.get(0).getIndicators();
+		if(indicatorList != null)
+			return indicatorList.toArray(new Indicator[indicatorList.size()]);
+		else return new Indicator[]{};
 	}
 
 	public LoaderBatch getDataID() {
 		return expBatch;
 	}
 	
-	public MultipleSnapshot generateMultipleSnapshot(MultipleDataSeries invDs, int index) {
-		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), invDs.getSeriesList());
-	}
-	
-	public MultipleSnapshot generateMultipleSnapshot(List<DataSeries> dss, int index) {
-		return new MultipleSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dss);
+	public boolean hasIndicator(String indicatorName) {
+		for(Indicator ind : getIndicators()){
+			if(ind.getName().compareTo(indicatorName.trim()) == 0)
+				return true;
+		}
+		return false;
 	}
 
-	public DataSeriesSnapshot generateDataSeriesSnapshot(DataSeries dataSeries, int index) {
-		return new DataSeriesSnapshot(obsList.get(index), injMap.get(obsList.get(index).getTimestamp()), dataSeries); 
+	public Snapshot generateSnapshot(DataSeries dataSeries, int index) {
+		Map<Indicator, Object> sv = new HashMap<>();
+		if(dataSeries != null && index < obsList.size() && index >= 0){
+			Observation obs = obsList.get(index);
+			for(Indicator ind : dataSeries.getIndicators()){
+				int indIndex = indexOf(ind);
+				sv.put(ind, obs.getValue(indIndex));
+			}
+		}
+		return new Snapshot(sv, injMap.get(obsList.get(index).getIndex()), dataSeries); 
+	}
+
+	private int indexOf(Indicator ind) {
+		if(ind != null && indicatorList != null){
+			for(int i=0;i<indicatorList.size();i++){
+				if(ind.getName().compareTo(indicatorList.get(i).getName()) == 0)
+					return i;
+			}
+		}
+		return -1;
 	}
 
 	public Observation get(int i) {
 		return obsList.get(i);
 	}
 
-	public InjectedElement getInjection(int obIndex) {
-		if(obIndex >= 0 && obIndex < size() && injMap.containsKey(obsList.get(obIndex).getTimestamp()))
-			return injMap.get(obsList.get(obIndex).getTimestamp());
+	public InjectedElement getInjectionAt(DatasetIndex index) {
+		if(injMap != null)
+			return injMap.get(index);
 		else return null;
 	}
+	
+	public InjectedElement getInjectionAt(int i) {
+		return getInjectionAt(obsList.get(i).getIndex());
+	}
 
-	public void addItem(Observation obs, InjectedElement injection) {
+	public void addObservation(Observation obs, InjectedElement injection) {
 		obsList.add(obs);
 		if(injection != null)
-			injMap.put(obs.getTimestamp(), injection);
-		
+			injMap.put(obs.getIndex(), injection);
+	}
+	
+	public void addIndicatorData(int obId, String indName, Object indData){
+		if(obId >= 0 && obId < obsList.size()){
+			if(indName != null && hasIndicator(indName)){
+				obsList.get(obId).addIndicator(indData);
+			} else 
+				AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to find indicator '" + indName + "'");
+		} else AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to find observation '" + obId + "'");
+	}
+
+	public void addIndicator(Indicator indicator) {
+		if(indicatorList != null && indicator != null && !hasIndicator(indicator.getName()))
+			indicatorList.add(indicator);
 	}
 	
 }

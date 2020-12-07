@@ -87,7 +87,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		scores = new LinkedList<MetaScore>();
 		for(Snapshot snap : snapList){
 			ObjectPair<Double, Object> res = calculateSnapshotScore(getSnapValueArray(snap));
-			scores.add(new MetaScore(Snapshot.snapToString(snap, getDataSeries()), res.getKey()));
+			scores.add(new MetaScore(snap.snapToString(), res.getKey()));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());

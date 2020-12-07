@@ -6,17 +6,13 @@ package ippoz.reload.algorithm.sliding;
 import ippoz.reload.algorithm.DataSeriesSlidingAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -119,20 +115,16 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		List<SPSBlock> blockList = new LinkedList<SPSBlock>();
 		for(Snapshot snap : array){
 			if(blockList.size() == 0)
-				blockList.add(new SPSBlock(snapToDataVector(snap), snap.getTimestamp(), null));
-			else blockList.add(new SPSBlock(snapToDataVector(snap), snap.getTimestamp(), blockList.get(blockList.size()-1)));
+				blockList.add(new SPSBlock(snapToDataVector(snap), null));
+			else blockList.add(new SPSBlock(snapToDataVector(snap), blockList.get(blockList.size()-1)));
 		}
 		return blockList;
 	}
 		
 	private DataVector snapToDataVector(Snapshot snap) {
 		DataVector result = new DataVector();
-		if(getDataSeries().size() == 1){
-			result.add(((DataSeriesSnapshot)snap).getSnapValue().getFirst());
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				result.add(((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());
-			}
+		for(int j=0;j<getDataSeries().size();j++){
+			result.add(snap.getDoubleValueFor(getDataSeries().getIndicators()[j]));
 		}
 		return result;
 	}
@@ -275,17 +267,11 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		/** The observation value. */
 		private DataVector obs;
 		
-		/** The timestamp. */
-		private Date timestamp;
-		
 		/** The drift. */
 		private DataVector drift;
 		
 		/** The offset. */
 		private DataVector offset;
-		
-		/** The time difference. */
-		private int timeDiff;
 		
 		/**
 		 * Instantiates a new SPS block.
@@ -294,17 +280,14 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 * @param timestamp the timestamp
 		 * @param last the last
 		 */
-		public SPSBlock(DataVector obs, Date timestamp, SPSBlock last) {
+		public SPSBlock(DataVector obs, SPSBlock last) {
 			this.obs = obs;
-			this.timestamp = timestamp;
 			if(last != null){
 				drift = obs.less(last.getDrift()).fraction(2);
 				offset = obs.less(last.getObs());
-				timeDiff = (int) ((timestamp.getTime() - last.getTimestamp().getTime())/1000);
 			} else {
 				drift = obs;
 				offset = obs;
-				timeDiff = 1;
 			}
 		}
 
@@ -341,16 +324,7 @@ public class SPSSlidingAlgorithm extends DataSeriesSlidingAlgorithm {
 		 * @return the time difference
 		 */
 		public int getTimeDiff(){
-			return timeDiff;
-		}
-		
-		/**
-		 * Gets the timestamp.
-		 *
-		 * @return the timestamp
-		 */
-		public Date getTimestamp(){
-			return timestamp;
+			return 1;
 		}
 		
 	}

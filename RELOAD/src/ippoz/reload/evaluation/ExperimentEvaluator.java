@@ -17,12 +17,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * The Class ExperimentVoter.
@@ -44,7 +42,7 @@ public class ExperimentEvaluator extends Thread {
 	private AlgorithmModel evalModel;
 	
 	/** The complete results of the voting. */
-	private Map<Date, AlgorithmResult> modelResults;
+	private List<AlgorithmResult> modelResults;
 	
 	private List<AlgorithmResult> failureScores;
 	
@@ -98,12 +96,12 @@ public class ExperimentEvaluator extends Thread {
 	@Override
 	public void run() {
 		int n = evalKnowledge.size();
-		modelResults = new TreeMap<>();
+		modelResults = new ArrayList<>(n);
 		failureScores = new LinkedList<AlgorithmResult>();
 		if(evalModel != null) {
 			for(int i=0;i<n;i++){
 				AlgorithmResult modelResult = evalModel.voteKnowledgeSnapshot(evalKnowledge, i);
-				modelResults.put(evalKnowledge.getTimestamp(i), modelResult);
+				modelResults.add(modelResult);
 				if(evalKnowledge.getInjection(i) != null){
 					failureScores.add(modelResult);
 				}
@@ -159,7 +157,7 @@ public class ExperimentEvaluator extends Thread {
 	public synchronized Map<Metric, Double> calculateMetricScores(Metric[] validationMetrics) {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		for(Metric met : validationMetrics){
-			metResults.put(met, met.evaluateAnomalyResults(new ArrayList<AlgorithmResult>(modelResults.values())));
+			metResults.put(met, met.evaluateAnomalyResults(modelResults));
 		}
 		return metResults;
 	}
@@ -178,7 +176,7 @@ public class ExperimentEvaluator extends Thread {
 		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
 		try {
 			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(new ArrayList<AlgorithmResult>(modelResults.values())));
+				metResults.put(met, met.evaluateAnomalyResults(modelResults));
 			}
 			if(printOutput){
 				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
@@ -196,7 +194,7 @@ public class ExperimentEvaluator extends Thread {
 	}
 
 	public List<AlgorithmResult> getSingleAlgorithmScores() {
-		return new ArrayList<>(modelResults.values());
+		return modelResults;
 	}
 
 	public int getFailuresNumber() {
@@ -212,7 +210,7 @@ public class ExperimentEvaluator extends Thread {
 	}
 
 	public List<AlgorithmResult> getExperimentResults() {
-		return new ArrayList<AlgorithmResult>(modelResults.values());
+		return modelResults;
 	}
 
 }

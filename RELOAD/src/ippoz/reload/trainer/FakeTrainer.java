@@ -39,11 +39,16 @@ public class FakeTrainer extends AlgorithmTrainer {
 		aModel.getAlgorithm().loadLoggedScores();
 		aModel.getAlgorithm().getConfiguration().addItem(DataSeriesDetectionAlgorithm.TAG, confTmp);
 		bestConf = aModel.getAlgorithmConfiguration(); 
-		aModel.getAlgorithm().saveLoggedScores();
+		// HERE
 		for(Knowledge know : kList){
 			trainResult.put(know, calculateResults(aModel.getAlgorithm(), know));
 		}
 		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, aModel.getMetricScore());
+	}
+
+	@Override
+	public void saveAlgorithmScores() {
+		aModel.getAlgorithm().saveLoggedScores();
 	}
 
 }
