@@ -717,6 +717,7 @@ public abstract class DetectionAlgorithm {
 				case ELKI_FASTABOD:
 				case DBSCAN:
 				case LDCOF_DBSCAN:
+				case ELKI_COF:
 					return AlgorithmComplexity.QUADRATIC;
 				default: 
 					return AlgorithmComplexity.LINEAR;

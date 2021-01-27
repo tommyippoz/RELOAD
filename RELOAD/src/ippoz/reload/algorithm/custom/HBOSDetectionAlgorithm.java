@@ -226,11 +226,13 @@ public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		double temp;
 		hbos = 0;
 		Indicator[] indList = getDataSeries().getIndicators();
-		for(int j=0;j<getDataSeries().size();j++){
-			temp = histograms.get(indList[j].getName()).getScore(snapArray[j]);
-			if(temp > 0)
-				hbos = hbos + Math.log(1.0/temp);
-			else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();
+		if(histograms != null){
+			for(int j=0;j<getDataSeries().size();j++){
+				temp = histograms.get(indList[j].getName()).getScore(snapArray[j]);
+				if(temp > 0)
+					hbos = hbos + Math.log(1.0/temp);
+				else hbos = HBOS_DEFAULT_MAX*getDataSeries().size();
+			}
 		}
 		return hbos;
 	}

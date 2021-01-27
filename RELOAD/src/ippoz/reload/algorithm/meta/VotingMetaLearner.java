@@ -54,6 +54,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
+				at.saveAlgorithmScores();
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			return mTrainer.getTrainers();

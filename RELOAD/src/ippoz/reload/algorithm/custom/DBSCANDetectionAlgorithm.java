@@ -365,7 +365,7 @@ public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		defPar.put("eps", new String[] { "100", "500", "1000" });
-		defPar.put("pts", new String[] { "0.5", "1", "2" });
+		defPar.put("pts", new String[] { "0.1", "0.2", "0.5", "1.0"});
 		return defPar;
 	}
 

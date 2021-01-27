@@ -61,6 +61,7 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 				AlgorithmTrainer at = trainWeakLearner(boostedKnowledge, i);
 				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
+					at.saveAlgorithmScores();
 					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);

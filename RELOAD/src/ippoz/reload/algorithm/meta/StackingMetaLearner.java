@@ -73,6 +73,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
+				at.saveAlgorithmScores();
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			
@@ -82,6 +83,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			sTrainer.start();
 			sTrainer.join();
 			for(AlgorithmTrainer at : sTrainer.getTrainers()){
+				at.saveAlgorithmScores();
 				metaLearner = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), at.getDataSeries(), at.getBestConfiguration());
 			}
 			

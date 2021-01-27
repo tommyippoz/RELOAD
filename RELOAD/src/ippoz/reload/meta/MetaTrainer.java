@@ -116,6 +116,4 @@ public class MetaTrainer extends ThreadScheduler {
 		return best;
 	}
 
-	
-
 }

@@ -60,6 +60,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 				AlgorithmTrainer at = trainWeakLearner(lList[i], boostedKnowledge, currentDs, i);
 				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
+					at.saveAlgorithmScores();
 					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(lList[i], at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
