@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,15 +26,15 @@ public class ThresholdAmount_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.hasInjection())
+			if(tr.isAnomalous())
 				faultyList.add(tr.getScore());
 			else normalList.add(tr.getScore());
 		}
-		return calculateThresholdsAmount(toFrequencyMap(normalList).keySet(), toFrequencyMap(faultyList).keySet());
+		return new DoubleMetricResult(calculateThresholdsAmount(toFrequencyMap(normalList).keySet(), toFrequencyMap(faultyList).keySet()));
 	}
 
 	@Override

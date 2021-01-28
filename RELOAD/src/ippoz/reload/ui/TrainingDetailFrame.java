@@ -197,7 +197,7 @@ public class TrainingDetailFrame {
 				case 1:
 					return av.getDataSeries().toString().contains("COMPOSITION") ? "Y" : "N";
 				case 2:
-					return Double.valueOf(AppUtility.formatDouble(av.getMetricScore()));
+					return av.getMetricScore().toString();
 				case 3:
 					return Double.valueOf(AppUtility.formatDouble(av.getReputationScore()));
 				case 4:

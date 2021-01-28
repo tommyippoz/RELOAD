@@ -25,6 +25,7 @@ import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.train.TrainerManager;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
 
@@ -282,7 +283,7 @@ public class DetectionManager {
 	}*/
 	
 	public DetectorOutput evaluate() {
-		double score = Double.NaN;
+		MetricResult score = null;
 		EvaluatorManager eManager;
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
@@ -295,7 +296,7 @@ public class DetectionManager {
 				eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);
 				if(eManager.detectAnomalies()){
 					score = eManager.getMetricsValues().get(metric.getMetricName());
-					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
+					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score.toString());
 				}
 				ValidationInfo vInfo = new ValidationInfo();
 				vInfo.setDataPoints(l.getDataPoints());

@@ -14,7 +14,7 @@ import ippoz.reload.output.LabelledResult;
 public class AlgorithmResult {
 	
 	/** The fault (if any) corresponding to each data point. */
-	private boolean hasInjection;
+	private boolean isAnomalous;
 	
 	/** The evaluated score. */
 	private double score;
@@ -38,8 +38,8 @@ public class AlgorithmResult {
 	 * @param score the score
 	 * @param object 
 	 */
-	public AlgorithmResult(boolean hasInjection, double score, double confidence, Object additionalScore) {
-		this.hasInjection = hasInjection;
+	public AlgorithmResult(boolean isAnomalous, double score, double confidence, Object additionalScore) {
+		this.isAnomalous = isAnomalous;
 		this.score = score;
 		this.confidence = confidence;
 		this.additionalScore = null;
@@ -47,7 +47,6 @@ public class AlgorithmResult {
 	
 	public AlgorithmResult(LabelledResult lr) {
 		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -59,11 +58,10 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(boolean hasInjection, double score, AnomalyResult scoreEvaluation, double confidence) {
-		this.hasInjection = hasInjection;
+	public AlgorithmResult(boolean isAnomalous, double score, AnomalyResult scoreEvaluation, double confidence) {
+		this.isAnomalous = isAnomalous;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
-		//this.dFunction = dFunction;
 		this.confidence = confidence;
 	}
 
@@ -170,11 +168,11 @@ public class AlgorithmResult {
 	}
 
 	public boolean isCorrect() {
-		return getBooleanScore() == hasInjection();
+		return getBooleanScore() == isAnomalous();
 	}
 
-	public boolean hasInjection() {
-		return hasInjection;
+	public boolean isAnomalous() {
+		return isAnomalous;
 	}
 
 	public double getConfidencedScore() {

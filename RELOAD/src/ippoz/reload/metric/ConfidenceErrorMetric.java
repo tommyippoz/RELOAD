@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -28,17 +30,17 @@ public class ConfidenceErrorMetric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		int fpHits = 0, fnHits = 0, tHits = 0;
 		double fpScore = 0, fnScore = 0, tScore = 0;
 		AlgorithmResult tResult;
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
 			tResult = anomalyEvaluations.get(i);
-			if (!tResult.hasInjection() && tResult.getBooleanScore()) {
+			if (!tResult.isAnomalous() && tResult.getBooleanScore()) {
 				fpHits++;
 				fpScore = fpScore + (tResult.getConfidence() > 1 ? 1.0 : tResult.getConfidence());
 			}
-			else if (tResult.hasInjection() && !tResult.getBooleanScore()) {
+			else if (tResult.isAnomalous() && !tResult.getBooleanScore()) {
 				fnHits++;
 				fnScore = fnScore + (tResult.getConfidence() > 1 ? 1.0 : tResult.getConfidence());
 			} else {
@@ -57,8 +59,8 @@ public class ConfidenceErrorMetric extends BetterMaxMetric {
 			val = fnScore / fnHits;
 		} else val = 0;
 		if(tHits > 0)
-			return tScore / tHits - val;
-		else return - val;
+			return new DoubleMetricResult(tScore / tHits - val);
+		else return new DoubleMetricResult(-val);
 	}
 
 	/*

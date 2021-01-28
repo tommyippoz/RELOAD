@@ -32,7 +32,7 @@ public class MetricReputation extends Reputation {
 
 	@Override
 	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
-		return metric.evaluateAnomalyResults(anomalyEvaluations);
+		return metric.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 	}
 
 }

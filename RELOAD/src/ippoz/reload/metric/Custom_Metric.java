@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -28,10 +30,10 @@ public class Custom_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double ce = new ConfidenceErrorMetric(isValidAfter(), 0.5).evaluateAnomalyResults(anomalyEvaluations);
-		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		return Math.abs(ce)*acc;
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+		double ce = new ConfidenceErrorMetric(isValidAfter(), 0.5).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		return new DoubleMetricResult(Math.abs(ce)*acc);
 	}
 
 	/*

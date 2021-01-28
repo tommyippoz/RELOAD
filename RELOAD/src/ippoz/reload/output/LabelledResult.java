@@ -19,7 +19,7 @@ public class LabelledResult {
 	private double confidencedScore;
 	
 	public LabelledResult(AlgorithmResult ar) {
-		label = ar.hasInjection();
+		label = ar.isAnomalous();
 		value = ar.getScore();
 		confidencedScore = ar.getConfidencedScore();
 	}

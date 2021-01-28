@@ -12,6 +12,7 @@ import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.meta.MetaData;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public class FakeTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
+	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> lookForBestConfiguration() {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
 		aModel.getAlgorithm().loadLoggedScores();
 		aModel.getAlgorithm().getConfiguration().addItem(DataSeriesDetectionAlgorithm.TAG, confTmp);
@@ -43,7 +44,7 @@ public class FakeTrainer extends AlgorithmTrainer {
 		for(Knowledge know : kList){
 			trainResult.put(know, calculateResults(aModel.getAlgorithm(), know));
 		}
-		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, aModel.getMetricScore());
+		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult>(trainResult, aModel.getMetricScore());
 	}
 
 	@Override

@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -25,11 +27,11 @@ public class GMean_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		fpr = 1 - fpr;
-		return Math.sqrt(fpr*r);
+		return new DoubleMetricResult(Math.sqrt(fpr*r));
 	}
 
 	/*

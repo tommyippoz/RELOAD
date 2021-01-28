@@ -3,6 +3,8 @@
  */
 package ippoz.reload.metric;
 
+import ippoz.reload.metric.result.MetricResult;
+
 /**
  * @author Tommy
  *
@@ -20,12 +22,12 @@ public abstract class BetterBigMetric extends ScoringMetric {
 	 * double)
 	 */
 	@Override
-	public int compareResults(double currentMetricValue, double bestMetricValue) {
-		if(!Double.isFinite(bestMetricValue))
+	public int compareResults(MetricResult currentMetricValue, MetricResult bestMetricValue) {
+		if(!Double.isFinite(bestMetricValue.getDoubleValue()))
 			return 1;
-		else if(!Double.isFinite(currentMetricValue))
+		else if(!Double.isFinite(currentMetricValue.getDoubleValue()))
 			return -1;
-		else return Double.valueOf(Math.abs(currentMetricValue)).compareTo(Math.abs(bestMetricValue));
+		else return Double.valueOf(Math.abs(currentMetricValue.getDoubleValue())).compareTo(Math.abs(bestMetricValue.getDoubleValue()));
 	}
 	
 }

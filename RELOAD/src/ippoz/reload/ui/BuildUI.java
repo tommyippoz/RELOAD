@@ -1207,6 +1207,14 @@ public class BuildUI {
 								newValue = newValue + "(" + s + ")";
 							} else newValue = newValue + "(1)";
 			        	}
+			        	if(comboBox.getSelectedItem().toString().equals("NO_PREDICTION")){
+			        		String s = (String)JOptionPane.showInputDialog(
+				                    frame, "Set Tolerable Hazard Rate % [0, 100] for No-Prediction Area.", "Tolerable Hazard Rate",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+								newValue = newValue + "(" + s + ")";
+							} else newValue = newValue + "(1)";
+			        	}
 			        	if(comboBox.getSelectedItem().toString().equals("PEARSON")){
 			        		String s = (String)JOptionPane.showInputDialog(
 				                    frame, "Set threshold for Pearson Correlation Index (0<threshold<=1) ", "Pearson Index Threshold",

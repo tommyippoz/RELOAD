@@ -7,6 +7,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,7 +47,7 @@ public class ValidationInfo {
 	
 	private static final String VALIDATION_BESTSCORE = "VALIDATION Best Score";
 	
-	private double bestScore;
+	private MetricResult bestScore;
 	
 	private static final String VALIDATION_BESTVOTER = "VALIDATION Best Voter";
 	
@@ -105,7 +106,7 @@ public class ValidationInfo {
 					valTimeMs = Long.parseLong(preferences.get(VALIDATION_TIME).trim());
 				}
 				if(preferences.containsKey(VALIDATION_BESTSCORE) && preferences.get(VALIDATION_BESTSCORE) != null){
-					bestScore = Double.parseDouble(preferences.get(VALIDATION_BESTSCORE).trim());
+					bestScore = MetricResult.valueOf(preferences.get(VALIDATION_BESTSCORE).trim());
 				}
 				if(preferences.containsKey(VALIDATION_BESTVOTER) && preferences.get(VALIDATION_BESTVOTER) != null){
 					voterString = preferences.get(VALIDATION_BESTVOTER).trim();
@@ -122,12 +123,12 @@ public class ValidationInfo {
 		}
 	}
 	
-	public double getBestScore() {
+	public MetricResult getBestScore() {
 		return bestScore;
 	}
 
-	public void setBestScore(double bestScore) {
-		this.bestScore = bestScore;
+	public void setBestScore(MetricResult score) {
+		this.bestScore = score;
 	}
 
 	public String getVoter() {

@@ -18,6 +18,7 @@ import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.ArrayList;
@@ -81,11 +82,11 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
+	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> lookForBestConfiguration() {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
 		ValueSeries vs = null;
 		List<AlgorithmResult> resultList = null;
-		double bestScore = Double.NaN;
+		MetricResult bestScore = null;
 		try {			
 			/* Iterates for Configurations */
 			for(BasicConfiguration conf : configurations){
@@ -110,8 +111,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						for(Knowledge know : kList){
 							resultList.addAll(calculateResults(algorithm, know));
 						}
-						ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
-						if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+						ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
+						if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 							currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 							algorithm.setDecisionFunction(value.getKey());
 							bestAlgorithm = algorithm;
@@ -141,8 +142,8 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 								resultList.addAll(calculateResults(algorithm, know));
 							}
 							
-							ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
-							if(value != null && value.getKey() != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+							ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
+							if(value != null && value.getKey() != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 								currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 								algorithm.setDecisionFunction(value.getKey());
 								bestAlgorithm = algorithm;
@@ -155,14 +156,14 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			} /* end conf for */
 			
 			if(getAlgType() instanceof MetaLearner){
-				ObjectPair<String, Double> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-				if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+				ObjectPair<String, MetricResult> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+				if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 					bestScore = value.getValue();
 					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 					bestAlgorithm.setDecisionFunction(value.getKey());
 				}
 				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-				if(value != null && (!Double.isFinite(bestScore) || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+				if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
 					bestScore = value.getValue();
 					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 					bestAlgorithm.setDecisionFunction(value.getKey());
@@ -189,28 +190,28 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
-		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
+		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult>(trainResult, bestScore);
 	}
 	
-	private ObjectPair<String, Double> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
+	private ObjectPair<String, MetricResult> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
 		try {
 			double thrValue = (thrRight + thrLeft)/2;
-		String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
-		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
-		double mScore = getMetric().evaluateAnomalyResults(updatedList);
-		if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
-			ObjectPair<String, Double> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
-			ObjectPair<String, Double> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
-			if(leftBest != null && rightBest != null){
-				if(getMetric().compareResults(mScore, leftBest.getValue()) > 0  && getMetric().compareResults(mScore, rightBest.getValue()) > 0){
-					return new ObjectPair<String, Double>(threshold, mScore);
-				} else {
-					if(getMetric().compareResults(leftBest.getValue(), rightBest.getValue()) > 0)
-						return leftBest;
-					else return rightBest;
-				} 
-			} else return null;
-		} else return new ObjectPair<String, Double>(threshold, mScore);
+			String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
+			List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
+			MetricResult mScore = getMetric().evaluateAnomalyResults(updatedList);
+			if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
+				ObjectPair<String, MetricResult> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
+				ObjectPair<String, MetricResult> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
+				if(leftBest != null && rightBest != null){
+					if(getMetric().compareResults(mScore, leftBest.getValue()) > 0  && getMetric().compareResults(mScore, rightBest.getValue()) > 0){
+						return new ObjectPair<String, MetricResult>(threshold, mScore);
+					} else {
+						if(getMetric().compareResults(leftBest.getValue(), rightBest.getValue()) > 0)
+							return leftBest;
+						else return rightBest;
+					} 
+				} else return null;
+			} else return new ObjectPair<String, MetricResult>(threshold, mScore);
 		} catch(Exception ex){
 			return null;
 		}

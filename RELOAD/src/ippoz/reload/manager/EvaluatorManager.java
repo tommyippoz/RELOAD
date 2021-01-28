@@ -17,6 +17,7 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.evaluation.ExperimentEvaluator;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -47,7 +48,7 @@ public class EvaluatorManager extends DataManager {
 	/** The validation metrics. */
 	private Metric[] validationMetrics;
 	
-	private Map<String, Double> metricValues;
+	private Map<String, MetricResult> metricValues;
 	
 	private AlgorithmModel evalModel;
 	
@@ -177,7 +178,7 @@ public class EvaluatorManager extends DataManager {
 		return outMap;
 	}
 	
-	public Map<String, Double> getMetricsValues() {
+	public Map<String, MetricResult> getMetricsValues() {
 		if(metricValues == null)
 			computeMetricValues();
 		return metricValues;
@@ -263,7 +264,7 @@ public class EvaluatorManager extends DataManager {
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
-							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.hasInjection() ? "anomaly" : "") + ",,");
+							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.isAnomalous() ? "anomaly" : "") + ",,");
 							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
 									res.getScore() + "," + (evalModel.getAlgorithm().getDecisionFunction() != null ? evalModel.getAlgorithm().getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){
@@ -326,8 +327,8 @@ public class EvaluatorManager extends DataManager {
 		String metString = "";
 		if(metricValues != null){
 			for(Metric met : validationMetrics){
-				double score = metricValues.get(met.getMetricName());
-				metString = metString + met.getMetricShortName() + ":" + score + ",";
+				MetricResult score = metricValues.get(met.getMetricName());
+				metString = metString + met.getMetricShortName() + ":" + score.toString() + ",";
 			}
 		}
 		return metString;

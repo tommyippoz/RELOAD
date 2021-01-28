@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -19,13 +21,13 @@ public class AUC_Metric extends BetterMaxMetric {
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		double tpr = new TruePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(anomalyEvaluations);
+				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double fpr = new FalsePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(anomalyEvaluations);
+				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double auc = (tpr * fpr) / 2 + (tpr + 1) * (1 - fpr) / 2;
-		return auc;
+		return new DoubleMetricResult(auc);
 	}
 
 	@Override

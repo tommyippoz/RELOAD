@@ -11,6 +11,7 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -128,7 +129,7 @@ public class ExperimentEvaluator extends Thread {
 	 * @param printOutput 
 	 * @return 
 	 */
-	public Map<Metric, Double> printVoting(String outFormat, String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
+	public Map<Metric, MetricResult> printVoting(String outFormat, String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
 		/*if(printOutput){
 			for(AlgorithmModel aVoter : algList){
 				aVoter.printResults(outFormat, outFolderName, expName);
@@ -146,7 +147,7 @@ public class ExperimentEvaluator extends Thread {
 	 * @param algConvergence the algorithm convergence time (for printing)
 	 * @param printOutput 
 	 */
-	private Map<Metric, Double> printExperimentVoting(String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
+	private Map<Metric, MetricResult> printExperimentVoting(String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
 		/*if(printOutput){
 			printGraphics(outFolderName, algConvergence);
 			printText(outFolderName);
@@ -154,8 +155,8 @@ public class ExperimentEvaluator extends Thread {
 		return printMetrics(outFolderName, validationMetrics, printOutput);
 	}
 	
-	public synchronized Map<Metric, Double> calculateMetricScores(Metric[] validationMetrics) {
-		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
+	public synchronized Map<Metric, MetricResult> calculateMetricScores(Metric[] validationMetrics) {
+		Map<Metric, MetricResult> metResults = new HashMap<Metric, MetricResult>();
 		for(Metric met : validationMetrics){
 			metResults.put(met, met.evaluateAnomalyResults(modelResults));
 		}
@@ -171,9 +172,9 @@ public class ExperimentEvaluator extends Thread {
 	 * @param validationMetrics the metrics used for validation and printed in the file
 	 * @return 
 	 */
-	private synchronized Map<Metric, Double> printMetrics(String outFolderName, Metric[] validationMetrics, boolean printOutput) {
+	private synchronized Map<Metric, MetricResult> printMetrics(String outFolderName, Metric[] validationMetrics, boolean printOutput) {
 		PrintWriter pw;
-		Map<Metric, Double> metResults = new HashMap<Metric, Double>();
+		Map<Metric, MetricResult> metResults = new HashMap<Metric, MetricResult>();
 		try {
 			for(Metric met : validationMetrics){
 				metResults.put(met, met.evaluateAnomalyResults(modelResults));

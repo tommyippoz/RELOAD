@@ -378,7 +378,7 @@ public class OutputFrame {
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Detailed Outputs ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		//fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(new GridLayout(1, 5, 20, 10));
+		fPanel.setLayout(new GridLayout(1, 6, 15, 10));
 		
 		JButton button = new JButton("Output Folder");
 		button.setVisible(true);
@@ -427,6 +427,16 @@ public class OutputFrame {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				PlotConfidenceFrame odf = new PlotConfidenceFrame(dOut);
+				odf.buildMainPanel();
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
+		button = new JButton("Plot No Prediction");
+		button.setVisible(true);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				PlotNoPredictionFrame odf = new PlotNoPredictionFrame(dOut);
 				odf.buildMainPanel();
 				odf.setVisible(true);
 			} } );	

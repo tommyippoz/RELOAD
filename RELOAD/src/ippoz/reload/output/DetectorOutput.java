@@ -17,6 +17,7 @@ import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -34,7 +35,7 @@ public class DetectorOutput {
 	
 	private InputManager iManager;
 	
-	private double bestScore;
+	private MetricResult bestScore;
 	
 	private AlgorithmModel refModel;
 	
@@ -56,7 +57,7 @@ public class DetectorOutput {
 	
 	private ValidationInfo vInfo;
 	
-	public DetectorOutput(InputManager iManager, LearnerType algorithms, double bestScore, 
+	public DetectorOutput(InputManager iManager, LearnerType algorithms, MetricResult bestScore, 
 			AlgorithmModel modelList,
 			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
@@ -195,7 +196,7 @@ public class DetectorOutput {
 		}
 	}*/
 
-	public double getBestScore() {
+	public MetricResult getBestScore() {
 		return bestScore;
 	}
 		
@@ -216,7 +217,7 @@ public class DetectorOutput {
 	}*/
 	
 	public String getFormattedBestScore() {
-		return new DecimalFormat("#.##").format(getBestScore());
+		return new DecimalFormat("#.##").format(getBestScore().getDoubleValue());
 	}
 
 	public String getEvaluationBatches() {

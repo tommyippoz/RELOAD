@@ -323,7 +323,7 @@ public class TrainerManager extends TrainDataManager {
 		try {
 			for(Thread tThread : list){
 				AlgorithmTrainer trainer = (AlgorithmTrainer)tThread;
-				if(bestTrainer == null || bestTrainer.getMetricAvgScore() < trainer.getMetricAvgScore())
+				if(bestTrainer == null || bestTrainer.getMetricAvgScore().compareTo(trainer.getMetricAvgScore()) < 0)
 					bestTrainer = trainer;
 			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));

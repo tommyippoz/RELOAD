@@ -31,7 +31,7 @@ public class BetaReputation extends Reputation {
 	private int countInjections(List<AlgorithmResult> anomalyEvaluations){
 		int count = 0;
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.hasInjection())
+			if(tr.isAnomalous())
 				count++;
 		}
 		return count;
@@ -39,7 +39,7 @@ public class BetaReputation extends Reputation {
 
 	@Override
 	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(anomalyEvaluations);
+		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double nInj = countInjections(anomalyEvaluations);
 		double alpha = tp + 1;
 		double beta = nInj + 1;

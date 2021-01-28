@@ -12,6 +12,7 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.utils.ObjectPair;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,7 +33,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	private DetectionAlgorithm alg;
 	
 	/** The metric score. */
-	private double metricScore;
+	private MetricResult metricScore;
 	
 	/** The reputation score. */
 	private double reputationScore;	
@@ -44,7 +45,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 * @param metricScore the metric score
 	 * @param reputationScore the reputation score
 	 */
-	public AlgorithmModel(DetectionAlgorithm alg, double metricScore, double reputationScore) {
+	public AlgorithmModel(DetectionAlgorithm alg, MetricResult metricScore, double reputationScore) {
 		this.alg = alg;
 		this.metricScore = metricScore;
 		this.reputationScore = reputationScore;
@@ -77,7 +78,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	 *
 	 * @return the metric score
 	 */
-	public double getMetricScore() {
+	public MetricResult getMetricScore() {
 		return metricScore;
 	}
 
@@ -149,7 +150,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 					conf.addItem(BasicConfiguration.DATASET_NAME, splitted[5]);
 				}
 				// TODO
-				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0]), conf), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[2]));
+				return new AlgorithmModel(DetectionAlgorithm.buildAlgorithm(conf.getLearnerType(), DataSeries.fromString(splitted[0]), conf), MetricResult.valueOf(splitted[3]), Double.parseDouble(splitted[2]));
 			}
 		}
 		return null;

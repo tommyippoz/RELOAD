@@ -10,6 +10,8 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +100,9 @@ public abstract class Metric implements Comparable<Metric> {
 			case "NO_PREDICTION":
 			case "NOP":
 			case "NPR":
-				return new NoPredictionArea_Metric(validAfter);
+				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
+					return new NoPredictionArea_Metric(validAfter, Double.valueOf(param));
+				else return new NoPredictionArea_Metric(validAfter, 1.0);
 			case "THRESHOLD":
 			case "THRESHOLDS":
 			case "THRESHOLDS_AMOUNT":
@@ -126,47 +130,6 @@ public abstract class Metric implements Comparable<Metric> {
 		}
 	}
 
-	
-	
-	/**
-	 * Evaluates the experiment using the chosen metric.
-	 *
-	 * @param alg
-	 *            the algorithm
-	 * @param expData
-	 *            the experiment data
-	 * @return the anomaly evaluation [metric score, avg algorithm score, std
-	 *         algorithm score]
-	 */
-	public double[] evaluateMetric(DetectionAlgorithm alg, Knowledge know) {
-		double average = 0;
-		double std = 0;
-		double snapValue;
-		int undetectable = 0;
-		Knowledge knowledge = know.cloneKnowledge();
-		List<AlgorithmResult> anomalyEvaluations = new ArrayList<AlgorithmResult>(knowledge.size());
-		for (int i = 0; i < knowledge.size(); i++) {
-			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
-			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
-			anomalyEvaluations.add(ar);
-			if (snapValue >= 0.0) {
-				average = average + snapValue;
-				std = std + Math.pow(snapValue, 2);
-			} else
-				undetectable++;
-			if (knowledge instanceof SlidingKnowledge) {
-				((SlidingKnowledge) knowledge).slide(i, snapValue);
-			}
-		}
-		if (knowledge instanceof SlidingKnowledge) {
-			((SlidingKnowledge) knowledge).reset();
-		}
-		average = average / (knowledge.size() - undetectable);
-		std = Math.sqrt((std / (knowledge.size() - undetectable))
-				- Math.pow(average, 2));
-		return new double[] {evaluateAnomalyResults(anomalyEvaluations), average, std};
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Metric)
@@ -185,7 +148,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the anomaly evaluations
 	 * @return the global anomaly evaluation
 	 */
-	public abstract double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations);
+	public abstract MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations);
 
 	/**
 	 * Compares metric results.
@@ -196,7 +159,7 @@ public abstract class Metric implements Comparable<Metric> {
 	 *            the best metric value
 	 * @return the comparison result
 	 */
-	public abstract int compareResults(double currentMetricValue, double bestMetricValue);
+	public abstract int compareResults(MetricResult currentMetricValue, MetricResult bestMetricValue);
 
 	/**
 	 * Converts numeric into boolean anomaly evaluation.
@@ -256,7 +219,7 @@ public abstract class Metric implements Comparable<Metric> {
 	}
 
 	public int compareResults(ValueSeries m1, ValueSeries m2) {
-		return compareResults(m1.getAvg(), m2.getAvg());
+		return compareResults(new DoubleMetricResult(m1.getAvg()), new DoubleMetricResult(m2.getAvg()));
 	}
 
 }

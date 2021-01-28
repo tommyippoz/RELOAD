@@ -39,7 +39,7 @@ public class TN_Metric extends ClassificationMetric {
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (!tResult.hasInjection() && !tResult.getBooleanScore()) {
+		if (!tResult.isAnomalous() && !tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

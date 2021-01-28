@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -30,7 +32,7 @@ public abstract class ClassificationConfidenceMetric extends BetterMaxMetric {
 	}
 		
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		double confSum = 0.0;
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {
@@ -43,14 +45,14 @@ public abstract class ClassificationConfidenceMetric extends BetterMaxMetric {
 			
 		}
 		if (anomalyEvaluations.size() > 0) {
-			return 1.0 * confSum / detectionHits;
-		} else return Double.NaN;
+			return new DoubleMetricResult(1.0 * confSum / detectionHits);
+		} else return new DoubleMetricResult(Double.NaN);
 	}
 	
 	
 
 	@Override
-	public int compareResults(double currentMetricValue, double bestMetricValue) {
+	public int compareResults(MetricResult currentMetricValue, MetricResult bestMetricValue) {
 		int res = super.compareResults(currentMetricValue, bestMetricValue);
 		if(betterMax)
 			return res;

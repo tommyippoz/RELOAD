@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -35,14 +37,13 @@ public class SafeScore_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		fpr = Math.pow(1 - fpr, 3);
 		if (fpr + r > 0)
-			return (1 + beta * beta) * fpr * r / (beta * beta * fpr + r);
-		else
-			return 0.0;
+			return new DoubleMetricResult((1 + beta * beta) * fpr * r / (beta * beta * fpr + r));
+		else return new DoubleMetricResult(0.0);
 	}
 
 	/*

@@ -1,7 +1,9 @@
 /**
  * 
  */
-package ippoz.reload.commons.support;
+package ippoz.reload.metric.result;
+
+import ippoz.reload.commons.support.AppUtility;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,28 +15,28 @@ import java.util.Map;
  * @author Tommy
  *
  */
-public class ValueSeries {
+public class MetricResultSeries {
 	
-	private List<Double> allValues;
+	private List<MetricResult> allValues;
 	
-	private List<Double> values;
+	private List<MetricResult> values;
 	
-	private Map<Double, Integer> frequencies;
+	private Map<MetricResult, Integer> frequencies;
 	
 	private boolean sorted;
 	
-	public ValueSeries(){
-		values = new LinkedList<Double>();
-		allValues = new LinkedList<Double>();
-		frequencies = new HashMap<Double, Integer>();
+	public MetricResultSeries(){
+		values = new LinkedList<>();
+		allValues = new LinkedList<>();
+		frequencies = new HashMap<>();
 		sorted = true;
 	}
 	
-	public ValueSeries(List<Double> scoresList) {
-		values = new LinkedList<Double>();
-		allValues = new LinkedList<Double>();
-		frequencies = new HashMap<Double, Integer>();
-		for(Double d : scoresList){
+	public MetricResultSeries(List<MetricResult> scoresList) {
+		values = new LinkedList<>();
+		allValues = new LinkedList<>();
+		frequencies = new HashMap<>();
+		for(MetricResult d : scoresList){
 			addValue(d);
 		}
 		Collections.sort(values);
@@ -46,36 +48,36 @@ public class ValueSeries {
 			values.remove(0);
 	}
 	
-	public void addValue(double newValue){
+	public void addValue(MetricResult newValue){
 		allValues.add(newValue);
 		if(frequencies.containsKey(newValue)){
 			frequencies.put(newValue, frequencies.get(newValue) + 1);
 		} else frequencies.put(newValue, 1);
-		if(Double.isFinite(newValue)){
+		if(newValue != null && Double.isFinite(newValue.getDoubleValue())){
 			values.add(newValue);
 			sorted = false;
 		}
 	}
 	
-	public double getMin(){
+	public MetricResult getMin(){
 		return quartile(0);
 	}
 	
-	public double getMax(){
+	public MetricResult getMax(){
 		return quartile(1);
 	}
 	
-	public double getQ1(){
+	public MetricResult getQ1(){
 		return quartile(0.25);
 	}
 	
-	public double getQ3(){
+	public MetricResult getQ3(){
 		return quartile(0.75);
 	}
 	
-	private double quartile(double lowerPercent) {
+	private MetricResult quartile(double lowerPercent) {
         if (values == null || values.size() == 0) {
-            return 0;
+            return new DoubleMetricResult(0.0);
         }
         if(!sorted){
         	Collections.sort(values);
@@ -86,11 +88,11 @@ public class ValueSeries {
     }
 	
 	public double getAvg(){
-		return AppUtility.calcAvg(values);
+		return AppUtility.calcAvg(getDoubleArray(values));
 	}
 	
 	public double getStd(){
-		return AppUtility.calcStd(values, AppUtility.calcAvg(values));
+		return AppUtility.calcStd(getDoubleArray(values), AppUtility.calcAvg(getDoubleArray(values)));
 	}
 
 	public void clear() {
@@ -98,7 +100,7 @@ public class ValueSeries {
 		sorted = true;
 	}
 
-	public double getMedian() {
+	public MetricResult getMedian() {
 		return quartile(0.5);
 	}
 
@@ -106,7 +108,7 @@ public class ValueSeries {
 		return values.size();
 	}
 
-	public double get(int i) {
+	public MetricResult get(int i) {
 		if(!sorted){
 			Collections.sort(values);
 			sorted = true;
@@ -114,15 +116,15 @@ public class ValueSeries {
 		return values.get(i);
 	}	
 	
-	public List<Double> getValues(){
+	public List<MetricResult> getValues(){
 		return values;
 	}
 	
-	public double getMode() {
-		double toReturn = Double.NaN;
+	public MetricResult getMode() {
+		MetricResult toReturn = null;
 		int maxOcc = 0;
 		if(frequencies != null){
-			for(Double d : frequencies.keySet()){
+			for(MetricResult d : frequencies.keySet()){
 				if(frequencies.get(d) > maxOcc){
 					maxOcc = frequencies.get(d);
 					toReturn = d;
@@ -131,8 +133,17 @@ public class ValueSeries {
 		}
 		return toReturn;
 	}
+	
+	public static List<Double> getDoubleArray(List<MetricResult> mrList){
+		List<Double> list = new LinkedList<>();
+		for(MetricResult mr : mrList){
+			if(mr != null)
+				list.add(mr.getDoubleValue());
+		}
+		return list;
+	}
 
-	public double getMinimumNonZero() {
+	/*public MetricResult getMinimumNonZero() {
 		double min = Math.abs(getMin());
 		if(min > 0)
 			return min;
@@ -145,6 +156,6 @@ public class ValueSeries {
 			}
 			return min;
 		}
-	}
+	}*/
 
 }
