@@ -3,6 +3,7 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -10,8 +11,10 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
+import ippoz.reload.decisionfunction.DoubleThresholdExtern;
+import ippoz.reload.decisionfunction.StaticThresholdGreaterThanDecision;
 import ippoz.reload.metric.NoPredictionArea_Metric;
-import ippoz.reload.metric.Overlap_Metric;
+import ippoz.reload.metric.result.ArrayMetricResult;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.output.LabelledResult;
 
@@ -26,22 +29,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -56,19 +50,21 @@ import javax.swing.event.DocumentListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.IntervalMarker;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.IntervalXYDataset;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.Layer;
 import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 
@@ -112,9 +108,11 @@ public class PlotNoPredictionFrame {
 	
 	private boolean norm;
 	
-	private boolean decisionFunctionFlag;
-	
 	private boolean anomalyNormalFlag;
+	
+	private boolean noPredictionFlag;
+	
+	private double currentTHR;
 	
 	private int numIntervals;
 	
@@ -125,7 +123,9 @@ public class PlotNoPredictionFrame {
 		
 		norm = false;
 		logScale = false;
-		decisionFunctionFlag = false;
+		
+		noPredictionFlag = false;
+		currentTHR = Double.NaN;
 		
 		numIntervals = NUM_INTERVALS;
 		algorithmScores = createScoresValueSeries();
@@ -192,12 +192,10 @@ public class PlotNoPredictionFrame {
 		ValueSeries series = new ValueSeries();
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			//if(containsPostiveLabel(list)) {
-				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue()) && lr.getLabel())
-						series.addValue(lr.getValue());
-				}
-			//}
+			for(LabelledResult lr : list){
+				if(Double.isFinite(lr.getValue()) && lr.getLabel())
+					series.addValue(lr.getValue());
+			}
 		}
 		return series;
 	}
@@ -226,10 +224,10 @@ public class PlotNoPredictionFrame {
 		detFrame = new JFrame();
 		detFrame.setTitle("Detail and Plots of Outputs");
 		if(screenSize.getWidth() > 1000)
-			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.75));
+			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.8));
 		else detFrame.setBounds(0, 0, 800, 480);
 		detFrame.setBackground(Color.WHITE);
-		detFrame.setResizable(false);
+		detFrame.setResizable(true);
 	}
 	
 	public void buildMainPanel(){
@@ -240,22 +238,22 @@ public class PlotNoPredictionFrame {
 				
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(Color.WHITE);
-		headerPanel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Parameters", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
-		headerPanel.setLayout(new GridLayout(2, 1));
+		headerPanel.setLayout(new GridLayout(3, 1));
 		
-		JPanel firstHeaderPanel = new JPanel();
-		firstHeaderPanel.setBackground(Color.WHITE);
-		firstHeaderPanel.setLayout(new GridLayout(1, 7));
+		JPanel visualizationPanel = new JPanel();
+		visualizationPanel.setBackground(Color.WHITE);
+		visualizationPanel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Visualization Preferences", TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
+		visualizationPanel.setLayout(new GridLayout(1, 6));
 		
 		JLabel lbl = new JLabel("Number of Rectangles");
 		lbl.setFont(labelFont);
 		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		firstHeaderPanel.add(lbl);
+		visualizationPanel.add(lbl);
 		
 		intTextField = new JTextField(String.valueOf(numIntervals));
 		intTextField.setFont(labelFont);
-		firstHeaderPanel.add(intTextField);
+		visualizationPanel.add(intTextField);
 		intTextField.setColumns(5);
 		intTextField.getDocument().addDocumentListener(new DocumentListener() {
 			  
@@ -293,21 +291,7 @@ public class PlotNoPredictionFrame {
 		        reload();
 		    }
 		});
-		firstHeaderPanel.add(logCB);
-		
-		JCheckBox normCB = new JCheckBox("Normalize Scores");
-		normCB.setSelected(norm);
-		normCB.setBorder(new EmptyBorder(5, 10, 5, 10));
-		normCB.setFont(labelFont);
-		normCB.setHorizontalAlignment(SwingConstants.CENTER);
-		normCB.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent event) {
-		    	norm = !norm;
-		        reload();
-		    }
-		});
-		firstHeaderPanel.add(normCB);
+		visualizationPanel.add(logCB);
 		
 		JPanel intervalPanel = new JPanel();
 		intervalPanel.setBackground(Color.WHITE);
@@ -342,7 +326,7 @@ public class PlotNoPredictionFrame {
 	        }
 	
 	    });		
-		firstHeaderPanel.add(lbl);
+		visualizationPanel.add(lbl);
 		
 		lbl = new JLabel("Right Bound: " + dfMax.format(maxValue));
 		lbl.setFont(labelFont);
@@ -371,18 +355,19 @@ public class PlotNoPredictionFrame {
 	    });	
 		intervalPanel.add(lbl);
 		
-		firstHeaderPanel.add(lbl);
+		visualizationPanel.add(lbl);
 		
-		JPanel secondHeaderPanel = new JPanel();
-		secondHeaderPanel.setBackground(Color.WHITE);
-		secondHeaderPanel.setLayout(new GridLayout(1, 5));
+		JPanel decisionFunctionPanel = new JPanel();
+		decisionFunctionPanel.setBackground(Color.WHITE);
+		decisionFunctionPanel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Decision Function", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
+		decisionFunctionPanel.setLayout(new GridLayout(1, 3, 30, 0));
 		
 		DecisionFunction suggDecision = createDefaultDecisionFunction();
 		
 		lbl = new JLabel("Decision Function");
 		lbl.setFont(labelFont);
 		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.setHorizontalAlignment(SwingConstants.RIGHT);
 		lbl.addMouseListener(new MouseAdapter() {
 	        @Override
 	        public void mouseClicked(MouseEvent e) {
@@ -395,7 +380,7 @@ public class PlotNoPredictionFrame {
 	        }
 	
 	    });
-		secondHeaderPanel.add(lbl);
+		decisionFunctionPanel.add(lbl);
 		
 		cbDecisionFunction = new JComboBox<DecisionFunctionType>(DecisionFunctionType.values());
 		if(dFunction != null)
@@ -453,165 +438,89 @@ public class PlotNoPredictionFrame {
 		    	}
 		    }
 		});
-		secondHeaderPanel.add(cbDecisionFunction);
+		decisionFunctionPanel.add(cbDecisionFunction);
 		
-		JCheckBox anomalyNormalCB = new JCheckBox("Anomaly Series");
-		anomalyNormalCB.setSelected(anomalyNormalFlag);
-		anomalyNormalCB.setBorder(new EmptyBorder(0, 10, 0, 10));
-		anomalyNormalCB.setFont(labelFont);
-		anomalyNormalCB.setHorizontalAlignment(SwingConstants.CENTER);
-		anomalyNormalCB.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent event) {
-		    	anomalyNormalFlag = !anomalyNormalFlag;
-		    	if(anomalyNormalFlag)
-	        		dFunction = DecisionFunction.buildDecisionFunction(anomalyScores, dFunction.getClassifierTag(), true);
-	        	else dFunction = DecisionFunction.buildDecisionFunction(algorithmScores, dFunction.getClassifierTag(), false);
-		        reload();
-		    }
-		});
-		
-		secondHeaderPanel.add(anomalyNormalCB);
-		
-		JCheckBox decisionFunctionCB = new JCheckBox("Apply Decision");
-		decisionFunctionCB.setSelected(decisionFunctionFlag);
-		decisionFunctionCB.setBorder(new EmptyBorder(0, 10, 0, 10));
-		decisionFunctionCB.setFont(labelFont);
-		decisionFunctionCB.setHorizontalAlignment(SwingConstants.CENTER);
-		decisionFunctionCB.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent event) {
-		    	decisionFunctionFlag = !decisionFunctionFlag;
-		        reload();
-		    }
-		});
-		
-		secondHeaderPanel.add(decisionFunctionCB);
-		
-		JButton butSave = new JButton("Save Data");
+		JButton butSave = new JButton("Reset to Default");
 		butSave.setVisible(true);
 		butSave.setFont(labelBoldFont);
 		butSave.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				ChartPanel cp;
 				try {
-					JFileChooser jfc = new JFileChooser(new File(System.getProperty("user.dir")));
-					int returnValue = jfc.showSaveDialog(null);
-					if (returnValue == JFileChooser.APPROVE_OPTION) {
-						File selectedFile = jfc.getSelectedFile();
-						String basicPath = selectedFile.getAbsolutePath();
-						if(basicPath.contains("."))
-							basicPath = basicPath.split(".")[basicPath.split(".").length - 2];
-						basicPath = basicPath + "_" + dOut.getAlgorithm() + "_" + dOut.getDataset();
-						if(decisionFunctionFlag && dFunction != null)
-							basicPath = basicPath + "_" + dFunction.getClassifierTag();
-						cp = buildChartPanel();
-						printDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + ".csv");
-						printDetailedDataset(((XYPlot) cp.getChart().getPlot()).getDataset(), basicPath + "_detailed.csv");
-						ChartUtilities.saveChartAsPNG(new File(basicPath + ".png"), cp.getChart(), (int)cp.getPreferredSize().getWidth(), (int)cp.getPreferredSize().getHeight());
-					}
+					dFunction = suggDecision;
+					reload();
 				} catch (Exception ex){
 					AppLogger.logException(getClass(), ex, "Unable to save graph to file");
 				}
+			}			
+		});	
+		decisionFunctionPanel.add(butSave);
+		
+		JPanel npAreaPanel = new JPanel();
+		npAreaPanel.setBackground(Color.WHITE);
+		npAreaPanel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "No Prediction Area", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
+		npAreaPanel.setLayout(new GridLayout(1, 4));
+		
+		lbl = new JLabel("Threshold for Residuals (Tolerable Hazard Rate)");
+		lbl.setFont(labelFont);
+		lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		npAreaPanel.add(lbl);
+		
+		JTextField thrTextField = new JTextField(!Double.isNaN(currentTHR) ? String.valueOf(currentTHR) : "");
+		thrTextField.setFont(labelFont);
+		npAreaPanel.add(thrTextField);
+		thrTextField.setColumns(5);
+		thrTextField.getDocument().addDocumentListener(new DocumentListener() {
+			  
+			public void changedUpdate(DocumentEvent e) {
+				workOnUpdate();
 			}
-			
-			private void printDetailedDataset(XYDataset dataset, String filename) {
-				BufferedWriter writer;
-				Map<Double, Integer> okList = new TreeMap<>();
-				Map<Double, Integer> anList = new TreeMap<>();
-				try {
-					// TODO
-					for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
-						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-						//if(containsPostiveLabel(list)){
-							for(LabelledResult lr : list){
-								double score = lr.getValue(); 
-								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
-									if(lr.getLabel()){
-										if(anList.containsKey(score))
-											anList.put(score, anList.get(score) + 1);
-										else anList.put(score, 1);
-									} else {
-										if(okList.containsKey(score))
-											okList.put(score, okList.get(score) + 1);
-										else okList.put(score, 1);
-									}
-								}
-							}
-						//}
-					}
-					List<Double> keys = new LinkedList<Double>(anList.keySet());
-					List<Double> temp = new LinkedList<Double>(okList.keySet());
-					temp.removeAll(keys);
-					keys.addAll(temp);
-					Collections.sort(keys);
-					
-					writer = new BufferedWriter(new FileWriter(new File(filename)));
-					writer.write(dOut.getAlgorithm() + "_scores,normal,anomaly\n");
-					for(Double xValue : keys){
-						writer.write(xValue + ",");
-						writer.write((okList.containsKey(xValue) ? okList.get(xValue) : "0") + ",");
-						writer.write((anList.containsKey(xValue) ? anList.get(xValue) : "0") + ",");
-						writer.write("\n");
-					}
-					writer.close();
-				} catch(IOException ex){
-					AppLogger.logException(getClass(), ex, "Unable to write summary files");
-				}
+			  
+			public void removeUpdate(DocumentEvent e) {
+				workOnUpdate();
+			}
+			  
+			public void insertUpdate(DocumentEvent e) {
+				workOnUpdate();
 			}
 	
-			private void printDataset(XYDataset dataset, String filename){
-				BufferedWriter writer;
-				List<Double> xValues = new LinkedList<Double>();
-				Map<Integer, Map<Double, Double>> map = new HashMap<>();
-				try {
-					for(int i=0;i<dataset.getSeriesCount();i++){
-						map.put(i, new HashMap<>());
-						for(int j=0;j<dataset.getItemCount(i);j++){
-							map.get(i).put(dataset.getXValue(i, j), dataset.getYValue(i, j));
-							if(!xValues.contains(dataset.getXValue(i, j)))
-								xValues.add(dataset.getXValue(i, j));
-						}
-					}
-					Collections.sort(xValues);
-					writer = new BufferedWriter(new FileWriter(new File(filename)));
-					writer.write("interval,");
-					for(int i=0;i<dataset.getSeriesCount();i++){
-						writer.write(dataset.getSeriesKey(i) + ",");
-					}
-					writer.write("\n");
-					for(Double xValue : xValues){
-						writer.write(xValue + ",");
-						double diff = 0;
-						for(int i=0;i<dataset.getSeriesCount();i++){
-							if(map.get(i).containsKey(xValue)){
-								writer.write((map.get(i).get(xValue) - diff) + ",");
-								diff = map.get(i).get(xValue);
-							} else {
-								writer.write("0,");
-								diff = 0;
-							}
-						}
-						writer.write("\n");
-					}
-					
-					writer.close();
-				} catch(IOException ex){
-					AppLogger.logException(getClass(), ex, "Unable to write summary files");
-				}
+			public void workOnUpdate() {
+				if (thrTextField.getText() != null && thrTextField.getText().length() > 0){
+	        		if(AppUtility.isNumber(thrTextField.getText()) && Double.parseDouble(thrTextField.getText()) > 0) {
+						currentTHR = Double.parseDouble(thrTextField.getText());
+		        		reload();
+	        		}
+	        	}
 			}
-			
-		} );	
-		secondHeaderPanel.add(butSave);
+		});
 		
-		headerPanel.add(firstHeaderPanel);
-		headerPanel.add(secondHeaderPanel);
+		JCheckBox npAreaCB = new JCheckBox("Calculate No-Prediction Area");
+		npAreaCB.setSelected(noPredictionFlag);
+		npAreaCB.setEnabled(!Double.isNaN(currentTHR));
+		npAreaCB.setBorder(new EmptyBorder(0, 10, 0, 10));
+		npAreaCB.setFont(labelFont);
+		npAreaCB.setHorizontalAlignment(SwingConstants.CENTER);
+		npAreaCB.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		    	if(!Double.isNaN(currentTHR)){
+		    		noPredictionFlag = !noPredictionFlag;
+		    	} else noPredictionFlag = false;
+		    	reload();
+		    }
+		});
+		
+		npAreaPanel.add(npAreaCB);
+		
+		headerPanel.add(visualizationPanel);
+		headerPanel.add(decisionFunctionPanel);
+		headerPanel.add(npAreaPanel);
 		
 		mainPanel.add(headerPanel, BorderLayout.NORTH);
 		
 		mainPanel.add(buildChartPanel(), BorderLayout.CENTER);
 		
-		if(dFunction != null && decisionFunctionFlag){	
+		if(dFunction != null){	
 			
 			JPanel panel = new JPanel();
 			panel.setBackground(Color.WHITE);
@@ -673,7 +582,7 @@ public class PlotNoPredictionFrame {
 		}
 		
 		DecimalFormat df = new DecimalFormat("#0.00"); 
-		outString = "TP: " + tp + ", TN: " + tn + " FP: " + fp + " FN: " + fn;
+		outString = "TP: " + tp + ", TN: " + tn + " FP: " + fp + " FN: " + fn + " FN(%): " + df.format(fn*100.0/(tp+fp+fn+tn));
 		double fpr = fp/(fp+tn);
 		outString = outString + " FPR: " + (fp+tn > 0 ? df.format(fpr) : "0.00");
 		double p = tp/(fp+tp);
@@ -718,17 +627,30 @@ public class PlotNoPredictionFrame {
 		
 		boolean infiniteFlag = containsInfiniteValues();
 		IntervalXYDataset dataset;
-		if(dFunction != null && decisionFunctionFlag)
+		if(dFunction != null)
 			dataset = (IntervalXYDataset)createConfusionMatrixSeries(minValue, maxValue, infiniteFlag);
 		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, infiniteFlag);
 		
+		String chartTitle = "Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
+				"\nwith " + okList.size() + " normal and " + anList.size() + " anomalous data points (" + countErr + " discarded, " + countInf + " infinite)";
+		
+		ArrayMetricResult noPredResult = null;
+		DecimalFormat df = new DecimalFormat("#0.00"); 
+		if(noPredictionFlag){
+			List<AlgorithmResult> arList = dOut.getAlgorithmResults(dFunction);
+			noPredResult = (ArrayMetricResult)new NoPredictionArea_Metric(true, currentTHR).evaluateAnomalyResults(arList);
+			if(Double.isFinite(noPredResult.getArray()[2]))
+				chartTitle = chartTitle + "\nNo-Prediction Area [" + df.format(noPredResult.getArray()[2]) + "," + df.format(noPredResult.getArray()[3]) + "]: "
+					+ df.format(noPredResult.getArray()[0]) + "% of data points, " + df.format(noPredResult.getArray()[1]) + "% of residual FNs";
+			else chartTitle = chartTitle + "\nNo-Prediction Area is empty, % FNs is lower than threshold";
+		}
+		
 		// Generate the graph
-		JFreeChart chart = ChartFactory.createXYBarChart(
-				"Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
-				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
+		JFreeChart chart = ChartFactory.createXYBarChart(chartTitle, 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
-		   
+		chart.getPlot().setBackgroundPaint(Color.LIGHT_GRAY);   
+		 
 		((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(0, Color.RED);
 		((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(1, Color.BLUE);
 		if(((XYPlot) chart.getPlot()).getSeriesCount() > 2){
@@ -737,7 +659,21 @@ public class PlotNoPredictionFrame {
 		}
 		
 		// Setting decision function thresholds
-		if(decisionFunctionFlag && dFunction != null){
+		if(noPredictionFlag && noPredResult != null){
+			double[] thresholds = noPredResult.getArray();
+			if(thresholds != null){
+				IntervalMarker target = new IntervalMarker(thresholds[2], thresholds[3], new Color(1, 0, 0, 1/2f));
+				XYPlot plot = ((XYPlot)chart.getPlot());
+				plot.addDomainMarker(target, Layer.BACKGROUND);
+				TextTitle legendText = new TextTitle("Purple Areas: SGS to be Anomaly, Grey Areas: SGS to be Normal, "
+						+ "Red Areas: NSGS or No-Prediction Area (" + df.format(noPredResult.getArray()[0]) + "%)");
+				legendText.setPosition(RectangleEdge.BOTTOM);
+				chart.addSubtitle(legendText);
+			}
+		}
+		
+		// Setting decision function thresholds
+		if(dFunction != null){
 			double[] thresholds = dFunction.getThresholds();
 			if(thresholds != null){
 				for(int i=0;i<thresholds.length;i++){
@@ -751,8 +687,33 @@ public class PlotNoPredictionFrame {
 			        domainMarker.setLabelTextAnchor(TextAnchor.HALF_ASCENT_CENTER);
 					((XYPlot)chart.getPlot()).addDomainMarker(domainMarker);
 				}
+				if(noPredictionFlag){
+					XYPlot plot = ((XYPlot)chart.getPlot());
+					Color sgsTrue = new Color(80, 0, 153);
+					if(thresholds.length == 2){
+						if(!(dFunction instanceof DoubleThresholdExtern)){
+							IntervalMarker target = new IntervalMarker(thresholds[0], thresholds[1], sgsTrue);
+							plot.addDomainMarker(target, Layer.BACKGROUND);
+						} else {
+							IntervalMarker target = new IntervalMarker(minRefValue, thresholds[0], sgsTrue);
+							IntervalMarker target2 = new IntervalMarker(thresholds[1], maxRefValue, sgsTrue);
+							plot.addDomainMarker(target, Layer.BACKGROUND);
+							plot.addDomainMarker(target2, Layer.BACKGROUND);
+						}
+					} else if(thresholds.length == 1){
+						if(dFunction instanceof StaticThresholdGreaterThanDecision){
+							IntervalMarker target = new IntervalMarker(thresholds[0], maxRefValue, sgsTrue);
+							plot.addDomainMarker(target, Layer.BACKGROUND);
+						} else {
+							IntervalMarker target = new IntervalMarker(minRefValue, thresholds[0], sgsTrue);
+							plot.addDomainMarker(target, Layer.BACKGROUND);
+						}
+					}
+				}
 			}
 		}
+		
+		
 		
 		// Setting x axis range
 		NumberAxis domain = (NumberAxis) ((XYPlot) chart.getPlot()).getDomainAxis();

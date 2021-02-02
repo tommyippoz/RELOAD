@@ -331,7 +331,19 @@ public class DetectorOutput {
 		return labelledScores;
 	}
 	
-	public Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<AlgorithmResult>> votingScores){
+	public List<AlgorithmResult> getAlgorithmResults(DecisionFunction df){
+		List<AlgorithmResult> list = new LinkedList<>();
+		Map<LoaderBatch, List<LabelledResult>> scoresMap = getLabelledScores();
+		for(LoaderBatch expName : scoresMap.keySet()){
+			List<LabelledResult> batchList = scoresMap.get(expName);
+			for(LabelledResult lr : batchList){
+				list.add(new AlgorithmResult(lr, df));
+			}
+		}
+		return list;
+	}
+	
+	private Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<AlgorithmResult>> votingScores){
 		Map<LoaderBatch, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
 			for(LoaderBatch expName : votingScores.keySet()){

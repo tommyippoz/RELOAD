@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.result;
 
 import ippoz.reload.decisionfunction.AnomalyResult;
+import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.output.LabelledResult;
 
 /**
@@ -21,10 +22,7 @@ public class AlgorithmResult {
 	
 	/** The evaluation in terms of AnomalyResult. */
 	private AnomalyResult scoreEvaluation;
-	
-	/** The decision function used. */
-	//private DecisionFunction dFunction;
-	
+
 	/** The confidence on the result. */
 	private double confidence;
 
@@ -47,6 +45,10 @@ public class AlgorithmResult {
 	
 	public AlgorithmResult(LabelledResult lr) {
 		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null);
+	}
+	
+	public AlgorithmResult(LabelledResult lr, DecisionFunction df) {
+		this(lr.getLabel(), lr.getValue(), df.assignScore(lr, false), lr.getConfidence());
 	}
 
 	/**

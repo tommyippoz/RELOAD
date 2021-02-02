@@ -9,9 +9,7 @@ import ippoz.reload.metric.result.ArrayMetricResult;
 import ippoz.reload.metric.result.MetricResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,20 +45,22 @@ public class NoPredictionArea_Metric extends BetterMinMetric {
 		double min = Double.POSITIVE_INFINITY;
 		double max = Double.NEGATIVE_INFINITY;
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.isAnomalous() && tr.getScoreEvaluation() != AnomalyResult.ANOMALY)
-				fnList.add(tr.getScore());
-			else otherList.add(tr.getScore());
+			if(tr.getScoreEvaluation() != AnomalyResult.ANOMALY){
+				if(tr.isAnomalous())
+					fnList.add(tr.getScore());
+				else otherList.add(tr.getScore());
+			}
 			if(tr.getScore() < min)
 				min = tr.getScore();
 			if(tr.getScore() > max)
 				max = tr.getScore();
 		}
 		if(fnList.size() == 0 || fnList.size()*100.0/anomalyEvaluations.size() < hazardRate){
-			return new ArrayMetricResult(new double[]{fnList.size()*100.0/anomalyEvaluations.size(), 0.0, Double.NaN, Double.NaN});
+			return new ArrayMetricResult(new double[]{0.0, fnList.size()*100.0/anomalyEvaluations.size(), Double.NaN, Double.NaN});
 		}
 		Map<Double, Integer> fnMap = toFrequencyMap(fnList);
 		Map<Double, Integer> otherMap = toFrequencyMap(otherList);
-		return new ArrayMetricResult(calculateNPArea(new ArrayList<>(fnMap.keySet()), fnMap, otherMap, min, max, fnList.size(), otherList.size()));
+		return new ArrayMetricResult(calculateNPArea(new ArrayList<>(fnMap.keySet()), fnMap, otherMap, min, max, fnList.size(), anomalyEvaluations.size() - fnList.size()));
 	}
 	
 	private double[] calcResidual(List<Double> fnKeys, Map<Double, Integer> fnMap, Map<Double, Integer> otherMap, double min, double max, int fnCount, int otherCount, int indexLeft, int indexRight){
@@ -71,7 +71,7 @@ public class NoPredictionArea_Metric extends BetterMinMetric {
 		int otherNoPrediction = countBetween(otherMap, left, right);
 		int otherPrediction = otherCount - otherNoPrediction;
 		double npArea = (fnNoPrediction + otherNoPrediction)*100.0 / (fnCount + otherCount);
-		double residuals = fnPrediction == 0 ? 0 : fnPrediction*100.0 / (fnPrediction + otherPrediction);
+		double residuals = fnPrediction == 0 ? 0 : fnPrediction*100.0 / (fnCount + otherCount);
 		return new double[]{npArea, residuals, left, right};
 	}
 	

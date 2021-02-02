@@ -13,6 +13,7 @@ import ippoz.reload.commons.support.AppLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,11 +49,12 @@ public class MonitoredData {
 	 * @param ssList the service stats list
 	 * @param timings the timings
 	 */
-	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, List<Indicator> indicatorList){
+	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, Map<String, Boolean> map){
 		this.obsList = obsList;
 		this.expBatch = expBatch;
 		this.injMap = injMap;
-		this.indicatorList = sanitizeIndicators(indicatorList);
+		if(map != null)
+			this.indicatorList = sanitizeStrIndicators(map.keySet());
 	}
 	
 	public MonitoredData(LoaderBatch expBatch, Indicator[] indicatorList){
@@ -62,12 +64,23 @@ public class MonitoredData {
 		injMap = new HashMap<>();
 	}
 
-	private List<Indicator> sanitizeIndicators(List<Indicator> initialList) {
+	private List<Indicator> sanitizeIndicators(Collection<Indicator> initialList) {
 		List<Indicator> finalList = new LinkedList<>();
 		if(initialList != null){
 			for(Indicator ind : initialList){
 				if(ind != null)
 					finalList.add(ind);
+			}
+		}
+		return finalList;
+	}
+	
+	private List<Indicator> sanitizeStrIndicators(Collection<String> initialList) {
+		List<Indicator> finalList = new LinkedList<>();
+		if(initialList != null){
+			for(String ind : initialList){
+				if(ind != null)
+					finalList.add(new Indicator(ind, String.class));
 			}
 		}
 		return finalList;

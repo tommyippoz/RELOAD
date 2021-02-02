@@ -14,7 +14,6 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.loader.Loader;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -184,7 +183,7 @@ public class DetectionManager {
 				if(trainLoader == null)
 					loader = iManager.buildLoader("train", loaderPref);
 				else loader = trainLoader;
-				if(SimpleLoader.isValid(loader)){
+				if(Loader.isValid(loader)){
 					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
 					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), iManager.getPredictMisclassificationsFlag());
 					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
@@ -217,7 +216,7 @@ public class DetectionManager {
 				if(trainLoader == null)
 					loader = iManager.buildLoader("train", loaderPref);
 				else loader = trainLoader;
-				if(SimpleLoader.isValid(loader)){
+				if(Loader.isValid(loader)){
 					kMap = generateKnowledge(loader.fetch());
 					if(!new File(buildScoresFolder()).exists())
 						new File(buildScoresFolder()).mkdirs();
@@ -290,7 +289,7 @@ public class DetectionManager {
 		Loader l = evalLoader;
 		if(evalLoader == null)
 			l = iManager.buildLoader("validation", loaderPref);
-		if(SimpleLoader.isValid(l)){
+		if(Loader.isValid(l)){
 			String scoresFileString = buildScoresFolder();
 			if(iManager.countAvailableModels(scoresFileString) > 0){
 				eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);

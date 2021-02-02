@@ -30,4 +30,8 @@ public class ArrayMetricResult extends MetricResult {
 		return Arrays.toString((double[])result).replace(",", ";");
 	}
 
+	public double[] getArray() {
+		return (double[])result;
+	}
+
 }

@@ -21,7 +21,6 @@ import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -1117,7 +1116,7 @@ public class InputManager {
 	public boolean isValid(PreferencesManager lPref){
 		Loader lt = buildSingleLoader(lPref, "train");
 		Loader lv = buildSingleLoader(lPref, "validation");
-		return SimpleLoader.isValid(lt) && SimpleLoader.isValid(lv);	
+		return Loader.isValid(lt) && Loader.isValid(lv);	
 	}
 	
 	/**

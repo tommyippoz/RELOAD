@@ -169,7 +169,7 @@ public class PlotConfidenceFrame {
 			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.75));
 		else detFrame.setBounds(0, 0, 800, 480);
 		detFrame.setBackground(Color.WHITE);
-		detFrame.setResizable(false);
+		detFrame.setResizable(true);
 	}
 	
 	public void buildMainPanel(){
