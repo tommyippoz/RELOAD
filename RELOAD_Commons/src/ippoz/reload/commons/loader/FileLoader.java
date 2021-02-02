@@ -6,6 +6,7 @@ package ippoz.reload.commons.loader;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.loader.info.DatasetInfo;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -191,7 +192,7 @@ public abstract class FileLoader extends Loader {
 												if(AppUtility.isNumber(splitted)){
 													indData = Double.parseDouble(splitted);
 												}
-											} 
+											}
 											current.addIndicator(indData);
 											dInfo.addValue(headName[i], indData, rowLabel);
 										}

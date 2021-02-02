@@ -5,6 +5,7 @@ package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.loader.info.DatasetInfo;
 import ippoz.reload.commons.support.PreferencesManager;
 
 import java.util.ArrayList;
@@ -299,6 +300,10 @@ public abstract class Loader {
 			batches.clear();
 		if(relevantFeatures != null)
 			relevantFeatures.clear();
+	}
+	
+	public DatasetInfo getDatasetInfo(){
+		return datasetInfo;
 	}
 	
 	public int getIndicatorNumber(){

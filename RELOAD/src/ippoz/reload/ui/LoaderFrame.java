@@ -17,8 +17,11 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -230,21 +234,17 @@ public class LoaderFrame {
 		sourcePanel.setBorder(tb);
 		sourcePanel.setLayout(new GridLayout(4, 1, 20, 0));
 		
-		JLabel trainDatasetLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch())
-			trainDatasetLabel.setText("Size: " + tLoader.getMBSize() + " MB, " + tLoader.getRowNumber() + " rows");
+		JPanel trainDatasetInfoPanel = buildDatasetInfoPanel(tLoader);
 		
 		showPreferenceButton(sourcePanel, 1*bigLabelSpacing, FileLoader.TRAIN_FILE, 
 				loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? loaderPref.getPreference(FileLoader.TRAIN_FILE) : loaderPref.getPreference("TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
-				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'", trainDatasetLabel);
+				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'", trainDatasetInfoPanel);
 		
-		JLabel validationDatasetLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch())
-			validationDatasetLabel.setText("Size: " + vLoader.getMBSize() + " MB, " + vLoader.getRowNumber() + " rows");
+		JPanel validationDatasetInfoPanel = buildDatasetInfoPanel(vLoader);
 		
 		showPreferenceButton(sourcePanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FILE, 
 				loaderPref.hasPreference(FileLoader.VALIDATION_FILE) ? loaderPref.getPreference(FileLoader.VALIDATION_FILE) : loaderPref.getPreference("VALIDATION_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
-				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'", validationDatasetLabel);
+				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'", validationDatasetInfoPanel);
 
 		String[] features = null;
 		if(tLoader != null && tLoader.canFetch())
@@ -549,6 +549,49 @@ public class LoaderFrame {
 		
 		root.add(panel);
 		
+	}
+	
+	private JPanel buildDatasetInfoPanel(Loader loader){
+		JPanel datasetInfoPanel = new JPanel();
+		datasetInfoPanel.setBackground(Color.WHITE);
+		datasetInfoPanel.setLayout(new GridBagLayout());
+		
+		JLabel trainDatasetLabel = initLabel("Not Defined");
+		if(loader != null && loader.canFetch())
+			trainDatasetLabel.setText("Size: " + tLoader.getMBSize() + " MB, " + loader.getRowNumber() + " rows");
+		datasetInfoPanel.add(trainDatasetLabel);
+		
+		ImageIcon it = new ImageIcon(getClass().getResource("/exploreDataset.png"));
+		JButton button = new JButton("", new ImageIcon(it.getImage().getScaledInstance(labelSpacing + 5, labelSpacing + 5, Image.SCALE_DEFAULT)));
+		button.setBorder(BorderFactory.createEmptyBorder());
+		button.setContentAreaFilled(false);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				DatasetInfoFrame dif = new DatasetInfoFrame(loader);
+				dif.setVisible(true);
+			}
+		} );
+		datasetInfoPanel.add(button);
+		
+		GridBagConstraints c = new GridBagConstraints();
+	    c.insets = new Insets(2, 2, 2, 2);
+	    c.weighty = 1.0;
+	    c.weightx = 1.0;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.gridheight = 2;
+	    c.fill = GridBagConstraints.BOTH; // Use both horizontal & vertical
+	    datasetInfoPanel.add(trainDatasetLabel, c);
+	    c.gridx = 1;
+	    c.gridheight = 1;
+	    c.gridwidth = 2;
+	    c.fill = GridBagConstraints.HORIZONTAL; // Horizontal only
+	    datasetInfoPanel.add(button, c);
+	    c.gridy = 1;
+	    c.gridwidth = 1;
+	    c.fill = GridBagConstraints.NONE; // Remember to reset to none
+	    
+	    return datasetInfoPanel;
 	}
 
 }
