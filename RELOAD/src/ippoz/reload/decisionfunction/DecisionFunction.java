@@ -224,6 +224,11 @@ public abstract class DecisionFunction {
 					return true;
 				} else if(thresholdTag.endsWith("%")) {
 					return true;
+				} else if(thresholdTag.contains("STATIC_THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
+					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+					if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+						return true;
+					} else return false;
 				} else if(thresholdTag.contains("DOUBLE_THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
 					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 					if(partial.contains(",")){

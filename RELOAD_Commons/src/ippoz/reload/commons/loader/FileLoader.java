@@ -429,7 +429,11 @@ public abstract class FileLoader extends Loader {
 	}
 	
 	public static String[] splitString(String toSplit, String sep){
-		return toSplit != null && toSplit.trim().length() > 0 ? toSplit.split(sep) : new String[]{};
+		String[] splitted = toSplit != null && toSplit.trim().length() > 0 ? toSplit.split(sep) : new String[]{};
+		for(int i=0;i<splitted.length;i++){
+			splitted[i] = splitted[i].trim();
+		}
+		return splitted;
 	}
 	
 	private List<LoaderBatch> getFeatureBatches(String featureName) {

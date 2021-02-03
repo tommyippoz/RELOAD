@@ -54,7 +54,7 @@ public class MonitoredData {
 		this.expBatch = expBatch;
 		this.injMap = injMap;
 		if(map != null)
-			this.indicatorList = sanitizeStrIndicators(map.keySet());
+			this.indicatorList = sanitizeStrIndicators(map);
 	}
 	
 	public MonitoredData(LoaderBatch expBatch, Indicator[] indicatorList){
@@ -75,15 +75,15 @@ public class MonitoredData {
 		return finalList;
 	}
 	
-	private List<Indicator> sanitizeStrIndicators(Collection<String> initialList) {
+	private List<Indicator> sanitizeStrIndicators(Map<String, Boolean> map) {
 		List<Indicator> finalList = new LinkedList<>();
-		if(initialList != null){
-			for(String ind : initialList){
-				if(ind != null)
-					finalList.add(new Indicator(ind, String.class));
+		if(map != null){
+			for(String ind : map.keySet()){
+				if(ind != null && map.get(ind))
+					finalList.add(new Indicator(ind.trim(), String.class));
 			}
 		}
-		return finalList;
+		return finalList; 
 	}
 
 	public int size(){

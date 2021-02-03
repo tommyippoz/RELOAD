@@ -314,6 +314,8 @@ public class CustomLOF extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		  			nn.add(new KNNValue(dist, i));
 				}
 		    }
+		    if(sum == 0.0)
+		    	return 0.0;
 		    return sum / (singleLRD(nn, newInstance)*count);
 		
 		}

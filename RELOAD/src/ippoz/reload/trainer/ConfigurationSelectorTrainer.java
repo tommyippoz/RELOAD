@@ -155,6 +155,20 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				} /* end else */
 			} /* end conf for */
 			
+			// Check decision functions based on Static Thresholds
+			ObjectPair<String, MetricResult> valueG = binarySearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), resultList);
+			if(valueG != null && (bestScore == null || getMetric().compareResults(valueG.getValue(), bestScore) > 0)){
+				bestScore = valueG.getValue();
+				bestConf.addItem(BasicConfiguration.THRESHOLD, valueG.getKey());
+				bestAlgorithm.setDecisionFunction(valueG.getKey());
+			}
+			ObjectPair<String, MetricResult> valueL = binarySearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), resultList);
+			if(valueL != null && (bestScore == null || getMetric().compareResults(valueL.getValue(), bestScore) > 0)){
+				bestScore = valueL.getValue();
+				bestConf.addItem(BasicConfiguration.THRESHOLD, valueL.getKey());
+				bestAlgorithm.setDecisionFunction(valueL.getKey());
+			}
+			
 			if(getAlgType() instanceof MetaLearner){
 				ObjectPair<String, MetricResult> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
 				if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
@@ -215,6 +229,92 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		} catch(Exception ex){
 			return null;
 		}
+	}
+	
+	private static int SAME_RESULT_THRESHOLD = 5;
+	
+	private ObjectPair<String, MetricResult> binarySearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, List<AlgorithmResult> resultList){
+		int sameResultCounter = 0;
+		// Test Center
+		double cThrValue = (thrRight + thrLeft)/2;
+		String cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
+		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
+		MetricResult cScore = getMetric().evaluateAnomalyResults(updatedList);
+		ObjectPair<String, MetricResult> best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+		while(thrRight > thrLeft && sameResultCounter < SAME_RESULT_THRESHOLD){
+			//System.out.println(thrLeft + " - " + thrRight + ": " + best.getValue());
+			// Test Left
+			double leftThrValue = thrLeft + (thrRight - thrLeft)/4;
+			String leftThreshold = thrCode + "(" + AppUtility.formatDouble(leftThrValue) + ")";
+			updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, leftThreshold, false), resultList);
+			MetricResult lScore = getMetric().evaluateAnomalyResults(updatedList);
+			// Test Right
+			double rightThrValue = thrLeft + (thrRight - thrLeft)*3/4;
+			String rightThreshold = thrCode + "(" + AppUtility.formatDouble(rightThrValue) + ")";
+			updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, rightThreshold, false), resultList);
+			MetricResult rScore = getMetric().evaluateAnomalyResults(updatedList);
+			if(getMetric().compareResults(lScore, rScore) > 0){
+				if(getMetric().compareResults(lScore, cScore) > 0){
+					// Left is highest
+					if(getMetric().compareResults(best.getValue(), lScore) > 0)
+						break;
+					thrRight = (thrLeft + thrRight)/2;
+					cThreshold = leftThreshold;
+					cScore = lScore;
+					best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+					sameResultCounter = 0;
+				} else {
+					// Left is better than Right but lower than Center
+					double oldThrLeft = thrLeft;
+					thrRight = (oldThrLeft + thrRight)/2;
+					thrLeft = leftThrValue;
+					cThrValue = (thrRight + thrLeft)/2;
+					cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
+					updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
+					cScore = getMetric().evaluateAnomalyResults(updatedList);
+					if(getMetric().compareResults(cScore, best.getValue()) > 0)
+						best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+					else sameResultCounter++;
+				}
+			} else if(getMetric().compareResults(rScore, lScore) > 0){
+					if(getMetric().compareResults(rScore, cScore) > 0){
+						// Right is highest
+						if(getMetric().compareResults(best.getValue(), rScore) > 0)
+							break;
+						thrLeft = (thrLeft + thrRight)/2;
+						cThreshold = rightThreshold;
+						cScore = rScore;
+						best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+						sameResultCounter = 0;
+					} else {
+						// Right is better than Left but lower than Center
+						double oldThrLeft = thrLeft;
+						thrLeft = (oldThrLeft + thrRight)/2;
+						thrRight = rightThrValue;
+						cThrValue = (thrRight + thrLeft)/2;
+						cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
+						updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
+						cScore = getMetric().evaluateAnomalyResults(updatedList);
+						if(getMetric().compareResults(cScore, best.getValue()) > 0)
+							best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+						else sameResultCounter++;
+					}
+			} else {
+				// lScore = rScore
+				if(getMetric().compareResults(lScore, best.getValue()) > 0){
+					// Left is highest
+					if(getMetric().compareResults(best.getValue(), lScore) > 0)
+						break;
+					thrRight = (thrLeft + thrRight)/2;
+					cThreshold = leftThreshold;
+					cScore = lScore;
+					best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
+					sameResultCounter = 0;
+				} else break;
+			}
+			
+		}
+		return best;
 	}
 	
 	public void saveAlgorithmScores(){
