@@ -77,8 +77,13 @@ public abstract class FileLoader extends Loader {
 		parseFaultyTags(faultyTags);
 		parseAvoidTags(avoidTags);
 		setBatches(deriveBatches(batchString, runsString));
-		datasetInfo = initialize();
+		initialize();
 		updateBatches();
+	}
+	
+	@Override
+	public DatasetInfo generateDatasetInfo(){
+		return initialize();
 	}
 
 	private List<LoaderBatch> deriveBatches(String batchString, String runsString){

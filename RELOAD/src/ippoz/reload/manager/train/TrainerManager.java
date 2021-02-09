@@ -41,6 +41,8 @@ public class TrainerManager extends TrainDataManager {
 	
 	private Metric[] validationMetrics;
 	
+	private boolean allowParallel;
+	
 	/**
 	 * Instantiates a new trainer manager.
 	 *
@@ -52,9 +54,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics) {
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
 		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		this.validationMetrics = validationMetrics;
+		this.allowParallel = allowParallel;
 		clearTmpFolders();
 	}
 	
@@ -70,9 +73,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics) {
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
 		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		this.validationMetrics = validationMetrics;
+		this.allowParallel = allowParallel;
 		clearTmpFolders();
 	}
 	
@@ -88,8 +92,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics) {
-		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
 		dataSeries = parseSelectedSeries(selectedSeriesString);
 		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}
@@ -232,7 +236,7 @@ public class TrainerManager extends TrainDataManager {
 			confList.add(BasicConfiguration.buildConfiguration(algTypes));
 		}
 		if(confList != null){
-			if(algTypes instanceof BaseLearner && DetectionAlgorithm.getMemoryComplexity(((BaseLearner)algTypes).getAlgType()) == AlgorithmComplexity.LINEAR){
+			if(allowParallel && algTypes instanceof BaseLearner && DetectionAlgorithm.getMemoryComplexity(((BaseLearner)algTypes).getAlgType()) == AlgorithmComplexity.LINEAR){
 				int step = (int)Math.ceil(1.0*confList.size() / getLoadFactor());
 				for(int i=0;i<confList.size();i=i+step){
 					List<BasicConfiguration> subList = confList.subList(i, Math.min(i+step, confList.size()));

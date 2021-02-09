@@ -57,8 +57,6 @@ public abstract class Loader {
 	/** The header. */
 	private Map<String, Boolean> header;
 	
-	protected DatasetInfo datasetInfo;
-	
 	/**
 	 * Instantiates a new simple loader.
 	 *
@@ -302,9 +300,7 @@ public abstract class Loader {
 			relevantFeatures.clear();
 	}
 	
-	public DatasetInfo getDatasetInfo(){
-		return datasetInfo;
-	}
+	public abstract DatasetInfo generateDatasetInfo();
 	
 	public int getIndicatorNumber(){
 		return getFeatureNames().length;

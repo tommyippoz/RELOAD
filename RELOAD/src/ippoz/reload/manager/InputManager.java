@@ -140,6 +140,8 @@ public class InputManager {
 	
 	public static final String FORCE_TRAINING_BASELEARNERS = "FORCE_TRAINING_BASELEARNERS";
 	
+	public static final String PARALLEL_TRAINING = "PARALLEL_TRAINING";
+	
 	public static final String FORCE_TRAINING = "FORCE_TRAINING";
 
 	public static final String PREDICT_MISCLASSIFICATIONS = "PREDICT_MISCLASSIFICATIONS";
@@ -1510,6 +1512,16 @@ public class InputManager {
 			return false;
 		}
 	}
+	
+	public boolean getParallelTrainingFlag() {
+		if(prefManager.hasPreference(PARALLEL_TRAINING))
+			return !prefManager.getPreference(PARALLEL_TRAINING).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PARALLEL_TRAINING + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
 
 	public static void copyScores(String fromFolder, String toFolder) {
 		File from = new File(fromFolder);
@@ -1554,5 +1566,7 @@ public class InputManager {
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
 		return null;
 	}
+
+	
 	
 }

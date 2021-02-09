@@ -155,7 +155,9 @@ public class OutputFrame {
 	}
 	
 	private JTable buildOutputSummaryPanel(List<DetectorOutput> outList){
-		String[] header = {"Dataset", "Algorithm", "Features", "Anomaly %", "Score", "Predicted MCC"};
+		String[] header = iManager.getPredictMisclassificationsFlag() ?
+				new String[]{"Dataset", "Algorithm", "Features", "Anomaly %", "Score", "Predicted MCC"} :
+				new String[]{"Dataset", "Algorithm", "Features", "Anomaly %", "Score"};
 		String[][] data = new String[outList.size()][6];
 		for(int i=0;i<outList.size();i++){
 			data[i][0] = outList.get(i).getDataset();
@@ -163,7 +165,8 @@ public class OutputFrame {
 			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
 			data[i][3] = outList.get(i).getFaultsRatioString();
 			data[i][4] = outList.get(i).getFormattedBestScore();
-			data[i][5] = String.valueOf(outList.get(i).getPredictedMCC());
+			if(iManager.getPredictMisclassificationsFlag())
+				data[i][5] = String.valueOf(outList.get(i).getPredictedMCC());
 		}
 		JTable table = new JTable(data, header);
 		table.setFont(labelFont);

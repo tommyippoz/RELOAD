@@ -112,6 +112,8 @@ public class BuildUI {
 	
 	private static final String SETUP_FORCE_TRAINING = "Force Training";
 	
+	private static final String SETUP_FORCE_PARALLEL = "Multi-Threading Training";
+	
 	private static final String SETUP_PREDICT = "Predict Misclassifications";
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
@@ -902,7 +904,7 @@ public class BuildUI {
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(12, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
 		
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
 		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
@@ -947,16 +949,20 @@ public class BuildUI {
 		boolean[] result = hasAlgorithmType();
 		boolean hasBase = result[0];
 		boolean hasMeta = result[1];
-		boolean hasSliding = result[2];
+		//boolean hasSliding = result[2];
 		comp = createLCKPanel(SETUP_FORCE_TRAINING, setupPanel, 5*optionSpacing, iManager.getForceTrainingFlag(), comp, InputManager.FORCE_TRAINING, "Specifies if existing data about a past training of this algorithm can be re-used.", hasBase, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_TRAINING, comp, setupMap);
+		
+		comp = createLCKPanel(SETUP_FORCE_PARALLEL, setupPanel, 5*optionSpacing, iManager.getParallelTrainingFlag(), comp, InputManager.PARALLEL_TRAINING, "Specifies if explouts CPU multi-threading.", iManager.getForceTrainingFlag(), false);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_FORCE_PARALLEL, comp, setupMap);
 		
 		comp = createLCKPanel(SETUP_FORCE_BASELEARNERS, setupPanel, 5*optionSpacing, iManager.getForceBaseLearnersFlag(), comp, InputManager.FORCE_TRAINING_BASELEARNERS, "Specifies if, during training of a meta-learner, all base-learners need to be trained or if existring results could be used to speedup the process.", hasMeta, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_BASELEARNERS, comp, setupMap);
 	
-		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
+		/*comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
 		
@@ -964,7 +970,7 @@ public class BuildUI {
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
-		/*seePrefPanel = new JPanel();
+		seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
 		//seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);

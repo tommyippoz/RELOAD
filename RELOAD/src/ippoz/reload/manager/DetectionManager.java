@@ -234,7 +234,7 @@ public class DetectionManager {
 							mainLearner, 
 							iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
 							iManager.getKFoldCounter(),
-							iManager.loadValidationMetrics());
+							iManager.loadValidationMetrics(), iManager.getParallelTrainingFlag());
 					tManager.addLoaderInfo(loader);
 					tManager.train(buildScoresFolder());
 					tManager.flush();

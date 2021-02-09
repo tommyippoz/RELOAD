@@ -85,7 +85,7 @@ public class DatasetInfoFrame {
 	public DatasetInfoFrame(Loader loader) {
 		this.loader = loader;
 		
-		dInfo = loader.getDatasetInfo();
+		dInfo = loader.generateDatasetInfo();
 		features = dInfo.getFeatures();
 		
 		selectedFeature = 0;
