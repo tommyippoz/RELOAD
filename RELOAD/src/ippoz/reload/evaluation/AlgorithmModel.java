@@ -18,8 +18,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class AlgorithmVoter.
@@ -197,6 +199,10 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 		if(algVoters != null && algVoters.size() > 0)
 			return true;
 		else return false;
+	}
+
+	public String getMainConfString(){
+		return alg.getMainConfString();
 	}
 
 }

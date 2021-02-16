@@ -3,6 +3,8 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
@@ -131,7 +133,7 @@ public class OutputFrame {
 		//fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 200, 0, 200), tb));
 		fPanel.setLayout(new GridLayout(1, 1));
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getMetricName() : "-"), null));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getMetricName() : "-"), null));			
 		summaryPanel.add(fPanel, BorderLayout.NORTH);
 		
 		JPanel contentPanel = new JPanel();
@@ -268,9 +270,9 @@ public class OutputFrame {
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 		
-		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
-		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
-		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
+		miscPanel.add(createLPanel(true, "Dataset", miscPanel, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
+		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
+		miscPanel.add(createLPanel(true, "Metric", miscPanel, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -279,11 +281,18 @@ public class OutputFrame {
 		
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Details ", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		miscPanel.setBorder(tb);
-		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
+		miscPanel.setLayout(new GridLayout(4, 1, 10, 5));
  
-		miscPanel.add(createLPanel(true, "Train Data Points", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getTrainDataPoints(), "Data Points used for Training"));
-		miscPanel.add(createLPanel(true, "Evaluation Data Points", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getEvaluationDataPoints(), "Data Points used for Evaluation"));
-		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, String.valueOf(dOut.getBestScore()), "Metric Score on Evaluation Runs"));			
+		miscPanel.add(createLPanel(true, "Train Data Points", miscPanel, dOut.getTrainDataPoints(), "Data Points used for Training"));
+		miscPanel.add(createLPanel(true, "Evaluation Data Points", miscPanel, dOut.getEvaluationDataPoints(), "Data Points used for Evaluation"));
+		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, String.valueOf(dOut.getBestScore()), "Metric Score on Evaluation Runs"));			
+		
+		String confString = "";
+		List<AlgorithmModel> am = dOut.getTrainingModels();
+		if(am != null && am.size() > 0){
+			confString = am.get(0).getMainConfString();
+		}
+		miscPanel.add(createLPanel(true, "Hyper-Parameters", miscPanel, confString, "Hyper-Parameters of the Algorithm"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -473,15 +482,15 @@ public class OutputFrame {
 	    return width;
 	}
 	
-	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, null);
+	public JPanel createLPanel(String textName, JPanel root, String textFieldText){
+		return createLPanel(false, textName, root, textFieldText, null);
 	}
 	
-	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText, String tooltipText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, tooltipText);
+	public JPanel createLPanel(String textName, JPanel root, String textFieldText, String tooltipText){
+		return createLPanel(false, textName, root, textFieldText, tooltipText);
 	}
 	
-	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText, String tooltipText){
+	public JPanel createLPanel(boolean bold, String textName, JPanel root, String textFieldText, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		//panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), labelSpacing);

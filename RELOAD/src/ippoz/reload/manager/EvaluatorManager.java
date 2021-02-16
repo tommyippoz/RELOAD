@@ -117,8 +117,13 @@ public class EvaluatorManager extends DataManager {
 		detailedEvaluations = new ArrayList<>(voterList.size());
 		if(evalModel != null && evalModel.getAlgorithm() != null){
 			try {
-				for(int expN = 0; expN < experimentsSize(); expN++){ 
-					voterList.add(new ExperimentEvaluator(evalModel, getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN)));
+				int splits = (int)Math.ceil((1.0*getLoadFactor())/experimentsSize());
+				for(int expN = 0; expN < experimentsSize(); expN++){
+					Knowledge bigKnow = getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN);
+					List<Knowledge> kSplit = bigKnow.split(splits);
+					for(Knowledge know : kSplit){
+						voterList.add(new ExperimentEvaluator(evalModel, know));
+					}
 				}
 			} catch (CloneNotSupportedException e) {
 				AppLogger.logException(getClass(), e, "Error while loading Experiment Evaluators");
@@ -260,7 +265,6 @@ public class EvaluatorManager extends DataManager {
 				
 				for(LoaderBatch expName : detailedExperimentsScores.keySet()){
 					if(detailedExperimentsScores.get(expName) != null && detailedExperimentsScores.get(expName).size() > 0){
-						//timedRef = detailedKnowledgeScores.get(expName).get(0).getDate();
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
@@ -332,6 +336,10 @@ public class EvaluatorManager extends DataManager {
 			}
 		}
 		return metString;
+	}
+
+	public AlgorithmModel getModel() {
+		return evalModel;
 	}
 
 }

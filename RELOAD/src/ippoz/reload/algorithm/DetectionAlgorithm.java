@@ -53,6 +53,7 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.evaluation.AlgorithmModel;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -693,6 +694,14 @@ public abstract class DetectionAlgorithm {
 
 	public ValueSeries getLoggedScores() {
 		return loggedScores;
+	}
+	
+	public String getMainConfString(){
+		String confString = "";
+		for(String key : getDefaultParameterValues().keySet()){
+			confString = confString + " " + key + ":" + conf.getItem(key);
+		}
+		return confString;
 	}
 	
 	public static AlgorithmType isAlgorithm(String value){

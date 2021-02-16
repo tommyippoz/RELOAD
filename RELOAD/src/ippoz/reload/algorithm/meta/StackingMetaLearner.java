@@ -154,7 +154,15 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put(STACKING_LEARNER, new String[]{String.valueOf(AlgorithmType.ELKI_ODIN)});
 		return defPar;
+	}
+
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(STACKING_LEARNER, String.valueOf(getStackingLearner().getAlgType()));
+		}
 	}
 
 }

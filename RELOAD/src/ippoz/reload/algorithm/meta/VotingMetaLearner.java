@@ -93,4 +93,10 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		return defPar;
 	}
 
+	@Override
+	protected void updateConfiguration() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -100,7 +100,15 @@ public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
+		defPar.put(CONFIDENCE_THRESHOLD, new String[]{String.valueOf(DEFAULT_CONFIDENCE_THRESHOLD)});
 		return defPar;
+	}
+	
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(CONFIDENCE_THRESHOLD, getStopThreshold());
+		}
 	}
 
 

@@ -143,7 +143,7 @@ public class TrainerManager extends TrainDataManager {
 							" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
 					if(!new File(outFolder).exists())
 						new File(outFolder).mkdirs();
-					saveModels(getThreadList(), outFolder + File.separatorChar + "scores.csv");
+					saveBestModel(getThreadList(), outFolder + File.separatorChar + "scores.csv");
 					//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
 					//saveThresholdRelevance(getThreadList(), outFolder + File.separatorChar + "thresholdrelevance.csv");
 					AppLogger.logInfo(getClass(), "Training scores saved");
@@ -321,7 +321,7 @@ public class TrainerManager extends TrainDataManager {
 	 *
 	 * @param list the list of algorithm trainers
 	 */
-	private void saveModels(List<? extends Thread> list, String filename) {
+	private void saveBestModel(List<? extends Thread> list, String filename) {
 		BufferedWriter scoreWriter;
 		AlgorithmTrainer bestTrainer = null;
 		try {

@@ -82,6 +82,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 		
+		updateConfiguration();
 		mTrainer = trainMetaLearner(kList);
 		
 		scores = new LinkedList<MetaScore>();
@@ -157,6 +158,8 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	}
 
 	protected abstract List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList);
+	
+	protected abstract void updateConfiguration();
 
 	@Override
 	protected void storeAdditionalPreferences() {

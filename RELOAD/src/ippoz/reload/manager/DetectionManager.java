@@ -305,6 +305,7 @@ public class DetectionManager {
 				vInfo.setBestScore(score);
 				vInfo.setMetricsString(eManager.getMetricsString());
 				vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()));
+				vInfo.setParamsString(eManager.getModel().getMainConfString());
 				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 				return new DetectorOutput(iManager, mainLearner, score, 
 						InputManager.loadAlgorithmModel(buildScoresFolder()),
@@ -343,7 +344,7 @@ public class DetectionManager {
 				writer.write("* Report for RELOAD activity on " + new Date(System.currentTimeMillis()) + "\n");
 				writer.write(FeatureSelectionInfo.getFileHeader() + ",");
 				writer.write(TrainInfo.getFileHeader() + ",");
-				writer.write("best_dataseries,dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+				writer.write(ValidationInfo.getFileHeader());
 				for(Metric met : iManager.loadValidationMetrics()){
 					writer.write("," + met.getMetricName());
 				}
@@ -353,12 +354,8 @@ public class DetectionManager {
 			}
 			writer.write(fsInfo.toFileString() + ",");
 			writer.write(tInfo.toFileString() + ",");
-			writer.write(
-					vInfo.getSeriesString() + "," +
-					getWritableTag() + "," + 
-					vInfo.getVoter() + "," + 
-					vInfo.getBestScore() + "," + 
-					vInfo.getMetricsValues() + "\n");
+			writer.write(vInfo.toFileString() + ",");
+			writer.write(vInfo.getMetricsValuesString() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

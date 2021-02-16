@@ -26,7 +26,7 @@ public class DatasetIndex implements Comparable<DatasetIndex>{
 
 	@Override
 	public int compareTo(DatasetIndex o) {
-		return Integer.compare(index, getIndex());
+		return Integer.compare(index, o.getIndex());
 	}
 	
 	

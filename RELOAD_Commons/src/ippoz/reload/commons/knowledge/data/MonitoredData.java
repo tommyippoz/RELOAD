@@ -50,11 +50,14 @@ public class MonitoredData {
 	 * @param timings the timings
 	 */
 	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, Map<String, Boolean> map){
+		this(expBatch, obsList, injMap, sanitizeStrIndicators(map));
+	}
+	
+	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, List<Indicator> indList){
 		this.obsList = obsList;
 		this.expBatch = expBatch;
 		this.injMap = injMap;
-		if(map != null)
-			this.indicatorList = sanitizeStrIndicators(map);
+		this.indicatorList = indList;
 	}
 	
 	public MonitoredData(LoaderBatch expBatch, Indicator[] indicatorList){
@@ -75,7 +78,7 @@ public class MonitoredData {
 		return finalList;
 	}
 	
-	private List<Indicator> sanitizeStrIndicators(Map<String, Boolean> map) {
+	private static List<Indicator> sanitizeStrIndicators(Map<String, Boolean> map) {
 		List<Indicator> finalList = new LinkedList<>();
 		if(map != null){
 			for(String ind : map.keySet()){
@@ -180,6 +183,21 @@ public class MonitoredData {
 	public void addIndicator(Indicator indicator) {
 		if(indicatorList != null && indicator != null && !hasIndicator(indicator.getName()))
 			indicatorList.add(indicator);
+	}
+
+	public MonitoredData subData(String tag, int min, int max) {
+		Map<DatasetIndex, InjectedElement> redMap = new HashMap<>();
+		if(min < obsList.size()){
+			if(max >= obsList.size())
+				max = obsList.size()-1;
+			DatasetIndex minIndex = obsList.get(min).getIndex();
+			DatasetIndex maxIndex = obsList.get(max).getIndex();
+			for(DatasetIndex di : injMap.keySet()){
+				if(di.compareTo(minIndex) >= 0 && di.compareTo(maxIndex) < 0)
+					redMap.put(di, injMap.get(di));
+			}
+			return new MonitoredData(new LoaderBatch(expBatch.getTag() + tag, expBatch.getFrom() + min, expBatch.getFrom() + max), obsList.subList(min, max), redMap, indicatorList);
+		} else return null;
 	}
 	
 }

@@ -153,5 +153,13 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		defPar.put(LEARNING_SPEED, new String[]{String.valueOf(DEFAULT_SPEED)});
 		return defPar;
 	}
+	
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(CONFIDENCE_THRESHOLD, getStopThreshold());
+			conf.addItem(LEARNING_SPEED, getLearningSpeed());
+		}
+	}
 
 }

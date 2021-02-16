@@ -201,17 +201,11 @@ public class DetectorMain {
 				AppLogger.logInfo(DetectorMain.class, "Starting Train Process");
 				dManager.train();
 			} 
-			/*if(dManager.needOptimization()){
-				AppLogger.logInfo(DetectorMain.class, "Starting Voting/Optimization Process");
-				checkMetaLearning(dManager, iManager);
-				oOut = dManager.optimizeVoting();
-			}*/
 			if(dManager.needEvaluation()){
 				AppLogger.logInfo(DetectorMain.class, "Starting Evaluation Process");
 				dOut = dManager.evaluate();
 				dManager.report();
 			}
-			//report(dOut, iManager);
 			AppLogger.logInfo(DetectorMain.class, "Done.");
 		} else AppLogger.logInfo(DetectorMain.class, "Not Executed.");
 		dManager.flush();

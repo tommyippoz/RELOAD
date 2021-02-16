@@ -37,18 +37,6 @@ public class FeatureSelectionInfo {
 	
 	private Integer nSelFeatures;
 	
-	private static final String FS_NUM_COM = "FS N Combined Features";
-	
-	private Integer nComFeatures;
-	
-	private static final String FS_NUM_FIN = "FS N Final DataSeries";
-	
-	private Integer nFinFeatures;
-	
-	private static final String FS_AGGR_STRATEGY = "FS Aggregation Strategy";
-	
-	private String aggrStrategy;
-	
 	private static final String FS_RUNS = "FS Runs";
 	
 	private String runs;
@@ -77,9 +65,6 @@ public class FeatureSelectionInfo {
 		selectorsList = null;
 		dataSeries = null;
 		nSelFeatures = null;
-		nComFeatures = null;
-		nFinFeatures = null;
-		aggrStrategy = null;
 		runs = null;
 		nDataPoints = null;
 		mccPred = Double.NaN;
@@ -134,15 +119,6 @@ public class FeatureSelectionInfo {
 				if(preferences.containsKey(FS_NUM_SEL) && preferences.get(FS_NUM_SEL) != null && AppUtility.isInteger(preferences.get(FS_NUM_SEL).trim())){
 					nSelFeatures = Integer.parseInt(preferences.get(FS_NUM_SEL).trim());
 				}
-				if(preferences.containsKey(FS_NUM_COM) && preferences.get(FS_NUM_COM) != null && AppUtility.isInteger(preferences.get(FS_NUM_COM).trim())){
-					nComFeatures = Integer.parseInt(preferences.get(FS_NUM_COM).trim());
-				}
-				if(preferences.containsKey(FS_NUM_FIN) && preferences.get(FS_NUM_FIN) != null && AppUtility.isInteger(preferences.get(FS_NUM_FIN).trim())){
-					nFinFeatures = Integer.parseInt(preferences.get(FS_NUM_FIN).trim());
-				}
-				if(preferences.containsKey(FS_AGGR_STRATEGY) && preferences.get(FS_AGGR_STRATEGY) != null){
-					aggrStrategy = preferences.get(FS_AGGR_STRATEGY).trim();
-				}
 				if(preferences.containsKey(FS_RUNS) && preferences.get(FS_RUNS) != null){
 					runs = preferences.get(FS_RUNS).trim().replace(",", ";");
 				}
@@ -171,30 +147,14 @@ public class FeatureSelectionInfo {
 		return (selectorsList != null ? Arrays.toString(selectorsList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + "," + 
 				(dataSeries != null ? dataSeries.getName() : "").replace(",", ";").replace("[", "").replace("]", "") + "," + 
 				(nSelFeatures != null ? nSelFeatures : "") + "," + 
-				(aggrStrategy != null ? aggrStrategy : "") + "," + 
-				(nComFeatures != null ? nComFeatures : "") + "," + 
-				(nFinFeatures != null ? nFinFeatures : "") + "," + 
 				(runs != null ? runs : "") + "," +
 				(nDataPoints != null ? nDataPoints : "") + "," + rPred + "," + f2Pred + "," + mccPred + "," + 
-				(predString != null ? predString : "");
+				(predString != null ? predString.replace(",", ";") : "");
 	}
 	
 	public static String getFileHeader(){
-		return FS_SELECTORS + "," + FS_SELECTED + "," + FS_NUM_SEL  + "," + 
-				FS_AGGR_STRATEGY + "," + FS_NUM_COM + "," + FS_NUM_FIN + "," + FS_RUNS + "," + 
-				FS_DATAPOINTS + "," + FS_PREDR + "," + FS_PREDF2 + "," + FS_PREDMCC + "," + FS_PRED + ",,,,,,,";
-	}
-
-	public void setAggregationStrategy(String aggrStrat) {
-		this.aggrStrategy = aggrStrat;
-	}
-
-	public void setCombinedFeatures(int size) {
-		this.nComFeatures = size;
-	}
-
-	public void setFinalizedFeatures(int size) {
-		this.nFinFeatures = size;
+		return FS_SELECTORS + "," + FS_SELECTED + "," + FS_NUM_SEL  + "," + FS_RUNS + "," + 
+				FS_DATAPOINTS + "," + FS_PREDR + "," + FS_PREDF2 + "," + FS_PREDMCC + "," + FS_PRED;
 	}
 
 	public void setSelectedFeatures(DataSeries selectedFeatures) {
@@ -211,9 +171,6 @@ public class FeatureSelectionInfo {
 			writer.write("\n* Feature selection strategies used\n" + FS_SELECTORS + " = " + (selectorsList != null ? Arrays.toString(selectorsList.toArray()) : "") + "\n");
 			writer.write("\n* Selected Features\n" + FS_SELECTED + " = " + (dataSeries != null ? dataSeries.getName() : "") + "\n");
 			writer.write("\n* Number of Selected Features\n" + FS_NUM_SEL + " = " + (nSelFeatures != null ? nSelFeatures : "") + "\n");
-			writer.write("\n* Feature Aggregation Strategy (NONE, SIMPLE, PEARSON, UNION, ALL)\n" + FS_AGGR_STRATEGY + " = " + (aggrStrategy != null ? aggrStrategy : "") + "\n");
-			writer.write("\n* Number of Combined Features\n" + FS_NUM_COM + " = " + (nComFeatures != null ? nComFeatures : "") + "\n");
-			writer.write("\n* Number of DataSeries\n" + FS_NUM_FIN + " = " + (nFinFeatures != null ? nFinFeatures : "") + "\n");
 			writer.write("\n* Runs used for Feature Selection \n" + FS_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for Feature Selection\n" + FS_DATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
 			writer.write("\n* Predicted R\n" + FS_PREDR + " = " + new DecimalFormat("#0.00").format(rPred).replace(",", ".") + "\n");

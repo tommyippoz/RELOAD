@@ -357,6 +357,7 @@ public class BuildUI {
 							} else {
 								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader), pBar, index++, tot);
 							}
+							//System.gc();
 						}
 						if(trainLoader != null)
 							trainLoader.flush();

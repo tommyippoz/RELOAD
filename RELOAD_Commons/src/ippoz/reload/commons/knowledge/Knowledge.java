@@ -207,14 +207,21 @@ public abstract class Knowledge implements Cloneable {
 	public static List<Knowledge> generateKnowledge(List<MonitoredData> expList, KnowledgeType kt, SlidingPolicyType sPolicy, int windowSize) {
 		List<Knowledge> map = new LinkedList<Knowledge>();
 		for(int i=0;i<expList.size();i++){
-			if(kt == KnowledgeType.GLOBAL)
-				map.add(new GlobalKnowledge(expList.get(i)));
-			if(kt == KnowledgeType.SLIDING)
-				map.add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
-			if(kt == KnowledgeType.SINGLE)
-				map.add(new SingleKnowledge(expList.get(i)));
+			Knowledge know = generateKnowledge(expList.get(i), kt, sPolicy, windowSize);
+			if(know != null)
+				map.add(know);
 		}
 		return map;
+	}
+	
+	public static Knowledge generateKnowledge(MonitoredData data, KnowledgeType kt, SlidingPolicyType sPolicy, int windowSize) {
+		if(kt == KnowledgeType.GLOBAL)
+			return new GlobalKnowledge(data);
+		if(kt == KnowledgeType.SLIDING)
+			return new SlidingKnowledge(data, sPolicy, windowSize);
+		if(kt == KnowledgeType.SINGLE)
+			return new SingleKnowledge(data);
+		return null;
 	}
 	
 	public static List<Knowledge> generateKnowledge(List<MonitoredData> data) {
@@ -236,9 +243,9 @@ public abstract class Knowledge implements Cloneable {
 		baseData.addIndicatorData(obId, indName, indData);
 	}
 	
-	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, Object expName) {
+	public static Knowledge findKnowledge(List<Knowledge> knowledgeList, LoaderBatch expName) {
 		for(Knowledge know : knowledgeList){
-			if(know.getID().equals(expName))
+			if(know.getID().compareTo(expName) == 0 || know.getID().contains(expName))
 				return know;
 		}
 		return null;
@@ -266,6 +273,17 @@ public abstract class Knowledge implements Cloneable {
 
 	public void addIndicator(Indicator indicator) {
 		baseData.addIndicator(indicator);
+	}
+
+	public List<Knowledge> split(int n) {
+		List<Knowledge> list = new LinkedList<>();
+		if(n > 0){
+			int blockSize = (int)Math.ceil((1.0*size())/n);
+			for(int i=0;i<n && i*blockSize<size();i++){
+				list.add(Knowledge.generateKnowledge(baseData.subData("", i*blockSize, (i+1)*blockSize), KnowledgeType.SINGLE, null, 0));
+			}
+		}
+		return list;
 	}
 
 }

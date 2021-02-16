@@ -118,5 +118,12 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		defPar.put(N_SAMPLES, new String[]{"10"});
 		return defPar;
 	}
+	
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(N_SAMPLES, getSamplesNumber());
+		}
+	}
 
 }

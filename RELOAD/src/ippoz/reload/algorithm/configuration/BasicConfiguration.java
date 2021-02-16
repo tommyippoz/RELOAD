@@ -276,6 +276,10 @@ public abstract class BasicConfiguration implements Cloneable {
 		} else
 			return -1;
 	}
+	
+	public void addItem(String tag, int intValue) {
+		addItem(tag, String.valueOf(intValue));
+	}
 
 	public void addItem(String tag, double doubleValue) {
 		addItem(tag, String.valueOf(doubleValue));

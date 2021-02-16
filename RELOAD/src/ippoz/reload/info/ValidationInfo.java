@@ -61,12 +61,17 @@ public class ValidationInfo {
 	
 	private String metricsString;
 	
+	private static final String PARAMS_VALUES = "Values HyperParameters";
+	
+	private String paramsString;
+	
 	public ValidationInfo(){
 		models = null;
 		runs = null;
 		nDataPoints = null;
 		faultRatio = null;
 		valTimeMs = null;
+		paramsString = null;
 	}
 	
 	public ValidationInfo(File file){
@@ -117,6 +122,9 @@ public class ValidationInfo {
 				if(preferences.containsKey(VALIDATION_METRICS) && preferences.get(VALIDATION_METRICS) != null){
 					metricsString = preferences.get(VALIDATION_METRICS).trim();
 				}
+				if(preferences.containsKey(PARAMS_VALUES) && preferences.get(PARAMS_VALUES) != null){
+					paramsString = preferences.get(PARAMS_VALUES).trim();
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading train info");
@@ -141,6 +149,14 @@ public class ValidationInfo {
 
 	public String getSeriesString() {
 		return seriesString;
+	}
+	
+	public String getParamsString() {
+		return paramsString;
+	}
+
+	public void setParamsString(String paramsString) {
+		this.paramsString = paramsString;
 	}
 
 	public void setSeriesString(List<DataSeries> list) {
@@ -188,6 +204,18 @@ public class ValidationInfo {
 		return metricsString;
 	}
 	
+	public String getMetricsValuesString() {
+		String mvString = "";
+		if(metricsString != null){
+			for(String str : metricsString.split(",")){
+				if(str.contains(":")){
+					mvString = mvString + str.split(":")[1].trim() + ",";
+				} else mvString = mvString + str.trim() + ",";
+			}
+		}
+		return mvString;
+	}
+	
 	public String getMetricsValues(){
 		String gridRows = "";
 		if(metricsString != null && metricsString.trim().length() > 0){
@@ -219,6 +247,7 @@ public class ValidationInfo {
 			writer.write("\n* Optimal voter used during validation\n" + VALIDATION_BESTVOTER + " = " + (voterString != null ? voterString : "") + "\n");
 			writer.write("\n* Series used for validation\n" + VALIDATION_SERIESSTRING + " = " + (seriesString != null ? seriesString : "") + "\n");
 			writer.write("\n* Metric values for validation\n" + VALIDATION_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
+			writer.write("\n* Values of Hyper-Parameters\n" + PARAMS_VALUES + " = " + (paramsString != null ? paramsString : "") + "\n");
 			
 			writer.close();
 		} catch(Exception ex){
@@ -231,12 +260,13 @@ public class ValidationInfo {
 				+ (runs != null ? runs : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
-				+ (valTimeMs != null ? valTimeMs : "");
+				+ (valTimeMs != null ? valTimeMs : "") + ","
+				+ (paramsString != null ? paramsString : "");
 	}
 	
 	public static String getFileHeader(){
 		return VALIDATION_MODELS + "," + VALIDATION_RUNS + "," +
-				VALIDATION_NDATAPOINTS + "," + VALIDATION_FAULT_RATIO + "," + VALIDATION_TIME;
+				VALIDATION_NDATAPOINTS + "," + VALIDATION_FAULT_RATIO + "," + VALIDATION_TIME + "," + PARAMS_VALUES;
 	}
 
 	public void setRuns(String runs) {
