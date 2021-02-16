@@ -17,7 +17,9 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
+import ippoz.reload.metric.BetterBigMetric;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.DoubleMetricResult;
 import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.reputation.Reputation;
 
@@ -193,20 +195,20 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				bestConf.addItem(BasicConfiguration.TRAIN_Q2, vs.getMedian());
 				bestConf.addItem(BasicConfiguration.TRAIN_Q3, vs.getQ3());
 				bestConf.addItem(BasicConfiguration.TRAIN_Q4, vs.getMax());
+				bestConf.addItem(BasicConfiguration.TRAIN_METRIC, getMetric().getMetricName());
 			}
 			if(bestAlgorithm != null){
 				for(Knowledge know : kList){
 					trainResult.put(know, calculateResults(bestAlgorithm, know));
 				}
-			} else
-				bestAlgorithm = null;
+			} else bestAlgorithm = null;
 					
 		} catch (CloneNotSupportedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to clone configuration");
 		}
 		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult>(trainResult, bestScore);
 	}
-	
+
 	private ObjectPair<String, MetricResult> linearSearchOptimalSingleThreshold(String thrCode, ValueSeries scores, double thrLeft, double thrRight, int iteration, List<AlgorithmResult> resultList){
 		try {
 			double thrValue = (thrRight + thrLeft)/2;

@@ -48,12 +48,14 @@ import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.metric.Metric;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -87,6 +89,18 @@ public abstract class DetectionAlgorithm {
 		loggedAnomalyScores = new ValueSeries();
 		decisionFunction = null;
 	}
+	
+	public double getTrainMetricScore() {
+		if(conf != null && conf.hasItem(BasicConfiguration.AVG_SCORE) && AppUtility.isNumber(conf.getItem(BasicConfiguration.AVG_SCORE)))
+			return Double.valueOf(conf.getItem(BasicConfiguration.AVG_SCORE));
+		else return Double.NaN;
+	}
+	
+	public Metric getTrainMetric() {
+		if(conf != null && conf.hasItem(BasicConfiguration.TRAIN_METRIC))
+			return Metric.fromString(conf.getItem(BasicConfiguration.TRAIN_METRIC), "absolute", true);
+		else return null;
+	}	
 	
 	protected DecisionFunction buildClassifier(ValueSeries vs, boolean revertFlag) {
 		if(conf != null && conf.hasItem(BasicConfiguration.THRESHOLD))

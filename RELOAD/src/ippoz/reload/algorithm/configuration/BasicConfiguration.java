@@ -82,6 +82,8 @@ public abstract class BasicConfiguration implements Cloneable {
 
 	public static final String SCORES_FOLDER = "scores_folder";
 
+	public static final String TRAIN_METRIC = "train_metric";
+
 	/** The configuration map. */
 	private Map<String, Object> confMap;
 

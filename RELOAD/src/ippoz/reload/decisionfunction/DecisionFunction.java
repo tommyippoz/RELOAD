@@ -510,4 +510,8 @@ public abstract class DecisionFunction {
 		} else return Double.NaN;	
 	}
 
+	public void revert() {
+		revertFlag = !revertFlag;
+	}
+
 }
