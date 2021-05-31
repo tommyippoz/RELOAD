@@ -18,8 +18,12 @@ public class TN_Metric extends ClassificationMetric {
 	 * @param absolute
 	 *            the absolute flag
 	 */
-	public TN_Metric(boolean absolute, boolean validAfter) {
-		super(MetricType.TN, absolute, validAfter);
+	public TN_Metric(boolean absolute) {
+		super(MetricType.TN, absolute);
+	}
+	
+	public TN_Metric(boolean absolute, double noPredictionTHR) {
+		super(MetricType.TN, absolute, noPredictionTHR);
 	}
 
 	/*

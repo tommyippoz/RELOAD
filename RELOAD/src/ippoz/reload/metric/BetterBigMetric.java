@@ -9,10 +9,14 @@ import ippoz.reload.metric.result.MetricResult;
  * @author Tommy
  *
  */
-public abstract class BetterBigMetric extends ScoringMetric {
+public abstract class BetterBigMetric extends Metric {
 
-	public BetterBigMetric(MetricType mType, boolean validAfter) {
-		super(mType, validAfter);
+	public BetterBigMetric(MetricType mType) {
+		super(mType);
+	}
+	
+	public BetterBigMetric(MetricType mType, double noPredTHR) {
+		super(mType, noPredTHR);
 	}
 
 	/*

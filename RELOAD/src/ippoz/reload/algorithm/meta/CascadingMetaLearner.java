@@ -110,7 +110,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
 				count = count + (0.5 + alg.getConfidence(score)*0.5);
 			} else {
 				count = count + (0.5 - alg.getConfidence(score)*0.5);

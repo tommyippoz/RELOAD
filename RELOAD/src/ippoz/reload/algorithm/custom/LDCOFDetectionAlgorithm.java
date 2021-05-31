@@ -157,11 +157,11 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	private void printScores(File file){
 		BufferedWriter writer;
 		try {
-			if(clSnaps != null && clSnaps.size() > 0){
+			if(clSnaps != null && clSnaps.size() > 0 && scores != null && scores.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("data(enclosed in {});dbscan\n");
+				writer.write("data(enclosed in {});ldcof\n");
 				for(LDCOFScore score : scores){
 					writer.write(score.getSnapValue() + ";" + score.getLDCOF() + "\n");
 				}

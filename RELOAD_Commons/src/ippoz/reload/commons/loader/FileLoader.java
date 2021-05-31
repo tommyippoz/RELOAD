@@ -53,8 +53,14 @@ public abstract class FileLoader extends Loader {
 	/** The list of faulty tags. */
 	protected List<String> faultyTagList;
 	
+	/** The normal tag. */
+	protected String normalTag;
+	
 	/** The list of tags to be avoided when reading. */
 	protected List<String> avoidTagList;
+	
+	/** The list of tags to be avoided when reading. */
+	protected List<String> knownFaults;
 	
 	/** The anomaly window. */
 	private int anomalyWindow;
@@ -68,19 +74,21 @@ public abstract class FileLoader extends Loader {
 	/** The skip ratio. */
 	private double skipRatio;
 
-	public FileLoader(File file, String[] toSkip, String labelColString, String faultyTags, String avoidTags, int anomalyWindow, String batchString, String runsString) {
+	public FileLoader(File file, String[] toSkip, String labelColString, String faultyTags, String knownTags, String normalTag, String avoidTags, int anomalyWindow, String batchString, String runsString) {
 		super();
 		this.file = file;
 		this.labelCol = extractHeaderIndexOf(labelColString);
 		this.anomalyWindow = anomalyWindow;
 		filterHeader(toSkip, labelColString);
 		parseFaultyTags(faultyTags);
+		parseKnownFaults(knownTags);
+		parseNormalTag(normalTag);
 		parseAvoidTags(avoidTags);
 		setBatches(deriveBatches(batchString, runsString));
 		initialize();
 		updateBatches();
 	}
-	
+
 	@Override
 	public DatasetInfo generateDatasetInfo(){
 		return initialize();
@@ -143,6 +151,7 @@ public abstract class FileLoader extends Loader {
 		Boolean[] headBool = null;
 		String[] headName = null;
 		int rowIndex = 0;
+		int unkCount = 0;
 		double skipCount = 0;
 		double itemCount = 0;
 		double anomalyCount = 0;
@@ -185,7 +194,9 @@ public abstract class FileLoader extends Loader {
 											rowLabel = hasFault(splitLine[labelCol]);
 											if(readLine.split(",")[labelCol] != null && rowLabel){
 												anomalyCount++;
-												injMap.put(dIndex, new InjectedElement(dIndex, splitLine[labelCol]));
+												boolean isUnk = checkUnknown(splitLine[labelCol]);
+												unkCount = unkCount + (isUnk ? 1 : 0);
+												injMap.put(dIndex, new InjectedElement(dIndex, splitLine[labelCol], isUnk));
 											}
 										} else skipCount++;
 									}
@@ -211,7 +222,7 @@ public abstract class FileLoader extends Loader {
 					if(obList != null && obList.size() > 0){
 						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injMap, getHeader()));
 					}
-					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows.");
+					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows, " + (unkCount*100.0/anomalyCount) + "% of unknown anomalies");
 					reader.close();
 				}
 
@@ -227,6 +238,18 @@ public abstract class FileLoader extends Loader {
 			AppLogger.logException(getClass(), ex, "unable to parse header");
 		}
 		return dInfo;
+	}
+	
+	private boolean checkUnknown(String tag){
+		if(tag == null || tag.trim().length() == 0)
+			return false;
+		if(knownFaults != null && knownFaults.size() > 0){
+			for(String attTag : knownFaults){
+				if(tag.compareTo(attTag) == 0)
+					return false;
+			}
+			return true;
+		} else return true;
 	}
 
 	public List<Integer> readRunIds(String idPref){
@@ -337,9 +360,33 @@ public abstract class FileLoader extends Loader {
 	 */
 	protected void parseFaultyTags(String faultyTags) {
 		faultyTagList = new LinkedList<String>();
-		for(String str : faultyTags.split(",")){
-			faultyTagList.add(str.trim());
+		if(faultyTags != null && faultyTags.length() > 0){
+			for(String str : faultyTags.split(",")){
+				faultyTagList.add(str.trim());
+			}
 		}
+	}
+	
+	/**
+	 * Parses the faulty tags.
+	 *
+	 * @param faultyTags the faulty tags
+	 */
+	protected void parseKnownFaults(String faultyTags) {
+		knownFaults = new LinkedList<String>();
+		if(faultyTags != null){
+			if (faultyTags.length() > 0){
+				for(String str : faultyTags.split(",")){
+					knownFaults.add(str.trim());
+				}
+			}
+		} else knownFaults = faultyTagList;
+	}
+	
+	private void parseNormalTag(String nt) {
+		if(nt != null && nt.length() > 0)
+			normalTag = nt.trim();
+		else normalTag = null;
 	}
 	
 	/**
@@ -414,13 +461,17 @@ public abstract class FileLoader extends Loader {
 	}
 	
 	protected boolean hasFault(String string){
-		if(faultyTagList == null)
+		if(faultyTagList == null && normalTag == null)
 			return false;
-		for(String fault : faultyTagList){
-			if(fault.toUpperCase().trim().compareTo(string.trim().toUpperCase()) == 0)
-				return true;
+		else if(normalTag != null){
+			return normalTag.toUpperCase().trim().compareTo(string.trim().toUpperCase()) != 0;
+		} else {
+			for(String fault : faultyTagList){
+				if(fault.toUpperCase().trim().compareTo(string.trim().toUpperCase()) == 0)
+					return true;
+			}
+			return false;
 		}
-		return false;
 	}
 	
 	public static String getBatchPreference(PreferencesManager pManager){

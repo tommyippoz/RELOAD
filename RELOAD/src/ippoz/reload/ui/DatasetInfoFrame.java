@@ -189,7 +189,7 @@ public class DatasetInfoFrame {
 				" Dataset Detail ", TitledBorder.CENTER, TitledBorder.CENTER,
 				new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		hPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 80, 0, 80), tb));
-		hPanel.setLayout(new GridLayout(1, 6));
+		hPanel.setLayout(new GridLayout(1, 5));
 
 		JLabel lbl = new JLabel("Features: " + String.valueOf(features.size()));
 		lbl.setFont(labelFont);
@@ -212,11 +212,6 @@ public class DatasetInfoFrame {
 		hPanel.add(lbl);
 		
 		lbl = new JLabel("Skip Rate: " + df3.format(dInfo.getSkipRatio()) + " %");
-		lbl.setFont(labelFont);
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		hPanel.add(lbl);
-		
-		lbl = new JLabel("Anomaly Tags: TBA");
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		hPanel.add(lbl);

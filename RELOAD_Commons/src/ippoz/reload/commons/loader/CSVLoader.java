@@ -30,8 +30,8 @@ public class CSVLoader extends FileLoader {
 	 * @param labelCol the label column
 	 * @param expRunsString the experiment rows
 	 */
-	public CSVLoader(File file, String[] toSkip, String labelCol, String faultyTags, String avoidTags, int anomalyWindow, String experimentRows, String runsString) {
-		super(file, toSkip, labelCol, faultyTags, avoidTags, anomalyWindow, experimentRows, runsString);
+	private CSVLoader(File file, String[] toSkip, String labelCol, String faultyTags, String knownAttacks, String normalTag, String avoidTags, int anomalyWindow, String experimentRows, String runsString) {
+		super(file, toSkip, labelCol, faultyTags, knownAttacks, normalTag, avoidTags, anomalyWindow, experimentRows, runsString);
 	}	
 	
 	public CSVLoader(PreferencesManager prefManager, String tag, int anomalyWindow, String datasetsFolder, String runsString) {
@@ -39,6 +39,8 @@ public class CSVLoader extends FileLoader {
 				splitString(prefManager.getPreference(SKIP_COLUMNS), ","), 
 				prefManager.getPreference(LABEL_COLUMN), 
 				extractFaultyTags(prefManager, tag), 
+				extractKnownAttacks(prefManager, tag), 
+				extractNormalTag(prefManager, tag), 
 				extractAvoidTags(prefManager, tag), 
 				anomalyWindow,
 				FileLoader.getBatchPreference(prefManager), 

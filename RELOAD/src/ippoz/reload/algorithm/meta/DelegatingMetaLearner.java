@@ -72,7 +72,7 @@ public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 			scores[i++] = score;
 			//System.out.println(alg.getConfidence(score));
 			if(alg.getConfidence(score) >= thr || i >= baseLearners.size()){
-				if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+				if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
 					score = 0.5 + alg.getConfidence(score)*0.5;
 				} else {
 					score = 0.5 - alg.getConfidence(score)*0.5;

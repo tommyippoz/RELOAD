@@ -3,7 +3,6 @@
  */
 package ippoz.reload.ui;
 
-import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
@@ -133,7 +132,7 @@ public class OutputFrame {
 		//fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 200, 0, 200), tb));
 		fPanel.setLayout(new GridLayout(1, 1));
-		fPanel.add(createLPanel(true, "Metric", fPanel, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getMetricName() : "-"), null));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getName() : "-"), null));			
 		summaryPanel.add(fPanel, BorderLayout.NORTH);
 		
 		JPanel contentPanel = new JPanel();
@@ -272,7 +271,7 @@ public class OutputFrame {
 		
 		miscPanel.add(createLPanel(true, "Dataset", miscPanel, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
 		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
-		miscPanel.add(createLPanel(true, "Metric", miscPanel, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
+		miscPanel.add(createLPanel(true, "Metric", miscPanel, dOut.getReferenceMetric().getName(), "Metric used by RELOAD"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -308,7 +307,7 @@ public class OutputFrame {
         columnNames[1] = "# Checkers";
 		int i = 2;
         for(Metric met : dOut.getEvaluationMetrics()){
-			columnNames[i++] = met.getMetricShortName();
+			columnNames[i++] = met.getShortName();
 		}	 
         
         int yDist = miscPanel.getHeight() + labelSpacing/2;

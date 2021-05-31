@@ -15,16 +15,21 @@ import java.util.List;
  */
 public class AUC_Metric extends BetterMaxMetric {
 
-	public AUC_Metric(boolean validAfter) {
-		super(MetricType.AUC, validAfter);
+	public AUC_Metric() {
+		super(MetricType.AUC);
+		// TODO Auto-generated constructor stub
+	}
+	
+	public AUC_Metric(double noPredTHR) {
+		super(MetricType.AUC, noPredTHR);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tpr = new TruePositiveRate_Metric(isValidAfter())
+		double tpr = new TruePositiveRate_Metric(getNoPredictionThreshold())
 				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fpr = new FalsePositiveRate_Metric(isValidAfter())
+		double fpr = new FalsePositiveRate_Metric(getNoPredictionThreshold())
 				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double auc = (tpr * fpr) / 2 + (tpr + 1) * (1 - fpr) / 2;
 		return new DoubleMetricResult(auc);

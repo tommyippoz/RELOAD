@@ -18,8 +18,12 @@ public class FP_Metric extends ClassificationMetric {
 	 * @param absolute
 	 *            the absolute flag
 	 */
-	public FP_Metric(boolean absolute, boolean validAfter) {
-		super(MetricType.FP, absolute, validAfter);
+	public FP_Metric(boolean absolute) {
+		super(MetricType.FP, absolute);
+	}
+	
+	public FP_Metric(boolean absolute, double noPredictionTHR) {
+		super(MetricType.FP, absolute, noPredictionTHR);
 	}
 
 	/*

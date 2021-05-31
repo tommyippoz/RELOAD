@@ -4,6 +4,8 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.algorithm.utils.KdTree;
+import ippoz.reload.algorithm.utils.KdTree.ELKIEuclid;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -118,12 +120,12 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	 */
 	protected int k;
 	
-	private List<ABODResult> resList;
+	//private List<ABODResult> resList;
 	
-	//private ELKIEuclid<ABODResult> treeList;
+	private ELKIEuclid<ABODResult> treeList;
 
 	/**
-	 * Constructor for Angle-Based Outlier Detection (ABOD).
+	 * Constructor for FAST Angle-Based Outlier Detection (FastABOD).
 	 *
 	 * @param kernelFunction kernel function to use
 	 * @param k Number of nearest neighbors
@@ -145,8 +147,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		// Build a kernel matrix, to make O(n^3) slightly less bad.
 		SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
 		
-		//treeList = new ELKIEuclid<ABODResult>(sq);
-		resList = new ArrayList<ABODResult>(ids.size());
+		treeList = new ELKIEuclid<ABODResult>();
+		//resList = new ArrayList<ABODResult>(ids.size());
 		
 		if(isApplicable(relation, ids)){
 			KernelMatrix kernelMatrix = new KernelMatrix(sq, relation, ids);
@@ -160,15 +162,15 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 				double[] abof = calculateABOF(kernelMatrix, pA, relation.iterDBIDs(), relation, db);
 				//System.out.println(abof[0]);
 				ABODResult ar = new ABODResult(db.getBundle(pA), abof[0]);
-				resList.add(ar);
-				//treeList.addPoint(ar.getPoint(), ar);
+				//resList.add(ar);
+				treeList.addPoint(ar.getPoint(), ar);
 				minmaxabod.put(abof[0]);
 				abodvalues.putDouble(pA, abof[0]);
 			}
 			
 			kernelMatrix = null;
 			
-			Collections.sort(resList);
+			//Collections.sort(resList);
 
 			// Build result representation.
 			DoubleRelation scoreResult = new MaterializedDoubleRelation("Fast Angle-Based Outlier Degree", "fabod-outlier", abodvalues, relation.getDBIDs());
@@ -273,7 +275,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		return sq.similarity(o1, o2);
 	}
 	
-	public int rankSingleABOF(V newInstance) {
+/*	public int rankSingleABOF(V newInstance) {
 		if(resList != null && resList.size() > 0) {
 			double abof = calculateSingleABOF(newInstance);
 			for(int i=resList.size()-1; i>=0;i--){
@@ -283,10 +285,10 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 		}
 		return Integer.MAX_VALUE;
-	}
+	} */
 	
 	private double hasResult(V newInstance){
-		for(ABODResult ar : resList){
+		for(ABODResult ar : treeList.listItems()){
 			if(ar.getVector().equals(newInstance))
 				return ar.getABOF();
 		}
@@ -294,10 +296,10 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	}
 	
 	public double calculateSingleABOF(V newInstance) {
-		return calculateSingleABOF_n(newInstance);
+		return calculateSingleABOF_heap(newInstance);
 	}
 	
-	public double calculateSingleABOF_n(V newInstance) {
+/*	public double calculateSingleABOF_n(V newInstance) {
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
@@ -315,10 +317,9 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 			Collections.sort(distances);
 			if(k < distances.size())
-				distances = new ArrayList<>(distances.subList(0, k));
+				distances = new ArrayList<>(distances.subList(0, k)); 
 			
 			// End KNN Search
-					
 			MeanVariance s = new MeanVariance();
 			final double simAA = getSimilarity(sq, newInstance, newInstance);
 			
@@ -343,6 +344,59 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 					}
 					
 					double simBC = getSimilarity(sq, resList.get(distances.get(j).getIndex()).getVector(), resList.get(distances.get(x).getIndex()).getVector());
+					double numerator = simBC - simAB - simAC + simAA;
+					double div = 1. / (sqdAB * sqdAC);
+					
+					s.put(numerator * div, Math.sqrt(div));
+					
+				}
+				
+			}
+			
+			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
+			return s.getNaiveVariance();
+		}
+	} */
+	
+	public double calculateSingleABOF_heap(V newInstance) {
+		double partialResult;
+		if(treeList == null || treeList.size() == 0) 
+			return Double.MAX_VALUE;
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
+			return partialResult;
+		else {			
+			double[] point = new double[newInstance.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = newInstance.doubleValue(i);
+			}
+			List<KdTree.Entry<ABODResult>> distances = treeList.nearestNeighbor(point, k-1, false);
+			Collections.sort(distances);
+					
+			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
+			MeanVariance s = new MeanVariance();
+			final double simAA = getSimilarity(sq, newInstance, newInstance);
+			
+			for(int j=0;j<(distances.size()<k ? distances.size() : k);j++) {
+				
+				double simBB = getSimilarity(sq, distances.get(j).value.getVector(), distances.get(j).value.getVector());
+				double simAB = getSimilarity(sq, newInstance, distances.get(j).value.getVector());
+				double sqdAB = simAA + simBB - simAB - simAB;
+				
+				if(!(sqdAB > 0.)) {
+					continue;
+				}
+				
+				for(int x=j+1;x<(distances.size()<k ? distances.size() : k);x++) {
+					
+					double sqdAC = distances.get(x).distance;
+					double simAC = getSimilarity(sq, newInstance, distances.get(x).value.getVector());
+					
+					if(!(sqdAC > 0.)) {
+						continue;
+					
+					}
+					
+					double simBC = getSimilarity(sq, distances.get(j).value.getVector(), distances.get(x).value.getVector());
 					double numerator = simBC - simAB - simAC + simAA;
 					double div = 1. / (sqdAB * sqdAC);
 					
@@ -494,14 +548,14 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 		}
 		
-		/*
+
 		public double[] getPoint(){
 			double[] point = new double[data.getDimensionality()];
 			for(int i=0;i<point.length;i++){
 				point[i] = data.doubleValue(i);
 			}
 			return point;
-		}*/
+		}
 		
 		public double getABOF() {
 			return abof;
@@ -524,7 +578,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 	}
 	
-	private class KNNValue implements Comparable<KNNValue>{
+	/*private class KNNValue implements Comparable<KNNValue>{
 		
 		private double score;
 		
@@ -553,11 +607,11 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			return "KNNValue [score=" + score + ", index=" + resList.get(index).getVector() + "]";
 		}
 		
-	}
+	}*/
 	
 	public double getDbSize() {
-		if(resList != null)
-			return resList.size();
+		if(treeList != null)
+			return treeList.size();
 		else return 0;
 	}
 
@@ -565,8 +619,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		BufferedReader reader;
 		String readed;
 		try {
-			//treeList = new ELKIEuclid<ABODResult>((SimilarityQuery<NumberVector>) kernelFunction.instantiate(null));
-			resList = new LinkedList<ABODResult>();
+			treeList = new ELKIEuclid<ABODResult>();
+			//resList = new LinkedList<ABODResult>();
 			if(new File(item).exists()){
 				reader = new BufferedReader(new FileReader(new File(item)));
 				reader.readLine();
@@ -575,26 +629,26 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 					if(readed != null){
 						readed = readed.trim();
 						ABODResult ar = new ABODResult(readed.split(";")[0], readed.split(";")[1]);
-						resList.add(ar);
-						//treeList.addPoint(ar.getPoint(), ar);
+						//resList.add(ar);
+						treeList.addPoint(ar.getPoint(), ar);
 					}
 				}
 				reader.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
+			AppLogger.logException(getClass(), ex, "Unable to read FastABOD file");
 		} 
 	}
 
 	public void printFile(File file) {
 		BufferedWriter writer;
 		try {
-			if(resList != null && resList.size() > 0){
+			if(treeList != null && treeList.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("data;abof\n");
-				for(ABODResult ar : resList){
+				for(ABODResult ar : treeList.listItems()){
 					writer.write(ar.getVector().toString() + ";" + ar.getABOF() + "\n");
 				}
 				writer.close();
@@ -606,8 +660,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 	@Override
 	public List<Double> getScoresList() {
-		ArrayList<Double> list = new ArrayList<Double>(resList.size());
-		for(ABODResult abof : resList){
+		ArrayList<Double> list = new ArrayList<Double>(treeList.size());
+		for(ABODResult abof : treeList.listItems()){
 			list.add(abof.getABOF());
 		}
 		Collections.sort(list);

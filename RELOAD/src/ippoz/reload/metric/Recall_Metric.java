@@ -16,8 +16,8 @@ import java.util.List;
  */
 public class Recall_Metric extends BetterMaxMetric {
 
-	public Recall_Metric(boolean validAfter) {
-		super(MetricType.RECALL, validAfter);
+	public Recall_Metric(double noPredTHR) {
+		super(MetricType.RECALL, noPredTHR);
 	}
 
 	/*
@@ -29,8 +29,8 @@ public class Recall_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (tp + fn > 0)
 			return new DoubleMetricResult(1.0 * tp / (tp + fn));
 		else return new DoubleMetricResult(0.0);

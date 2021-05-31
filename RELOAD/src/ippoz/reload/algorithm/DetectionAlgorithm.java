@@ -54,7 +54,6 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
-import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.metric.Metric;
 
 import java.util.Arrays;
@@ -98,7 +97,7 @@ public abstract class DetectionAlgorithm {
 	
 	public Metric getTrainMetric() {
 		if(conf != null && conf.hasItem(BasicConfiguration.TRAIN_METRIC))
-			return Metric.fromString(conf.getItem(BasicConfiguration.TRAIN_METRIC), "absolute", true);
+			return Metric.fromString(conf.getItem(BasicConfiguration.TRAIN_METRIC), "absolute");
 		else return null;
 	}	
 	

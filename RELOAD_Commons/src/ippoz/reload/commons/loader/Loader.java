@@ -36,12 +36,16 @@ public abstract class Loader {
 	
 	/** The Constant TRAIN_FAULTY_TAGS. */
 	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
+	
+	public static final String TRAIN_NORMAL_TAG = "TRAIN_NORMAL_TAG";
 
 	/** The Constant VALIDATION_CSV_FILE. */
 	public static final String VALIDATION_FILE = "VALIDATION_FILE";
 	
 	/** The Constant VALIDATION_FAULTY_TAGS. */
 	public static final String VALIDATION_FAULTY_TAGS = "VALIDATION_FAULTY_TAGS";
+	
+	public static final String VALIDATION_NORMAL_TAG = "VALIDATION_NORMAL_TAG";
 	
 	public static final int SAMPLE_VALUES_COUNT = 200;
 
@@ -364,6 +368,20 @@ public abstract class Loader {
 		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_FAULTY_TAGS))
 			return prefManager.getPreference(VALIDATION_FAULTY_TAGS);
 		else return prefManager.getPreference("FAULTY_TAGS");
+	}
+	
+	protected static String extractKnownAttacks(PreferencesManager prefManager, String tag) {
+		if(prefManager.hasPreference(TRAIN_FAULTY_TAGS))
+			return prefManager.getPreference(TRAIN_FAULTY_TAGS);
+		else return prefManager.getPreference("FAULTY_TAGS");
+	}
+	
+	protected static String extractNormalTag(PreferencesManager prefManager, String tag) {
+		if(tag.equals("train") && prefManager.hasPreference(TRAIN_NORMAL_TAG))
+			return prefManager.getPreference(TRAIN_NORMAL_TAG);
+		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_NORMAL_TAG))
+			return prefManager.getPreference(VALIDATION_NORMAL_TAG);
+		else return prefManager.getPreference("NORMAL_TAG");
 	}
 	
 	public static boolean isValid(Loader loader) {

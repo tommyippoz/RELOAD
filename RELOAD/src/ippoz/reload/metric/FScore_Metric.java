@@ -25,8 +25,8 @@ public class FScore_Metric extends BetterMaxMetric {
 	 * @param beta
 	 *            the beta parameter of f-score
 	 */
-	public FScore_Metric(double beta, boolean validAfter) {
-		super(MetricType.FSCORE, validAfter);
+	public FScore_Metric(double beta, double noPredTHR) {
+		super(MetricType.FSCORE, noPredTHR);
 		this.beta = beta;
 	}
 
@@ -39,8 +39,8 @@ public class FScore_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double p = new Precision_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (p + r > 0)
 			return new DoubleMetricResult((1 + beta * beta) * p * r / (beta * beta * p + r));
 		else return new DoubleMetricResult(0.0);

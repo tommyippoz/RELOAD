@@ -4,7 +4,6 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.output.DetectorOutput;
 
@@ -118,7 +117,7 @@ public class TrainingDetailFrame {
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Metric: " + dOut.getReferenceMetric().getMetricName());
+		lbl = new JLabel("Metric: " + dOut.getReferenceMetric().getName());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);

@@ -21,8 +21,8 @@ import java.util.Set;
  */
 public class ThresholdAmount_Metric extends BetterMinMetric {
 
-	public ThresholdAmount_Metric(boolean validAfter) {
-		super(MetricType.THRESHOLDS, validAfter);
+	public ThresholdAmount_Metric(double noPredTHR) {
+		super(MetricType.THRESHOLDS, noPredTHR);
 	}
 
 	@Override

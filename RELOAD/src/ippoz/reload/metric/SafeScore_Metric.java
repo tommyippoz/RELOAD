@@ -24,8 +24,8 @@ public class SafeScore_Metric extends BetterMaxMetric {
 	 * @param beta
 	 *            the beta parameter of f-score
 	 */
-	public SafeScore_Metric(double beta, boolean validAfter) {
-		super(MetricType.SAFESCORE, validAfter);
+	public SafeScore_Metric(double beta, double noPredTHR) {
+		super(MetricType.SAFESCORE, noPredTHR);
 		this.beta = beta;
 	}
 
@@ -38,8 +38,8 @@ public class SafeScore_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fpr = new FalsePositiveRate_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		fpr = Math.pow(1 - fpr, 3);
 		if (fpr + r > 0)
 			return new DoubleMetricResult((1 + beta * beta) * fpr * r / (beta * beta * fpr + r));

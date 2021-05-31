@@ -17,6 +17,9 @@ public class AlgorithmResult {
 	/** The fault (if any) corresponding to each data point. */
 	private boolean isAnomalous;
 	
+	/** The fault (if any) corresponding to each data point. */
+	private boolean isUnknown;
+	
 	/** The evaluated score. */
 	private double score;
 	
@@ -36,15 +39,16 @@ public class AlgorithmResult {
 	 * @param score the score
 	 * @param object 
 	 */
-	public AlgorithmResult(boolean isAnomalous, double score, double confidence, Object additionalScore) {
+	public AlgorithmResult(boolean isAnomalous, double score, double confidence, Object additionalScore, boolean isUnknown) {
 		this.isAnomalous = isAnomalous;
 		this.score = score;
 		this.confidence = confidence;
-		this.additionalScore = null;
+		this.isUnknown = isUnknown;
+		this.additionalScore = additionalScore;
 	}
 	
 	public AlgorithmResult(LabelledResult lr) {
-		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null);
+		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null, lr.isUnknown());
 	}
 	
 	public AlgorithmResult(LabelledResult lr, DecisionFunction df) {
@@ -159,6 +163,10 @@ public class AlgorithmResult {
 
 	public boolean getBooleanScore() {
 		return getScoreEvaluation() == AnomalyResult.ANOMALY;
+	}
+	
+	public boolean isUnknown(){
+		return isUnknown;
 	}
 	
 	public double getConfidence() {

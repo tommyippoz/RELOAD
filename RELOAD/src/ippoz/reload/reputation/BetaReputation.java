@@ -23,9 +23,8 @@ public class BetaReputation extends Reputation {
 	 *
 	 * @param reputationTag the reputation tag
 	 */
-	public BetaReputation(String reputationTag, boolean validAfter) {
+	public BetaReputation(String reputationTag) {
 		super(reputationTag);
-		this.validAfter = validAfter;
 	}
 	
 	private int countInjections(List<AlgorithmResult> anomalyEvaluations){
@@ -39,7 +38,7 @@ public class BetaReputation extends Reputation {
 
 	@Override
 	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, validAfter).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tp = new TP_Metric(true, Double.NaN).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double nInj = countInjections(anomalyEvaluations);
 		double alpha = tp + 1;
 		double beta = nInj + 1;

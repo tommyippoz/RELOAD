@@ -111,7 +111,7 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	   */
 	  private int k;
 	  
-	  private List<KNNScore> resList;
+	//  private List<KNNScore> resList;
 	  
 	  private ELKIEuclid<KNNScore> treeList;
 
@@ -135,18 +135,15 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		  if(isApplicable(relation, relation.getDBIDs())){
 		    final DistanceQuery<NumberVector> distanceQuery = relation.getDistanceQuery(getDistanceFunction());
 		    final KNNQuery<NumberVector> knnQuery = relation.getKNNQuery(distanceQuery, k);
-		    resList = new LinkedList<KNNScore>();
 		    treeList = new ELKIEuclid<KNNScore>();
 		    for(DBIDIter it = relation.iterDBIDs(); it.valid(); it.advance()) {
 		      // distance to the kth nearest neighbor
 		      // (assuming the query point is always included, with distance 0)
 		      final double dkn = knnQuery.getKNNForDBID(it, k).getKNNDistance();
 		      KNNScore knn = new KNNScore(relation.get(it), dkn);
-		      resList.add(knn);
 		      treeList.addPoint(knn.getPoint(), knn);
 		    }
-		    Collections.sort(resList);
-		    return resList;
+		    return treeList;
 		  } else return null;
 	  }
 	  
@@ -178,7 +175,7 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	  
 	  public double calculateSingleKNN(Vector newInstance) {
 		  double partialResult;
-			if(resList == null || resList.size() == 0) 
+			if(treeList == null || treeList.size() == 0) 
 				return Double.MAX_VALUE;
 			else if(Double.isFinite(partialResult = hasResult(newInstance)))
 				return partialResult;
@@ -189,19 +186,20 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 				}
 				List<KdTree.Entry<KNNScore>> kNN = treeList.nearestNeighbor(point, k-1, false);
 				Collections.sort(kNN);
+				return kNN.get(k-2).distance;
 				/*DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
 				List<Double> distances = new ArrayList<Double>(resList.size());
 				for(KNNScore ks : resList){
 					if(ks != null)
 						distances.add(getSimilarity(sq, newInstance, ks.getVector()));
 				}
-				Collections.sort(distances);*/
-				return kNN.get(k-2).distance;			
+				Collections.sort(distances);
+				return distances.get(k-2);		*/	
 			}
 		}
 	  
 	  private double hasResult(NumberVector newInstance){
-			for(KNNScore ar : resList){
+			for(KNNScore ar : treeList.listItems()){
 				if(ar.getVector().equals(newInstance))
 					return ar.getDistanceToKthNeighbour();
 			}
@@ -284,7 +282,6 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 			BufferedReader reader;
 			String readed;
 			try {
-				resList = new LinkedList<KNNScore>();
 				treeList = new ELKIEuclid<CustomKNN.KNNScore>();
 				if(new File(item).exists()){
 					reader = new BufferedReader(new FileReader(new File(item)));
@@ -294,13 +291,10 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 						if(readed != null){
 							readed = readed.trim();
 							KNNScore knn = new KNNScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2]);
-							resList.add(knn);
 							treeList.addPoint(knn.getPoint(), knn);
 						}
 					}
 					reader.close();
-					Collections.sort(resList);
-					resList = new ArrayList<>(resList);
 				}
 			} catch (IOException ex) {
 				AppLogger.logException(getClass(), ex, "Unable to read LOF file");
@@ -310,12 +304,12 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		public void printFile(File file) {
 			BufferedWriter writer;
 			try {
-				if(resList != null && resList.size() > 0){
+				if(treeList != null && treeList.size() > 0){
 					if(file.exists())
 						file.delete();
 					writer = new BufferedWriter(new FileWriter(file));
 					writer.write("data (enclosed in {});k;distanceToKthNeighbour\n");
-					for(KNNScore ar : resList){
+					for(KNNScore ar : treeList.listItems()){
 						writer.write("{" + ar.getVector().toString().replace(" ", ",") + "};" + (k-1) + ";" + ar.getDistanceToKthNeighbour() + "\n");
 					}
 					writer.close();
@@ -326,19 +320,13 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 		}
 
 		public int size() {
-			return resList.size();
-		}
-
-		public double getScore(int ratio) {
-			if(ratio >= 1 && ratio <= size()){
-				return resList.get(ratio-1).getDistanceToKthNeighbour();
-			} else return 1.0;
+			return treeList.size();
 		}
 
 		@Override
 		public List<Double> getScoresList() {
 			ArrayList<Double> list = new ArrayList<Double>(size());
-			for(KNNScore os : resList){
+			for(KNNScore os : treeList.listItems()){
 				list.add(os.getDistanceToKthNeighbour());
 			}
 			Collections.sort(list);
@@ -404,8 +392,8 @@ public class CustomKNN extends AbstractDistanceBasedAlgorithm<NumberVector, Outl
 	}
 
 	public double getDbSize() {
-		if(resList != null)
-			return resList.size();
+		if(treeList != null)
+			return treeList.size();
 		else return 0;
 	}
 	  

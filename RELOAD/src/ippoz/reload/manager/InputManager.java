@@ -252,8 +252,7 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim(), 
-								prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true));
+						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim()));
 					}
 				}
 			}
@@ -340,8 +339,7 @@ public class InputManager {
 	 * @return the metric
 	 */
 	public Metric getTargetMetric() {
-		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim(), 
-				prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true);
+		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim());
 	}
 
 	public String getConfigurationFolder() {
@@ -479,7 +477,7 @@ public class InputManager {
 			mConf.addItem(BasicConfiguration.SCORES_FOLDER, getScoresFolder());
 			mConf.addItem(BasicConfiguration.FORCE_META_TRAINING, String.valueOf(getForceBaseLearnersFlag()));
 			mConf.addItem(BasicConfiguration.K_FOLD, getKFoldCounter());
-			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getMetricName());
+			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getName());
 			mConf.addItem(BasicConfiguration.REPUTATION, getReputation(getTargetMetric()).toString());
 			mConf.addItem(BasicConfiguration.DATASET_NAME, datasetName);
 			
@@ -1490,7 +1488,7 @@ public class InputManager {
 	}
 
 	public Reputation getReputation(Metric met) {
-		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met, prefManager.getPreference(VALID_AFTER_INJECTION).equals("no") ? false : true);
+		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met);
 	}
 
 	public boolean getForceBaseLearnersFlag() {

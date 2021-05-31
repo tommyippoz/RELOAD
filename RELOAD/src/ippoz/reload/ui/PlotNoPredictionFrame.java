@@ -118,6 +118,8 @@ public class PlotNoPredictionFrame {
 	
 	private DecisionFunction dFunction;
 	
+	private ArrayMetricResult nprMetricResult;
+	
 	public PlotNoPredictionFrame(DetectorOutput dOut) {
 		this.dOut = dOut;
 		
@@ -136,6 +138,8 @@ public class PlotNoPredictionFrame {
 		else anomalyNormalFlag = false;
 	
 		dFunction = createDefaultDecisionFunction();
+		
+		nprMetricResult = null;
 		
 		setMinMaxValues();
 		minValue = minRefValue;
@@ -224,8 +228,8 @@ public class PlotNoPredictionFrame {
 		detFrame = new JFrame();
 		detFrame.setTitle("Detail and Plots of Outputs");
 		if(screenSize.getWidth() > 1000)
-			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.8));
-		else detFrame.setBounds(0, 0, 800, 480);
+			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.7), (int)(screenSize.getHeight()*0.9));
+		else detFrame.setBounds(0, 0, 700, 800);
 		detFrame.setBackground(Color.WHITE);
 		detFrame.setResizable(true);
 	}
@@ -524,26 +528,34 @@ public class PlotNoPredictionFrame {
 			
 			JPanel panel = new JPanel();
 			panel.setBackground(Color.WHITE);
-			panel.setLayout(new GridLayout(3, 1));
+			panel.setLayout(new GridLayout(noPredictionFlag ? 3 : 2, 1));
 			panel.setBorder(new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), "Metric Scores", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 20), Color.DARK_GRAY));
 			
-			JLabel label = new JLabel("Metric scores for " + dFunction.getName());
+			JLabel label = new JLabel("Metric scores for '" + dFunction.getName() + "': " + dFunction.toCompactStringComplete());
 			label.setFont(labelBoldFont);
 			label.setBorder(new EmptyBorder(0, 10, 0, 10));
 			label.setHorizontalAlignment(SwingConstants.CENTER);
 			panel.add(label);
 			
-			label = new JLabel(dFunction.toCompactStringComplete());
-			label.setFont(labelBoldFont);
-			label.setBorder(new EmptyBorder(0, 10, 0, 10));
-			label.setHorizontalAlignment(SwingConstants.CENTER);
-			panel.add(label);
-			
-			label = new JLabel(calculateMetrics());
-			label.setFont(labelFont);
-			label.setBorder(new EmptyBorder(0, 10, 0, 10));
-			label.setHorizontalAlignment(SwingConstants.CENTER);
-			panel.add(label);
+			if(noPredictionFlag){
+				label = new JLabel("NPr + SSPr Scores: " + calculateMetrics(false));
+				label.setFont(labelFont);
+				label.setBorder(new EmptyBorder(0, 10, 0, 10));
+				label.setHorizontalAlignment(SwingConstants.CENTER);
+				panel.add(label);
+				
+				label = new JLabel("SSPr Scores: " + calculateMetrics(true));
+				label.setFont(labelFont);
+				label.setBorder(new EmptyBorder(0, 10, 0, 10));
+				label.setHorizontalAlignment(SwingConstants.CENTER);
+				panel.add(label);
+			} else {
+				label = new JLabel("Metric Scores: " + calculateMetrics(false));
+				label.setFont(labelFont);
+				label.setBorder(new EmptyBorder(0, 10, 0, 10));
+				label.setHorizontalAlignment(SwingConstants.CENTER);
+				panel.add(label);
+			}
 			
 			mainPanel.add(panel, BorderLayout.SOUTH);
 		}
@@ -551,14 +563,18 @@ public class PlotNoPredictionFrame {
 		mainPanel.validate();
 	}
 	
-	private String calculateMetrics() {	
+	private String calculateMetrics(boolean useThresholds) {	
 		String outString = null;
 		double tp = 0, fp = 0, tn = 0, fn = 0;
-		
+		double thr1 = Double.NaN;
+		double thr2 = Double.NaN;
 		double currentMax = maxValue;
 		if(containsInfiniteValues())
 			currentMax = maxValue + maxValue/(numIntervals-1.0);
-		
+		if(useThresholds && nprMetricResult != null){
+			thr1 = nprMetricResult.getArray()[2];
+			thr2 = nprMetricResult.getArray()[3];
+		}
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			for(LabelledResult lr : list){
@@ -566,18 +582,20 @@ public class PlotNoPredictionFrame {
 				if(Double.isFinite(lr.getValue()))
 					currentScore = lr.getValue();
 				else currentScore = maxValue + maxValue/(numIntervals-1.0);
-				if(currentScore >= minValue && currentScore <= currentMax){
-					AnomalyResult aRes = dFunction.assignScore(lr, false);
-					if(lr.getLabel()){
-						if(aRes == AnomalyResult.ANOMALY)
-							tp++;
-						else fn++;
-					} else {
-						if(aRes == AnomalyResult.ANOMALY)
-							fp++;
-						else tn++;
+				
+					if(currentScore >= minValue && currentScore <= currentMax){
+						AnomalyResult aRes = dFunction.assignScore(lr, false);
+						if(aRes == AnomalyResult.ANOMALY){
+							if(lr.getLabel())
+								tp++;
+							else fp++;
+						} else if(!Double.isFinite(thr1) || !Double.isFinite(thr2) || currentScore < thr1 || currentScore > thr2){
+							if(lr.getLabel())
+								fn++;
+							else tn++;
+						}
 					}
-				}
+				
 			}
 		}
 		
@@ -591,7 +609,7 @@ public class PlotNoPredictionFrame {
 		outString = outString + " R: " + (fn+tp > 0 ? df.format(r) : "0.00");
 		outString = outString + " F1: " + (p+r > 0 ? df.format(2*p*r/(p+r)) : "0.00");
 		outString = outString + " ACC: " + df.format((tp+tn)/(fn+tn+fp+tp));
-		outString = outString + " MCC: " + df.format((tp*tn - fp*fn)/Math.sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn)));
+		outString = outString + " MCC: " + (tp+fp>0 && tn+fn >0 ? df.format((tp*tn - fp*fn)/Math.sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn))): 0.0);
 		outString = outString + " AUC: " + df.format((r * fpr) / 2 + (r + 1) * (1 - fpr) / 2);
 	
 		return outString;
@@ -632,16 +650,15 @@ public class PlotNoPredictionFrame {
 		else dataset = (IntervalXYDataset)createSeries(minValue, maxValue, infiniteFlag);
 		
 		String chartTitle = "Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
-				"\nwith " + okList.size() + " normal and " + anList.size() + " anomalous data points (" + countErr + " discarded, " + countInf + " infinite)";
+				" with " + okList.size() + " normal and " + anList.size() + " anomalies (" + countErr + " disc, " + countInf + " inf)";
 		
-		ArrayMetricResult noPredResult = null;
 		DecimalFormat df = new DecimalFormat("#0.00"); 
 		if(noPredictionFlag){
 			List<AlgorithmResult> arList = dOut.getAlgorithmResults(dFunction);
-			noPredResult = (ArrayMetricResult)new NoPredictionArea_Metric(true, currentTHR).evaluateAnomalyResults(arList);
-			if(Double.isFinite(noPredResult.getArray()[2]))
-				chartTitle = chartTitle + "\nNo-Prediction Area [" + df.format(noPredResult.getArray()[2]) + "," + df.format(noPredResult.getArray()[3]) + "]: "
-					+ df.format(noPredResult.getArray()[0]) + "% of data points, " + df.format(noPredResult.getArray()[1]) + "% of residual FNs";
+			nprMetricResult = (ArrayMetricResult)new NoPredictionArea_Metric(currentTHR).evaluateAnomalyResults(arList);
+			if(Double.isFinite(nprMetricResult.getArray()[2]))
+				chartTitle = chartTitle + "\nNo-Prediction Area [" + df.format(nprMetricResult.getArray()[2]) + "," + df.format(nprMetricResult.getArray()[3]) + "]: "
+					+ df.format(nprMetricResult.getArray()[0]) + "% of data points, " + df.format(nprMetricResult.getArray()[1]) + "% of residual FNs";
 			else chartTitle = chartTitle + "\nNo-Prediction Area is empty, % FNs is lower than threshold";
 		}
 		
@@ -649,7 +666,8 @@ public class PlotNoPredictionFrame {
 		JFreeChart chart = ChartFactory.createXYBarChart(chartTitle, 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
-		chart.getPlot().setBackgroundPaint(Color.LIGHT_GRAY);   
+		chart.getPlot().setBackgroundPaint(Color.LIGHT_GRAY);  
+		chart.getTitle().setFont(chart.getTitle().getFont().deriveFont(20));
 		 
 		((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(0, Color.RED);
 		((XYPlot) chart.getPlot()).getRenderer().setSeriesPaint(1, Color.BLUE);
@@ -659,14 +677,14 @@ public class PlotNoPredictionFrame {
 		}
 		
 		// Setting decision function thresholds
-		if(noPredictionFlag && noPredResult != null){
-			double[] thresholds = noPredResult.getArray();
+		if(noPredictionFlag && nprMetricResult != null){
+			double[] thresholds = nprMetricResult.getArray();
 			if(thresholds != null){
 				IntervalMarker target = new IntervalMarker(thresholds[2], thresholds[3], new Color(1, 0, 0, 1/2f));
 				XYPlot plot = ((XYPlot)chart.getPlot());
 				plot.addDomainMarker(target, Layer.BACKGROUND);
 				TextTitle legendText = new TextTitle("Purple Areas: SGS to be Anomaly, Grey Areas: SGS to be Normal, "
-						+ "Red Areas: NSGS or No-Prediction Area (" + df.format(noPredResult.getArray()[0]) + "%)");
+						+ "Red Areas: NSGS or No-Prediction Area (" + df.format(nprMetricResult.getArray()[0]) + "%)");
 				legendText.setPosition(RectangleEdge.BOTTOM);
 				chart.addSubtitle(legendText);
 			}

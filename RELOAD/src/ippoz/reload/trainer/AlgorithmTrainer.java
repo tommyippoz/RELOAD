@@ -210,7 +210,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		String toReturn = "";
 		if(validationMetrics != null){
 			for(Metric met : validationMetrics){
-				toReturn = toReturn + met.getMetricShortName() + ":" + evaluateMetricScore(met, trainResults).getAvg() + ",";
+				toReturn = toReturn + met.getShortName() + ":" + evaluateMetricScore(met, trainResults).getAvg() + ",";
 			}
 			return toReturn.substring(0, toReturn.length()-1);
 		} else return "Not Calculated";

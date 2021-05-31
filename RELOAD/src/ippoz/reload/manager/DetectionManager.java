@@ -153,9 +153,15 @@ public class DetectionManager {
 		else {
 			if(iManager.getForceTrainingFlag()){
 				return true;
-			} else if(mainLearner instanceof BaseLearner){
-				return !AlgorithmModel.trainResultExists(iManager.getScoresFile(getDatasetName() + File.separatorChar + mainLearner.toString()));	
-			} else return true;
+			} else {
+				String filename = "";
+				if(mainLearner instanceof BaseLearner){
+					filename = getDatasetName() + File.separatorChar + mainLearner.toString();
+				} else {
+					filename = getDatasetName() + File.separatorChar + mainLearner.toCompactString();
+				}
+				return !AlgorithmModel.trainResultExists(iManager.getScoresFile(filename));	
+			}
 		}
 	}
 	
@@ -294,10 +300,11 @@ public class DetectionManager {
 			if(iManager.countAvailableModels(scoresFileString) > 0){
 				eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);
 				if(eManager.detectAnomalies()){
-					score = eManager.getMetricsValues().get(metric.getMetricName());
+					score = eManager.getMetricsValues().get(metric.getName());
 					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score.toString());
 				}
 				ValidationInfo vInfo = new ValidationInfo();
+				vInfo.setLoaderName(l.getCompactName());
 				vInfo.setDataPoints(l.getDataPoints());
 				vInfo.setRuns(l.getRuns());
 				vInfo.setFaultRatio(eManager.getInjectionsRatio());
@@ -346,7 +353,7 @@ public class DetectionManager {
 				writer.write(TrainInfo.getFileHeader() + ",");
 				writer.write(ValidationInfo.getFileHeader());
 				for(Metric met : iManager.loadValidationMetrics()){
-					writer.write("," + met.getMetricName());
+					writer.write("," + met.getName());
 				}
 				writer.write("\n");
 			} else {

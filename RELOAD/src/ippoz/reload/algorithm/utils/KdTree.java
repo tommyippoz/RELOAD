@@ -60,6 +60,8 @@ public abstract class KdTree<T> {
 
     // Temporary
     private Status                     status;
+    
+    private List<T> items;
 
     /**
      * Construct a KdTree with a given number of dimensions and a limit on
@@ -73,6 +75,7 @@ public abstract class KdTree<T> {
         this.data = new Object[bucketSize];
         this.locationCount = 0;
         this.singularity = true;
+        this.items = new LinkedList<>();
 
         // Init as root
         this.parent = null;
@@ -85,6 +88,10 @@ public abstract class KdTree<T> {
         }
     }
     
+    public List<T> listItems() {
+		return items;
+	}
+    
     private KdTree(Integer sizeLimit) {
         this.dimensions = Integer.MAX_VALUE;
 
@@ -93,6 +100,7 @@ public abstract class KdTree<T> {
         this.data = new Object[bucketSize];
         this.locationCount = 0;
         this.singularity = true;
+        this.items = new LinkedList<>();
 
         // Init as root
         this.parent = null;
@@ -137,7 +145,7 @@ public abstract class KdTree<T> {
         KdTree<T> cursor = this;
         if(dimensions == Integer.MAX_VALUE && location != null && location.length > 0)
         	dimensions = location.length;
-
+        items.add(value);
         while (cursor.locations == null || cursor.locationCount >= cursor.locations.length) {
             if (cursor.locations != null) {
                 cursor.splitDimension = cursor.findWidestAxis();
@@ -431,8 +439,7 @@ public abstract class KdTree<T> {
                 resultHeap.removeLargest();
                 results.add(new Entry<T>(resultHeap.removedDist, (T)resultHeap.removedData));
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < resultHeap.values; i++) {
                 results.add(new Entry<T>(resultHeap.distance[i], (T)resultHeap.data[i]));
             }
@@ -537,7 +544,6 @@ public abstract class KdTree<T> {
             }
             return agg;
         }
-        
 
         protected double pointDist2(double[] p1, double[] p2) {
         	final int dim1 = p1.length, dim2 = p2.length;
@@ -613,6 +619,7 @@ public abstract class KdTree<T> {
 
             return d;
         }
+
     }
 
     /**

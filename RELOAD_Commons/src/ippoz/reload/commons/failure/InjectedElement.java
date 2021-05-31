@@ -18,6 +18,8 @@ public class InjectedElement {
 	
 	/** The failure description. */
 	private String description;
+	
+	private boolean isUnknown;
 
 	/**
 	 * Instantiates a new injected element.
@@ -25,9 +27,10 @@ public class InjectedElement {
 	 * @param timestamp the timestamp
 	 * @param description the description
 	 */
-	public InjectedElement(DatasetIndex index, String description) {
+	public InjectedElement(DatasetIndex index, String description, boolean isUnknown) {
 		this.index = index;
 		this.description = description;
+		this.isUnknown = isUnknown;
 	}
 
 	/**
@@ -46,6 +49,10 @@ public class InjectedElement {
 	 */
 	public DatasetIndex getIndex() {
 		return index;
+	}
+	
+	public boolean isUnknown(){
+		return isUnknown;
 	}
 
 	public boolean compliesWith(DatasetIndex other) {

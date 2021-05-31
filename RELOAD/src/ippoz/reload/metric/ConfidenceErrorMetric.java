@@ -17,8 +17,8 @@ public class ConfidenceErrorMetric extends BetterMaxMetric {
 	
 	private double fpfnRate;
 
-	public ConfidenceErrorMetric(boolean validAfter, double fpfnRate) {
-		super(MetricType.CONFIDENCE_ERROR, validAfter);
+	public ConfidenceErrorMetric(double fpfnRate, double noPredTHR) {
+		super(MetricType.CONFIDENCE_ERROR, noPredTHR);
 		this.fpfnRate = fpfnRate;
 	}
 

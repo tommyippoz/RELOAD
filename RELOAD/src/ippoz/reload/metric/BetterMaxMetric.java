@@ -10,10 +10,14 @@ import ippoz.reload.metric.result.MetricResult;
  *
  * @author Tommy
  */
-public abstract class BetterMaxMetric extends ScoringMetric {
+public abstract class BetterMaxMetric extends Metric {
 
-	public BetterMaxMetric(MetricType mType, boolean validAfter) {
-		super(mType, validAfter);
+	public BetterMaxMetric(MetricType mType) {
+		super(mType);
+	}
+	
+	public BetterMaxMetric(MetricType mType, double noPredTHR) {
+		super(mType, noPredTHR);
 	}
 
 	/*

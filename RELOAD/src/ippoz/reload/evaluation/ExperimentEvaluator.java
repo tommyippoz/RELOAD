@@ -118,79 +118,11 @@ public class ExperimentEvaluator extends Thread {
 		}
 	}
 	
-	/**
-	 * Prints the anomaly voting.
-	 *
-	 * @param outFormat the output format
-	 * @param outFolderName the output folder
-	 * @param validationMetrics the metrics used for validation and printed in the file
-	 * @param anomalyTreshold the anomaly threshold
-	 * @param algConvergence the algorithm convergence time (for printing)
-	 * @param printOutput 
-	 * @return 
-	 */
-	public Map<Metric, MetricResult> printVoting(String outFormat, String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
-		/*if(printOutput){
-			for(AlgorithmModel aVoter : algList){
-				aVoter.printResults(outFormat, outFolderName, expName);
-			}
-		}*/
-		return printExperimentVoting(outFolderName, validationMetrics, algConvergence, printOutput);
-	}
-
-	/**
-	 * Prints the experiment voting.
-	 *
-	 * @param outFolderName the output folder
-	 * @param validationMetrics the metrics used for validation and printed in the file
-	 * @param  the anomaly threshold
-	 * @param algConvergence the algorithm convergence time (for printing)
-	 * @param printOutput 
-	 */
-	private Map<Metric, MetricResult> printExperimentVoting(String outFolderName, Metric[] validationMetrics, double algConvergence, boolean printOutput) {
-		/*if(printOutput){
-			printGraphics(outFolderName, algConvergence);
-			printText(outFolderName);
-		}*/
-		return printMetrics(outFolderName, validationMetrics, printOutput);
-	}
-	
 	public synchronized Map<Metric, MetricResult> calculateMetricScores(Metric[] validationMetrics) {
 		Map<Metric, MetricResult> metResults = new HashMap<Metric, MetricResult>();
 		for(Metric met : validationMetrics){
 			metResults.put(met, met.evaluateAnomalyResults(modelResults));
 		}
-		return metResults;
-	}
-	
-	
-	
-	/**
-	 * Prints the metrics.
-	 *
-	 * @param outFolderName the output folder
-	 * @param validationMetrics the metrics used for validation and printed in the file
-	 * @return 
-	 */
-	private synchronized Map<Metric, MetricResult> printMetrics(String outFolderName, Metric[] validationMetrics, boolean printOutput) {
-		PrintWriter pw;
-		Map<Metric, MetricResult> metResults = new HashMap<Metric, MetricResult>();
-		try {
-			for(Metric met : validationMetrics){
-				metResults.put(met, met.evaluateAnomalyResults(modelResults));
-			}
-			if(printOutput){
-				pw = new PrintWriter(new FileOutputStream(new File(outFolderName + "/voter/results.csv"), true));
-				pw.append(expBatch + "," + evalKnowledge.size() + ",");
-				for(Metric met : validationMetrics){
-					pw.append(String.valueOf(metResults.get(met)) + ",");
-				}
-				pw.append("\n");
-				pw.close();
-			}
-		} catch (FileNotFoundException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to find results file");
-		} 
 		return metResults;
 	}
 

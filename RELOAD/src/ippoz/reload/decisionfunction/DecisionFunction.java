@@ -190,13 +190,13 @@ public abstract class DecisionFunction {
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 						if(partial != null && partial.trim().length() > 0){
 							if(partial.contains(",")){
-								List<Double> list = new LinkedList<>();
+								List<String> list = new LinkedList<>();
 								for(String st : partial.split(",")){
-									list.add(Double.valueOf(st));
+									list.add(st.trim());
 								}
-								return new ValuesDecision(list.toArray(new Double[list.size()]), algorithmScores);
+								return new ValuesDecision(list.toArray(new String[list.size()]), algorithmScores);
 							} else if(AppUtility.isNumber(partial.trim()))
-								return new ValuesDecision(new Double[]{Double.valueOf(partial.trim())}, algorithmScores);
+								return new ValuesDecision(new String[]{partial.trim()}, algorithmScores);
 							else AppLogger.logInfo(DecisionFunction.class, "Parameters of values '" + thresholdTag + "' cannot be parsed");
 						}
 						

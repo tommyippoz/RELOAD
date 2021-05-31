@@ -25,8 +25,8 @@ public class ARFFLoader extends FileLoader {
 	 *
 	 * @param runs the runs
 	 */
-	public ARFFLoader(File file, String[] toSkip, String labelCol, String faultyTags, String avoidTags, int anomalyWindow, String experimentRows, String runsString) {
-		super(file, toSkip, labelCol, faultyTags, avoidTags, anomalyWindow, experimentRows, runsString);
+	private ARFFLoader(File file, String[] toSkip, String labelCol, String faultyTags, String attackTags, String normalTag, String avoidTags, int anomalyWindow, String experimentRows, String runsString) {
+		super(file, toSkip, labelCol, faultyTags, attackTags, normalTag, avoidTags, anomalyWindow, experimentRows, runsString);
 	}
 	
 	/**
@@ -43,12 +43,14 @@ public class ARFFLoader extends FileLoader {
 				splitString(prefManager.getPreference(SKIP_COLUMNS), ","),  
 				prefManager.getPreference(LABEL_COLUMN), 
 				extractFaultyTags(prefManager, tag), 
+				extractKnownAttacks(prefManager, tag), 
+				extractNormalTag(prefManager, tag), 
 				extractAvoidTags(prefManager, tag), 
 				anomalyWindow,
 				FileLoader.getBatchPreference(prefManager),
 				runsString);
 	}
-	
+
 	@Override
 	public LoaderType getLoaderType() {
 		return LoaderType.ARFF;

@@ -118,14 +118,16 @@ public class WEKAUtils {
 		for(int i=0;i<label.length;i++){
 			str = "";
 			for(int j=0;j<data[i].length;j++){
-				str = str + data[i][j] + ",";
+				if(Double.isFinite(data[i][j]))
+					str = str + data[i][j] + ",";
+				else str = str + "0.0,";
 			}
 			inner = inner + str + label[i] + "\n";
 			if(i % STRING_BATCHES == 0){
 				arff = arff + inner;
 				inner = "";
 			}
-		}
+		}		
 		return new StringReader(arff + inner);
 	}
 	

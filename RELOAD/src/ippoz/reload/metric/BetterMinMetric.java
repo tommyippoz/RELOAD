@@ -10,10 +10,10 @@ import ippoz.reload.metric.result.MetricResult;
  *
  * @author Tommy
  */
-public abstract class BetterMinMetric extends ScoringMetric {
+public abstract class BetterMinMetric extends Metric {
 
-	public BetterMinMetric(MetricType mType, boolean validAfter) {
-		super(mType, validAfter);
+	public BetterMinMetric(MetricType mType, double noPredTHR) {
+		super(mType, noPredTHR);
 	}
 
 	/*

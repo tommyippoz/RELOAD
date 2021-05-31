@@ -11,8 +11,8 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
  */
 public class FNConfidence_Metric extends ClassificationConfidenceMetric {
 
-	public FNConfidence_Metric(boolean validAfter) {
-		super(MetricType.FN_CONF, false, validAfter);
+	public FNConfidence_Metric(double noPredTHR) {
+		super(MetricType.FN_CONF, false, noPredTHR);
 		// TODO Auto-generated constructor stub
 	}
 

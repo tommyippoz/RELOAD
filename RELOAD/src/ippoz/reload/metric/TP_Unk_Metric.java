@@ -6,24 +6,23 @@ package ippoz.reload.metric;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 
 /**
- * The Class FN_Metric. Implements a metric based on false negatives.
- *
  * @author Tommy
+ *
  */
-public class FN_Metric extends ClassificationMetric {
+public class TP_Unk_Metric extends ClassificationMetric {
 
 	/**
-	 * Instantiates a new fn_ metric.
+	 * Instantiates a new tp_ metric.
 	 *
 	 * @param absolute
 	 *            the absolute flag
 	 */
-	public FN_Metric(boolean absolute) {
-		super(MetricType.FN, absolute);
+	public TP_Unk_Metric(boolean absolute) {
+		super(MetricType.TP_UNK, absolute);
 	}
-	
-	public FN_Metric(boolean absolute, double noPredictionTHR) {
-		super(MetricType.FN, absolute, noPredictionTHR);
+
+	public TP_Unk_Metric(boolean absolute, double noPredictionTHR) {
+		super(MetricType.TP_UNK, absolute, noPredictionTHR);
 	}
 
 	/*
@@ -33,17 +32,17 @@ public class FN_Metric extends ClassificationMetric {
 	 */
 	@Override
 	public String getMetricName() {
-		return "False Negatives";
+		return "True Positives Unk";
 	}
 
 	@Override
 	public String getMetricShortName() {
-		return "FN";
+		return "TPUnk";
 	}
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (tResult.isAnomalous() && !tResult.getBooleanScore()) {
+		if(tResult.isUnknown() && tResult.isAnomalous() && tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

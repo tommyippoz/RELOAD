@@ -126,6 +126,7 @@ public class TrainerManager extends TrainDataManager {
 		try {
 			if(trainInfo == null)
 				trainInfo = new TrainInfo();
+			trainInfo.setLoaderName(getDatasetName());
 			trainInfo.setFaultRatio(getInjectionsRatio());
 			trainInfo.setSeries(dataSeries);
 			trainInfo.setKFold(kfold);
@@ -144,8 +145,6 @@ public class TrainerManager extends TrainDataManager {
 					if(!new File(outFolder).exists())
 						new File(outFolder).mkdirs();
 					saveBestModel(getThreadList(), outFolder + File.separatorChar + "scores.csv");
-					//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
-					//saveThresholdRelevance(getThreadList(), outFolder + File.separatorChar + "thresholdrelevance.csv");
 					AppLogger.logInfo(getClass(), "Training scores saved");
 					trainInfo.printFile(new File(outFolder + File.separatorChar + "trainInfo.info"));
 				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
@@ -332,7 +331,7 @@ public class TrainerManager extends TrainDataManager {
 			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
 			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getMetricName() + "),std_metric_score(" + getMetric().getMetricName() + "),dataset,configuration\n");
+			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getName() + "),std_metric_score(" + getMetric().getName() + "),dataset,configuration\n");
 			if(bestTrainer != null && bestTrainer.getBestConfiguration() != null) {
 				bestTrainer.saveAlgorithmScores();
 				scoreWriter.write(bestTrainer.getSeriesDescription() + "§" + 

@@ -10,8 +10,6 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
-import ippoz.reload.metric.NoPredictionArea_Metric;
-import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.output.LabelledResult;
 
@@ -725,7 +723,7 @@ public class PlotOutputFrame {
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
 				"Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
-				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
+				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   

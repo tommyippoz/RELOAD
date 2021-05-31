@@ -18,8 +18,12 @@ public class TP_Metric extends ClassificationMetric {
 	 * @param absolute
 	 *            the absolute flag
 	 */
-	public TP_Metric(boolean absolute, boolean validAfter) {
-		super(MetricType.TP, absolute, validAfter);
+	public TP_Metric(boolean absolute) {
+		super(MetricType.TP, absolute);
+	}
+
+	public TP_Metric(boolean absolute, double noPredictionTHR) {
+		super(MetricType.TP, absolute, noPredictionTHR);
 	}
 
 	/*

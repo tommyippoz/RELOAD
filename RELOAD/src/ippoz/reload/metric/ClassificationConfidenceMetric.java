@@ -26,8 +26,8 @@ public abstract class ClassificationConfidenceMetric extends BetterMaxMetric {
 	 * @param absolute
 	 *            the validAfter flag
 	 */
-	public ClassificationConfidenceMetric(MetricType mType, boolean betterMax, boolean validAfter) {
-		super(mType, validAfter);
+	public ClassificationConfidenceMetric(MetricType mType, boolean betterMax, double noPredTHR) {
+		super(mType, noPredTHR);
 		this.betterMax = betterMax;
 	}
 		

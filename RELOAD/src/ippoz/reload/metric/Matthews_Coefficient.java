@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class Matthews_Coefficient extends BetterBigMetric {
 
-	public Matthews_Coefficient(boolean validAfter) {
-		super(MetricType.MATTHEWS, validAfter);
+	public Matthews_Coefficient(double noPredTHR) {
+		super(MetricType.MATTHEWS, noPredTHR);
 	}
 
 	/*
@@ -28,10 +28,10 @@ public class Matthews_Coefficient extends BetterBigMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fp = new FP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tn = new TN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		double num = tp * tn - fp * fn;
 		if (num != 0.0)
 			return new DoubleMetricResult(1.0 * num

@@ -16,8 +16,8 @@ import java.util.List;
  */
 public class FMeasure_Metric extends BetterMaxMetric {
 
-	public FMeasure_Metric(boolean validAfter) {
-		super(MetricType.FMEASURE, validAfter);
+	public FMeasure_Metric(double noPredTHR) {
+		super(MetricType.FMEASURE, noPredTHR);
 	}
 
 	/*
@@ -29,8 +29,8 @@ public class FMeasure_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double p = new Precision_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double p = new Precision_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (p + r > 0)
 			return new DoubleMetricResult(2.0 * p * r / (p + r));
 		else return new DoubleMetricResult(0.0);

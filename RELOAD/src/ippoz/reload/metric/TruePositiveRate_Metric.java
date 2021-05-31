@@ -15,8 +15,12 @@ import java.util.List;
  */
 public class TruePositiveRate_Metric extends BetterMaxMetric {
 
-	public TruePositiveRate_Metric(boolean validAfter) {
-		super(MetricType.TPR, validAfter);
+	public TruePositiveRate_Metric() {
+		super(MetricType.TPR);
+	}
+	
+	public TruePositiveRate_Metric(double noPredTHR) {
+		super(MetricType.TPR, noPredTHR);
 	}
 
 	/*
@@ -28,8 +32,8 @@ public class TruePositiveRate_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (tp + fn > 0)
 			return new DoubleMetricResult(1.0 * tp / (fn + tp));
 		else

@@ -17,8 +17,8 @@ import java.util.List;
  */
 public class FalsePositiveRate_Metric extends BetterMinMetric {
 
-	public FalsePositiveRate_Metric(boolean validAfter) {
-		super(MetricType.FPR, validAfter);
+	public FalsePositiveRate_Metric(double noPredTHR) {
+		super(MetricType.FPR, noPredTHR);
 	}
 
 	/*
@@ -30,8 +30,8 @@ public class FalsePositiveRate_Metric extends BetterMinMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tn = new TN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fp = new FP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (tn + fp > 0)
 			return new DoubleMetricResult(1.0 * fp / (fp + tn));
 		else return new DoubleMetricResult(0.0);

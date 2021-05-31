@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class Accuracy_Metric extends BetterMaxMetric {
 
-	public Accuracy_Metric(boolean validAfter) {
-		super(MetricType.ACCURACY, validAfter);
+	public Accuracy_Metric(double noPredTHR) {
+		super(MetricType.ACCURACY, noPredTHR);
 	}
 
 	/*
@@ -28,10 +28,10 @@ public class Accuracy_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fp = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double tn = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fp = new FP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double tn = new TN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		if (tp + fp + tn + fn > 0)
 			return new DoubleMetricResult(1.0 * (tn + tp) / (tp + fp + tn + fn));
 		else

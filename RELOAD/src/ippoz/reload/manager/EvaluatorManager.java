@@ -196,7 +196,7 @@ public class EvaluatorManager extends DataManager {
 			allResults.addAll(list);
 		}
 		for(Metric met : validationMetrics){
-			metricValues.put(met.getMetricName(), met.evaluateAnomalyResults(allResults));
+			metricValues.put(met.getName(), met.evaluateAnomalyResults(allResults));
 		}
 	}
 
@@ -331,8 +331,8 @@ public class EvaluatorManager extends DataManager {
 		String metString = "";
 		if(metricValues != null){
 			for(Metric met : validationMetrics){
-				MetricResult score = metricValues.get(met.getMetricName());
-				metString = metString + met.getMetricShortName() + ":" + score.toString() + ",";
+				MetricResult score = metricValues.get(met.getName());
+				metString = metString + met.getShortName() + ":" + score.toString() + ",";
 			}
 		}
 		return metString;

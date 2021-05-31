@@ -21,6 +21,10 @@ import java.util.HashMap;
  */
 public class TrainInfo {
 	
+	private static final String TRAIN_LOADER = "TRAIN Loader";
+	
+	private String loaderName;
+	
 	private static final String TRAIN_SERIES = "TRAIN DataSeries";
 
 	private DataSeries dataSeries;
@@ -54,6 +58,7 @@ public class TrainInfo {
 	private String metricsString;
 	
 	public TrainInfo(){
+		loaderName = null;
 		dataSeries = null;
 		kFold = null;
 		runs = null;
@@ -69,6 +74,9 @@ public class TrainInfo {
 		try {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
+				if(preferences.containsKey(TRAIN_LOADER) && preferences.get(TRAIN_LOADER) != null){
+					loaderName = preferences.get(TRAIN_LOADER).trim();
+				}
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
 					String algString = preferences.get(TRAIN_ALGORITHMS).trim();
 					try {
@@ -147,6 +155,14 @@ public class TrainInfo {
 		this.trainTimeMs = trainTimeMs;
 	}
 
+	public String getLoaderName() {
+		return loaderName;
+	}
+
+	public void setLoaderName(String loaderName) {
+		this.loaderName = loaderName;
+	}
+
 	public DataSeries getSeriesList() {
 		return dataSeries;
 	}
@@ -176,6 +192,7 @@ public class TrainInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on training details\n"); 
+			writer.write("\n* Loader Name\n" + TRAIN_LOADER + " = " + (loaderName != null ? loaderName : "") + "\n");
 			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? algTypes.toString() : "") + "\n");
 			writer.write("\n* K-Fold value used\n" + TRAIN_KFOLD + " = " + (kFold != null ? kFold : "") + "\n");
 			writer.write("\n* Runs used for training\n" + TRAIN_RUNS + " = " + (runs != null ? runs : "") + "\n");
@@ -191,7 +208,8 @@ public class TrainInfo {
 	}
 	
 	public String toFileString(){
-		return (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (loaderName != null ? loaderName.replace(",", ";") : "") + ","
+			    + (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (kFold != null ? kFold : "") + ","
 				+ (runs != null ? runs.replace(",", ";") : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
@@ -202,7 +220,7 @@ public class TrainInfo {
 	}
 	
 	public static String getFileHeader(){
-		return TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
+		return TRAIN_LOADER + "," + TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
 				TRAIN_NDATAPOINTS + "," + TRAIN_SERIES + "," +
 				TRAIN_FAULT_RATIO + "," + TRAIN_TIME + "," + TRAIN_METRICS;
 	}

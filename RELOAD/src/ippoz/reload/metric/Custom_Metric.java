@@ -18,8 +18,8 @@ import java.util.List;
  */
 public class Custom_Metric extends BetterMaxMetric {
 
-	public Custom_Metric(boolean validAfter) {
-		super(MetricType.CUSTOM, validAfter);
+	public Custom_Metric(double noPredTHR) {
+		super(MetricType.CUSTOM, noPredTHR);
 	}
 
 	/*
@@ -31,8 +31,8 @@ public class Custom_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double ce = new ConfidenceErrorMetric(isValidAfter(), 0.5).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double ce = new ConfidenceErrorMetric(getNoPredictionThreshold(), 0.5).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double acc = new Accuracy_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		return new DoubleMetricResult(Math.abs(ce)*acc);
 	}
 

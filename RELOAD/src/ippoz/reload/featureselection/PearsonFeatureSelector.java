@@ -22,6 +22,8 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  * @author Tommy
  */
 public class PearsonFeatureSelector extends FeatureRanker {
+	
+	private static final int BATCH_SIZE = 5000;
 
 	/**
 	 * Instantiates a new pearson feature selector.
@@ -38,35 +40,52 @@ public class PearsonFeatureSelector extends FeatureRanker {
 	 */
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
-		double corr = 0;
-		List<Double> values = new LinkedList<Double>();
-		List<Double> labels = new LinkedList<Double>();
+		List<Double> corrArray;
+		List<Double> values = new LinkedList<>();
+		List<Double> labels = new LinkedList<>();
 		List<Snapshot> snapList = null;
 		Map<DataSeries, Double> outMap = new HashMap<DataSeries, Double>();
 		for(DataSeries ds : seriesList){
 			values.clear();
 			labels.clear();
+			corrArray = new LinkedList<>();
 			if(ds.size() == 1){
-				corr = 0;
+				List<Double> tempValues = new LinkedList<>();
+				List<Double> tempLabels = new LinkedList<>();
 				for(Knowledge know : kList){
 					snapList = toSnapList(know, ds);
 					values.addAll(getSnapValues(snapList));
 					labels.addAll(getSnapLabels(snapList));
 				}
 				for(int i=0;i<values.size();i++){
-					if(!Double.isFinite(values.get(i))){
-						values.remove(i);
-						values.add(i, 0.0);
-					} 
-					if(!Double.isFinite(labels.get(i))){
-						labels.remove(i);
-						labels.add(i, 0.0);
-					} 
+					if(Double.isFinite(values.get(i)))
+						tempValues.add(values.get(i));
+					else tempValues.add(0.0);
+					if(Double.isFinite(labels.get(i)))
+						tempLabels.add(labels.get(i));
+					else tempLabels.add(0.0);
+					if(i > 0 && i % BATCH_SIZE == 0){
+						double corr = new PearsonsCorrelation().correlation(
+								AppUtility.toPrimitiveArray(tempValues), 
+								AppUtility.toPrimitiveArray(tempLabels));
+						tempValues.clear();
+						tempLabels.clear();
+						if(!Double.isFinite(corr))
+							corr = 0.0;
+						corrArray.add(corr);
+					}
 				}
-				corr = new PearsonsCorrelation().correlation(
-						AppUtility.toPrimitiveArray(values), 
-						AppUtility.toPrimitiveArray(labels));
-				outMap.put(ds, Math.abs(corr));
+				if(tempValues.size() > 0){
+					double corr = new PearsonsCorrelation().correlation(
+							AppUtility.toPrimitiveArray(tempValues), 
+							AppUtility.toPrimitiveArray(tempLabels));
+					if(!Double.isFinite(corr))
+						corr = 0.0;
+					corrArray.add(corr);
+				}
+				if(corrArray.size() > 0)
+					outMap.put(ds, AppUtility.calcAvg(corrArray));
+				else outMap.put(ds, 0.0);
 			}
 		}
 		return outMap;

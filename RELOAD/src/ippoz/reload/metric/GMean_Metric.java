@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class GMean_Metric extends BetterMaxMetric {
 
-	public GMean_Metric(boolean validAfter) {
-		super(MetricType.GMEAN, validAfter);
+	public GMean_Metric(double noPredTHR) {
+		super(MetricType.GMEAN, noPredTHR);
 	}
 
 	/*
@@ -28,8 +28,8 @@ public class GMean_Metric extends BetterMaxMetric {
 	 */
 	@Override
 	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double fpr = new FalsePositiveRate_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
-		double r = new Recall_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double fpr = new FalsePositiveRate_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+		double r = new Recall_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
 		fpr = 1 - fpr;
 		return new DoubleMetricResult(Math.sqrt(fpr*r));
 	}

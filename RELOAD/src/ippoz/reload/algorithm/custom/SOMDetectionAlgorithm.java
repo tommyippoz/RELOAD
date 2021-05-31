@@ -110,7 +110,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	private double calculateSOM(Double[][] w, double[] row) {		
 	    double[] D = ComputeInput(row, w);
-	    return D[1] / D[0];
+	    return Math.cbrt(D[1] - D[0]);
 	}
 	
 	private double calculateSOM(double row[]){

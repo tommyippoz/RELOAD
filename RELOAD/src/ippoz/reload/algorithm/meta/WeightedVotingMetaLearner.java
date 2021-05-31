@@ -31,7 +31,7 @@ public class WeightedVotingMetaLearner extends VotingMetaLearner {
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
 				String repString = alg.getConfiguration().getItem(BasicConfiguration.AVG_SCORE);
 				if(AppUtility.isNumber(repString))
 					count = count + Double.parseDouble(repString);

@@ -67,10 +67,10 @@ public abstract class Reputation {
 	 */
 	protected abstract double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations);
 
-	public static Reputation fromString(String reputationType, Metric metric, boolean validAfter) {
+	public static Reputation fromString(String reputationType, Metric metric) {
 		switch(reputationType.toUpperCase()){
 			case "BETA":
-				return new BetaReputation(reputationType, validAfter);
+				return new BetaReputation(reputationType);
 			case "METRIC":
 				return new MetricReputation(reputationType, metric);
 			default:

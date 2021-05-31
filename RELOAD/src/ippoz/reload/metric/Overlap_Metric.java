@@ -17,8 +17,8 @@ import java.util.List;
  */
 public class Overlap_Metric extends BetterMinMetric {
 
-	public Overlap_Metric(boolean validAfter) {
-		super(MetricType.OVERLAP, validAfter);
+	public Overlap_Metric(double noPredTHR) {
+		super(MetricType.OVERLAP, noPredTHR);
 	}
 
 	@Override

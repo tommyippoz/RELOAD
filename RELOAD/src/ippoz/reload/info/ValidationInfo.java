@@ -25,6 +25,10 @@ import java.util.List;
  */
 public class ValidationInfo {
 	
+	private static final String VALIDATION_LOADER = "VALIDATION Loader";
+	
+	private String loaderName;
+	
 	private static final String VALIDATION_RUNS = "VALIDATION Runs";
 	
 	private String runs;
@@ -66,6 +70,7 @@ public class ValidationInfo {
 	private String paramsString;
 	
 	public ValidationInfo(){
+		loaderName = null;
 		models = null;
 		runs = null;
 		nDataPoints = null;
@@ -79,6 +84,9 @@ public class ValidationInfo {
 		try {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
+				if(preferences.containsKey(VALIDATION_LOADER) && preferences.get(VALIDATION_LOADER) != null){
+					loaderName = preferences.get(VALIDATION_LOADER).trim();
+				}
 				if(preferences.containsKey(VALIDATION_MODELS) && preferences.get(VALIDATION_MODELS) != null && preferences.get(VALIDATION_MODELS).trim().length() > 0){
 					models = new LinkedList<AlgorithmModel>();
 					if(preferences.get(VALIDATION_MODELS).contains(",")){
@@ -157,6 +165,14 @@ public class ValidationInfo {
 
 	public void setParamsString(String paramsString) {
 		this.paramsString = paramsString;
+	}
+
+	public String getLoaderName() {
+		return loaderName;
+	}
+
+	public void setLoaderName(String loaderName) {
+		this.loaderName = loaderName;
 	}
 
 	public void setSeriesString(List<DataSeries> list) {
@@ -238,6 +254,7 @@ public class ValidationInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on validation details\n"); 
+			writer.write("\n* Loader Name\n" + VALIDATION_LOADER + " = " + (loaderName != null ? loaderName : "") + "\n");
 			writer.write("\n* Models used in the experiment\n" + VALIDATION_MODELS + " = " + (models != null ? Arrays.toString(models.toArray()) : "") + "\n");
 			writer.write("\n* Runs used for validation\n" + VALIDATION_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + VALIDATION_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
@@ -256,7 +273,8 @@ public class ValidationInfo {
 	}
 	
 	public String toFileString(){
-		return (models != null ? Arrays.toString(models.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (loaderName != null ? loaderName.replace(",", ";") : "") + ","
+				+ (models != null ? Arrays.toString(models.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (runs != null ? runs : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
@@ -265,7 +283,7 @@ public class ValidationInfo {
 	}
 	
 	public static String getFileHeader(){
-		return VALIDATION_MODELS + "," + VALIDATION_RUNS + "," +
+		return VALIDATION_LOADER + "," + VALIDATION_MODELS + "," + VALIDATION_RUNS + "," +
 				VALIDATION_NDATAPOINTS + "," + VALIDATION_FAULT_RATIO + "," + VALIDATION_TIME + "," + PARAMS_VALUES;
 	}
 

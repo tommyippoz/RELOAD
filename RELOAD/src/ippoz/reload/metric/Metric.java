@@ -23,9 +23,34 @@ import java.util.Map;
 public abstract class Metric implements Comparable<Metric> {
 
 	private MetricType mType;
+	
+	private double noPredTHR;
 
 	public Metric(MetricType mType) {
 		this.mType = mType;
+		this.noPredTHR = Double.NaN;
+	}
+	
+	public Metric(MetricType mType, double noPredTHR) {
+		this.mType = mType;
+		this.noPredTHR = noPredTHR;
+	}
+	
+	protected double getNoPredictionThreshold(){
+		return noPredTHR;
+	}
+	
+	private static String[] processParams(String str){
+		String[] splitted = new String[0];
+		if(str != null && str.contains("(")){
+			String params = str.substring(str.indexOf('(')+1, str.indexOf(')'));
+			splitted = params.split(",");
+			for(int i=0;i<splitted.length;i++){
+				if(splitted[i] != null)
+					splitted[i] = splitted[i].trim();
+			}
+		}
+		return splitted;
 	}
 	
 	/**
@@ -34,62 +59,70 @@ public abstract class Metric implements Comparable<Metric> {
 	 * @param metricType the metric tag
 	 * @return the obtained metric
 	 */
-	public static Metric fromString(String metricType, String mType, boolean validAfter){
-		String param = null;
+	public static Metric fromString(String metricType, String mType){
+		String[] params = processParams(metricType);
 		boolean absolute = mType != null && mType.equals("absolute") ? true : false;
-		if(metricType.contains("(")){
-			param = metricType.substring(metricType.indexOf('(')+1, metricType.indexOf(')'));
-			metricType = metricType.substring(0, metricType.indexOf('('));
+		if(metricType != null && metricType.contains("(")){
+			metricType = metricType.substring(0, metricType.indexOf("("));
 		}
+		double noPredictionTHR = processNPRParam(params, metricType);
 		switch(metricType.toUpperCase()){
 			case "TP":
 			case "TRUEPOSITIVE":
-				return new TP_Metric(absolute, validAfter);
+				return new TP_Metric(absolute, noPredictionTHR);
 			case "TN":
 			case "TRUENEGATIVE":
-				return new TN_Metric(absolute, validAfter);
+				return new TN_Metric(absolute, noPredictionTHR);
 			case "FN":
 			case "FALSENEGATIVE":
-				return new FN_Metric(absolute, validAfter);
+				return new FN_Metric(absolute, noPredictionTHR);
 			case "FP":
 			case "FALSEPOSITIVE":
-				return new FP_Metric(absolute, validAfter);
+				return new FP_Metric(absolute, noPredictionTHR);
+			case "TPUNK":
+			case "TP_UNK":
+			case "TRUEPOSITIVE_UNK":
+				return new TP_Unk_Metric(absolute, noPredictionTHR);
+			case "FNUNK":
+			case "FN_UNK":
+			case "FALSENEGATIVE_UNK":
+				return new FN_Unk_Metric(absolute, noPredictionTHR);
 			case "PRECISION":
-				return new Precision_Metric(validAfter);
+				return new Precision_Metric(noPredictionTHR);
 			case "RECALL":
-				return new Recall_Metric(validAfter);
+				return new Recall_Metric(noPredictionTHR);
 			case "F-MEASURE":
 			case "FMEASURE":
-				return new FMeasure_Metric(validAfter);
+				return new FMeasure_Metric(noPredictionTHR);
 			case "G-MEAN":
 			case "GMEAN":
 			case "GMEANS":
-				return new GMean_Metric(validAfter);
+				return new GMean_Metric(noPredictionTHR);
 			case "F-SCORE":
 			case "FSCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new FScore_Metric(Double.valueOf(param), validAfter);
-				else return new FMeasure_Metric(validAfter);
+				if(params != null && params.length > 0 && AppUtility.isNumber(params[0].trim()))
+					return new FScore_Metric(Double.valueOf(params[0]), noPredictionTHR);
+				else return new FMeasure_Metric(noPredictionTHR);
 			case "FPR":
-				return new FalsePositiveRate_Metric(validAfter);
+				return new FalsePositiveRate_Metric(noPredictionTHR);
 			case "MCC":
 			case "MATTHEWS":
 			case "MATTHEWSCORRELATIONCOEFFICIENT":
-				return new Matthews_Coefficient(validAfter);
+				return new Matthews_Coefficient(noPredictionTHR);
 			case "AUC":
-				return new AUC_Metric(validAfter);
+				return new AUC_Metric(noPredictionTHR);
 			case "ACCURACY":
-				return new Accuracy_Metric(validAfter);
+				return new Accuracy_Metric(noPredictionTHR);
 			case "SSCORE":
 			case "SAFESCORE":
 			case "SAFE_SCORE":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new SafeScore_Metric(Double.valueOf(param), validAfter);
-				else return new SafeScore_Metric(2.0, validAfter);
+				if(params != null && params.length > 0 && AppUtility.isNumber(params[0].trim()))
+					return new SafeScore_Metric(Double.valueOf(params[0]), noPredictionTHR);
+				else return new SafeScore_Metric(2.0, noPredictionTHR);
 			case "CUSTOM":
-				return new Custom_Metric(validAfter);
+				return new Custom_Metric(noPredictionTHR);
 			case "OVERLAP":
-				return new Overlap_Metric(validAfter);
+				return new Overlap_Metric(noPredictionTHR);
 			case "OVERLAPD":
 			case "OVERLAPDETAIL":
 			case "OVERLAP_DETAIL":
@@ -97,40 +130,67 @@ public abstract class Metric implements Comparable<Metric> {
 			case "NO_PREDICTION":
 			case "NOP":
 			case "NPR":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new NoPredictionArea_Metric(validAfter, Double.valueOf(param));
-				else return new NoPredictionArea_Metric(validAfter, 1.0);
+				return new NoPredictionArea_Metric(noPredictionTHR);
 			case "THRESHOLD":
 			case "THRESHOLDS":
 			case "THRESHOLDS_AMOUNT":
-				return new ThresholdAmount_Metric(validAfter);
+				return new ThresholdAmount_Metric(noPredictionTHR);
 			case "TPCONF":
 			case "TP_CONFIDENCE":
-				return new TPConfidence_Metric(validAfter);
+				return new TPConfidence_Metric(noPredictionTHR);
 			case "TNCONF":
 			case "TN_CONFIDENCE":
-				return new TNConfidence_Metric(validAfter);
+				return new TNConfidence_Metric(noPredictionTHR);
 			case "FPCONF":
 			case "FP_CONFIDENCE":
-				return new FPConfidence_Metric(validAfter);
+				return new FPConfidence_Metric(noPredictionTHR);
 			case "FNCONF":
 			case "FN_CONFIDENCE":
-				return new FNConfidence_Metric(validAfter);
+				return new FNConfidence_Metric(noPredictionTHR);
 			case "CONFIDENCE_ERROR":
 			case "CONFERROR":
-				if(param != null && param.trim().length() > 0 && AppUtility.isNumber(param.trim()))
-					return new ConfidenceErrorMetric(validAfter, Double.valueOf(param));
-				else return new ConfidenceErrorMetric(validAfter, 1.0);
+				if(params != null && params.length > 0 && AppUtility.isNumber(params[0].trim()))
+					return new ConfidenceErrorMetric(Double.valueOf(params[0]), noPredictionTHR);
+				else return new ConfidenceErrorMetric(1.0, noPredictionTHR);
 			default:
 				AppLogger.logError(Metric.class, "MissingPreferenceError", "Metric '" + metricType + "' cannot be defined. Default FMeasure will be used");
-				return new FMeasure_Metric(validAfter);
+				return new FMeasure_Metric(noPredictionTHR);
+		}
+	}
+
+	private static double processNPRParam(String[] params, String metricType) {
+		switch(metricType.toUpperCase()){
+			case "F-SCORE":
+			case "FSCORE":
+			case "SSCORE":
+			case "SAFESCORE":
+			case "SAFE_SCORE":
+			case "CONFIDENCE_ERROR":
+			case "CONFERROR":
+				if(params != null && params.length > 1 && AppUtility.isNumber(params[1].trim()))
+					return Double.valueOf(params[1]);
+				else return Double.NaN;
+			case "OVERLAPD":
+			case "OVERLAPDETAIL":
+			case "OVERLAP_DETAIL":
+			case "NOPREDICTION":
+			case "NO_PREDICTION":
+			case "NOP":
+			case "NPR":
+				if(params != null && params.length > 0 && AppUtility.isNumber(params[0].trim()))
+					return Double.valueOf(params[0]);
+				else return 1.0;
+			default:
+				if(params != null && params.length > 0 && AppUtility.isNumber(params[0].trim()))
+					return Double.valueOf(params[0]);
+				else return Double.NaN;	
 		}
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Metric)
-			return ((Metric) obj).getMetricName().equals(getMetricName());
+			return ((Metric) obj).getName().equals(getName());
 		else
 			return super.equals(obj);
 	}
@@ -174,14 +234,34 @@ public abstract class Metric implements Comparable<Metric> {
 	 *
 	 * @return the metric name 
 	 */
-	public abstract String getMetricName();
+	protected abstract String getMetricName();
+	
+	public String getName(){
+		String metName = getMetricName();
+		if(metName != null && Double.isFinite(noPredTHR) && !mType.equals(MetricType.NO_PREDICTION)){
+			if(metName.length() > 0 && metName.endsWith("("))
+				metName = metName.substring(0, metName.length()-1) + "," + noPredTHR + ")";
+			else metName = metName + "(" + noPredTHR + ")";
+		}
+		return metName;
+	}
 
 	/**
 	 * Gets the metric short name.
 	 *
 	 * @return the metric short name
 	 */
-	public abstract String getMetricShortName();
+	protected abstract String getMetricShortName();
+	
+	public String getShortName(){
+		String metName = getMetricShortName();
+		if(metName != null && Double.isFinite(noPredTHR) && !mType.equals(MetricType.NO_PREDICTION)){
+			if(metName.length() > 0 && metName.endsWith("("))
+				metName = metName.substring(0, metName.length()-1) + "," + noPredTHR + ")";
+			else metName = metName + "(" + noPredTHR + ")";
+		}
+		return metName;
+	}
 
 	public MetricType getMetricType() {
 		return mType;
@@ -212,7 +292,7 @@ public abstract class Metric implements Comparable<Metric> {
 
 	@Override
 	public int compareTo(Metric o) {
-		return o.getMetricName().compareTo(getMetricName());
+		return o.getName().compareTo(getName());
 	}
 
 	public int compareResults(ValueSeries m1, ValueSeries m2) {
