@@ -4,6 +4,8 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.algorithm.utils.KdTree;
+import ippoz.reload.algorithm.utils.KdTree.ELKIEuclid;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -118,10 +120,12 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	 */
 	protected int k;
 	
-	private List<ABODResult> resList;
+	//private List<ABODResult> resList;
+	
+	private ELKIEuclid<ABODResult> treeList;
 
 	/**
-	 * Constructor for Angle-Based Outlier Detection (ABOD).
+	 * Constructor for FAST Angle-Based Outlier Detection (FastABOD).
 	 *
 	 * @param kernelFunction kernel function to use
 	 * @param k Number of nearest neighbors
@@ -141,12 +145,12 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	public OutlierResult run(Database db, Relation<V> relation) {	
 		DBIDs ids = relation.getDBIDs();
 		// Build a kernel matrix, to make O(n^3) slightly less bad.
+		SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
 		
-
-		resList = new ArrayList<ABODResult>(ids.size());
+		treeList = new ELKIEuclid<ABODResult>();
+		//resList = new ArrayList<ABODResult>(ids.size());
 		
 		if(isApplicable(relation, ids)){
-			SimilarityQuery<V> sq = db.getSimilarityQuery(relation, kernelFunction);
 			KernelMatrix kernelMatrix = new KernelMatrix(sq, relation, ids);
 
 			WritableDoubleDataStore abodvalues = DataStoreUtil.makeDoubleStorage(ids, DataStoreFactory.HINT_STATIC);
@@ -157,14 +161,16 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 				//System.out.println(relation.get(pA));
 				double[] abof = calculateABOF(kernelMatrix, pA, relation.iterDBIDs(), relation, db);
 				//System.out.println(abof[0]);
-				resList.add(new ABODResult(db.getBundle(pA), abof[0]));
+				ABODResult ar = new ABODResult(db.getBundle(pA), abof[0]);
+				//resList.add(ar);
+				treeList.addPoint(ar.getPoint(), ar);
 				minmaxabod.put(abof[0]);
 				abodvalues.putDouble(pA, abof[0]);
 			}
 			
 			kernelMatrix = null;
 			
-			Collections.sort(resList);
+			//Collections.sort(resList);
 
 			// Build result representation.
 			DoubleRelation scoreResult = new MaterializedDoubleRelation("Fast Angle-Based Outlier Degree", "fabod-outlier", abodvalues, relation.getDBIDs());
@@ -269,7 +275,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		return sq.similarity(o1, o2);
 	}
 	
-	public int rankSingleABOF(V newInstance) {
+/*	public int rankSingleABOF(V newInstance) {
 		if(resList != null && resList.size() > 0) {
 			double abof = calculateSingleABOF(newInstance);
 			for(int i=resList.size()-1; i>=0;i--){
@@ -279,10 +285,10 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 		}
 		return Integer.MAX_VALUE;
-	}
+	} */
 	
 	private double hasResult(V newInstance){
-		for(ABODResult ar : resList){
+		for(ABODResult ar : treeList.listItems()){
 			if(ar.getVector().equals(newInstance))
 				return ar.getABOF();
 		}
@@ -290,56 +296,54 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 	}
 	
 	public double calculateSingleABOF(V newInstance) {
+		return calculateSingleABOF_heap(newInstance);
+	}
+	
+/*	public double calculateSingleABOF_n(V newInstance) {
 		double partialResult;
 		if(resList == null || resList.size() == 0) 
 			return Double.MAX_VALUE;
 		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {			
+			// KNN Search
 			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
+			List<KNNValue> distances = new ArrayList<>(resList.size());
+			int i=0;
+			for(ABODResult ks : resList){
+				if(ks != null)
+					distances.add(new KNNValue(getSimilarity(sq, newInstance, ks.getVector()), i));
+				i++;
+			}
+			Collections.sort(distances);
+			if(k < distances.size())
+				distances = new ArrayList<>(distances.subList(0, k)); 
+			
+			// End KNN Search
 			MeanVariance s = new MeanVariance();
-			List<KNNValue> nn = new LinkedList<KNNValue>();
-			Map<String, Integer> nOccurrences = new HashMap<String, Integer>();
 			final double simAA = getSimilarity(sq, newInstance, newInstance);
 			
-			for(int i=0;i<resList.size();i++) {
-				double simBB = getSimilarity(sq, resList.get(i).getVector(), resList.get(i).getVector());
-				double simAB = getSimilarity(sq, newInstance, resList.get(i).getVector());
+			for(int j=0;j<(distances.size()<k ? distances.size() : k);j++) {
+				
+				double simBB = getSimilarity(sq, resList.get(distances.get(j).getIndex()).getVector(), resList.get(distances.get(j).getIndex()).getVector());
+				double simAB = getSimilarity(sq, newInstance, resList.get(distances.get(j).getIndex()).getVector());
 				double sqdAB = simAA + simBB - simAB - simAB;
-				if(!(sqdAB > 0.)) {
-					continue;
-				}
-				if(!nOccurrences.containsKey(resList.get(i).getVector().toString())){
-					nn.add(new KNNValue(sqdAB, i));
-					nOccurrences.put(resList.get(i).getVector().toString(), 1);
-				} else if(nOccurrences.get(resList.get(i).getVector().toString()) < k - 1){	
-					nn.add(new KNNValue(sqdAB, i));
-					nOccurrences.put(resList.get(i).getVector().toString(), nOccurrences.get(resList.get(i).getVector().toString()) + 1);
-				}
-			}
-	
-			Collections.sort(nn);
-			
-			for(int j=0;j<(nn.size()<k ? nn.size() : k);j++) {
-				
-				double sqdAB = nn.get(j).getScore();
-				double simAB = getSimilarity(sq, newInstance, resList.get(nn.get(j).getIndex()).getVector());
 				
 				if(!(sqdAB > 0.)) {
 					continue;
 				}
 				
-				for(int x=j+1;x<(nn.size()<k ? nn.size() : k);x++) {
+				for(int x=j+1;x<(distances.size()<k ? distances.size() : k);x++) {
 					
-					double sqdAC = nn.get(x).getScore();
-					double simAC = getSimilarity(sq, newInstance, resList.get(nn.get(x).getIndex()).getVector());
+					double sqdAC = distances.get(x).getScore();
+					double simAC = getSimilarity(sq, newInstance, resList.get(distances.get(x).getIndex()).getVector());
 					
 					if(!(sqdAC > 0.)) {
 						continue;
 					
 					}
 					
-					double simBC = getSimilarity(sq, resList.get(nn.get(j).getIndex()).getVector(), resList.get(nn.get(x).getIndex()).getVector());
+					double simBC = getSimilarity(sq, resList.get(distances.get(j).getIndex()).getVector(), resList.get(distances.get(x).getIndex()).getVector());
 					double numerator = simBC - simAB - simAC + simAA;
 					double div = 1. / (sqdAB * sqdAC);
 					
@@ -352,7 +356,129 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
 			return s.getNaiveVariance();
 		}
-	}
+	} */
+	
+	public double calculateSingleABOF_heap(V newInstance) {
+		double partialResult;
+		if(treeList == null || treeList.size() == 0) 
+			return Double.MAX_VALUE;
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
+			return partialResult;
+		else {			
+			double[] point = new double[newInstance.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = newInstance.doubleValue(i);
+			}
+			List<KdTree.Entry<ABODResult>> distances = treeList.nearestNeighbor(point, k-1, false);
+			Collections.sort(distances);
+					
+			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
+			MeanVariance s = new MeanVariance();
+			final double simAA = getSimilarity(sq, newInstance, newInstance);
+			
+			for(int j=0;j<(distances.size()<k ? distances.size() : k);j++) {
+				
+				double simBB = getSimilarity(sq, distances.get(j).value.getVector(), distances.get(j).value.getVector());
+				double simAB = getSimilarity(sq, newInstance, distances.get(j).value.getVector());
+				double sqdAB = simAA + simBB - simAB - simAB;
+				
+				if(!(sqdAB > 0.)) {
+					continue;
+				}
+				
+				for(int x=j+1;x<(distances.size()<k ? distances.size() : k);x++) {
+					
+					double sqdAC = distances.get(x).distance;
+					double simAC = getSimilarity(sq, newInstance, distances.get(x).value.getVector());
+					
+					if(!(sqdAC > 0.)) {
+						continue;
+					
+					}
+					
+					double simBC = getSimilarity(sq, distances.get(j).value.getVector(), distances.get(x).value.getVector());
+					double numerator = simBC - simAB - simAC + simAA;
+					double div = 1. / (sqdAB * sqdAC);
+					
+					s.put(numerator * div, Math.sqrt(div));
+					
+				}
+				
+			}
+			
+			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
+			return s.getNaiveVariance();
+		}
+	} 
+	
+	/*public double calculateSingleABOF_kd(V newInstance) {
+		double partialResult;
+		if(resList == null || resList.size() == 0) 
+			return Double.MAX_VALUE;
+		else if(Double.isFinite(partialResult = hasResult(newInstance)))
+			return partialResult;
+		else {			
+			double[] point = new double[newInstance.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = newInstance.doubleValue(i);
+			}
+			List<KdTree.Entry<ABODResult>> kNN = treeList.nearestNeighbor(point, k, false);
+			
+			double sum = 0;
+			for(KdTree.Entry<ABODResult> en : kNN){
+				sum = sum + en.distance;
+			}
+			//System.out.println("SUM KD: " + sum);
+
+			SimilarityQuery<V> sq = kernelFunction.instantiate(null);
+			List<KNNValue> distances = new ArrayList<>(resList.size());
+			int i=0;
+			for(ABODResult ks : resList){
+				if(ks != null)
+					distances.add(new KNNValue(getSimilarity(sq, newInstance, ks.getVector()), i));
+				i++;
+			}
+			Collections.sort(distances);
+			if(k < distances.size())
+				distances = new ArrayList<>(distances.subList(0, k));
+					
+			MeanVariance s = new MeanVariance();
+			final double simAA = getSimilarity(sq, newInstance, newInstance);
+			
+			for(int j=0;j<(kNN.size()<k ? kNN.size() : k);j++) {
+				
+				double simBB = getSimilarity(sq, kNN.get(j).value.getVector(), kNN.get(j).value.getVector());
+				double simAB = getSimilarity(sq, newInstance, kNN.get(j).value.getVector());
+				double sqdAB = simAA + simBB - simAB - simAB;
+				
+				if(!(sqdAB > 0.)) {
+					continue;
+				}
+				
+				for(int x=j+1;x<(kNN.size()<k ? kNN.size() : k);x++) {
+					
+					double sqdAC = kNN.get(x).distance;
+					double simAC = getSimilarity(sq, newInstance, kNN.get(x).value.getVector());
+					
+					if(!(sqdAC > 0.)) {
+						continue;
+					
+					}
+					
+					double simBC = getSimilarity(sq, kNN.get(j).value.getVector(), kNN.get(x).value.getVector());
+					double numerator = simBC - simAB - simAC + simAA;
+					double div = 1. / (sqdAB * sqdAC);
+					
+					s.put(numerator * div, Math.sqrt(div));
+					
+				}
+				
+			}
+			
+			//System.out.println("EVAL TIME: " + (System.currentTimeMillis() - start));
+			return s.getNaiveVariance();
+		}
+	}*/
 
 	@Override
 	public TypeInformation[] getInputTypeRestriction() {
@@ -422,6 +548,15 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 			}
 		}
 		
+
+		public double[] getPoint(){
+			double[] point = new double[data.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = data.doubleValue(i);
+			}
+			return point;
+		}
+		
 		public double getABOF() {
 			return abof;
 		}
@@ -443,7 +578,7 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 	}
 	
-	private class KNNValue implements Comparable<KNNValue>{
+	/*private class KNNValue implements Comparable<KNNValue>{
 		
 		private double score;
 		
@@ -464,19 +599,19 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 		@Override
 		public int compareTo(KNNValue o) {
-			return score < o.getScore() ? -1 : score == o.getScore() ? 0 : 1;
+			return Double.compare(score, o.getScore());
 		}
 
 		@Override
 		public String toString() {
-			return "KNNValue [score=" + score + ", index=" + index + "]";
+			return "KNNValue [score=" + score + ", index=" + resList.get(index).getVector() + "]";
 		}
 		
-	}
+	}*/
 	
 	public double getDbSize() {
-		if(resList != null)
-			return resList.size();
+		if(treeList != null)
+			return treeList.size();
 		else return 0;
 	}
 
@@ -484,7 +619,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 		BufferedReader reader;
 		String readed;
 		try {
-			resList = new LinkedList<ABODResult>();
+			treeList = new ELKIEuclid<ABODResult>();
+			//resList = new LinkedList<ABODResult>();
 			if(new File(item).exists()){
 				reader = new BufferedReader(new FileReader(new File(item)));
 				reader.readLine();
@@ -492,25 +628,27 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						resList.add(new ABODResult(readed.split(";")[0], readed.split(";")[1]));
+						ABODResult ar = new ABODResult(readed.split(";")[0], readed.split(";")[1]);
+						//resList.add(ar);
+						treeList.addPoint(ar.getPoint(), ar);
 					}
 				}
 				reader.close();
 			}
 		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read ABOD file");
+			AppLogger.logException(getClass(), ex, "Unable to read FastABOD file");
 		} 
 	}
 
 	public void printFile(File file) {
 		BufferedWriter writer;
 		try {
-			if(resList != null && resList.size() > 0){
+			if(treeList != null && treeList.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("data;abof\n");
-				for(ABODResult ar : resList){
+				for(ABODResult ar : treeList.listItems()){
 					writer.write(ar.getVector().toString() + ";" + ar.getABOF() + "\n");
 				}
 				writer.close();
@@ -522,8 +660,8 @@ public class CustomFastABOD<V extends NumberVector> extends ABOD<V> implements E
 
 	@Override
 	public List<Double> getScoresList() {
-		ArrayList<Double> list = new ArrayList<Double>(resList.size());
-		for(ABODResult abof : resList){
+		ArrayList<Double> list = new ArrayList<Double>(treeList.size());
+		for(ABODResult abof : treeList.listItems()){
 			list.add(abof.getABOF());
 		}
 		Collections.sort(list);

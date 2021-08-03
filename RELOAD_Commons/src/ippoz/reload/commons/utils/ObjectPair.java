@@ -3,7 +3,6 @@
  */
 package ippoz.reload.commons.utils;
 
-import java.io.Serializable;
 
 /**
  * @author Tommy
@@ -52,7 +51,8 @@ public class ObjectPair<K, V> {
         return key + "=" + value;
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public boolean equals(Object o) {
         if (this == o)
             return true;

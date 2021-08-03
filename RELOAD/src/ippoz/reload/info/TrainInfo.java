@@ -12,11 +12,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @author Tommy
@@ -24,9 +21,13 @@ import java.util.List;
  */
 public class TrainInfo {
 	
+	private static final String TRAIN_LOADER = "TRAIN Loader";
+	
+	private String loaderName;
+	
 	private static final String TRAIN_SERIES = "TRAIN DataSeries";
 
-	private List<DataSeries> seriesList;
+	private DataSeries dataSeries;
 	
 	private static final String TRAIN_KFOLD = "TRAIN KFold";
 	
@@ -57,7 +58,8 @@ public class TrainInfo {
 	private String metricsString;
 	
 	public TrainInfo(){
-		seriesList = null;
+		loaderName = null;
+		dataSeries = null;
 		kFold = null;
 		runs = null;
 		nDataPoints = null;
@@ -72,6 +74,9 @@ public class TrainInfo {
 		try {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
+				if(preferences.containsKey(TRAIN_LOADER) && preferences.get(TRAIN_LOADER) != null){
+					loaderName = preferences.get(TRAIN_LOADER).trim();
+				}
 				if(preferences.containsKey(TRAIN_ALGORITHMS) && preferences.get(TRAIN_ALGORITHMS) != null && preferences.get(TRAIN_ALGORITHMS).trim().length() > 0){
 					String algString = preferences.get(TRAIN_ALGORITHMS).trim();
 					try {
@@ -90,19 +95,18 @@ public class TrainInfo {
 					nDataPoints = Integer.parseInt(preferences.get(TRAIN_NDATAPOINTS).trim());
 				}
 				if(preferences.containsKey(TRAIN_SERIES) && preferences.get(TRAIN_SERIES) != null && preferences.get(TRAIN_SERIES).trim().length() > 0){
-					seriesList = new LinkedList<DataSeries>();
 					if(preferences.get(TRAIN_SERIES).contains(",")){
 						String[] splitted = preferences.get(TRAIN_SERIES).trim().split(",");
 						for(String algString : splitted){
 							try {
-								seriesList.add(DataSeries.fromString(algString.trim(), false));
+								dataSeries = DataSeries.fromString(algString.trim());
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + algString + "'");
 							}
 						}
 					} else {
 						try {
-							seriesList.add(DataSeries.fromString(preferences.get(TRAIN_SERIES).trim(), false));
+							dataSeries = DataSeries.fromString(preferences.get(TRAIN_SERIES).trim());
 						} catch(Exception ex){
 							AppLogger.logException(getClass(), ex, "Unable to decode dataseries '" + preferences.get(TRAIN_SERIES) + "'");
 						}
@@ -127,8 +131,8 @@ public class TrainInfo {
 		return runs;
 	}
 
-	public void setSeries(List<DataSeries> seriesList) {
-		this.seriesList = seriesList;
+	public void setSeries(DataSeries dataSeries) {
+		this.dataSeries = dataSeries;
 	}
 	
 	public void setKFold(int kFold) {
@@ -151,8 +155,16 @@ public class TrainInfo {
 		this.trainTimeMs = trainTimeMs;
 	}
 
-	public List<DataSeries> getSeriesList() {
-		return seriesList;
+	public String getLoaderName() {
+		return loaderName;
+	}
+
+	public void setLoaderName(String loaderName) {
+		this.loaderName = loaderName;
+	}
+
+	public DataSeries getSeriesList() {
+		return dataSeries;
 	}
 
 	public Integer getkFold() {
@@ -180,11 +192,12 @@ public class TrainInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on training details\n"); 
+			writer.write("\n* Loader Name\n" + TRAIN_LOADER + " = " + (loaderName != null ? loaderName : "") + "\n");
 			writer.write("\n* Algorithms used in the experiment\n" + TRAIN_ALGORITHMS + " = " + (algTypes != null ? algTypes.toString() : "") + "\n");
 			writer.write("\n* K-Fold value used\n" + TRAIN_KFOLD + " = " + (kFold != null ? kFold : "") + "\n");
 			writer.write("\n* Runs used for training\n" + TRAIN_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + TRAIN_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
-			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (seriesList != null ? Arrays.toString(seriesList.toArray()) : "") + "\n");
+			writer.write("\n* Data Series used with algorithms\n" + TRAIN_SERIES + " = " + (dataSeries != null ? dataSeries.toString() : "") + "\n");
 			writer.write("\n* % of Faults/attacks in training set\n" + TRAIN_FAULT_RATIO + " = " + (faultRatio != null ? faultRatio : "") + "\n");
 			writer.write("\n* Training time in ms\n" + TRAIN_TIME + " = " + (trainTimeMs != null ? trainTimeMs : "") + "\n");
 			writer.write("\n* Metric values for training\n" + TRAIN_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
@@ -195,18 +208,19 @@ public class TrainInfo {
 	}
 	
 	public String toFileString(){
-		return (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (loaderName != null ? loaderName.replace(",", ";") : "") + ","
+			    + (algTypes != null ? algTypes.toString() : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (kFold != null ? kFold : "") + ","
 				+ (runs != null ? runs.replace(",", ";") : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
-				+ (seriesList != null ? Arrays.toString(seriesList.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+				+ (dataSeries != null ? dataSeries.toString().replace(",", ";").replace("[", "").replace("]", "") : "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
 				+ (trainTimeMs != null ? trainTimeMs : "") + ","
 				+ (metricsString != null ? metricsString.replace(",", ";") : "");
 	}
 	
 	public static String getFileHeader(){
-		return TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
+		return TRAIN_LOADER + "," + TRAIN_ALGORITHMS + "," + TRAIN_KFOLD + "," + TRAIN_RUNS + "," +
 				TRAIN_NDATAPOINTS + "," + TRAIN_SERIES + "," +
 				TRAIN_FAULT_RATIO + "," + TRAIN_TIME + "," + TRAIN_METRICS;
 	}

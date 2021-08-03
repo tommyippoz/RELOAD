@@ -10,8 +10,6 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.decisionfunction.DecisionFunctionType;
-import ippoz.reload.metric.NoPredictionArea_Metric;
-import ippoz.reload.metric.Overlap_Metric;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.output.LabelledResult;
 
@@ -155,11 +153,11 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore())){
-						if(lr.getValue().getScore() > maxRefValue)
-							maxRefValue = lr.getValue().getScore();
-						if(lr.getValue().getScore() < minRefValue)
-							minRefValue = lr.getValue().getScore();
+					if(Double.isFinite(lr.getValue())){
+						if(lr.getValue() > maxRefValue)
+							maxRefValue = lr.getValue();
+						if(lr.getValue() < minRefValue)
+							minRefValue = lr.getValue();
 					}
 						
 				}
@@ -168,16 +166,8 @@ public class PlotOutputFrame {
 	}
 	
 	private DecisionFunction createDefaultDecisionFunction() {
-		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
-			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			if(list != null && list.size() > 0){
-				for(int i=0;i<list.size();i++){
-					if(list.get(i) != null && list.get(i).getValue() != null && list.get(i).getValue().getDecisionFunction() != null){
-						return list.get(i).getValue().getDecisionFunction();
-					}
-				}
-			}
-		}
+		if(dOut.getDecisionFunction() != null)
+			return dOut.getDecisionFunction();
 		return null;
 	}
 	
@@ -188,8 +178,8 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore()))
-						series.addValue(lr.getValue().getScore());
+					if(Double.isFinite(lr.getValue()))
+						series.addValue(lr.getValue());
 				}
 			//}
 		}
@@ -202,8 +192,8 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			//if(containsPostiveLabel(list)) {
 				for(LabelledResult lr : list){
-					if(Double.isFinite(lr.getValue().getScore()) && lr.getLabel())
-						series.addValue(lr.getValue().getScore());
+					if(Double.isFinite(lr.getValue()) && lr.getLabel())
+						series.addValue(lr.getValue());
 				}
 			//}
 		}
@@ -237,7 +227,7 @@ public class PlotOutputFrame {
 			detFrame.setBounds(0, 0, (int)(screenSize.getWidth()*0.6), (int)(screenSize.getHeight()*0.75));
 		else detFrame.setBounds(0, 0, 800, 480);
 		detFrame.setBackground(Color.WHITE);
-		detFrame.setResizable(false);
+		detFrame.setResizable(true);
 	}
 	
 	public void buildMainPanel(){
@@ -533,7 +523,7 @@ public class PlotOutputFrame {
 						List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 						//if(containsPostiveLabel(list)){
 							for(LabelledResult lr : list){
-								double score = lr.getValue().getScore(); 
+								double score = lr.getValue(); 
 								if(score >= minValue && (maxValue == maxRefValue || score <= maxValue)){
 									if(lr.getLabel()){
 										if(anList.containsKey(score))
@@ -660,26 +650,24 @@ public class PlotOutputFrame {
 		
 		for(LoaderBatch expName : dOut.getLabelledScores().keySet()){
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
-			//if(containsPostiveLabel(list)){
-				for(LabelledResult lr : list){
-					double currentScore;
-					if(Double.isFinite(lr.getValue().getScore()))
-						currentScore = lr.getValue().getScore();
-					else currentScore = maxValue + maxValue/(numIntervals-1.0);
-					if(currentScore >= minValue && currentScore <= currentMax){
-						AnomalyResult aRes = dFunction.assignScore(lr.getValue(), false);
-						if(lr.getLabel()){
-							if(aRes == AnomalyResult.ANOMALY)
-								tp++;
-							else fn++;
-						} else {
-							if(aRes == AnomalyResult.ANOMALY)
-								fp++;
-							else tn++;
-						}
+			for(LabelledResult lr : list){
+				double currentScore;
+				if(Double.isFinite(lr.getValue()))
+					currentScore = lr.getValue();
+				else currentScore = maxValue + maxValue/(numIntervals-1.0);
+				if(currentScore >= minValue && currentScore <= currentMax){
+					AnomalyResult aRes = dFunction.assignScore(lr, false);
+					if(lr.getLabel()){
+						if(aRes == AnomalyResult.ANOMALY)
+							tp++;
+						else fn++;
+					} else {
+						if(aRes == AnomalyResult.ANOMALY)
+							fp++;
+						else tn++;
 					}
 				}
-			//}
+			}
 		}
 		
 		DecimalFormat df = new DecimalFormat("#0.00"); 
@@ -709,13 +697,13 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
-					if(lr.getValue().getScore() >= minValue && (maxValue == maxRefValue || lr.getValue().getScore() <= maxValue)){
+					if(lr.getValue() >= minValue && (maxValue == maxRefValue || lr.getValue() <= maxValue)){
 						if(lr.getLabel()){								
-							anList.add(lr.getValue().getScore());
+							anList.add(lr.getValue());
 						} else {
-							okList.add(lr.getValue().getScore());
+							okList.add(lr.getValue());
 						}
-						if(!Double.isFinite(lr.getValue().getScore()))
+						if(!Double.isFinite(lr.getValue()))
 							countInf++;
 					} else countErr++;
 				}
@@ -735,7 +723,7 @@ public class PlotOutputFrame {
 		// Generate the graph
 		JFreeChart chart = ChartFactory.createXYBarChart(
 				"Scores of '" + dOut.getAlgorithm() + "' on '" + dOut.getDataset() + "'" +
-				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite, " + AppUtility.formatDouble(Overlap_Metric.calculateOverlap(okList, anList)) + "% overlap,  " + AppUtility.formatDouble(NoPredictionArea_Metric.calculateOverlapDetail(okList, anList)) + "% weighted overlap)", 
+				"\n with " + okList.size() + " normal and " + anList.size() + " anomalous data points \n(" + countErr + " discarded, " + countInf + " infinite)", 
 				"", false, dOut.getAlgorithm().replace("[", "").replace("]", "") + " score", dataset, 
 				PlotOrientation.VERTICAL, true, true, false);
 		   
@@ -797,7 +785,7 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			/*if(containsPostiveLabel(list)){*/
 				for(LabelledResult lr : list){
-					if(Double.isInfinite(lr.getValue().getScore()) || lr.getValue().getScore() > Double.MAX_VALUE - 10){
+					if(Double.isInfinite(lr.getValue()) || lr.getValue() > Double.MAX_VALUE - 10){
 						infiniteFlag = true;
 					}
 				}
@@ -820,15 +808,15 @@ public class PlotOutputFrame {
 			//if(containsPostiveLabel(list)){
 				for(LabelledResult lr : list){
 					double currentScore;
-					if(Double.isFinite(lr.getValue().getScore()))
-						currentScore = lr.getValue().getScore();
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
+					if(Double.isFinite(lr.getValue()))
+						currentScore = lr.getValue();
+					else if(!Double.isFinite(lr.getValue()) && lr.getValue() > 0 && maxValue == maxRefValue)
 						currentScore = maxValue + maxValue/(numIntervals-1.0);
-					else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
+					else if(!Double.isFinite(lr.getValue()) && lr.getValue() < 0 && minValue == minRefValue)
 						currentScore = minValue - minValue/(numIntervals-1.0);
-					else currentScore = lr.getValue().getScore();
+					else currentScore = lr.getValue();
 					if(currentScore >= minValue && currentScore <= currentMax){
-						double normalizedScore = (lr.getValue().getScore() - minValue) / (currentMax - minValue);
+						double normalizedScore = (lr.getValue() - minValue) / (currentMax - minValue);
 						int dataIndex = (int) (normalizedScore*numIntervals);
 						if(dataIndex >= numIntervals)
 							dataIndex = numIntervals - 1;
@@ -877,16 +865,16 @@ public class PlotOutputFrame {
 			List<LabelledResult> list = dOut.getLabelledScores().get(expName);
 			for(LabelledResult lr : list){
 				double currentScore;
-				if(Double.isFinite(lr.getValue().getScore()))
-					currentScore = lr.getValue().getScore();
-				else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() > 0 && maxValue == maxRefValue)
+				if(Double.isFinite(lr.getValue()))
+					currentScore = lr.getValue();
+				else if(!Double.isFinite(lr.getValue()) && lr.getValue() > 0 && maxValue == maxRefValue)
 					currentScore = maxValue + maxValue/(numIntervals-1.0);
-				else if(!Double.isFinite(lr.getValue().getScore()) && lr.getValue().getScore() < 0 && minValue == minRefValue)
+				else if(!Double.isFinite(lr.getValue()) && lr.getValue() < 0 && minValue == minRefValue)
 					currentScore = minValue - minValue/(numIntervals-1.0);
-				else currentScore = lr.getValue().getScore();
+				else currentScore = lr.getValue();
 				if(currentScore >= minValue && currentScore <= currentMax){
 					double normalizedScore = (currentScore - minValue) / (currentMax - minValue);
-					AnomalyResult aRes = dFunction.classify(lr.getValue());
+					AnomalyResult aRes = dFunction.classify(lr);
 					int dataIndex = (int) (normalizedScore*numIntervals);
 					if(dataIndex == numIntervals)
 						dataIndex--;

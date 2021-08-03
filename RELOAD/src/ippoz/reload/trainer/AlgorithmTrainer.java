@@ -7,18 +7,20 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.BetterMaxMetric;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
+import ippoz.reload.metric.result.MetricResultSeries;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.ArrayList;
@@ -127,11 +129,11 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public void run() {
-		ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> confResults;
+		ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> confResults;
 		trainingTime = System.currentTimeMillis();
 		confResults = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
-		if(confResults != null){
+		if(confResults != null && bestConf != null){
 			
 			valMetricsString = calculateMetrics(validationMetrics, confResults.getKey());
 			//printTrainingResults();
@@ -141,7 +143,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			if(getReputationScore() > 0.0)
 				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 			else bestConf.addItem(BasicConfiguration.WEIGHT, "1.0");
-			bestConf.addItem(BasicConfiguration.AVG_SCORE, confResults.getValue());//String.valueOf(getMetricAvgScore()));
+			bestConf.addItem(BasicConfiguration.AVG_SCORE, confResults.getValue().toString());//String.valueOf(getMetricAvgScore()));
 			bestConf.addItem(BasicConfiguration.STD_SCORE, 0);//String.valueOf(getMetricStdScore()));
 			bestConf.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
 		}
@@ -190,17 +192,17 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @param tTiming the t timing
 	 * @return the algorithm configuration
 	 */
-	protected abstract ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration();
+	protected abstract ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> lookForBestConfiguration();
 
 	/**
 	 * Evaluates metric score on a specified set of experiments.
 	 *
 	 * @return the metric score
 	 */
-	private ValueSeries evaluateMetricScore(Metric met, Map<Knowledge, List<AlgorithmResult>> trainResults){
-		ValueSeries metricResults = new ValueSeries();
+	private MetricResultSeries evaluateMetricScore(Metric met, Map<Knowledge, List<AlgorithmResult>> trainResults){
+		MetricResultSeries metricResults = new MetricResultSeries();
 		for(Knowledge knowledge : trainResults.keySet()){
-			metricResults.addValue(met.evaluateAnomalyResults(trainResults.get(knowledge)));
+			metricResults.addValue(met.evaluateAnomalyResults(trainResults.get(knowledge), new ConfusionMatrix(trainResults.get(knowledge))));
 		}
 		return metricResults;
 	}
@@ -209,7 +211,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		String toReturn = "";
 		if(validationMetrics != null){
 			for(Metric met : validationMetrics){
-				toReturn = toReturn + met.getMetricShortName() + ":" + evaluateMetricScore(met, trainResults).getAvg() + ",";
+				toReturn = toReturn + met.getShortName() + ":" + evaluateMetricScore(met, trainResults).getAvg() + ",";
 			}
 			return toReturn.substring(0, toReturn.length()-1);
 		} else return "Not Calculated";
@@ -305,8 +307,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 *
 	 * @return the metric score
 	 */
-	public double getMetricAvgScore() {
-		return Double.valueOf(bestConf.getItem(BasicConfiguration.AVG_SCORE));
+	public MetricResult getMetricAvgScore() {
+		if(bestConf != null)
+			return MetricResult.valueOf(bestConf.getItem(BasicConfiguration.AVG_SCORE));
+		else return new DoubleMetricResult(Double.NaN);
 	}
 	
 	/**
@@ -315,7 +319,9 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 * @return the metric score
 	 */
 	public double getMetricStdScore() {
-		return Double.valueOf(bestConf.getItem(BasicConfiguration.STD_SCORE));
+		if(bestConf != null)
+			return Double.valueOf(bestConf.getItem(BasicConfiguration.STD_SCORE));
+		else return Double.NaN;
 	}
 	
 	/**
@@ -346,28 +352,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			return dataSeries.getName();
 		else return null;
 	}
-	
-	/**
-	 * Gets the layer.
-	 *
-	 * @return the layer
-	 */
-	public LayerType getLayerType(){
-		if(dataSeries != null)
-			return dataSeries.getLayerType();
-		else return null;
-	}
-	
-	/**
-	 * Gets the series name.
-	 *
-	 * @return the series name
-	 */
-	public DataCategory getDataCategory(){
-		if(dataSeries != null)
-			return dataSeries.getDataCategory();
-		else return null;
-	}
 
 	/**
 	 * Gets the algorithm type.
@@ -384,8 +368,8 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
 		if(metric instanceof BetterMaxMetric)
-			return Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
-		else return -1*Double.compare(other.getMetricAvgScore(), getMetricAvgScore());
+			return getMetricAvgScore().compareTo(other.getMetricAvgScore());
+		else return -1*getMetricAvgScore().compareTo(other.getMetricAvgScore());
 	}
 
 	/**
@@ -403,17 +387,17 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		kList = null;
 	}
 	
-	protected ObjectPair<String, Double> electBestDecisionFunction(DetectionAlgorithm algorithm, List<AlgorithmResult> resultList, ValueSeries vs){
-		double bestScore = Double.NaN;
+	protected ObjectPair<String, MetricResult> electBestDecisionFunction(DetectionAlgorithm algorithm, List<AlgorithmResult> resultList, ValueSeries vs){
+		MetricResult bestScore = null;
 		String bestFunction = null;
-		if(resultList != null){
+		if(resultList != null && vs != null && vs.size() > 0){
 			for(String decFunctString : DECISION_FUNCTIONS){
 				if(DecisionFunction.isApplicableTo(getAlgType(), decFunctString)){
 					DecisionFunction df = algorithm.setDecisionFunction(decFunctString);
 					if(df != null){
 						List<AlgorithmResult> updatedList = updateResultWithDecision(df, resultList);
-						double val = getMetric().evaluateAnomalyResults(updatedList);
-						if(!Double.isFinite(bestScore) || getMetric().compareResults(val, bestScore) > 0){
+						MetricResult val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
+						if(bestScore == null || getMetric().compareResults(val, bestScore) > 0){
 							bestScore = val;
 							bestFunction = decFunctString;
 						}
@@ -422,14 +406,14 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			}
 			
 		}
-		return new ObjectPair<String, Double>(bestFunction, bestScore);
+		return new ObjectPair<String, MetricResult>(bestFunction, bestScore);
 	}
 	
 	protected static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, List<AlgorithmResult> oldList){
 		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
 		for(AlgorithmResult ar : oldList){
 			AnomalyResult anr = dFunction.classify(ar);
-			newList.add(new AlgorithmResult(ar.hasInjection(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, dFunction, ar.getConfidence()));
+			newList.add(new AlgorithmResult(ar.isAnomalous(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, ar.getConfidence()));
 		}
 		return newList;
 	}
@@ -437,5 +421,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	public String getMetricsString() {
 		return valMetricsString;
 	}
+	
+	public abstract void saveAlgorithmScores();
 	
 }

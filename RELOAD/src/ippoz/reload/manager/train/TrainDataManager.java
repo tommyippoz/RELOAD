@@ -40,7 +40,7 @@ public abstract class TrainDataManager extends DataManager {
 	private Reputation reputation;
 	
 	/** The list of indicators. */
-	protected List<DataSeries> seriesList;
+	protected DataSeries dataSeries;
 	
 	/** The algorithm types. */
 	protected LearnerType algTypes;
@@ -67,10 +67,10 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold) {
+	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold) {
 		this(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
-		seriesList = selectedSeries;
-		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
+		dataSeries = selectedSeries;
+		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}
 	
 	public String getDatasetName(){

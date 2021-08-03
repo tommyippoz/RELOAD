@@ -7,6 +7,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,6 +24,10 @@ import java.util.List;
  *
  */
 public class ValidationInfo {
+	
+	private static final String VALIDATION_LOADER = "VALIDATION Loader";
+	
+	private String loaderName;
 	
 	private static final String VALIDATION_RUNS = "VALIDATION Runs";
 	
@@ -46,7 +51,7 @@ public class ValidationInfo {
 	
 	private static final String VALIDATION_BESTSCORE = "VALIDATION Best Score";
 	
-	private double bestScore;
+	private MetricResult bestScore;
 	
 	private static final String VALIDATION_BESTVOTER = "VALIDATION Best Voter";
 	
@@ -60,12 +65,18 @@ public class ValidationInfo {
 	
 	private String metricsString;
 	
+	private static final String PARAMS_VALUES = "Values HyperParameters";
+	
+	private String paramsString;
+	
 	public ValidationInfo(){
+		loaderName = null;
 		models = null;
 		runs = null;
 		nDataPoints = null;
 		faultRatio = null;
 		valTimeMs = null;
+		paramsString = null;
 	}
 	
 	public ValidationInfo(File file){
@@ -73,6 +84,9 @@ public class ValidationInfo {
 		try {
 			preferences = AppUtility.loadPreferences(file, null);
 			if(preferences != null && !preferences.isEmpty()){
+				if(preferences.containsKey(VALIDATION_LOADER) && preferences.get(VALIDATION_LOADER) != null){
+					loaderName = preferences.get(VALIDATION_LOADER).trim();
+				}
 				if(preferences.containsKey(VALIDATION_MODELS) && preferences.get(VALIDATION_MODELS) != null && preferences.get(VALIDATION_MODELS).trim().length() > 0){
 					models = new LinkedList<AlgorithmModel>();
 					if(preferences.get(VALIDATION_MODELS).contains(",")){
@@ -105,7 +119,7 @@ public class ValidationInfo {
 					valTimeMs = Long.parseLong(preferences.get(VALIDATION_TIME).trim());
 				}
 				if(preferences.containsKey(VALIDATION_BESTSCORE) && preferences.get(VALIDATION_BESTSCORE) != null){
-					bestScore = Double.parseDouble(preferences.get(VALIDATION_BESTSCORE).trim());
+					bestScore = MetricResult.valueOf(preferences.get(VALIDATION_BESTSCORE).trim());
 				}
 				if(preferences.containsKey(VALIDATION_BESTVOTER) && preferences.get(VALIDATION_BESTVOTER) != null){
 					voterString = preferences.get(VALIDATION_BESTVOTER).trim();
@@ -116,18 +130,21 @@ public class ValidationInfo {
 				if(preferences.containsKey(VALIDATION_METRICS) && preferences.get(VALIDATION_METRICS) != null){
 					metricsString = preferences.get(VALIDATION_METRICS).trim();
 				}
+				if(preferences.containsKey(PARAMS_VALUES) && preferences.get(PARAMS_VALUES) != null){
+					paramsString = preferences.get(PARAMS_VALUES).trim();
+				}
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Error while loading train info");
 		}
 	}
 	
-	public double getBestScore() {
+	public MetricResult getBestScore() {
 		return bestScore;
 	}
 
-	public void setBestScore(double bestScore) {
-		this.bestScore = bestScore;
+	public void setBestScore(MetricResult score) {
+		this.bestScore = score;
 	}
 
 	public String getVoter() {
@@ -140,6 +157,22 @@ public class ValidationInfo {
 
 	public String getSeriesString() {
 		return seriesString;
+	}
+	
+	public String getParamsString() {
+		return paramsString;
+	}
+
+	public void setParamsString(String paramsString) {
+		this.paramsString = paramsString;
+	}
+
+	public String getLoaderName() {
+		return loaderName;
+	}
+
+	public void setLoaderName(String loaderName) {
+		this.loaderName = loaderName;
 	}
 
 	public void setSeriesString(List<DataSeries> list) {
@@ -187,6 +220,18 @@ public class ValidationInfo {
 		return metricsString;
 	}
 	
+	public String getMetricsValuesString() {
+		String mvString = "";
+		if(metricsString != null){
+			for(String str : metricsString.split(",")){
+				if(str.contains(":")){
+					mvString = mvString + str.split(":")[1].trim() + ",";
+				} else mvString = mvString + str.trim() + ",";
+			}
+		}
+		return mvString;
+	}
+	
 	public String getMetricsValues(){
 		String gridRows = "";
 		if(metricsString != null && metricsString.trim().length() > 0){
@@ -209,6 +254,7 @@ public class ValidationInfo {
 		try {
 			writer = new BufferedWriter(new FileWriter(file));
 			writer.write("* INFO file generated at " + new Date() + " that reports on validation details\n"); 
+			writer.write("\n* Loader Name\n" + VALIDATION_LOADER + " = " + (loaderName != null ? loaderName : "") + "\n");
 			writer.write("\n* Models used in the experiment\n" + VALIDATION_MODELS + " = " + (models != null ? Arrays.toString(models.toArray()) : "") + "\n");
 			writer.write("\n* Runs used for validation\n" + VALIDATION_RUNS + " = " + (runs != null ? runs : "") + "\n");
 			writer.write("\n* Number of Data Points used for training\n" + VALIDATION_NDATAPOINTS + " = " + (nDataPoints != null ? nDataPoints : "") + "\n");
@@ -218,6 +264,7 @@ public class ValidationInfo {
 			writer.write("\n* Optimal voter used during validation\n" + VALIDATION_BESTVOTER + " = " + (voterString != null ? voterString : "") + "\n");
 			writer.write("\n* Series used for validation\n" + VALIDATION_SERIESSTRING + " = " + (seriesString != null ? seriesString : "") + "\n");
 			writer.write("\n* Metric values for validation\n" + VALIDATION_METRICS + " = " + (metricsString != null ? metricsString : "") + "\n");
+			writer.write("\n* Values of Hyper-Parameters\n" + PARAMS_VALUES + " = " + (paramsString != null ? paramsString : "") + "\n");
 			
 			writer.close();
 		} catch(Exception ex){
@@ -226,16 +273,18 @@ public class ValidationInfo {
 	}
 	
 	public String toFileString(){
-		return (models != null ? Arrays.toString(models.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
+		return (loaderName != null ? loaderName.replace(",", ";") : "") + ","
+				+ (models != null ? Arrays.toString(models.toArray()) : "").replace(",", ";").replace("[", "").replace("]", "") + ","
 				+ (runs != null ? runs : "") + ","
 				+ (nDataPoints != null ? nDataPoints : "") + ","
 				+ (faultRatio != null ? faultRatio : "") + ","
-				+ (valTimeMs != null ? valTimeMs : "");
+				+ (valTimeMs != null ? valTimeMs : "") + ","
+				+ (paramsString != null ? paramsString : "");
 	}
 	
 	public static String getFileHeader(){
-		return VALIDATION_MODELS + "," + VALIDATION_RUNS + "," +
-				VALIDATION_NDATAPOINTS + "," + VALIDATION_FAULT_RATIO + "," + VALIDATION_TIME;
+		return VALIDATION_LOADER + "," + VALIDATION_MODELS + "," + VALIDATION_RUNS + "," +
+				VALIDATION_NDATAPOINTS + "," + VALIDATION_FAULT_RATIO + "," + VALIDATION_TIME + "," + PARAMS_VALUES;
 	}
 
 	public void setRuns(String runs) {

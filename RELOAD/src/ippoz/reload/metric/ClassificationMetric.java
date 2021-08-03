@@ -4,7 +4,12 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.decisionfunction.AnomalyResult;
+import ippoz.reload.metric.result.ArrayMetricResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -24,78 +29,50 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	 * @param absolute
 	 *            the validAfter flag
 	 */
-	public ClassificationMetric(MetricType mType, boolean absolute,	boolean validAfter) {
-		super(mType, validAfter);
+	public ClassificationMetric(MetricType mType, boolean absolute) {
+		this(mType, absolute, Double.NaN);
+	}
+	
+	public ClassificationMetric(MetricType mType, boolean absolute,	double noPredictionTHR) {
+		super(mType, noPredictionTHR);
 		this.absolute = absolute;
 	}
 		
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		if(confusionMatrix != null && confusionMatrix.hasMetric(getMetricType()))
+			return confusionMatrix.getValueFor(getMetricType(), absolute);
+		else return calculateMetric(anomalyEvaluations);
+	}
+	
+	private MetricResult calculateMetric(List<AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
-		for (int i = 0; i < anomalyEvaluations.size(); i++) {
-			//System.out.println(i + "," + anomalyEvaluations.get(i).getScore() + "," + (anomalyEvaluations.get(i).getInjection() != null ? 1 : 0));
-			int d = classifyMetric(anomalyEvaluations.get(i));
+		List<AlgorithmResult> resList = anomalyEvaluations;
+		if(Double.isFinite(getNoPredictionThreshold()))
+			resList = filterResults(anomalyEvaluations);
+		for (int i = 0; i < resList.size(); i++) {
+			int d = classifyMetric(resList.get(i));
 			detectionHits = detectionHits + d;
 		}
-		if (anomalyEvaluations.size() > 0) {
+		if (resList.size() > 0) {
 			if (!absolute){
-				return 100.0 * detectionHits / anomalyEvaluations.size();
-			} else return detectionHits;
-		} else return 0.0;
+				return new DoubleMetricResult(100.0 * detectionHits / resList.size());
+			} else return new DoubleMetricResult(detectionHits);
+		} else return new DoubleMetricResult(0.0);
 	}
 
-
-
-
-	/*@Override
-	public double evaluateAnomalyResults(List<TimedResult> anomalyEvaluations) {
-		int detectionHits = 0;
-		int undetectableCount = 0;
-		List<InjectedElement> overallInj = new LinkedList<InjectedElement>();
-		List<InjectedElement> currentInj = new LinkedList<InjectedElement>();
-		for (int i = 0; i < anomalyEvaluations.size(); i++) {
-			while (!currentInj.isEmpty() && currentInj.get(0).getFinalTimestamp().before(anomalyEvaluations.get(i).getDate())) {
-				currentInj.remove(0);
+	private List<AlgorithmResult> filterResults(List<AlgorithmResult> anomalyEvaluations) {
+		ArrayMetricResult mr = (ArrayMetricResult) new NoPredictionArea_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, null);
+		double[] arr = mr.getArray();
+		if(mr.getDoubleValue() > 0.0 && !Double.isNaN(arr[2]) && !Double.isNaN(arr[3])){
+			List<AlgorithmResult> resList = new LinkedList<>();
+			for(AlgorithmResult ar : anomalyEvaluations){
+				if(ar.getScoreEvaluation() == AnomalyResult.ANOMALY || ar.getScore() < arr[2] || ar.getScore() > arr[3])
+					resList.add(ar);
 			}
-			if (anomalyEvaluations.get(i).getInjectedElement() != null) {
-				overallInj.add(anomalyEvaluations.get(i).getInjectedElement());
-				currentInj.add(anomalyEvaluations.get(i).getInjectedElement());
-			}
-			//System.out.println(i + "," + anomalyEvaluations.get(i).getValue() + "," + (currentInj.size() > 0 ? 1 : 0));
-			int d = classifyMetric(anomalyEvaluations.get(i).getDate(), anomalyEvaluations.get(i).getValue(), currentInj);
-			if (anomalyEvaluations.get(i).getValue() >= 0.0) {
-				detectionHits = detectionHits + d;
-			} else undetectableCount++;
-		}
-		if (anomalyEvaluations.size() > 0) {
-			if (!absolute)
-				// getUndetectable?
-				return 1.0 * detectionHits / (anomalyEvaluations.size() - undetectableCount);
-			else
-				return detectionHits;
-		} else
-			return 0.0;
+			return resList;
+		} else return anomalyEvaluations;
 	}
-
-	private int getUndetectable(List<InjectedElement> injList) {
-		int undetectable = 0;
-		List<InjectedElement> current;
-		while (!injList.isEmpty()) {
-			current = new LinkedList<InjectedElement>();
-			current.add(injList.remove(0));
-			while (!injList.isEmpty()
-					&& current.get(current.size() - 1).compliesWith(
-							injList.get(0))) {
-				current.add(injList.remove(0));
-			}
-			undetectable = undetectable
-					+ ((int) (current.get(current.size() - 1)
-							.getFinalTimestamp().getTime() - current.get(0)
-							.getTimestamp().getTime()) / 1000 - current.size());
-		}
-		return undetectable;
-	}*/
-
 	protected abstract int classifyMetric(AlgorithmResult tResult);
 
 }

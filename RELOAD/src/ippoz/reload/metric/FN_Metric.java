@@ -18,8 +18,12 @@ public class FN_Metric extends ClassificationMetric {
 	 * @param absolute
 	 *            the absolute flag
 	 */
-	public FN_Metric(boolean absolute, boolean validAfter) {
-		super(MetricType.FN, absolute, validAfter);
+	public FN_Metric(boolean absolute) {
+		super(MetricType.FN, absolute);
+	}
+	
+	public FN_Metric(boolean absolute, double noPredictionTHR) {
+		super(MetricType.FN, absolute, noPredictionTHR);
 	}
 
 	/*
@@ -39,7 +43,7 @@ public class FN_Metric extends ClassificationMetric {
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (tResult.hasInjection() && !tResult.getBooleanScore()) {
+		if (tResult.isAnomalous() && !tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

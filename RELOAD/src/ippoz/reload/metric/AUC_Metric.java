@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -13,19 +15,24 @@ import java.util.List;
  */
 public class AUC_Metric extends BetterMaxMetric {
 
-	public AUC_Metric(boolean validAfter) {
-		super(MetricType.AUC, validAfter);
+	public AUC_Metric() {
+		super(MetricType.AUC);
+		// TODO Auto-generated constructor stub
+	}
+	
+	public AUC_Metric(double noPredTHR) {
+		super(MetricType.AUC, noPredTHR);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tpr = new TruePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(anomalyEvaluations);
-		double fpr = new FalsePositiveRate_Metric(isValidAfter())
-				.evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double tpr = new TruePositiveRate_Metric(getNoPredictionThreshold())
+				.evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		double fpr = new FalsePositiveRate_Metric(getNoPredictionThreshold())
+				.evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		double auc = (tpr * fpr) / 2 + (tpr + 1) * (1 - fpr) / 2;
-		return auc;
+		return new DoubleMetricResult(auc);
 	}
 
 	@Override

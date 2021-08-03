@@ -7,15 +7,17 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.featureselection.FeatureSelectorType;
+import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -33,11 +35,9 @@ public class DetectorOutput {
 	
 	private InputManager iManager;
 	
-	private double bestScore;
+	private MetricResult bestScore;
 	
 	private AlgorithmModel refModel;
-	
-	private Loader loader;
 	
 	private List<DataSeries> selectedSeries;
 	
@@ -51,24 +51,26 @@ public class DetectorOutput {
 	
 	private Map<LoaderBatch, List<LabelledResult>> labelledScores;
 	
+	private FeatureSelectionInfo fsInfo;
+	
 	private TrainInfo tInfo;
 	
 	private ValidationInfo vInfo;
 	
-	public DetectorOutput(InputManager iManager, LearnerType algorithms, double bestScore, 
+	public DetectorOutput(InputManager iManager, LearnerType algorithms, MetricResult bestScore, 
 			AlgorithmModel modelList,
-			Loader loader, Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores, 
+			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores, 
 			List<DataSeries> selectedSeries, Map<DataSeries, Map<FeatureSelectorType, Double>> selectedFeatures,
-			String writableTag, double faultsRatio, TrainInfo tInfo, ValidationInfo vInfo) {
+			String writableTag, double faultsRatio, FeatureSelectionInfo fsInfo, TrainInfo tInfo, ValidationInfo vInfo) {
 		this.iManager = iManager;
 		this.algorithms = algorithms;
 		this.bestScore = bestScore;
 		this.refModel = modelList;
-		this.loader = loader;
 		this.selectedSeries = selectedSeries;
 		this.selectedFeatures = selectedFeatures;
 		this.writableTag = writableTag;
 		this.faultsRatio = faultsRatio;
+		this.fsInfo = fsInfo;
 		this.tInfo = tInfo;
 		this.vInfo = vInfo;
 		labelledScores = buildLabelledScores(detailedExperimentsScores);
@@ -194,7 +196,7 @@ public class DetectorOutput {
 		}
 	}*/
 
-	public double getBestScore() {
+	public MetricResult getBestScore() {
 		return bestScore;
 	}
 		
@@ -215,7 +217,7 @@ public class DetectorOutput {
 	}*/
 	
 	public String getFormattedBestScore() {
-		return new DecimalFormat("#.##").format(getBestScore());
+		return new DecimalFormat("#.##").format(getBestScore().getDoubleValue());
 	}
 
 	public String getEvaluationBatches() {
@@ -329,7 +331,19 @@ public class DetectorOutput {
 		return labelledScores;
 	}
 	
-	public Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<AlgorithmResult>> votingScores){
+	public List<AlgorithmResult> getAlgorithmResults(DecisionFunction df){
+		List<AlgorithmResult> list = new LinkedList<>();
+		Map<LoaderBatch, List<LabelledResult>> scoresMap = getLabelledScores();
+		for(LoaderBatch expName : scoresMap.keySet()){
+			List<LabelledResult> batchList = scoresMap.get(expName);
+			for(LabelledResult lr : batchList){
+				list.add(new AlgorithmResult(lr, df));
+			}
+		}
+		return list;
+	}
+	
+	private Map<LoaderBatch, List<LabelledResult>> buildLabelledScores(Map<LoaderBatch, List<AlgorithmResult>> votingScores){
 		Map<LoaderBatch, List<LabelledResult>> outMap = new HashMap<>();
 		if(votingScores != null && votingScores.size() > 0){
 			for(LoaderBatch expName : votingScores.keySet()){
@@ -337,7 +351,7 @@ public class DetectorOutput {
 				for(int i=0;i<votingScores.get(expName).size();i++){
 					AlgorithmResult ar = votingScores.get(expName).get(i);
 					if(i < votingScores.get(expName).size()){
-						outMap.get(expName).add(new LabelledResult(ar.hasInjection(), ar));
+						outMap.get(expName).add(new LabelledResult(ar));
 					}
 				}
 			}
@@ -398,7 +412,7 @@ public class DetectorOutput {
 	} 
 	
 	public String getTrainRuns(){
-		return loader.getRuns();
+		return tInfo.getRuns();
 	}
 	
 	public String getTrainDataPoints(){
@@ -407,6 +421,24 @@ public class DetectorOutput {
 
 	public String getTrainBatches() {
 		return tInfo.getRuns().replace("[", "").replace("]", "");
+	}
+
+	public DecisionFunction getDecisionFunction() {
+		if(refModel != null && refModel.getAlgorithm() != null)
+			return refModel.getAlgorithm().getDecisionFunction();
+		return null;
+	}
+
+	public double getPredictedMCC() {
+		return fsInfo.getMCCPrediction();
+	}
+
+	public double getPredictedF2() {
+		return fsInfo.getF2Prediction();
+	}
+
+	public double getPredictedR() {
+		return fsInfo.getRPrediction();
 	}
 
 	/*public TrainInfo getTrainInfo() {

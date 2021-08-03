@@ -60,6 +60,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 				AlgorithmTrainer at = trainWeakLearner(lList[i], boostedKnowledge, currentDs, i);
 				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
+					at.saveAlgorithmScores();
 					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(lList[i], at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
@@ -109,7 +110,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
 				count = count + (0.5 + alg.getConfidence(score)*0.5);
 			} else {
 				count = count + (0.5 - alg.getConfidence(score)*0.5);
@@ -151,6 +152,14 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		defPar.put(CONFIDENCE_THRESHOLD, new String[]{String.valueOf(DEFAULT_CONFIDENCE_THRESHOLD)});
 		defPar.put(LEARNING_SPEED, new String[]{String.valueOf(DEFAULT_SPEED)});
 		return defPar;
+	}
+	
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(CONFIDENCE_THRESHOLD, getStopThreshold());
+			conf.addItem(LEARNING_SPEED, getLearningSpeed());
+		}
 	}
 
 }

@@ -3,6 +3,7 @@
  */
 package ippoz.reload.ui;
 
+import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.output.DetectorOutput;
@@ -131,7 +132,7 @@ public class OutputFrame {
 		//fPanel.setBounds(summaryPanel.getWidth()/4, 0, summaryPanel.getWidth()/2, 3*labelSpacing);
 		fPanel.setBorder(new CompoundBorder(new EmptyBorder(0, 200, 0, 200), tb));
 		fPanel.setLayout(new GridLayout(1, 1));
-		fPanel.add(createLPanel(true, "Metric", fPanel, (int) (0.01*fPanel.getWidth()), labelSpacing, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getMetricName() : "-"), null));			
+		fPanel.add(createLPanel(true, "Metric", fPanel, (outList != null && outList.size() > 0 && outList.get(0) != null ? outList.get(0).getReferenceMetric().getName() : "-"), null));			
 		summaryPanel.add(fPanel, BorderLayout.NORTH);
 		
 		JPanel contentPanel = new JPanel();
@@ -155,14 +156,18 @@ public class OutputFrame {
 	}
 	
 	private JTable buildOutputSummaryPanel(List<DetectorOutput> outList){
-		String[] header = {"Dataset", "Algorithm", "Features", "Anomaly %", "Score"};
-		String[][] data = new String[outList.size()][5];
+		String[] header = iManager.getPredictMisclassificationsFlag() ?
+				new String[]{"Dataset", "Algorithm", "Features", "Anomaly %", "Score", "Predicted MCC"} :
+				new String[]{"Dataset", "Algorithm", "Features", "Anomaly %", "Score"};
+		String[][] data = new String[outList.size()][6];
 		for(int i=0;i<outList.size();i++){
 			data[i][0] = outList.get(i).getDataset();
 			data[i][1] = outList.get(i).getFullAlgorithm();
 			data[i][2] = String.valueOf(outList.get(i).getUsedFeatures().size());
 			data[i][3] = outList.get(i).getFaultsRatioString();
 			data[i][4] = outList.get(i).getFormattedBestScore();
+			if(iManager.getPredictMisclassificationsFlag())
+				data[i][5] = String.valueOf(outList.get(i).getPredictedMCC());
 		}
 		JTable table = new JTable(data, header);
 		table.setFont(labelFont);
@@ -177,8 +182,8 @@ public class OutputFrame {
         	table.getColumnModel().getColumn(x).setCellRenderer(centerRenderer);
         	table.getColumnModel().getColumn(x).setHeaderRenderer(centerRenderer);
         }
-		table.getColumnModel().getColumn(0).setPreferredWidth(outFrame.getWidth()/5);
-		table.getColumnModel().getColumn(1).setPreferredWidth(outFrame.getWidth()*2/5);
+		table.getColumnModel().getColumn(0).setPreferredWidth(outFrame.getWidth()/6);
+		table.getColumnModel().getColumn(1).setPreferredWidth(outFrame.getWidth()/3);
 		table.getColumnModel().setColumnMargin(5);
 		return table;
 	}
@@ -187,7 +192,7 @@ public class OutputFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, 5, 10, 5));
+		panel.setLayout(new GridLayout(1, 6, 10, 5));
 		
 		JLabel lbl = new JLabel(dOut != null ? dOut.getDataset() : "Dataset");
 		if(dOut == null)
@@ -234,6 +239,15 @@ public class OutputFrame {
 		lbl.setToolTipText("Metric score on the Evaluation Set");
 		panel.add(lbl);
 		
+		lbl = new JLabel(dOut != null ? String.valueOf(dOut.getPredictedMCC()) : "Predicted MCC");
+		if(dOut == null)
+			lbl.setFont(labelBoldFont);
+		else lbl.setFont(smallLabelFont);
+		//lbl.setBounds(panel.getWidth()*5/elements, 0, panel.getWidth()/elements, labelSpacing);
+		lbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lbl.setToolTipText("Predicted MCC according only to Feature Selection");
+		panel.add(lbl);
+		
 		return panel;
 	}
 	
@@ -255,9 +269,9 @@ public class OutputFrame {
 		miscPanel.setBorder(tb);
 		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
 		
-		miscPanel.add(createLPanel(true, "Dataset", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
-		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
-		miscPanel.add(createLPanel(true, "Metric", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing+ 2*bigLabelSpacing, dOut.getReferenceMetric().getMetricName(), "Metric used by RELOAD"));			
+		miscPanel.add(createLPanel(true, "Dataset", miscPanel, dOut.getDataset(), "Name of the loader used bt RELOAD to calculate this score"));
+		miscPanel.add(createLPanel(true, "Algorithm", miscPanel, dOut.getAlgorithm(), "Algorithm used by RELOAD"));
+		miscPanel.add(createLPanel(true, "Metric", miscPanel, dOut.getReferenceMetric().getName(), "Metric used by RELOAD"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -266,11 +280,18 @@ public class OutputFrame {
 		
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Details ", TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		miscPanel.setBorder(tb);
-		miscPanel.setLayout(new GridLayout(3, 1, 10, 5));
+		miscPanel.setLayout(new GridLayout(4, 1, 10, 5));
  
-		miscPanel.add(createLPanel(true, "Train Data Points", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing, dOut.getTrainDataPoints(), "Data Points used for Training"));
-		miscPanel.add(createLPanel(true, "Evaluation Data Points", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + bigLabelSpacing, dOut.getEvaluationDataPoints(), "Data Points used for Evaluation"));
-		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, (int) (0.02*miscPanel.getWidth()), labelSpacing + 2*bigLabelSpacing, String.valueOf(dOut.getBestScore()), "Metric Score on Evaluation Runs"));			
+		miscPanel.add(createLPanel(true, "Train Data Points", miscPanel, dOut.getTrainDataPoints(), "Data Points used for Training"));
+		miscPanel.add(createLPanel(true, "Evaluation Data Points", miscPanel, dOut.getEvaluationDataPoints(), "Data Points used for Evaluation"));
+		miscPanel.add(createLPanel(true, "Metric Score", miscPanel, String.valueOf(dOut.getBestScore()), "Metric Score on Evaluation Runs"));			
+		
+		String confString = "";
+		List<AlgorithmModel> am = dOut.getTrainingModels();
+		if(am != null && am.size() > 0){
+			confString = am.get(0).getMainConfString();
+		}
+		miscPanel.add(createLPanel(true, "Hyper-Parameters", miscPanel, confString, "Hyper-Parameters of the Algorithm"));			
 		
 		headerPanel.add(miscPanel);
 		
@@ -286,7 +307,7 @@ public class OutputFrame {
         columnNames[1] = "# Checkers";
 		int i = 2;
         for(Metric met : dOut.getEvaluationMetrics()){
-			columnNames[i++] = met.getMetricShortName();
+			columnNames[i++] = met.getShortName();
 		}	 
         
         int yDist = miscPanel.getHeight() + labelSpacing/2;
@@ -368,7 +389,7 @@ public class OutputFrame {
 		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Detailed Outputs ", TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 16), Color.DARK_GRAY);
 		//fPanel.setBounds(outFrame.getWidth()/5, yDist, outFrame.getWidth()*3/5, 2*bigLabelSpacing);
 		fPanel.setBorder(tb);
-		fPanel.setLayout(new GridLayout(1, 5, 20, 10));
+		fPanel.setLayout(new GridLayout(1, 6, 15, 10));
 		
 		JButton button = new JButton("Output Folder");
 		button.setVisible(true);
@@ -422,6 +443,16 @@ public class OutputFrame {
 			} } );	
 		fPanel.add(button);
 		
+		button = new JButton("Plot No Prediction");
+		button.setVisible(true);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				PlotNoPredictionFrame odf = new PlotNoPredictionFrame(dOut);
+				odf.buildMainPanel();
+				odf.setVisible(true);
+			} } );	
+		fPanel.add(button);
+		
 		containerPanel.add(fPanel, BorderLayout.SOUTH);
 		
 		return containerPanel;
@@ -450,15 +481,15 @@ public class OutputFrame {
 	    return width;
 	}
 	
-	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, null);
+	public JPanel createLPanel(String textName, JPanel root, String textFieldText){
+		return createLPanel(false, textName, root, textFieldText, null);
 	}
 	
-	public JPanel createLPanel(String textName, JPanel root, int panelY, String textFieldText, String tooltipText){
-		return createLPanel(false, textName, root, (int) (root.getWidth()*0.02), panelY, textFieldText, tooltipText);
+	public JPanel createLPanel(String textName, JPanel root, String textFieldText, String tooltipText){
+		return createLPanel(false, textName, root, textFieldText, tooltipText);
 	}
 	
-	public JPanel createLPanel(boolean bold, String textName, JPanel root, int panelX, int panelY, String textFieldText, String tooltipText){
+	public JPanel createLPanel(boolean bold, String textName, JPanel root, String textFieldText, String tooltipText){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
 		//panel.setBounds(panelX, panelY, (int) (root.getWidth()*0.96), labelSpacing);

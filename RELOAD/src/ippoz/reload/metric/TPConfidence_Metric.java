@@ -11,14 +11,14 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
  */
 public class TPConfidence_Metric extends ClassificationConfidenceMetric {
 
-	public TPConfidence_Metric(boolean validAfter) {
-		super(MetricType.TP_CONF, true, validAfter);
+	public TPConfidence_Metric(double noPredTHR) {
+		super(MetricType.TP_CONF, true, noPredTHR);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	protected int classifyMetric(AlgorithmResult tResult) {
-		if (tResult.hasInjection() && tResult.getBooleanScore()) {
+		if (tResult.isAnomalous() && tResult.getBooleanScore()) {
 			return 1;
 		} else return 0;
 	}

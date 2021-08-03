@@ -76,7 +76,7 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 		
 		scores = new LinkedList<LDCOFScore>();
 		for(Snapshot snap : Knowledge.toSnapList(kList, getDataSeries())){
-			scores.add(new LDCOFScore(Snapshot.snapToString(snap, getDataSeries()), calculateLDCOF(getSnapValueArray(snap))));
+			scores.add(new LDCOFScore(snap.snapToString(), calculateLDCOF(getSnapValueArray(snap))));
 		}
 		
 		return true;
@@ -157,11 +157,11 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 	private void printScores(File file){
 		BufferedWriter writer;
 		try {
-			if(clSnaps != null && clSnaps.size() > 0){
+			if(clSnaps != null && clSnaps.size() > 0 && scores != null && scores.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
-				writer.write("data(enclosed in {});dbscan\n");
+				writer.write("data(enclosed in {});ldcof\n");
 				for(LDCOFScore score : scores){
 					writer.write(score.getSnapValue() + ";" + score.getLDCOF() + "\n");
 				}
@@ -253,34 +253,6 @@ public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgori
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN file");
-		} 
-	}
-	
-	/**
-	 * Load scores file.
-	 *
-	 * @param file the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if(file.exists()){
-				scores = new LinkedList<LDCOFScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new LDCOFScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read DBSCAN Scores file");
 		} 
 	}
 	

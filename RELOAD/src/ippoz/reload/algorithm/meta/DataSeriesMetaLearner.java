@@ -17,6 +17,7 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.meta.MetaLearnerType;
+import ippoz.reload.metric.BetterBigMetric;
 import ippoz.reload.trainer.AlgorithmTrainer;
 
 import java.io.BufferedWriter;
@@ -82,12 +83,13 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	public boolean automaticInnerTraining(List<Knowledge> kList) {
 		List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 		
+		updateConfiguration();
 		mTrainer = trainMetaLearner(kList);
 		
 		scores = new LinkedList<MetaScore>();
 		for(Snapshot snap : snapList){
 			ObjectPair<Double, Object> res = calculateSnapshotScore(getSnapValueArray(snap));
-			scores.add(new MetaScore(Snapshot.snapToString(snap, getDataSeries()), res.getKey()));
+			scores.add(new MetaScore(snap.snapToString(), res.getKey()));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
@@ -131,7 +133,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		try {
 			writer = new BufferedWriter(new FileWriter(new File(filefolder + filename)));
 			writer.write("*This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
-			writer.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + data.getTargetMetric().getMetricName() + "),std_metric_score(" + data.getTargetMetric().getMetricName() + "),dataset,configuration\n");
+			writer.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + data.getTargetMetric().getName() + "),std_metric_score(" + data.getTargetMetric().getName() + "),dataset,configuration\n");
 			for(AlgorithmTrainer trainer : tList){
 				if(trainer.getBestConfiguration() != null) {
 					writer.write(trainer.getSeriesDescription() + "§" + 
@@ -157,6 +159,8 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	}
 
 	protected abstract List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList);
+	
+	protected abstract void updateConfiguration();
 
 	@Override
 	protected void storeAdditionalPreferences() {
@@ -191,10 +195,18 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
-				count = count + (0.5 + alg.getConfidence(score)*0.5);
+			if(alg.getTrainMetric() instanceof BetterBigMetric && alg.getTrainMetricScore() < 0){
+				if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
+					count = count + (0.5 - alg.getConfidence(score)*0.5);
+				} else {
+					count = count + (0.5 + alg.getConfidence(score)*0.5);
+				}
 			} else {
-				count = count + (0.5 - alg.getConfidence(score)*0.5);
+				if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){
+					count = count + (0.5 + alg.getConfidence(score)*0.5);
+				} else {
+					count = count + (0.5 - alg.getConfidence(score)*0.5);
+				}
 			}
 		}
 		return new ObjectPair<Double, Object>(count/i, scores);

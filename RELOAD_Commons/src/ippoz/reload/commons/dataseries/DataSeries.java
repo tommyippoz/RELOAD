@@ -3,24 +3,11 @@
  */
 package ippoz.reload.commons.dataseries;
 
-import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.data.Observation;
-import ippoz.reload.commons.knowledge.snapshot.SnapshotValue;
-import ippoz.reload.commons.layers.LayerType;
-import ippoz.reload.commons.service.IndicatorStat;
-import ippoz.reload.commons.service.ServiceCall;
-import ippoz.reload.commons.service.ServiceStat;
-import ippoz.reload.commons.service.StatPair;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,239 +15,141 @@ import java.util.List;
  * @author Tommy
  *
  */
-public abstract class DataSeries implements Comparable<DataSeries> {
+public class DataSeries implements Comparable<DataSeries> {
 	
 	private static final int COMPACT_STRING_SIZE_LIMIT = 60;
 
 	private String seriesName;
 	
-	private DataCategory dataCategory;
+	private Indicator[] indList;
 	
 	private double dsRank;
 	
-	protected DataSeries(String seriesName, DataCategory dataCategory) {
-		this.seriesName = seriesName;
-		this.dataCategory = dataCategory;
+	public DataSeries(List<DataSeries> seriesList){
 		this.dsRank = Double.NaN;
+		List<Indicator> iList = new LinkedList<>();
+		for(DataSeries ds : seriesList){
+			iList.addAll(Arrays.asList(ds.getIndicators()));
+		}
+		iList = sanitizeIndicators(iList);
+		indList = iList.toArray(new Indicator[iList.size()]);
+		if(indList != null && indList.length > 0){
+			seriesName = toCompactString();
+		} else seriesName = "";
+	}
+
+	public DataSeries(Indicator[] indicatorList) {
+		List<Indicator> ind = sanitizeIndicators(Arrays.asList(indicatorList));
+		this.indList = ind.toArray(new Indicator[ind.size()]);
+		this.dsRank = Double.NaN;
+		if(indList != null && indList.length > 0){
+			seriesName = toCompactString();
+		} else seriesName = "";
+	}
+	
+	private List<Indicator> sanitizeIndicators(List<Indicator> initialList) {
+		List<Indicator> finalList = new LinkedList<>();
+		if(initialList != null){
+			for(Indicator ind : initialList){
+				if(ind != null)
+					finalList.add(ind);
+			}
+		}
+		return finalList;
+	}
+	
+	public DataSeries(Indicator indicator) {
+		this(new Indicator[]{indicator});
+	}
+	
+	public Indicator[] getIndicators() {
+		return indList;
 	}
 
 	@Override
 	public String toString() {
-		return seriesName + "#" + dataCategory + "#" + getLayerType();
+		return getName();
 	}
-
-	public String getName() {
+	
+	public String getName(){
 		return seriesName;
-	}
-
-	public DataCategory getDataCategory() {
-		return dataCategory;
 	}
 	
 	public List<DataSeries> listSubSeries(){
 		List<DataSeries> outList = new LinkedList<DataSeries>();
-		if(this instanceof ComplexDataSeries){
-			outList.addAll(((ComplexDataSeries)this).getFirstOperand().listSubSeries());
-			outList.addAll(((ComplexDataSeries)this).getSecondOperand().listSubSeries());
-		} else if(this instanceof MultipleDataSeries)
-			outList.addAll(((MultipleDataSeries)this).getSeriesList());
-		else outList.add(this); 
+		if(indList != null && indList.length > 1){
+			for(Indicator ind : indList){
+				outList.add(new DataSeries(ind));
+			}
+		} else outList.add(this);
 		return outList;
 	}
 	
 	public boolean contains(DataSeries other){
-		if(this instanceof MultipleDataSeries)
-			return DataSeries.isIn(((MultipleDataSeries)this).getSeriesList(), other);
-		else if(this instanceof ComplexDataSeries)
-			return ((ComplexDataSeries)this).getFirstOperand().contains(other) || ((ComplexDataSeries)this).getSecondOperand().contains(other);
-		else return compareTo(other) == 0;
+		if(other == null || other.size() == 0)
+			return true;
+		else if(size() == 0)
+			return false;
+		else {
+			for(Indicator ind : other.getIndicators()){
+				if(!containsIndicator(ind))
+					return false;
+			} 
+			return true;
+		}
+	}
+
+	private boolean containsIndicator(Indicator other) {
+		if(other != null){
+			for(Indicator ind : getIndicators()){
+				if(ind.getName().compareTo(other.getName()) == 0)
+					return true;
+			} 
+		}
+		return false;
 	}
 
 	@Override
 	public int compareTo(DataSeries other) {
-		if(seriesName.equals(other.getName()) && dataCategory.equals(other.getDataCategory()))
-			return 0;
-		else if(seriesName.equals(other.getName())){
-			return dataCategory.compareTo(other.getDataCategory());
-		} else return seriesName.compareTo(other.getName());
+		return seriesName.compareTo(other.getName());
 	}
 	
-	public SnapshotValue getSeriesValue(Observation obs){
-		try {
-			switch(dataCategory){
-				case PLAIN:
-					return getPlainSeriesValue(obs);
-				case DIFFERENCE:
-					return getDiffSeriesValue(obs);
-				default:
-					return null;
+	public static DataSeries fromString(String seriesName) {
+		if(seriesName.contains("@")){
+			int indIndex = 0;
+			Indicator[] iList = new Indicator[seriesName.split("@").length];
+			for(String sName : seriesName.split("@")){
+				iList[indIndex++] = new Indicator(sName.trim(), Double.class);
 			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "CastError");
-		}
-		return null;
-	}
-
-	public abstract LayerType getLayerType();
-	
-	public abstract boolean compliesWith(AlgorithmType algType);
-	
-	protected abstract SnapshotValue getPlainSeriesValue(Observation obs);
-	
-	protected abstract SnapshotValue getDiffSeriesValue(Observation obs);
-	
-	// Sincronizza anche se è all'inizio, nel corpo o alla fine.
-	public abstract StatPair getSeriesServiceStat(Date timestamp, ServiceCall sCall, ServiceStat sStat);
-
-	protected static StatPair getPairByTime(Date timestamp, ServiceCall sCall, IndicatorStat iStat){
-		if(sCall.isAliveAt(timestamp)){
-			if(sCall.getStartTime().equals(timestamp))
-				return iStat.getFirstObs();
-			else if(sCall.getStartTime().before(timestamp) && sCall.getEndTime().after(timestamp))
-				return iStat.getAllObs();
-			else if(sCall.getEndTime().equals(timestamp))
-				return iStat.getLastObs();
-		}
-		return null;
-	}
-	
-	public static DataSeries fromString(String stringValue, boolean show) {
-		try {
-			if(stringValue != null && stringValue.length() > 0){
-				String layer = stringValue.substring(stringValue.lastIndexOf("#")+1);
-				String partial = stringValue.substring(0, stringValue.indexOf(layer)-1);
-				String dataType = partial.substring(partial.lastIndexOf("#")+1);
-				String dataSeries = stringValue.substring(0, partial.lastIndexOf("#"));
-				return fromStrings(dataSeries, DataCategory.valueOf(dataType), LayerType.valueOf(layer));
+			return new DataSeries(iList);
+		} else if(seriesName.contains(";")){
+			int indIndex = 0;
+			Indicator[] iList = new Indicator[seriesName.split(";").length];
+			for(String sName : seriesName.split(";")){
+				iList[indIndex++] = new Indicator(sName.trim(), Double.class);
 			}
-		} catch(Exception ex){
-			if(show)
-				AppLogger.logError(DataSeries.class, "ParseError", "Unable to parse '" + stringValue + "' dataseries");
-		}
-		return null;
+			return new DataSeries(iList);
+		} else return new DataSeries(new Indicator(seriesName, Double.class));
 	}
 	
-	public static DataSeries fromStrings(String seriesName, DataCategory dataType, LayerType layerType) {
-		List<DataSeries> sList;
-		if(layerType.equals(LayerType.COMPOSITION)){
-			if(seriesName.contains(")*(")){
-				return new ProductDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")*(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")*(")+3, seriesName.length()-1).trim(), true), dataType);
-			} else if(seriesName.contains(")/(")){
-				return new FractionDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")/(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")/(")+3, seriesName.length()-1).trim(), true), dataType);
-			} else if(seriesName.contains(")+(")){
-				return new SumDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")+(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")+(")+3, seriesName.length()-1).trim(), true), dataType);
-			} else if(seriesName.contains(")-(")){
-				return new DiffDataSeries(DataSeries.fromString(seriesName.substring(1,  seriesName.indexOf(")-(")).trim(), true), DataSeries.fromString(seriesName.substring(seriesName.indexOf(")-(")+3, seriesName.length()-1).trim(), true), dataType);
-			} else if(seriesName.contains("@")){
-				sList = new ArrayList<DataSeries>(seriesName.split("@").length);
-				for(String sName : seriesName.split("@")){
-					sList.add(DataSeries.fromString(sName.trim(), true));
-				}
-				return new MultipleDataSeries(sList);
-			} else return null;
-		} else return new IndicatorDataSeries(new Indicator(seriesName, layerType, Double.class), dataType);
-	}
-	
-	public static List<DataSeries> simpleCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
-		LinkedList<DataSeries> simpleInd = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> groupInd = new LinkedList<DataSeries>();
-		for(Indicator ind : indicators){
-			for(DataCategory dCat : dataTypes){
-				simpleInd.add(new IndicatorDataSeries(ind, dCat));
-			}
-			groupInd.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
-		}
-		simpleInd.add(new MultipleDataSeries(groupInd));
-		return simpleInd;
-	}
-	
-	public static List<DataSeries> basicCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
-		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
-		for(Indicator ind : indicators){
-			for(DataCategory dCat : dataTypes){
-				simpleInd.add(new IndicatorDataSeries(ind, dCat));
-			}
-		}
-		return simpleInd;
-	}
-	
-	public static List<DataSeries> unionCombinations(Indicator[] indicators) {
-		LinkedList<DataSeries> unionInd = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> simpleIndPlain = new LinkedList<DataSeries>();
-		LinkedList<DataSeries> simpleIndDiff = new LinkedList<DataSeries>();
-		for(Indicator ind : indicators){
-			simpleIndPlain.add(new IndicatorDataSeries(ind, DataCategory.PLAIN));
-			simpleIndDiff.add(new IndicatorDataSeries(ind, DataCategory.DIFFERENCE));
-		}
-		unionInd.add(new MultipleDataSeries(simpleIndPlain));
-		unionInd.add(new MultipleDataSeries(simpleIndDiff));
-		return unionInd;
-	}
-	
-	
-	
-	public static List<DataSeries> selectedCombinations(Indicator[] indicators, DataCategory[] dataTypes, List<List<String>> list) {
-		DataSeries firstDS, secondDS;
+	public static List<DataSeries> basicCombinations(Indicator[] indicators) {
 		List<DataSeries> outList = new LinkedList<DataSeries>();
-		List<DataSeries> complexInd = new LinkedList<DataSeries>();
-		List<DataSeries> simpleInd = simpleCombinations(indicators, dataTypes);
-		for(List<String> lEntry : list){
-			if(lEntry != null && lEntry.size() == 2){
-				firstDS = DataSeries.fromList(simpleInd, lEntry.get(0).trim());
-				secondDS = DataSeries.fromList(simpleInd, lEntry.get(1).trim());
-				if(firstDS != null && secondDS != null){
-					for(DataCategory dCat : dataTypes){
-						complexInd.add(new DiffDataSeries(firstDS, secondDS, dCat));
-						complexInd.add(new FractionDataSeries(firstDS, secondDS, dCat));
-					}
-					List<DataSeries> pList = new ArrayList<DataSeries>(lEntry.size());
-					for(String entry : lEntry){
-						pList.add(DataSeries.fromList(simpleInd, entry.trim()));
-					}
-					complexInd.add(new MultipleDataSeries(pList));
-				}
+		if(indicators != null){
+			for(Indicator ind : indicators){
+				outList.add(new DataSeries(ind));
 			}
 		}
-		outList.addAll(simpleInd);
-		outList.addAll(complexInd);
 		return outList;
 	}
 	
-	public static List<DataSeries> allCombinations(Indicator[] indicators, DataCategory[] dataTypes) {
-		List<DataSeries> outList = new LinkedList<DataSeries>();
-		List<DataSeries> simpleInd = new LinkedList<DataSeries>();
-		List<DataSeries> complexInd = new LinkedList<DataSeries>();
-		for(Indicator ind : indicators){
-			for(DataCategory dCat : dataTypes){
-				simpleInd.add(new IndicatorDataSeries(ind, dCat));
-			}
-		}
-		for(int i=0;i<simpleInd.size();i++){
-			for(int j=i+1;j<simpleInd.size();j++){
-				if(!simpleInd.get(i).getName().equals(simpleInd.get(j).getName())){
-					for(DataCategory dCat : dataTypes){
-						complexInd.add(new DiffDataSeries(simpleInd.get(i), simpleInd.get(j), dCat));
-						complexInd.add(new FractionDataSeries(simpleInd.get(i), simpleInd.get(j), dCat));
-					}
-				}
-			}
-		}
-		outList.addAll(simpleInd);
-		outList.addAll(complexInd);
-		return outList;
-	}
-
-	public static DataSeries fromList(List<? extends DataSeries> seriesList, String newSeriesName) {
-		for(DataSeries ds : seriesList){
-			if(ds.toString().equals(newSeriesName)) {
-				return ds;
-			}
-		}
-		return null;
+	public static DataSeries unionCombinations(Indicator[] indicators) {
+		return new DataSeries(indicators);
 	}
 
 	public int size() {
-		return 1;
+		if(indList != null)
+			return indList.length;
+		else return 0;
 	}
 	
 	public String getCompactString(){
@@ -275,7 +164,16 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		return toReturn;
 	}
 	
-	protected abstract String toCompactString();
+	private String toCompactString(){
+		String string = "";
+		if(indList != null && indList.length > 0){
+			for(Indicator ind : indList){
+				if(ind != null)
+					string = string + ind.getName() + ";";
+			}
+			return string.substring(0, string.length()-1);
+		} else return "";
+	}
 
 	public static List<DataSeries> fromString(String[] sStrings, boolean show) {
 		DataSeries ds;
@@ -290,7 +188,7 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 				dsString = ss;
 				dsRank = Double.NaN;
 			}	
-			ds = DataSeries.fromString(dsString, show);
+			ds = DataSeries.fromString(dsString);
 			if(ds != null){
 				ds.setRank(dsRank);
 				outList.add(ds);
@@ -327,11 +225,11 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 	}
 
 	public String getSanitizedName() {
-		return toString().replace("#PLAIN#", "(P)").replace("#DIFFERENCE#", "(D)").replace("NO_LAYER", "").replace("COMPOSITION", "");
+		return getName();
 	}
 	
 	public String getCompactName() {
-		return toString().replace("#PLAIN#", "").replace("#DIFFERENCE#", "").replace("NO_LAYER", "").replace("COMPOSITION", "");
+		return getName();
 	}
 	
 	public static boolean isIn(List<DataSeries> dsList, DataSeries newSeries){
@@ -343,71 +241,5 @@ public abstract class DataSeries implements Comparable<DataSeries> {
 		}
 		return false;
 	}
-	
-	public static List<DataSeries> allCombinations(List<DataSeries> selectedFeatures){
-		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
-		for(int i=0;i<selectedFeatures.size();i++){
-			for(int j=i+1;j<selectedFeatures.size();j++){
-				if(!selectedFeatures.get(i).getName().equals(selectedFeatures.get(j).getName())){
-					combinedFeatures.add(new SumDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
-					combinedFeatures.add(new FractionDataSeries(selectedFeatures.get(i), selectedFeatures.get(j), DataCategory.PLAIN));
-				}
-			}
-		}
-		return combinedFeatures;
-	}
-	
-	public static List<DataSeries> unionCombinations(List<DataSeries> selectedFeatures) {
-		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
-		if(selectedFeatures != null){
-			if(selectedFeatures.size() == 1)
-				combinedFeatures.add(selectedFeatures.get(0));
-			else combinedFeatures.add(new MultipleDataSeries(selectedFeatures));
-		}
-		return combinedFeatures;
-	}
-	
-	public static List<DataSeries> multipleUnionCombinations(List<DataSeries> selectedFeatures) {
-		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
-		if(selectedFeatures != null){
-			Collections.sort(selectedFeatures);
-			for(int i=1;i<=selectedFeatures.size();i++){
-				List<DataSeries> innerUnion = unionCombinations(selectedFeatures.subList(0, i));
-				if(innerUnion != null)
-					combinedFeatures.addAll(innerUnion);
-			}
-		}
-		return combinedFeatures;
-	}
-	
-	public static List<DataSeries> pearsonCombinations(List<Knowledge> kList, double pearsonThreshold, String setupFolder, List<DataSeries> selectedFeatures) {
-		PearsonCombinationManager pcManager;
-		List<DataSeries> combinedFeatures = new LinkedList<DataSeries>();
-		File pearsonFile = new File(setupFolder + "pearsonCombinations.csv");
-		pcManager = new PearsonCombinationManager(pearsonFile, selectedFeatures, kList);
-		pcManager.calculatePearsonIndexes(pearsonThreshold);
-		combinedFeatures = pcManager.getPearsonCombinedSeries();
-		pcManager.flush();
-		return combinedFeatures;
-	}
 
-	public static List<DataSeries> uniqueCombinations(List<DataSeries> seriesList) {
-		List<DataSeries> unique = new LinkedList<>();
-		uniqueCombinations(seriesList, unique);
-		return unique;
-	}
-	
-	private static void uniqueCombinations(List<DataSeries> seriesList, List<DataSeries> unique) {
-		for(DataSeries ds : seriesList){
-			if(ds.size() == 1){
-				if(!isIn(unique, ds))
-					unique.add(ds);
-			} else if(ds instanceof ComplexDataSeries){
-				uniqueCombinations(ds.listSubSeries(), unique);
-			} else {
-				uniqueCombinations(((MultipleDataSeries)ds).getSeriesList(), unique);
-			}
-		}
-	}
-		
 }

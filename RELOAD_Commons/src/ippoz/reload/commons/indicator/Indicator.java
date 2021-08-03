@@ -3,8 +3,6 @@
  */
 package ippoz.reload.commons.indicator;
 
-import ippoz.reload.commons.layers.LayerType;
-
 /**
  * The Class Indicator.
  * Represents an indicator monitored during the experiments, linked with its layer and data type.
@@ -16,9 +14,6 @@ public class Indicator implements Comparable<Indicator>{
 	/** The indicator name. */
 	private String indicatorName;
 	
-	/** The indicator layer. */
-	private LayerType indicatorLayer;
-	
 	/** The indicator value type. */
 	private Class<?> indicatorType;
 	
@@ -29,9 +24,8 @@ public class Indicator implements Comparable<Indicator>{
 	 * @param indicatorLayer the indicator layer
 	 * @param indicatorType the indicator value type
 	 */
-	public Indicator(String indicatorName, LayerType indicatorLayer, Class<?> indicatorType) {
+	public Indicator(String indicatorName, Class<?> indicatorType) {
 		this.indicatorName = indicatorName;
-		this.indicatorLayer = indicatorLayer;
 		this.indicatorType = indicatorType;
 	}
 
@@ -54,15 +48,6 @@ public class Indicator implements Comparable<Indicator>{
 		return indicatorName;
 	}
 	
-	/**
-	 * Gets the indicator layer.
-	 *
-	 * @return the layer
-	 */
-	public LayerType getLayer(){
-		return indicatorLayer;
-	}
-	
 	public Class<?> getIndicatorType(){
 		return indicatorType;
 	}
@@ -74,7 +59,7 @@ public class Indicator implements Comparable<Indicator>{
 
 	@Override
 	public String toString() {
-		return "[" + indicatorName + ", " + indicatorLayer + "]";
+		return "[" + indicatorName + ", " + indicatorType.toString() + "]";
 	}
 	
 	

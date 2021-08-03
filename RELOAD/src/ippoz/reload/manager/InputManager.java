@@ -10,21 +10,17 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.IndicatorDataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.reload.commons.layers.LayerType;
 import ippoz.reload.commons.loader.ARFFLoader;
 import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -34,7 +30,6 @@ import ippoz.reload.featureselection.FeatureSelectorType;
 import ippoz.reload.info.FeatureSelectionInfo;
 import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.MetricType;
 import ippoz.reload.reputation.Reputation;
@@ -145,7 +140,11 @@ public class InputManager {
 	
 	public static final String FORCE_TRAINING_BASELEARNERS = "FORCE_TRAINING_BASELEARNERS";
 	
+	public static final String PARALLEL_TRAINING = "PARALLEL_TRAINING";
+	
 	public static final String FORCE_TRAINING = "FORCE_TRAINING";
+
+	public static final String PREDICT_MISCLASSIFICATIONS = "PREDICT_MISCLASSIFICATIONS";
 	
 	/** The main preference manager. */
 	private PreferencesManager prefManager;
@@ -169,7 +168,7 @@ public class InputManager {
 		}
 	}
 	
-	public boolean updatePreference(String tag, String newValue,boolean createNew,  boolean updateFile){
+	public boolean updatePreference(String tag, String newValue, boolean createNew,  boolean updateFile){
 		if(tag != null && (createNew || prefManager.hasPreference(tag))){
 			prefManager.updatePreference(tag, newValue, createNew, updateFile);
 			return true;
@@ -253,8 +252,7 @@ public class InputManager {
 				if(readed != null){
 					readed = readed.trim();
 					if(readed.length() > 0 && !readed.trim().startsWith("*")){
-						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim(), 
-								prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true));
+						metricList.add(Metric.fromString(readed.trim(), prefManager.getPreference(METRIC_TYPE).trim()));
 					}
 				}
 			}
@@ -330,7 +328,9 @@ public class InputManager {
 	}
 	
 	public MetricType getMetricType() {
-		return getTargetMetric().getMetricType();
+		if(getTargetMetric() != null)
+			return getTargetMetric().getMetricType();
+		else return MetricType.FMEASURE;
 	}
 
 	/**
@@ -339,8 +339,7 @@ public class InputManager {
 	 * @return the metric
 	 */
 	public Metric getTargetMetric() {
-		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim(), 
-				prefManager.hasPreference(VALID_AFTER_INJECTION) ? Boolean.getBoolean(prefManager.getPreference(VALID_AFTER_INJECTION)) : true);
+		return Metric.fromString(prefManager.getPreference(METRIC), prefManager.getPreference(METRIC_TYPE).trim());
 	}
 
 	public String getConfigurationFolder() {
@@ -380,40 +379,6 @@ public class InputManager {
 		return "";
 	}
 	
-	/**
-	 * Gets the data types.
-	 *
-	 * @return the data types
-	 */
-	public DataCategory[] getDataTypes() {
-		File dataTypeFile = new File(getSetupFolder() + "dataSeries.preferences");
-		LinkedList<DataCategory> dataList = new LinkedList<DataCategory>();
-		BufferedReader reader;
-		String readed;
-		try {
-			if(dataTypeFile.exists()){
-				reader = new BufferedReader(new FileReader(dataTypeFile));
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && !readed.trim().startsWith("*")){
-							dataList.add(DataCategory.valueOf(readed.trim()));
-						}
-					}
-				}
-				reader.close();
-			} else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "File " + 
-						dataTypeFile.getPath() + " not found. Using default value of 'PLAIN, DIFFERENCE'");
-				return new DataCategory[]{DataCategory.PLAIN, DataCategory.DIFFERENCE};
-			}
-		} catch(Exception ex){
-			AppLogger.logException(getClass(), ex, "Unable to read data types");
-		}
-		return dataList.toArray(new DataCategory[dataList.size()]);
-	}
-	
 	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
 		return loadConfigurations(at, datasetName, windowSize, sPolicy, true);
 	}
@@ -427,7 +392,7 @@ public class InputManager {
 	 */
 	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
 		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
-		if(confList == null && createMissing && alg != null && alg instanceof BaseLearner){
+		if((confList == null || confList.size() == 0) && createMissing && alg != null && alg instanceof BaseLearner){
 			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
 			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
 			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
@@ -512,7 +477,7 @@ public class InputManager {
 			mConf.addItem(BasicConfiguration.SCORES_FOLDER, getScoresFolder());
 			mConf.addItem(BasicConfiguration.FORCE_META_TRAINING, String.valueOf(getForceBaseLearnersFlag()));
 			mConf.addItem(BasicConfiguration.K_FOLD, getKFoldCounter());
-			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getMetricName());
+			mConf.addItem(BasicConfiguration.METRIC, getTargetMetric().getName());
 			mConf.addItem(BasicConfiguration.REPUTATION, getReputation(getTargetMetric()).toString());
 			mConf.addItem(BasicConfiguration.DATASET_NAME, datasetName);
 			
@@ -619,6 +584,16 @@ public class InputManager {
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					FILTERING_NEEDED_FLAG + " not found. Using default value of '1'");
+			return true;
+		}
+	}
+	
+	public boolean getPredictMisclassificationsFlag() {
+		if(prefManager.hasPreference(PREDICT_MISCLASSIFICATIONS))
+			return !prefManager.getPreference(PREDICT_MISCLASSIFICATIONS).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PREDICT_MISCLASSIFICATIONS + " not found. Using default value of 'yes'");
 			return true;
 		}
 	}
@@ -861,8 +836,6 @@ public class InputManager {
 				writer.write("\n FScore(2)\n");
 				writer.write("\n MATTHEWS\n");
 				writer.write("\n NoPrediction\n");
-				writer.write("\n Thresholds\n");
-				writer.write("\n SScore(3)\n");
 			}
 		} catch(IOException ex){
 			AppLogger.logException(InputManager.class, ex, "Error while generating RELOAD algorithm preferences");
@@ -1117,9 +1090,7 @@ public class InputManager {
 	
 	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag, int anomalyWindow, String runIdsString){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
 			return new CSVLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(lPref, loaderTag, anomalyWindow, getDatasetsFolder(), runIdsString);
@@ -1132,9 +1103,7 @@ public class InputManager {
 	public Loader buildSingleLoader(PreferencesManager lPref, String loaderTag){
 		String loaderType = lPref.getPreference(Loader.LOADER_TYPE);
 		String runIdsString = lPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, lPref, loaderTag, getConsideredLayers(), null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV"))
 			return new CSVLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
 		else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(lPref, loaderTag, getAnomalyWindow(), getDatasetsFolder(), runIdsString);
@@ -1147,7 +1116,7 @@ public class InputManager {
 	public boolean isValid(PreferencesManager lPref){
 		Loader lt = buildSingleLoader(lPref, "train");
 		Loader lv = buildSingleLoader(lPref, "validation");
-		return SimpleLoader.isValid(lt) && SimpleLoader.isValid(lv);	
+		return Loader.isValid(lt) && Loader.isValid(lv);	
 	}
 	
 	/**
@@ -1182,16 +1151,15 @@ public class InputManager {
 		return null;
 	}
 
-	public PreferencesManager generateDefaultLoaderPreferences(String loaderName, LoaderType loaderType) {
-		File file = createDefaultLoader(loaderName, loaderType);
+	public PreferencesManager generateDefaultLoaderPreferences(String loaderName, LoaderType loaderType, String filename) {
+		File file = createDefaultLoader(loaderName, loaderType, filename);
 		return new PreferencesManager(file);
 	}
 
-	private File createDefaultLoader(String loaderName, LoaderType loaderType) {
+	private File createDefaultLoader(String loaderName, LoaderType loaderType, String filename) {
 		BufferedWriter writer = null;
-		File lFile = new File(getLoaderFolder() + loaderName);
+		File lFile = new File(getLoaderFolder() + loaderName + ".loader");
 		try {
-			if(!lFile.exists()){
 				writer = new BufferedWriter(new FileWriter(lFile));
 				
 				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
@@ -1202,33 +1170,32 @@ public class InputManager {
 				writer.write("\n* Data Partitioning.\n\n");
 				
 				writer.write("\n* File Used for Training\n" +
-						FileLoader.TRAIN_FILE + " = \n");
+						FileLoader.TRAIN_FILE + " = " + (filename != null && filename.trim().length() > 0 ? filename.trim() : "") + "\n");
 				writer.write("\n* Train Runs.\n" + 
-						FileLoader.TRAIN_PARTITION + " = 1 - 10\n");
-				writer.write("\n* Train Faulty Tags.\n" + 
-						FileLoader.TRAIN_FAULTY_TAGS + " = attack\n");
-				writer.write("\n* Train Runs.\n" + 
-						FileLoader.TRAIN_SKIP_ROWS + " = \n");
+						FileLoader.TRAIN_PARTITION + " = 0 - 999\n");
+				
 				writer.write("\n* File Used for Validation\n" +
-						FileLoader.VALIDATION_FILE + " = \n");
+						FileLoader.VALIDATION_FILE + " = " + (filename != null && filename.trim().length() > 0 ? filename.trim() : "") + "\n");
 				writer.write("\n* Validation Runs.\n" + 
-						FileLoader.VALIDATION_PARTITION + " = 1 - 10\n");
-				writer.write("\n* Train Faulty Tags.\n" + 
-						FileLoader.VALIDATION_FAULTY_TAGS + " = attack\n");
-				writer.write("\n* Train Runs.\n" + 
-						FileLoader.VALIDATION_SKIP_ROWS + " = \n");
+						FileLoader.VALIDATION_PARTITION + " = 1000 - 1999\n");
+				
+				writer.write("\n* Faulty Tags.\n" + 
+						FileLoader.FAULTY_TAGS + " = attack\n");
+				writer.write("\n* Tags to Skip.\n" + 
+						FileLoader.SKIP_ROWS + " = \n");
 				
 				writer.write("\n* Parsing Dataset.\n\n");
 				
 				writer.write("\n* Features to Skip\n" + 
-						FileLoader.SKIP_COLUMNS + " = 0\n");
+						FileLoader.SKIP_COLUMNS + " = \n");
 				writer.write("\n* Column Containing the 'Label' Feature\n" + 
 						FileLoader.LABEL_COLUMN + " = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
-						FileLoader.BATCH_COLUMN + " = 100\n");	
+						FileLoader.BATCH_COLUMN + " = \n");	
+				writer.write("\n* Size of Each Experiment.\n" + 
+						FileLoader.EXPERIMENT_ROWS + " = \n");	
 				
 				writer.close();
-			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "'");
 		}
@@ -1380,9 +1347,8 @@ public class InputManager {
 							if(header == null){
 								header = readed.split(",");
 								for(int i=2;i<header.length;i++){
-									String name = header[i].split("#")[0].trim();
-									String dataCat = header[i].split("#")[1].trim();
-									featureMap.put(new IndicatorDataSeries(new Indicator(name, LayerType.NO_LAYER, Double.class), DataCategory.valueOf(dataCat)), new HashMap<>());
+									String name = header[i].trim();
+									featureMap.put(new DataSeries(new Indicator(name, Double.class)), new HashMap<>());
 								}
 							} else {
 								String[] splitted = readed.split(",");
@@ -1412,12 +1378,6 @@ public class InputManager {
 		return featureMap;
 	}
 	
-	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats, String filename) {
-		List<DataSeries> ds = createDataSeries(kMap, cats);
-		saveFilteredSeries(ds, filename);
-		return ds;
-	}
-	
 	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String filename) {
 		List<DataSeries> ds = createDataSeries(kMap);
 		saveFilteredSeries(ds, filename);
@@ -1439,11 +1399,7 @@ public class InputManager {
 	}
 	
 	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
-		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), getDataTypes());
-	}
-	
-	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, DataCategory[] cats) {
-		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap), cats);
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap));
 	}
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {
@@ -1530,7 +1486,7 @@ public class InputManager {
 	}
 
 	public Reputation getReputation(Metric met) {
-		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met, prefManager.getPreference(VALID_AFTER_INJECTION).equals("no") ? false : true);
+		return Reputation.fromString(prefManager.getPreference(REPUTATION_TYPE), met);
 	}
 
 	public boolean getForceBaseLearnersFlag() {
@@ -1549,6 +1505,16 @@ public class InputManager {
 		else {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					FORCE_TRAINING + " not found. Using default value of 'no'");
+			return false;
+		}
+	}
+	
+	public boolean getParallelTrainingFlag() {
+		if(prefManager.hasPreference(PARALLEL_TRAINING))
+			return !prefManager.getPreference(PARALLEL_TRAINING).equals("0");
+		else {
+			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
+					PARALLEL_TRAINING + " not found. Using default value of 'no'");
 			return false;
 		}
 	}
@@ -1582,5 +1548,21 @@ public class InputManager {
 			AppLogger.logException(InputManager.class, e, "Unable to copy from " + source);
 		} 
 	}
+	
+	public Loader buildLoader(String loaderTag, PreferencesManager loaderPref){
+		if(loaderPref != null){
+			return buildLoader(loaderTag, loaderPref, getAnomalyWindow());
+		} else return null;
+	}
+	
+	private Loader buildLoader(String loaderTag, PreferencesManager loaderPref, int anomalyWindow){
+		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
+		if(runsString != null && runsString.length() > 0){
+			return buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
+		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
+		return null;
+	}
+
+	
 	
 }

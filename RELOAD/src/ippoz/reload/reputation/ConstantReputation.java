@@ -4,6 +4,7 @@
 package ippoz.reload.reputation;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.ConfusionMatrix;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class ConstantReputation extends Reputation {
 	}
 
 	@Override
-	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
+	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		return repValue;
 	}
 

@@ -3,10 +3,11 @@
  */
 package ippoz.reload.manager.train;
 
+import ippoz.reload.algorithm.AlgorithmComplexity;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
+import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -23,14 +24,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * The Class TrainerManager.
@@ -44,6 +41,8 @@ public class TrainerManager extends TrainDataManager {
 	
 	private Metric[] validationMetrics;
 	
+	private boolean allowParallel;
+	
 	/**
 	 * Instantiates a new trainer manager.
 	 *
@@ -55,9 +54,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics) {
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
 		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		this.validationMetrics = validationMetrics;
+		this.allowParallel = allowParallel;
 		clearTmpFolders();
 	}
 	
@@ -73,9 +73,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, List<DataSeries> selectedSeries, int kfold, Metric[] validationMetrics) {
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
 		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		this.validationMetrics = validationMetrics;
+		this.allowParallel = allowParallel;
 		clearTmpFolders();
 	}
 	
@@ -91,10 +92,10 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, DataCategory[] dataTypes, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics) {
-		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics);
-		seriesList = parseSelectedSeries(selectedSeriesString, dataTypes);
-		AppLogger.logInfo(getClass(), seriesList.size() + " Data Series Loaded");
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
+		dataSeries = parseSelectedSeries(selectedSeriesString);
+		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}
 	
 	private void clearTmpFolders() {
@@ -108,31 +109,10 @@ public class TrainerManager extends TrainDataManager {
 		}
 	}
 	
-	private List<DataSeries> parseSelectedSeries(String[] selectedSeriesString, DataCategory[] dataTypes) {
+	private DataSeries parseSelectedSeries(String[] selectedSeriesString) {
 		List<DataSeries> selected = DataSeries.fromString(selectedSeriesString, false);
-		AppLogger.logInfo(getClass(), "Selected Data Series Loaded: " + selected.size());
-		List<DataSeries> finalList = selected;
-		List<DataSeries> combined = new LinkedList<DataSeries>();
-		/*if(dsDomain.equals("ALL")){
-			combined = DataSeries.allCombinations(selected);
-			finalList.addAll(combined);
-		} else if(dsDomain.equals("UNION")){*/
-			combined = DataSeries.unionCombinations(selected);
-			finalList = combined;/*
-		} else if(dsDomain.equals("MULTIPLE_UNION")){
-			combined = DataSeries.multipleUnionCombinations(selected);
-			finalList = combined;
-		} else if(dsDomain.equals("SIMPLE")){
-			combined = DataSeries.unionCombinations(selected);
-			finalList.addAll(combined);
-		} else if(dsDomain.contains("PEARSON") && dsDomain.contains("(") && dsDomain.contains(")")){
-			double pearsonSimple = Double.valueOf(dsDomain.substring(dsDomain.indexOf("(")+1, dsDomain.indexOf(")")));
-			combined = DataSeries.pearsonCombinations(getKnowledge(), pearsonSimple, setupFolder, selected);
-			finalList.addAll(combined);
-		}*/
-		AppLogger.logInfo(getClass(), "Combined Data Series Created: " + combined.size());
-		AppLogger.logInfo(getClass(), "Finalized Data Series (UNION): " + finalList.size());
-		return finalList;
+		AppLogger.logInfo(getClass(), "Selected Features Loaded: " + selected.size());
+		return new DataSeries(selected);
 	}
 
 	/**
@@ -146,28 +126,29 @@ public class TrainerManager extends TrainDataManager {
 		try {
 			if(trainInfo == null)
 				trainInfo = new TrainInfo();
+			trainInfo.setLoaderName(getDatasetName());
 			trainInfo.setFaultRatio(getInjectionsRatio());
-			trainInfo.setSeries(seriesList);
+			trainInfo.setSeries(dataSeries);
 			trainInfo.setKFold(kfold);
 			trainInfo.setAlgorithm(algTypes);
-			if(isValidKnowledge()){
-				start();
-				join();
-				Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
-				trainInfo.setTrainingTime(System.currentTimeMillis() - start);
-				AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
-				AlgorithmTrainer at = bestModel(getThreadList());
-				trainInfo.setMetricsString(at.getMetricsString());
-				AppLogger.logInfo(getClass(), "Found: " + (at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
-						" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
-				if(!new File(outFolder).exists())
-					new File(outFolder).mkdirs();
-				saveModels(getThreadList(), outFolder + File.separatorChar + "scores.csv");
-				//saveTrainScores((List<AlgorithmTrainer>)getThreadList(), metaFile);
-				saveThresholdRelevance(getThreadList(), outFolder + File.separatorChar + "thresholdrelevance.csv");
-				AppLogger.logInfo(getClass(), "Training scores saved");
-				trainInfo.printFile(new File(outFolder + File.separatorChar + "trainInfo.info"));
-			} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
+			if(dataSeries != null && dataSeries.size() > 0){
+				if(isValidKnowledge()){
+					start();
+					join();
+					Collections.sort((List<AlgorithmTrainer>)getThreadList()); 
+					trainInfo.setTrainingTime(System.currentTimeMillis() - start);
+					AppLogger.logInfo(getClass(), "Training executed in " + trainInfo.getTrainTime() + "ms");
+					AlgorithmTrainer at = bestModel(getThreadList());
+					trainInfo.setMetricsString(at.getMetricsString());
+					AppLogger.logInfo(getClass(), "Found: " + (at.getBestConfiguration() != null ? at.getBestConfiguration().toString() : "null") + 
+							" Score: <" + at.getMetricAvgScore() + ", " + at.getMetricStdScore() + ">");
+					if(!new File(outFolder).exists())
+						new File(outFolder).mkdirs();
+					saveBestModel(getThreadList(), outFolder + File.separatorChar + "scores.csv");
+					AppLogger.logInfo(getClass(), "Training scores saved");
+					trainInfo.printFile(new File(outFolder + File.separatorChar + "trainInfo.info"));
+				} else AppLogger.logError(getClass(), "NoSuchDataError", "Unable to fetch train data");
+			} else AppLogger.logError(getClass(), "NoDataSeriesError", "Unable to find valid dataeries: try running Feature Selection again");
 		} catch (InterruptedException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to complete training phase");
 		}
@@ -185,7 +166,7 @@ public class TrainerManager extends TrainDataManager {
 		return best;
 	}
 
-	private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
+	/*private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
 		BufferedWriter thresholdRelevanceWriter;
 		BasicConfiguration conf;
 		AlgorithmTrainer trainer;
@@ -238,7 +219,7 @@ public class TrainerManager extends TrainDataManager {
         }
 
         return sortedMap;
-    }
+    }*/
 
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
@@ -247,19 +228,20 @@ public class TrainerManager extends TrainDataManager {
 	protected void initRun(){
 		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
+		KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algTypes);
 		if(confList == null || confList.size() == 0){
 			AppLogger.logError(getClass(), "UnrecognizedConfiguration", algTypes + " does not have an associated configuration: basic will be applied");
 			confList = new LinkedList<BasicConfiguration>();
 			confList.add(BasicConfiguration.buildConfiguration(algTypes));
 		}
-		KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algTypes);
-		for(DataSeries dataSeries : seriesList){
-			/*if(confList.size() > 1){
-				int nPartitions = 2;//Math.min(getLoadFactor()/seriesList.size(), confList.size());
-				for(List<BasicConfiguration> confPart : BasicConfiguration.partition(confList, nPartitions)){
-					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confPart, getDatasetName(), kfold));
+		if(confList != null){
+			if(allowParallel && algTypes instanceof BaseLearner && DetectionAlgorithm.getMemoryComplexity(((BaseLearner)algTypes).getAlgType()) == AlgorithmComplexity.LINEAR){
+				int step = (int)Math.ceil(1.0*confList.size() / getLoadFactor());
+				for(int i=0;i<confList.size();i=i+step){
+					List<BasicConfiguration> subList = confList.subList(i, Math.min(i+step, confList.size()));
+					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), subList, getDatasetName(), kfold, validationMetrics));
 				}
-			} else*/ trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold, validationMetrics));
+			} else trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold, validationMetrics));
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());
@@ -338,65 +320,29 @@ public class TrainerManager extends TrainDataManager {
 	 *
 	 * @param list the list of algorithm trainers
 	 */
-	private void saveModels(List<? extends Thread> list, String filename) {
-		BufferedWriter scoreWriter, statWriter;
-		AlgorithmTrainer trainer;
-		int count = 0;
-		Double[] statMap = new Double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	private void saveBestModel(List<? extends Thread> list, String filename) {
+		BufferedWriter scoreWriter;
+		AlgorithmTrainer bestTrainer = null;
 		try {
+			for(Thread tThread : list){
+				AlgorithmTrainer trainer = (AlgorithmTrainer)tThread;
+				if(bestTrainer == null || bestTrainer.getMetricAvgScore().compareTo(trainer.getMetricAvgScore()) < 0)
+					bestTrainer = trainer;
+			}
 			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
 			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getMetricName() + "),std_metric_score(" + getMetric().getMetricName() + "),dataset,configuration\n");
-			for(Thread tThread : list){
-				trainer = (AlgorithmTrainer)tThread;
-				count++;
-				if(trainer.getBestConfiguration() != null) {
-					scoreWriter.write(trainer.getSeriesDescription() + "§" + 
-							trainer.getAlgType() + "§" +
-							trainer.getReputationScore() + "§" + 
-							trainer.getMetricAvgScore() + "§" +  
-							trainer.getMetricStdScore() + "§" + 
-							trainer.getDatasetName() + "§" +
-							trainer.getBestConfiguration().toFileRow(false) + "\n");
-					statMap[0] += 1.0;
-					statMap[1] += trainer.getTrainingTime();
-					statMap[2] += trainer.getMetricAvgScore();
-					if(count <= 10)
-						statMap[3] += 1.0;
-					if(count <= 50)
-						statMap[4] += 1.0;
-					if(count <= 100)
-						statMap[5] += 1.0;
-					if(count <= 10)
-						statMap[6] += trainer.getMetricAvgScore();
-					if(count <= 50)
-						statMap[7] += trainer.getMetricAvgScore();
-					if(count <= 100)
-						statMap[8] += trainer.getMetricAvgScore();
-				}			
+			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getName() + "),std_metric_score(" + getMetric().getName() + "),dataset,configuration\n");
+			if(bestTrainer != null && bestTrainer.getBestConfiguration() != null) {
+				bestTrainer.saveAlgorithmScores();
+				scoreWriter.write(bestTrainer.getSeriesDescription() + "§" + 
+						bestTrainer.getAlgType() + "§" +
+						bestTrainer.getReputationScore() + "§" + 
+						bestTrainer.getMetricAvgScore() + "§" +  
+						bestTrainer.getMetricStdScore() + "§" + 
+						bestTrainer.getDatasetName() + "§" +
+						bestTrainer.getBestConfiguration().toFileRow(false) + "\n");		
 			}
-			scoreWriter.close();
-			if(statMap[0] > 0) {
-				statMap[1] = statMap[1] / statMap[0];
-				statMap[2] = statMap[2] / statMap[0];
-			}
-			if(statMap[3] > 0)
-				statMap[6] = statMap[6] / statMap[3];
-			if(statMap[4] > 0)
-				statMap[7] = statMap[7] / statMap[4];
-			if(statMap[5] > 0)
-				statMap[8] = statMap[8] / statMap[5];
-			if(confList != null && confList.size() > 0)
-				statMap[9] = (double) confList.size();
-			statWriter = new BufferedWriter(new FileWriter(new File(getScoresFolder() + "trainingTimings.csv")));
-			statWriter.write("algorithm,knowledge,#checkers,avg_time(ms),avg_" + getMetric().getMetricName() + ",#top10,#top50,#top100,avg_" + getMetric().getMetricName() + "_top10,avg_" + getMetric().getMetricName() + "_top50,avg_" + getMetric().getMetricName() + "_top100,#conf\n");
-			statWriter.write(algTypes.toString() + "," + DetectionAlgorithm.getKnowledgeType(algTypes) + ",");
-			for(double d : statMap){
-				statWriter.write(d + ",");
-			}
-			statWriter.write("\n");
-			statWriter.close();
-			
+			scoreWriter.close();			
 		} catch(IOException ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}

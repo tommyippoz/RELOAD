@@ -54,6 +54,8 @@ public enum DecisionFunctionType {
 	MODE_INTERVAL, MODE,
 	
 	/** Median Interval Function */
-	MEDIAN_INTERVAL, MEDIAN
+	MEDIAN_INTERVAL, MEDIAN, 
+	
+	VALUES
 
 }

@@ -5,6 +5,7 @@ package ippoz.reload.algorithm.result;
 
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
+import ippoz.reload.output.LabelledResult;
 
 /**
  * The Class AlgorithmResult. Stores results of an evaluation of a Knowledge item by an algorithm.
@@ -14,17 +15,17 @@ import ippoz.reload.decisionfunction.DecisionFunction;
 public class AlgorithmResult {
 	
 	/** The fault (if any) corresponding to each data point. */
-	private boolean hasInjection;
+	private boolean isAnomalous;
+	
+	/** The fault (if any) corresponding to each data point. */
+	private boolean isUnknown;
 	
 	/** The evaluated score. */
 	private double score;
 	
 	/** The evaluation in terms of AnomalyResult. */
 	private AnomalyResult scoreEvaluation;
-	
-	/** The decision function used. */
-	private DecisionFunction dFunction;
-	
+
 	/** The confidence on the result. */
 	private double confidence;
 
@@ -38,11 +39,20 @@ public class AlgorithmResult {
 	 * @param score the score
 	 * @param object 
 	 */
-	public AlgorithmResult(boolean hasInjection, double score, double confidence, Object additionalScore) {
-		this.hasInjection = hasInjection;
+	public AlgorithmResult(boolean isAnomalous, double score, double confidence, Object additionalScore, boolean isUnknown) {
+		this.isAnomalous = isAnomalous;
 		this.score = score;
 		this.confidence = confidence;
+		this.isUnknown = isUnknown;
 		this.additionalScore = additionalScore;
+	}
+	
+	public AlgorithmResult(LabelledResult lr) {
+		this(lr.getLabel(), lr.getValue(), lr.getConfidence(), null, lr.isUnknown());
+	}
+	
+	public AlgorithmResult(LabelledResult lr, DecisionFunction df) {
+		this(lr.getLabel(), lr.getValue(), df.assignScore(lr, false), lr.getConfidence());
 	}
 
 	/**
@@ -54,11 +64,10 @@ public class AlgorithmResult {
 	 * @param scoreEvaluation the score evaluation
 	 * @param dFunction the decision function
 	 */
-	public AlgorithmResult(boolean hasInjection, double score, AnomalyResult scoreEvaluation, DecisionFunction dFunction, double confidence) {
-		this.hasInjection = hasInjection;
+	public AlgorithmResult(boolean isAnomalous, double score, AnomalyResult scoreEvaluation, double confidence) {
+		this.isAnomalous = isAnomalous;
 		this.score = score;
 		this.scoreEvaluation = scoreEvaluation;
-		this.dFunction = dFunction;
 		this.confidence = confidence;
 	}
 
@@ -84,10 +93,10 @@ public class AlgorithmResult {
 	 * Sets the decision function.
 	 *
 	 * @param dFunction the new decision function
-	 */
+	 
 	public void setDecisionFunction(DecisionFunction dFunction) {
 		this.dFunction = dFunction;
-	}
+	}*/
 	
 	/**
 	 * Sets the score evaluation.
@@ -102,10 +111,10 @@ public class AlgorithmResult {
 	 * Gets the decision function.
 	 *
 	 * @return the decision function
-	 */
+	 
 	public DecisionFunction getDecisionFunction() {
 		return dFunction;
-	}
+	}*/
 
 	/**
 	 * Outputs the default AlgorithmResult for an erroneous evaluation e.g., data is missing.
@@ -115,7 +124,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult error(boolean hasInjection) {
-		return new AlgorithmResult(hasInjection, Double.NaN, AnomalyResult.ERROR, null, 1);
+		return new AlgorithmResult(hasInjection, Double.NaN, AnomalyResult.ERROR, 1);
 	}
 
 	/**
@@ -126,7 +135,7 @@ public class AlgorithmResult {
 	 * @return the algorithm result
 	 */
 	public static AlgorithmResult unknown(boolean injection) {
-		return new AlgorithmResult(injection, Double.NaN, AnomalyResult.UNKNOWN, null, 0);
+		return new AlgorithmResult(injection, Double.NaN, AnomalyResult.UNKNOWN, 0);
 	}	
 	
 	/**
@@ -156,6 +165,10 @@ public class AlgorithmResult {
 		return getScoreEvaluation() == AnomalyResult.ANOMALY;
 	}
 	
+	public boolean isUnknown(){
+		return isUnknown;
+	}
+	
 	public double getConfidence() {
 		return confidence;
 	}
@@ -165,11 +178,11 @@ public class AlgorithmResult {
 	}
 
 	public boolean isCorrect() {
-		return getBooleanScore() == hasInjection();
+		return getBooleanScore() == isAnomalous();
 	}
 
-	public boolean hasInjection() {
-		return hasInjection;
+	public boolean isAnomalous() {
+		return isAnomalous;
 	}
 
 	public double getConfidencedScore() {

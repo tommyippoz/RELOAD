@@ -4,6 +4,7 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.DetectionAlgorithm;
+import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
@@ -12,12 +13,10 @@ import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.executable.DetectorMain;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
 import ippoz.reload.metric.MetricType;
@@ -112,6 +111,10 @@ public class BuildUI {
 	private static final String SETUP_FORCE_BASELEARNERS = "Force Training of BaseLearners";
 	
 	private static final String SETUP_FORCE_TRAINING = "Force Training";
+	
+	private static final String SETUP_FORCE_PARALLEL = "Multi-Threading Training";
+	
+	private static final String SETUP_PREDICT = "Predict Misclassifications";
 	
 	private JPanel headerPanel, setupPanel, pathPanel, dataAlgPanel, footerPanel;
 	
@@ -339,17 +342,28 @@ public class BuildUI {
 					List<DetectorOutput> outList = new ArrayList<DetectorOutput>(tot);
 					long startTime = System.currentTimeMillis();
 					for(PreferencesManager loaderPref : activeLoaders){
+						Loader trainLoader = null, evalLoader = null;
+						if(iManager.getFilteringFlag() || iManager.getTrainingFlag())
+							trainLoader = iManager.buildLoader("train", loaderPref);
+						if(iManager.getEvaluationFlag())
+							evalLoader = iManager.buildLoader("validation", loaderPref);
+						boolean filterFlag = true;
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, windowSize, sPolicy), pBar, index++, tot);
+										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag), pBar, index++, tot);
 									}
 								}
 							} else {
-								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref), pBar, index++, tot);
+								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
 							}
+							filterFlag = false;
 						}
+						if(trainLoader != null)
+							trainLoader.flush();
+						if(evalLoader != null)
+							evalLoader.flush();
 					}
 					pBar.deleteFrame();
 					AppLogger.logInfo(getClass(), "RELOAD Execution time: " + (System.currentTimeMillis() - startTime) + " ms");
@@ -377,6 +391,9 @@ public class BuildUI {
 				if(iManager.getOutputFormat().equalsIgnoreCase("ui") && newOut != null)
 					outList.add(newOut);
 				pBar.moveNext();
+				detManager.flush();
+				detManager = null;
+				
 			}
 		}).start();
 	}
@@ -436,13 +453,25 @@ public class BuildUI {
 				
 				jb = new JButton("#");
 				jb.setHorizontalAlignment(SwingConstants.CENTER);
+				if(!option.contains(".")){
+					try {
+						LearnerType at = fromOption(option);
+						if(at == null || at instanceof MetaLearner)
+							jb.setEnabled(false);
+					} catch(Exception ex){
+						AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
+					}
+					
+				}
 				jb.addActionListener(new ActionListener() { 
 					public void actionPerformed(ActionEvent e) { 
 						if(!option.contains(".")) {
 							try {
 								LearnerType at = fromOption(option);
-								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
-								asf.setVisible(true);
+								if(at != null && at instanceof BaseLearner){
+									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+									asf.setVisible(true);
+								}
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
 							}
@@ -644,7 +673,9 @@ public class BuildUI {
 		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				LoaderFrame lf;
+				CreateLoaderFrame clf = new CreateLoaderFrame(iManager);
+				clf.setVisible(true);
+				/*LoaderFrame lf;
 				String loaderName = null;
 				LoaderType loaderType = null;
 				String s = (String)JOptionPane.showInputDialog(
@@ -672,7 +703,7 @@ public class BuildUI {
 					lf.setVisible(true);
 				} catch(Exception ex){
 					AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "' preferences");
-				}
+				}*/
 				
 			} } );
 		seePrefPanel.add(button);
@@ -801,12 +832,12 @@ public class BuildUI {
 		Map<String, Boolean> dsMap = new HashMap<>();
 		for(PreferencesManager lPref : lList){
 			boolean isValid = true; // iManager.isValid(lPref);
-			if(lPref.getPreference(Loader.LOADER_TYPE).equals("MYSQL"))
-				dsMap.put("MySQL @ " + lPref.getPreference(MySQLLoader.DB_NAME), isValid);
-			else if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
-				dsMap.put("CSV @ " + lPref.getFilename(), isValid);
-			} else {
-				dsMap.put(lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename(), isValid);
+			if(lPref.getPreference(Loader.LOADER_TYPE) != null){
+				if(lPref.getPreference(Loader.LOADER_TYPE).equals("CSVALL")){
+					dsMap.put("CSV @ " + lPref.getFilename(), isValid);
+				} else {
+					dsMap.put(lPref.getPreference(Loader.LOADER_TYPE) + " @ " + lPref.getFilename(), isValid);
+				}
 			}
 		}
 		return dsMap;
@@ -900,11 +931,15 @@ public class BuildUI {
 					AppLogger.logException(getClass(), ex, "Unable to open feature selection preferences");
 				}
 			} } );
-		seePrefPanel.setVisible(iManager.getFilteringFlag());
 		seePrefPanel.add(button);
+		seePrefPanel.setVisible(iManager.getFilteringFlag());		
 		
 		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed.", true, true), setupMap);
 		setupPanel.add(seePrefPanel);
+		
+		comp = createLCKPanel(SETUP_PREDICT, setupPanel, 2*optionSpacing, iManager.getPredictMisclassificationsFlag(), new JPanel[]{}, InputManager.PREDICT_MISCLASSIFICATIONS, "Specifies if Misclassification Prediction should be applied.", true, false);
+		comp.setVisible(iManager.getFilteringFlag());
+		addToPanel(setupPanel, SETUP_PREDICT, comp, setupMap);
 		
 		//comp = createLCBPanel(SETUP_IND_SELECTION, setupPanel, 5*optionSpacing, InputManager.getIndicatorSelectionPolicies(), iManager.getDataSeriesBaseDomain(), InputManager.INDICATOR_SELECTION, "<html><p>Specifies the policy to aggregate selected features. <br> 'NONE' just takes all the selected features individually, <br> 'UNION' considers the n-dimensional space composed by all the n selected features (all at once), <br> 'SIMPLE' merges 'NONE' and 'UNION', <br> 'MULTIPLE_UNION' considers j-dimensional subspaces (0 &lt j &lt= n), constituted by the j top-ranked features, <br> 'PEARSON' extends 'NONE' by considering couples, triples, quadruples, etc. of features that have a pearson correlation stronger than a given threshold, while <br> 'ALL' merges 'PEARSON' and 'UNION'.</p></html>");
 		//comp.setVisible(iManager.getTrainingFlag());
@@ -918,16 +953,20 @@ public class BuildUI {
 		boolean[] result = hasAlgorithmType();
 		boolean hasBase = result[0];
 		boolean hasMeta = result[1];
-		boolean hasSliding = result[2];
+		//boolean hasSliding = result[2];
 		comp = createLCKPanel(SETUP_FORCE_TRAINING, setupPanel, 5*optionSpacing, iManager.getForceTrainingFlag(), comp, InputManager.FORCE_TRAINING, "Specifies if existing data about a past training of this algorithm can be re-used.", hasBase, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_TRAINING, comp, setupMap);
+		
+		comp = createLCKPanel(SETUP_FORCE_PARALLEL, setupPanel, 5*optionSpacing, iManager.getParallelTrainingFlag(), comp, InputManager.PARALLEL_TRAINING, "Specifies if explouts CPU multi-threading.", iManager.getForceTrainingFlag(), false);
+		comp.setVisible(iManager.getTrainingFlag());
+		addToPanel(setupPanel, SETUP_FORCE_PARALLEL, comp, setupMap);
 		
 		comp = createLCKPanel(SETUP_FORCE_BASELEARNERS, setupPanel, 5*optionSpacing, iManager.getForceBaseLearnersFlag(), comp, InputManager.FORCE_TRAINING_BASELEARNERS, "Specifies if, during training of a meta-learner, all base-learners need to be trained or if existring results could be used to speedup the process.", hasMeta, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_BASELEARNERS, comp, setupMap);
 	
-		comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
+		/*comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
 		
@@ -935,7 +974,7 @@ public class BuildUI {
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
 		
-		/*seePrefPanel = new JPanel();
+		seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
 		seePrefPanel.setLayout(new GridLayout(1, 1));
 		//seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
@@ -1108,26 +1147,27 @@ public class BuildUI {
 		cb.setEnabled(isEnabled);
 		//cb.setBounds(root.getWidth()/4, 0, root.getWidth()/2, labelSpacing);
 		cb.setHorizontalAlignment(SwingConstants.CENTER);
-		if(tooltipText != null)
+		if(tooltipText != null){
 			cb.setToolTipText(tooltipText);
+		}
 		
-		if(comp != null ){
-			cb.addActionListener(new ActionListener() {
-			    @Override
-			    public void actionPerformed(ActionEvent event) {
-			        JCheckBox cb = (JCheckBox) event.getSource();
+		cb.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent event) {
+		        JCheckBox cb = (JCheckBox) event.getSource();
+		        if(comp != null && comp.length > 0){
 			        for(JPanel linkedPanel : comp){
 			        	if(linkedPanel != null)
 			        		linkedPanel.setVisible(cb.isSelected());
 			        }
-			        if(!isUpdating){
-			        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true, true);
-			        	reload();
-			        }
-			        	
-			    }
-			});
-		}
+		        }
+		        if(!isUpdating){
+		        	iManager.updatePreference(fileTag, cb.isSelected() ? "1" : "0", true, true);
+		        	reload();
+		        }
+		        	
+		    }
+		});
 		
 		panel.add(cb);
 		
@@ -1172,6 +1212,14 @@ public class BuildUI {
 			        	if(comboBox.getSelectedItem().toString().equals("CONFIDENCE_ERROR")){
 			        		String s = (String)JOptionPane.showInputDialog(
 				                    frame, "Set parameter P for Confidence Error (P in [0, 1]). the higher the P, the more relevance to FN", "Confidence Error P",
+				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
+							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
+								newValue = newValue + "(" + s + ")";
+							} else newValue = newValue + "(1)";
+			        	}
+			        	if(comboBox.getSelectedItem().toString().equals("NO_PREDICTION")){
+			        		String s = (String)JOptionPane.showInputDialog(
+				                    frame, "Set Tolerable Hazard Rate % [0, 100] for No-Prediction Area.", "Tolerable Hazard Rate",
 				                    JOptionPane.PLAIN_MESSAGE, null, null, "");
 							if ((s != null) && (s.trim().length() > 0) && AppUtility.isNumber(s.trim())) {
 								newValue = newValue + "(" + s + ")";

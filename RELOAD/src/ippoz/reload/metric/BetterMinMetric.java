@@ -3,15 +3,17 @@
  */
 package ippoz.reload.metric;
 
+import ippoz.reload.metric.result.MetricResult;
+
 /**
  * The Class BetterMinMetric. Identifies a metric that is better if it is low.
  *
  * @author Tommy
  */
-public abstract class BetterMinMetric extends ScoringMetric {
+public abstract class BetterMinMetric extends Metric {
 
-	public BetterMinMetric(MetricType mType, boolean validAfter) {
-		super(mType, validAfter);
+	public BetterMinMetric(MetricType mType, double noPredTHR) {
+		super(mType, noPredTHR);
 	}
 
 	/*
@@ -21,12 +23,12 @@ public abstract class BetterMinMetric extends ScoringMetric {
 	 * double)
 	 */
 	@Override
-	public int compareResults(double currentMetricValue, double bestMetricValue) {
-		if(!Double.isFinite(bestMetricValue))
+	public int compareResults(MetricResult currentMetricValue, MetricResult bestMetricValue) {
+		if(!Double.isFinite(bestMetricValue.getDoubleValue()))
 			return 1;
-		else if(!Double.isFinite(currentMetricValue))
+		else if(!Double.isFinite(currentMetricValue.getDoubleValue()))
 			return -1;
-		else return Double.valueOf(bestMetricValue).compareTo(currentMetricValue);
+		else return Double.valueOf(bestMetricValue.getDoubleValue()).compareTo(currentMetricValue.getDoubleValue());
 	}
 
 }

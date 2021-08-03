@@ -82,6 +82,8 @@ public abstract class BasicConfiguration implements Cloneable {
 
 	public static final String SCORES_FOLDER = "scores_folder";
 
+	public static final String TRAIN_METRIC = "train_metric";
+
 	/** The configuration map. */
 	private Map<String, Object> confMap;
 
@@ -275,6 +277,10 @@ public abstract class BasicConfiguration implements Cloneable {
 			return Integer.parseInt(getItem(SLIDING_WINDOW_SIZE));
 		} else
 			return -1;
+	}
+	
+	public void addItem(String tag, int intValue) {
+		addItem(tag, String.valueOf(intValue));
 	}
 
 	public void addItem(String tag, double doubleValue) {

@@ -14,6 +14,7 @@ import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import java.util.Map;
  * @author Tommy
  */
 public class FixedConfigurationTrainer extends AlgorithmTrainer {
+	
+	private DetectionAlgorithm algorithm;
 	
 	/**
 	 * Instantiates a new algorithm trainer.
@@ -49,10 +52,10 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 	}
 
 	@Override
-	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double> lookForBestConfiguration() {
-		double bestScore = Double.NaN;
+	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> lookForBestConfiguration() {
+		MetricResult bestScore = null;
 		ValueSeries vs = null;
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
+		algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
 		
 		/* Automatic Training */
 		boolean trainingResult = false;
@@ -66,13 +69,14 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 			for(Knowledge know : kList){
 				resultList.addAll(calculateResults(algorithm, know));
 			}
-			ObjectPair<String, Double> value = electBestDecisionFunction(algorithm, resultList, vs);
+			ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
 			bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
 			algorithm.setDecisionFunction(value.getKey());
 			bestScore = value.getValue();
 		}
 		
-		algorithm.saveLoggedScores();
+		// here
+		
 		
 		// Final Operations, assume 'algorithm', 'vs' and 'bestConf' are set
 		bestConf.addItem(BasicConfiguration.TRAIN_AVG, vs.getAvg());
@@ -88,7 +92,12 @@ public class FixedConfigurationTrainer extends AlgorithmTrainer {
 			trainResult.put(know, calculateResults(algorithm, know));
 		}
 		
-		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, Double>(trainResult, bestScore);
+		return new ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult>(trainResult, bestScore);
+	}
+
+	@Override
+	public void saveAlgorithmScores() {
+		algorithm.saveLoggedScores();
 	}
 	
 }

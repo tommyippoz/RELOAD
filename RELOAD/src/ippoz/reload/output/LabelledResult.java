@@ -13,26 +13,43 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 public class LabelledResult {
 	
 	private boolean label;
-	private AlgorithmResult value;
 	
-	public LabelledResult(boolean label, AlgorithmResult value) {
-		this.label = label;
-		this.value = value;
+	private double value;
+	
+	private double confidencedScore;
+	
+	private boolean isUnknown;
+	
+	public LabelledResult(AlgorithmResult ar) {
+		label = ar.isAnomalous();
+		value = ar.getScore();
+		isUnknown = ar.isUnknown();
+		confidencedScore = ar.getConfidencedScore();
 	}
-	
+
 	public boolean getLabel() {
 		return label;
 	}
 	
-	public AlgorithmResult getValue() {
+	public double getValue() {
 		return value;
+	}
+	
+	public double getConfidencedScore() {
+		return confidencedScore;
 	}
 
 	@Override
 	public String toString() {
-		return "LabelledResult [label=" + label + ", value=" + value.getScore() + "]";
+		return "LabelledResult [label=" + label + ", value=" + value + "]";
+	}
+
+	public double getConfidence() {
+		return 0;
+	}
+
+	public boolean isUnknown() {
+		return isUnknown;
 	}	
 	
-	
-
 }

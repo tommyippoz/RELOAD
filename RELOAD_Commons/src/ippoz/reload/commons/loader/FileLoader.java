@@ -3,22 +3,33 @@
  */
 package ippoz.reload.commons.loader;
 
-import ippoz.reload.commons.indicator.Indicator;
+import ippoz.reload.commons.failure.InjectedElement;
+import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.loader.info.DatasetInfo;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tommy
  *
  */
-public abstract class FileLoader extends SimpleLoader {
+public abstract class FileLoader extends Loader {
 	
 	/** The Constant TRAIN_SKIP_ROWS. */
 	public static final String TRAIN_SKIP_ROWS = "TRAIN_SKIP_ROWS";
+	
+	public static final String SKIP_ROWS = "SKIP_ROWS";
 	
 	/** The Constant VALIDATION_SKIP_ROWS. */
 	public static final String VALIDATION_SKIP_ROWS = "VALIDATION_SKIP_ROWS";
@@ -44,8 +55,14 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The list of faulty tags. */
 	protected List<String> faultyTagList;
 	
+	/** The normal tag. */
+	protected String normalTag;
+	
 	/** The list of tags to be avoided when reading. */
 	protected List<String> avoidTagList;
+	
+	/** The list of tags to be avoided when reading. */
+	protected List<String> knownFaults;
 	
 	/** The anomaly window. */
 	private int anomalyWindow;
@@ -59,17 +76,24 @@ public abstract class FileLoader extends SimpleLoader {
 	/** The skip ratio. */
 	private double skipRatio;
 
-	public FileLoader(File file, String toSkip, String labelColString, String faultyTags, String avoidTags, int anomalyWindow, String batchString, String runsString) {
+	public FileLoader(File file, String[] toSkip, String labelColString, String faultyTags, String knownTags, String normalTag, String avoidTags, int anomalyWindow, String batchString, String runsString) {
 		super();
 		this.file = file;
-		this.labelCol = extractIndexOf(labelColString);
+		this.labelCol = extractHeaderIndexOf(labelColString);
 		this.anomalyWindow = anomalyWindow;
-		filterHeader(parseSkipColumns(toSkip));
+		filterHeader(toSkip, labelColString);
 		parseFaultyTags(faultyTags);
+		parseKnownFaults(knownTags);
+		parseNormalTag(normalTag);
 		parseAvoidTags(avoidTags);
 		setBatches(deriveBatches(batchString, runsString));
 		initialize();
 		updateBatches();
+	}
+
+	@Override
+	public DatasetInfo generateDatasetInfo(){
+		return initialize();
 	}
 
 	private List<LoaderBatch> deriveBatches(String batchString, String runsString){
@@ -119,11 +143,120 @@ public abstract class FileLoader extends SimpleLoader {
 		return outList;
 	}
 	
-	protected abstract List<LoaderBatch> getFeatureBatches(String featureName);
+	/**
+	 * Reads the files.
+	 */
+	protected DatasetInfo initialize() {
+		BufferedReader reader = null;
+		List<Observation> obList = null;
+		Map<DatasetIndex, InjectedElement> injMap = null;
+		Boolean[] headBool = null;
+		String[] headName = null;
+		int rowIndex = 0;
+		int unkCount = 0;
+		double skipCount = 0;
+		double itemCount = 0;
+		double anomalyCount = 0;
+		int currentBatchIndex = -1;
+		DatasetInfo dInfo = new DatasetInfo(getHeader());
+		try {
+			dataList = new LinkedList<MonitoredData>();
+			headBool = getHeader().values().toArray(new Boolean[getHeader().values().size()]);
+			headName = getHeader().keySet().toArray(new String[getHeader().keySet().size()]);
+			AppLogger.logInfo(getClass(), "Loading " + file.getPath());
+			if(getBatchesNumber() > 0){
+				if(file != null && !file.isDirectory() && file.exists()){
+					String readLine = null;
+					reader = skipHeader();
+					int indicatorNumber = getIndicatorNumber();
+					while(reader.ready()){
+						readLine = reader.readLine();
+						if(readLine != null){
+							readLine = readLine.trim();
+							if(readLine.length() > 0 && !readLine.startsWith("*")){
+								if(currentBatchIndex < 0 || (currentBatchIndex < getBatchesNumber() && getBatchIndex(rowIndex) >= 0 && currentBatchIndex != getBatchIndex(rowIndex))){
+									if(obList != null && obList.size() > 0){
+										dataList.add(new MonitoredData(getBatch(currentBatchIndex), new ArrayList<>(obList), injMap, getHeader()));
+									}
+									injMap = new HashMap<>();
+									obList = new LinkedList<Observation>();
+									currentBatchIndex++;
+								}
+								readLine = AppUtility.filterInnerCommas(readLine);
+								if(canRead(rowIndex)/* && currentBatchIndex < getBatchesNumber()*/){
+									DatasetIndex dIndex = new DatasetIndex(rowIndex);
+									String[] splitLine = readLine.split(",");
+									Observation current = new Observation(dIndex, indicatorNumber);
+									int i = 0;
+									boolean rowLabel = false;
+									if(labelCol >= 0 && labelCol < splitLine.length && splitLine[labelCol] != null) { 
+										itemCount++;
+										if(avoidTagList == null || !avoidTagList.contains(splitLine[labelCol])){
+											obList.add(current);
+											rowLabel = hasFault(splitLine[labelCol]);
+											if(readLine.split(",")[labelCol] != null && rowLabel){
+												anomalyCount++;
+												boolean isUnk = checkUnknown(splitLine[labelCol]);
+												unkCount = unkCount + (isUnk ? 1 : 0);
+												injMap.put(dIndex, new InjectedElement(dIndex, splitLine[labelCol], isUnk));
+											}
+										} else skipCount++;
+									}
+									for(String splitted : splitLine){
+										if(i < headBool.length && headBool[i]){
+											Double indData = 0.0;
+											if(splitted != null && splitted.trim().length() > 0){	
+												splitted = splitted.replace("\"", "").trim();
+												if(AppUtility.isNumber(splitted)){
+													indData = Double.parseDouble(splitted);
+												}
+											}
+											current.addIndicator(indData);
+											dInfo.addValue(headName[i], indData, rowLabel);
+										}
+										i++;
+									}
+								}
+								rowIndex++;
+							}
+						}
+					}
+					if(obList != null && obList.size() > 0){
+						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injMap, getHeader()));
+					}
+					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows, " + (anomalyCount > 0 ? unkCount*100.0/anomalyCount : 0.0) + "% of unknown anomalies");
+					reader.close();
+				}
+
+				// Setting up key variables
+				dInfo.setDataPoints(rowIndex);
+				setTotalDataPoints(rowIndex);
+				dInfo.setAnomalyRatio(100.0*anomalyCount/itemCount);
+				dInfo.setSkipRatio(100.0*skipCount/itemCount);
+				setSkipRatio(100.0*skipCount/itemCount);
+				setAnomalyRatio(100.0*anomalyCount/itemCount);
+			} else AppLogger.logError(getClass(), "FileNotFound", "File '" + file.getPath() + "' not found");
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to parse header");
+		}
+		return dInfo;
+	}
+	
+	private boolean checkUnknown(String tag){
+		if(tag == null || tag.trim().length() == 0)
+			return false;
+		if(knownFaults != null && knownFaults.size() > 0){
+			for(String attTag : knownFaults){
+				if(tag.compareTo(attTag) == 0)
+					return false;
+			}
+			return true;
+		} else return true;
+	}
 
 	public List<Integer> readRunIds(String idPref){
 		String from, to;
-		LinkedList<Integer> idList = new LinkedList<Integer>();
+		List<Integer> idList = new LinkedList<Integer>();
 		if(idPref != null && idPref.length() > 0){
 			for(String id : idPref.split(",")){
 				if(id.contains("-")){
@@ -137,8 +270,6 @@ public abstract class FileLoader extends SimpleLoader {
 		}
 		return idList;
 	}
-	
-	protected abstract void initialize();
 	
 	@Override
 	public String getCompactName() {
@@ -159,7 +290,7 @@ public abstract class FileLoader extends SimpleLoader {
 		LinkedList<Integer> iList = new LinkedList<Integer>();
 		if(colString != null && colString.length() > 0){
 			for(String str : colString.split(",")){
-				Integer newSkip = extractIndexOf(str.trim());
+				Integer newSkip = extractHeaderIndexOf(str.trim());
 				if(newSkip >= 0)
 					iList.add(newSkip);
 			}
@@ -169,16 +300,16 @@ public abstract class FileLoader extends SimpleLoader {
 		return iList.toArray(new Integer[iList.size()]);
 	}
 	
-	protected int extractIndexOf(String labelColString) {
-		List<Indicator> header = getHeader();
+	protected int extractHeaderIndexOf(String labelColString) {
+		Map<String, Boolean> header = getHeader();
 		if(labelColString != null && header != null && header.size() > 0){
 			labelColString = labelColString.trim();
 			if(AppUtility.isNumber(labelColString))
 				return Integer.parseInt(labelColString);
 			else {
 				int i = 0;
-				for(Indicator ind : header){
-					if(ind.getName().trim().toUpperCase().equals(labelColString.toUpperCase()))
+				for(String ind : header.keySet()){
+					if(ind != null && ind.trim().toUpperCase().equals(labelColString.toUpperCase()))
 						return i;
 					i++;
 				}
@@ -221,7 +352,7 @@ public abstract class FileLoader extends SimpleLoader {
 			return prefManager.getPreference(TRAIN_SKIP_ROWS);
 		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_SKIP_ROWS))
 			return prefManager.getPreference(VALIDATION_SKIP_ROWS);
-		else return prefManager.getPreference("SKIP_ROWS");
+		else return prefManager.getPreference(SKIP_ROWS);
 	}
 	
 	/**
@@ -231,9 +362,33 @@ public abstract class FileLoader extends SimpleLoader {
 	 */
 	protected void parseFaultyTags(String faultyTags) {
 		faultyTagList = new LinkedList<String>();
-		for(String str : faultyTags.split(",")){
-			faultyTagList.add(str.trim());
+		if(faultyTags != null && faultyTags.length() > 0){
+			for(String str : faultyTags.split(",")){
+				faultyTagList.add(str.trim());
+			}
 		}
+	}
+	
+	/**
+	 * Parses the faulty tags.
+	 *
+	 * @param faultyTags the faulty tags
+	 */
+	protected void parseKnownFaults(String faultyTags) {
+		knownFaults = new LinkedList<String>();
+		if(faultyTags != null){
+			if (faultyTags.length() > 0){
+				for(String str : faultyTags.split(",")){
+					knownFaults.add(str.trim());
+				}
+			}
+		} else knownFaults = faultyTagList;
+	}
+	
+	private void parseNormalTag(String nt) {
+		if(nt != null && nt.length() > 0)
+			normalTag = nt.trim();
+		else normalTag = null;
 	}
 	
 	/**
@@ -307,6 +462,20 @@ public abstract class FileLoader extends SimpleLoader {
 		return readedString != null && readedString.startsWith("*");
 	}
 	
+	protected boolean hasFault(String string){
+		if(faultyTagList == null && normalTag == null)
+			return false;
+		else if(normalTag != null){
+			return normalTag.toUpperCase().trim().compareTo(string.trim().toUpperCase()) != 0;
+		} else {
+			for(String fault : faultyTagList){
+				if(fault.toUpperCase().trim().compareTo(string.trim().toUpperCase()) == 0)
+					return true;
+			}
+			return false;
+		}
+	}
+	
 	public static String getBatchPreference(PreferencesManager pManager){
 		if (pManager != null){
 			if(pManager.hasPreference(BATCH_COLUMN))
@@ -316,5 +485,54 @@ public abstract class FileLoader extends SimpleLoader {
 		}
 		return null;
 	}
+	
+	public static String[] splitString(String toSplit, String sep){
+		String[] splitted = toSplit != null && toSplit.trim().length() > 0 ? toSplit.split(sep) : new String[]{};
+		for(int i=0;i<splitted.length;i++){
+			splitted[i] = splitted[i].trim();
+		}
+		return splitted;
+	}
+	
+	private List<LoaderBatch> getFeatureBatches(String featureName) {
+		BufferedReader reader = null;
+		String readLine = null;
+		List<LoaderBatch> bList = new LinkedList<LoaderBatch>();
+		try {
+			if(file != null && file.exists() && hasFeature(featureName)){				
+				reader = skipHeader();
+				int rowCount = 0;
+				int startIndex = 0;
+				String featValue = null;
+				int columnIndex = getFeatureIndex(featureName);
+				while(reader.ready() && readLine != null){
+					readLine = reader.readLine();
+					if(readLine != null){
+						readLine = readLine.trim();
+						if(readLine.length() > 0 && !isComment(readLine)){
+							String[] splitted = readLine.split(",");
+							if(splitted.length > columnIndex){
+								if(featValue == null || !featValue.equals(splitted[columnIndex])){
+									if(featValue != null){
+										bList.add(new LoaderBatch(new String(featValue + " (batch " + bList.size() + ")"), startIndex, rowCount-1));
+									}
+									featValue = splitted[columnIndex];
+									startIndex = rowCount;
+								}
+							}
+							rowCount++;
+						}
+					}
+				}
+				
+				reader.close();
+			}
+		} catch (IOException ex){
+			AppLogger.logException(getClass(), ex, "unable to get feature batches");
+		}
+		return new ArrayList<>(bList);
+	}
+	
+	protected abstract BufferedReader skipHeader() throws IOException;
 	
 }

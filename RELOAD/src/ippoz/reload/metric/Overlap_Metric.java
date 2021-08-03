@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -15,20 +17,20 @@ import java.util.List;
  */
 public class Overlap_Metric extends BetterMinMetric {
 
-	public Overlap_Metric(boolean validAfter) {
-		super(MetricType.OVERLAP, validAfter);
+	public Overlap_Metric(double noPredTHR) {
+		super(MetricType.OVERLAP, noPredTHR);
 	}
 
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
 		for(AlgorithmResult tr : anomalyEvaluations){
-			if(tr.hasInjection())
+			if(tr.isAnomalous())
 				faultyList.add(tr.getScore());
 			else normalList.add(tr.getScore());
 		}
-		return calculateOverlap(normalList, faultyList);
+		return new DoubleMetricResult(calculateOverlap(normalList, faultyList));
 	}
 
 	@Override

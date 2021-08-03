@@ -6,10 +6,7 @@ package ippoz.reload.algorithm.elki;
 import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
@@ -140,18 +137,9 @@ public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorith
 	 */
 	protected Vector convertSnapToVector(Snapshot sysSnapshot) {
 		Vector vec = new Vector(getDataSeries().size());
-		if(getDataSeries().size() == 1){
-			if(needNormalization)
-				vec.set(0, (((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst() - minmax[0][0])/(minmax[0][1] - minmax[0][0]));
-			else vec.set(0, ((DataSeriesSnapshot)sysSnapshot).getSnapValue().getFirst());
-		} else {
-			for(int j=0;j<getDataSeries().size();j++){
-				if(((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue() != null){
-					if(needNormalization)
-						vec.set(j, (((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]));
-					else vec.set(j, ((MultipleSnapshot)sysSnapshot).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst());	
-				} else vec.set(j, 0.0);					
-			}
+		double[] arr = sysSnapshot.getDoubleValues();
+		for(int j=0;j<getDataSeries().size();j++){
+			vec.set(j, arr[j]);					
 		}
 		return vec;
 	}

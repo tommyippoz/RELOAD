@@ -5,7 +5,6 @@ package ippoz.reload.featureselection;
 
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 
 import java.util.ArrayList;
@@ -168,12 +167,15 @@ public abstract class FeatureSelector {
 	 * Gets the snap values.
 	 *
 	 * @param snapList the snap list
-	 * @return the snap values
+	 * @return the snap values 
 	 */
 	protected List<Double> getSnapValues(List<Snapshot> snapList){
 		List<Double> values = new ArrayList<Double>(snapList.size());
 		for(Snapshot snap : snapList){
-			values.add(((DataSeriesSnapshot)snap).getSnapValue().getFirst());
+			double[] dValues = snap.getDoubleValues();
+			if(dValues != null && dValues.length > 0)
+				values.add(dValues[0]);
+			else values.add(Double.NaN);
 		}
 		return values;
 	}
@@ -298,5 +300,11 @@ public abstract class FeatureSelector {
 	public void updateRankedThreshold(boolean b) {
 		rankThresholdFlag = b;
 	}
+	
+	public abstract double getHighestScore();
+	
+	public abstract double getRankedScore(int index);
+	
+	public abstract double getRankedAverageScore(int index);
 
 }

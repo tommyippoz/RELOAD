@@ -41,6 +41,9 @@ package ippoz.reload.algorithm.elki.support;
  */
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.algorithm.utils.KdTree;
+import ippoz.reload.algorithm.utils.KdTree.ELKIEuclid;
+import ippoz.reload.algorithm.utils.KdTree.Entry;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -125,9 +128,11 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
    */
   protected int k;
   
-  private List<ISOSScore> scoresList;
+  //private List<ISOSScore> scoresList;
   
   private double perplexity;
+  
+  private ELKIEuclid<ISOSScore> treeList;
 
   /**
    * Estimator of intrinsic dimensionality.
@@ -158,7 +163,8 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		BufferedReader reader;
 		String readed;
 		try {
-			scoresList = new LinkedList<ISOSScore>();
+			treeList = new ELKIEuclid<CustomISOS.ISOSScore>();
+//			scoresList = new LinkedList<ISOSScore>();
 			if(new File(item).exists()){
 				reader = new BufferedReader(new FileReader(new File(item)));
 				reader.readLine();
@@ -166,13 +172,13 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						scoresList.add(new ISOSScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[5], readed.split(";")[4]));
+						ISOSScore is = new ISOSScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[5], readed.split(";")[4]);
+						treeList.addPoint(is.getPoint(), is);
 					}
 				}
 				reader.close();
-				Collections.sort(scoresList);
-				if(k > scoresList.size())
-					k = scoresList.size();
+				if(k > treeList.size())
+					k = treeList.size();
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read ISOS file");
@@ -182,12 +188,12 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	public void printFile(File file) {
 		BufferedWriter writer;
 		try {
-			if(scoresList != null && scoresList.size() > 0){
+			if(treeList != null && treeList.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("data (enclosed in {});k;perplexity;estimator;s;sos\n");
-				for(ISOSScore ar : scoresList){
+				for(ISOSScore ar : treeList.listItems()){
 					writer.write("{" + ar.getVector().toString() + "};" + k + ";" + perplexity + ";" + estimator.toString() + ";" + ar.getS() + ";" + ar.getSOS() + "\n");
 				}
 				writer.close();
@@ -198,19 +204,13 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	}
 
 	public int size() {
-		return scoresList.size();
-	}
-
-	public double getScore(int ratio) {
-		if(ratio >= 0 && ratio < size()){
-			return scoresList.get(ratio).getSOS();
-		} else return Double.NaN;
+		return treeList.size();
 	}
 
 	@Override
 	public List<Double> getScoresList() {
 		List<Double> list = new ArrayList<Double>(size());
-		for(ISOSScore os : scoresList){
+		for(ISOSScore os : treeList.listItems()){
 			list.add(os.getSOS());
 		}
 		Collections.sort(list);
@@ -239,7 +239,7 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
     KNNQuery<NumberVector> knnq = relation.getKNNQuery(getDistanceFunction(), k1);
     final double logPerp = perplexity > 1. ? Math.log(perplexity) : .1;
     
-    scoresList = new LinkedList<ISOSScore>();
+    treeList = new ELKIEuclid<CustomISOS.ISOSScore>();
 
     double[] p = new double[k + 10];
     ModifiableDoubleDBIDList dists = DBIDUtil.newDistanceDBIDList(k + 10);
@@ -282,10 +282,10 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
       }
       LOG.incrementProcessed(prog);
     }
-    if(k > scoresList.size())
-		k = scoresList.size();
-    LOG.ensureCompleted(prog);
     DoubleMinMax minmax = transformScores(db, scores, relation.getDBIDs(), logPerp, phi, sList);
+    if(k > treeList.size())
+		k = treeList.size();
+    LOG.ensureCompleted(prog);
     DoubleRelation scoreres = new MaterializedDoubleRelation("Intrinsic Stoachastic Outlier Selection", "isos-outlier", scores, relation.getDBIDs());
     OutlierScoreMeta meta = new ProbabilisticOutlierScore(minmax.getMin(), minmax.getMax(), 0.);
     return new OutlierResult(meta, scoreres);
@@ -374,10 +374,10 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
     }
   }
   
-  public static double nominateNeighbors(List<ISOSCouple> neiDist, double[] p) {
+  public static double nominateNeighbors(List<Entry<ISOSScore>> kNN, double[] p) {
 	  double sos = 1;  
-	  for(int i=0;i<neiDist.size();i++) {
-	      double v = p[i] * neiDist.get(i).getScore().getNorm(); // Normalize
+	  for(int i=0;i<kNN.size();i++) {
+	      double v = p[i] * kNN.get(i).value.getNorm(); // Normalize
 	      if(!(v > 0)) {
 	        break;
 	      }
@@ -388,16 +388,16 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 
   public double calculateSingleISOS(NumberVector newInstance) {
 	  double partialResult;
-	  if(scoresList == null || scoresList.size() == 0) 
+	  if(treeList == null || treeList.size() == 0) 
 		  return Double.MAX_VALUE;
 	  else if(Double.isFinite(partialResult = hasResult(newInstance)))
 		  return partialResult;
 	  else {
-		  DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
+		  /*DistanceQuery<NumberVector> sq = getDistanceFunction().instantiate(null);
 
 		  // Calculating distances
 		  List<ISOSCouple> distances = new LinkedList<ISOSCouple>();
-		  for(ISOSScore ss : scoresList){
+		  for(ISOSScore ss : treeList.listItems()){
 			  distances.add(new ISOSCouple(ss, getSimilarity(sq, ss.getVector(), newInstance)));
 		  }
 		  Collections.sort(distances);
@@ -407,12 +407,19 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		  for(int i=0;i<k+1;i++){
 			  neiDist.add(distances.get(distances.size() - i - 1));
 		  }
-		  Collections.sort(neiDist);
+		  Collections.sort(neiDist);*/
+		  
+		  double[] point = new double[newInstance.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = newInstance.doubleValue(i);
+			}
+			List<KdTree.Entry<ISOSScore>> kNN = treeList.nearestNeighbor(point, k-1, false);
+			Collections.sort(kNN);
 
 		  // Calculating ISOS
 		  double[] p = new double[k + 10];
 		  double sos = Double.NaN;
-		  List<Double> neiDistDouble = extractDistancesFrom(neiDist);
+		  List<Double> neiDistDouble = extractDistancesFrom(kNN);
 		  // Trying adjustment of distances
 		  try {
 			  double id = estimateID(neiDistDouble, p);
@@ -422,17 +429,17 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		  // Normalization factor:
 		  double s = CustomSOS.sumOfProbabilities(neiDistDouble, p);
 		  if(s > 0.) {
-			  sos = nominateNeighbors(neiDist, p);
+			  sos = nominateNeighbors(kNN, p);
 		  }
 		  return transformScore(sos, Math.log(perplexity), phi);
 	  }
 		   
 	}
   
-  private List<Double> extractDistancesFrom(List<ISOSCouple> list){
+  private List<Double> extractDistancesFrom(List<Entry<ISOSScore>> kNN){
 	  List<Double> distances = new LinkedList<Double>();
-	  for(ISOSCouple sc : list){
-		  distances.add(sc.getDistance());
+	  for(Entry<ISOSScore> eis : kNN){
+		  distances.add(eis.distance);
 	  }
 	  return distances;
   }
@@ -442,38 +449,12 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	}
 
   private double hasResult(NumberVector newInstance){
-		for(ISOSScore ar : scoresList){
+		for(ISOSScore ar : treeList.listItems()){
 			if(ar.getVector().equals(newInstance))
 				return ar.getSOS();
 		}
 		return Double.NaN;
 	}
-  
-private class ISOSCouple implements Comparable<ISOSCouple> {
-	  
-	  private ISOSScore score;
-	  
-	  private double distance; 
-
-	public ISOSCouple(ISOSScore score, double distance) {
-		this.score = score;
-		this.distance = distance;
-	}
-
-	public ISOSScore getScore() {
-		return score;
-	}
-	
-	public double getDistance() {
-		return distance;
-	}
-
-	@Override
-	public int compareTo(ISOSCouple o) {
-		return Double.compare(distance, o.getDistance());
-	}  
-	  
-  }
   
   private class ISOSScore implements Comparable<ISOSScore> {
 
@@ -493,6 +474,14 @@ private class ISOSCouple implements Comparable<ISOSCouple> {
 			}
 		}
 	
+		public double[] getPoint(){
+			double[] point = new double[data.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = data.doubleValue(i);
+			}
+			return point;
+		}
+
 		public ISOSScore(String vString, String sos, String s) {
 			this.sos = Double.parseDouble(sos);
 			this.s = Double.parseDouble(s);
@@ -549,7 +538,8 @@ private class ISOSCouple implements Comparable<ISOSCouple> {
       double or = Math.exp(-scores.doubleValue(it) * logPerp) * adj;
       double s = 1. / (1 + or);
       scores.putDouble(it, s);
-      scoresList.add(new ISOSScore(db.getBundle(it), s, sList.get(i++)));
+      ISOSScore is = new ISOSScore(db.getBundle(it), s, sList.get(i++));
+      treeList.addPoint(is.getPoint(), is);
       minmax.put(s);
     }
     return minmax;

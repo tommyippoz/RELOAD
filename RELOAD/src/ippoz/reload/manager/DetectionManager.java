@@ -6,7 +6,6 @@ package ippoz.reload.manager;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.datacategory.DataCategory;
 import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.KnowledgeType;
@@ -15,7 +14,6 @@ import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.knowledge.data.MonitoredData;
 import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
 import ippoz.reload.commons.loader.Loader;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
@@ -26,6 +24,7 @@ import ippoz.reload.info.TrainInfo;
 import ippoz.reload.info.ValidationInfo;
 import ippoz.reload.manager.train.TrainerManager;
 import ippoz.reload.metric.Metric;
+import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.output.DetectorOutput;
 import ippoz.reload.reputation.Reputation;
 
@@ -56,9 +55,6 @@ public class DetectionManager {
 	/** The chosen reputation metric. */
 	protected Reputation reputation;
 	
-	/** The used data types (plain, diff...). */
-	protected DataCategory[] dataTypes;
-	
 	/** The algorithm types (SPS, Historical...). */
 	protected LearnerType mainLearner;
 	
@@ -68,25 +64,36 @@ public class DetectionManager {
 	
 	protected SlidingPolicy sPolicy;
 	
+	private Loader trainLoader;
+	
+	private Loader evalLoader;
+	
+	private boolean filterFlag;
+	
 	/**
 	 * Instantiates a new detection manager.
 	 * @param loaderPref 
+	 * @param filterFlag 
+	 * @param sPolicy2 
+	 * @param windowSize2 
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref){
-		this(iManager, algTypes, loaderPref, null, null);
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, boolean filterFlag){
+		this(iManager, algTypes, loaderPref, trainLoader, evalLoader, null, null, filterFlag);
 	}
 	
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Integer windowSize, SlidingPolicy sPolicy) {
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, Integer windowSize, SlidingPolicy sPolicy, boolean filterFlag) {
 		this.iManager = iManager;
 		this.mainLearner = algTypes;
 		this.loaderPref = loaderPref;
 		this.windowSize = windowSize;
 		this.sPolicy = sPolicy;
+		this.trainLoader = trainLoader;
+		this.evalLoader = evalLoader;
+		this.filterFlag = filterFlag;
 		metric = iManager.getTargetMetric();
 		reputation = iManager.getReputation(metric);
-		dataTypes = iManager.getDataTypes();
 		if(new File(getDetectorOutputFolder()).exists()){
 			for(File f : new File(getDetectorOutputFolder()).listFiles()){
 				if(f.isFile())
@@ -109,13 +116,13 @@ public class DetectionManager {
 	
 	private String getWritableTag() {
 		String tag = "";
-		if(loaderPref != null)
+		if(loaderPref != null && loaderPref.getFilename() != null)
 			tag = tag + loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.'));
 		tag = tag + ",";
-		if(loaderPref != null)
+		if(loaderPref != null && loaderPref.getPreference(Loader.VALIDATION_PARTITION) != null)
 			tag = tag + loaderPref.getPreference(Loader.VALIDATION_PARTITION).replace(",", "");
 		tag = tag + ",";
-		if(mainLearner != null)
+		if(mainLearner != null && mainLearner.toString() != null)
 			tag = tag + mainLearner.toString().replace(",", "");
 		tag = tag + ",";
 		if(windowSize != null)
@@ -124,20 +131,6 @@ public class DetectionManager {
 		if(sPolicy != null)
 			tag = tag + sPolicy.toString();
 		return tag;
-	}
-	
-	protected Loader buildLoader(String loaderTag){
-		if(loaderPref != null){
-			return buildLoader(loaderTag, iManager.getAnomalyWindow());
-		} else return null;
-	}
-	
-	private Loader buildLoader(String loaderTag, int anomalyWindow){
-		String runsString = loaderPref.getPreference(loaderTag.equals("validation") ? Loader.VALIDATION_PARTITION : Loader.TRAIN_PARTITION);
-		if(runsString != null && runsString.length() > 0){
-			return iManager.buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
-		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
-		return null;
 	}
 	
 	/**
@@ -166,14 +159,20 @@ public class DetectionManager {
 		else {
 			if(iManager.getForceTrainingFlag()){
 				return true;
-			} else if(mainLearner instanceof BaseLearner){
-				return !AlgorithmModel.trainResultExists(iManager.getScoresFile(getDatasetName() + File.separatorChar + mainLearner.toString()));	
-			} else return true;
+			} else {
+				String filename = "";
+				if(mainLearner instanceof BaseLearner){
+					filename = getDatasetName() + File.separatorChar + mainLearner.toString();
+				} else {
+					filename = getDatasetName() + File.separatorChar + mainLearner.toCompactString();
+				}
+				return !AlgorithmModel.trainResultExists(iManager.getScoresFile(filename));	
+			}
 		}
 	}
 	
 	public boolean needFiltering() {
-		return iManager.getFilteringFlag();
+		return iManager.getFilteringFlag() && filterFlag;
 	}
 	
 	public boolean needEvaluation() {
@@ -193,10 +192,12 @@ public class DetectionManager {
 				scoresFolderName = iManager.getScoresFolder() + getDatasetName() + File.separatorChar;
 				if(!new File(scoresFolderName).exists())
 					new File(scoresFolderName).mkdirs();
-				loader = buildLoader("train");
-				if(SimpleLoader.isValid(loader)){
+				if(trainLoader == null)
+					loader = iManager.buildLoader("train", loaderPref);
+				else loader = trainLoader;
+				if(Loader.isValid(loader)){
 					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
-					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), dataTypes);
+					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), iManager.getPredictMisclassificationsFlag());
 					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 					fsm.addLoaderInfo(loader);
 					fsm.saveSelectedFeatures(scoresFolderName, getDatasetName() + "_filtered.csv");
@@ -224,8 +225,10 @@ public class DetectionManager {
 		Loader loader;
 		try {
 			if(needTraining()) {
-				loader = buildLoader("train");
-				if(SimpleLoader.isValid(loader)){
+				if(trainLoader == null)
+					loader = iManager.buildLoader("train", loaderPref);
+				else loader = trainLoader;
+				if(Loader.isValid(loader)){
 					kMap = generateKnowledge(loader.fetch());
 					if(!new File(buildScoresFolder()).exists())
 						new File(buildScoresFolder()).mkdirs();
@@ -240,16 +243,14 @@ public class DetectionManager {
 							iManager.loadConfigurations(mainLearner, getDatasetName(), windowSize, sPolicy, true), 
 							metric, 
 							reputation, 
-							dataTypes, 
 							mainLearner, 
 							iManager.loadSelectedDataSeriesString(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
 							iManager.getKFoldCounter(),
-							iManager.loadValidationMetrics());
+							iManager.loadValidationMetrics(), iManager.getParallelTrainingFlag());
 					tManager.addLoaderInfo(loader);
 					tManager.train(buildScoresFolder());
 					tManager.flush();
 				} else AppLogger.logError(getClass(), "UnvalidLoaderError", "Loader '" + (loader != null ? loader.getLoaderName() : "") + "' not specified correctly. Check if it is reachable and if train partition is specified correctly to include some anomalies to be used to calculate optimal parameters values");
-			
 			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to train detector");
@@ -293,36 +294,41 @@ public class DetectionManager {
 	}*/
 	
 	public DetectorOutput evaluate() {
-		double score = Double.NaN;
+		MetricResult score = null;
 		EvaluatorManager eManager;
 		Metric[] metList = iManager.loadValidationMetrics();
 		boolean printOutput = iManager.getOutputVisibility();
-		Loader l = buildLoader("validation");
-		if(SimpleLoader.isValid(l)){
+		Loader l = evalLoader;
+		if(evalLoader == null)
+			l = iManager.buildLoader("validation", loaderPref);
+		if(Loader.isValid(l)){
 			String scoresFileString = buildScoresFolder();
 			if(iManager.countAvailableModels(scoresFileString) > 0){
 				eManager = new EvaluatorManager(getDetectorOutputFolder(), scoresFileString, generateKnowledge(l.fetch()), metList, printOutput);
 				if(eManager.detectAnomalies()){
-					score = eManager.getMetricsValues().get(metric.getMetricName());
-					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score);
+					score = eManager.getMetricsValues().get(metric.getName());
+					AppLogger.logInfo(getClass(), "Detection Executed. Obtained score is " + score.toString());
 				}
 				ValidationInfo vInfo = new ValidationInfo();
+				vInfo.setLoaderName(l.getCompactName());
 				vInfo.setDataPoints(l.getDataPoints());
 				vInfo.setRuns(l.getRuns());
+				vInfo.setValidationTime(eManager.getEvalTime());
 				vInfo.setFaultRatio(eManager.getInjectionsRatio());
 				vInfo.setModels(eManager.getModels());
 				vInfo.setBestScore(score);
 				vInfo.setMetricsString(eManager.getMetricsString());
 				vInfo.setSeriesString(iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()));
+				vInfo.setParamsString(eManager.getModel().getMainConfString());
 				vInfo.printFile(new File(getDetectorOutputFolder() + File.separatorChar + "validationInfo.info"));
 				return new DetectorOutput(iManager, mainLearner, score, 
 						InputManager.loadAlgorithmModel(buildScoresFolder()),
-						l,
 						eManager.getDetailedEvaluations(),
 						iManager.getSelectedSeries(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName()), 
 						iManager.extractSelectedFeatures(iManager.getScoresFolder(), getDatasetName() + File.separatorChar + getDatasetName(), loaderPref.getFilename()),		
 						getWritableTag(),
 						eManager.getInjectionsRatio(), 
+						iManager.loadFeatureSelectionInfo(iManager.getScoresFolder() + getDatasetName() + File.separatorChar + "featureSelectionInfo.info"),
 						iManager.loadTrainInfo(buildScoresFolder() + File.separatorChar + "trainInfo.info"),
 						vInfo);
 			
@@ -352,9 +358,9 @@ public class DetectionManager {
 				writer.write("* Report for RELOAD activity on " + new Date(System.currentTimeMillis()) + "\n");
 				writer.write(FeatureSelectionInfo.getFileHeader() + ",");
 				writer.write(TrainInfo.getFileHeader() + ",");
-				writer.write("best_dataseries,dataset,runs,algorithm,window_size,window_policy,setup,metric_score");
+				writer.write(ValidationInfo.getFileHeader());
 				for(Metric met : iManager.loadValidationMetrics()){
-					writer.write("," + met.getMetricName());
+					writer.write("," + met.getName());
 				}
 				writer.write("\n");
 			} else {
@@ -362,12 +368,8 @@ public class DetectionManager {
 			}
 			writer.write(fsInfo.toFileString() + ",");
 			writer.write(tInfo.toFileString() + ",");
-			writer.write(
-					vInfo.getSeriesString() + "," +
-					getWritableTag() + "," + 
-					vInfo.getVoter() + "," + 
-					vInfo.getBestScore() + "," + 
-					vInfo.getMetricsValues() + "\n");
+			writer.write(vInfo.toFileString() + ",");
+			writer.write(vInfo.getMetricsValuesString() + "\n");
 			writer.close();
 		} catch(IOException ex){
 			AppLogger.logException(DetectorMain.class, ex, "Unable to report");

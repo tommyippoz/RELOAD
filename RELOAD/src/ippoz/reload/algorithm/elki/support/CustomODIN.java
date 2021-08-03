@@ -4,6 +4,7 @@
 package ippoz.reload.algorithm.elki.support;
 
 import ippoz.reload.algorithm.elki.ELKIAlgorithm;
+import ippoz.reload.algorithm.utils.KdTree.ELKIEuclid;
 import ippoz.reload.commons.support.AppLogger;
 
 import java.io.BufferedReader;
@@ -14,7 +15,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import de.lmu.ifi.dbs.elki.algorithm.AbstractDistanceBasedAlgorithm;
@@ -105,7 +105,9 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	 */
 	int k;
 
-	private List<ODINScore> resList;
+	//private List<ODINScore> resList;
+	
+	private ELKIEuclid<ODINScore> treeList;
 
 	/**
 	 * Constructor.
@@ -164,12 +166,12 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 			distances.put(iter, maxDist);
 		}
 
-		resList = new ArrayList<ODINScore>(ids.size());
+		treeList = new ELKIEuclid<CustomODIN.ODINScore>();
 		ids = relation.getDBIDs();
 		for(DBIDIter iter = ids.iter(); iter.valid(); iter.advance()) {
-			resList.add(new ODINScore(database.getBundle(iter), scores.doubleValue(iter), distances.doubleValue(iter)));
+			ODINScore os = new ODINScore(database.getBundle(iter), scores.doubleValue(iter), distances.doubleValue(iter));
+			treeList.addPoint(os.getPoint(), os);
 		}
-		Collections.sort(resList);
 
 		// Wrap the result and add metadata.
 		OutlierScoreMeta meta = new InvertedOutlierScoreMeta(min, max, 0., inc * (ids.size() - 1), 1);
@@ -179,19 +181,16 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 
 	public double calculateSingleODIN(NumberVector newInstance) {
 		double partialResult;
-		if(resList == null || resList.size() == 0) 
+		if(treeList == null || treeList.size() == 0) 
 			return Double.MAX_VALUE;
 		else if(Double.isFinite(partialResult = hasResult(newInstance)))
 			return partialResult;
 		else {
 			double odin = 0;
 			double inc = 1. / (k - 1);
-			List<ODINScore> extList = new ArrayList<ODINScore>(resList.size()+1);
-			for(ODINScore os : resList){
-				extList.add(os);
-			}
+			List<ODINScore> extList = new ArrayList<ODINScore>(treeList.listItems());
 			extList.add(new ODINScore(newInstance, 0.0));
-			for(ODINScore os : resList){
+			for(ODINScore os : treeList.listItems()){
 				if(!os.getVector().equals(newInstance) && isKNN(newInstance, os))
 					odin = odin + inc;
 			}
@@ -210,7 +209,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	}
 
 	private double hasResult(NumberVector newInstance){
-		for(ODINScore ar : resList){
+		for(ODINScore ar : treeList.listItems()){
 			if(ar.getVector().equals(newInstance))
 				return ar.getODIN();
 		}
@@ -254,6 +253,13 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 			}
 		}
 	
+		public double[] getPoint(){
+			double[] point = new double[data.getDimensionality()];
+			for(int i=0;i<point.length;i++){
+				point[i] = data.doubleValue(i);
+			}
+			return point;
+		}
 
 		public ODINScore(String vString, String odin, String distK) {
 			this.odin = Double.parseDouble(odin);
@@ -295,8 +301,8 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	}
 
 	public double getDbSize() {
-		if(resList != null)
-			return resList.size();
+		if(treeList != null)
+			return treeList.size();
 		else return 0;
 	}
 
@@ -345,7 +351,7 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 		BufferedReader reader;
 		String readed;
 		try {
-			resList = new LinkedList<ODINScore>();
+			treeList = new ELKIEuclid<CustomODIN.ODINScore>();
 			if(new File(item).exists()){
 				reader = new BufferedReader(new FileReader(new File(item)));
 				reader.readLine();
@@ -353,11 +359,11 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 					readed = reader.readLine();
 					if(readed != null){
 						readed = readed.trim();
-						resList.add(new ODINScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2], readed.split(";")[3]));
+						ODINScore os = new ODINScore(readed.split(";")[0].replace("{", "").replace("}",  ""), readed.split(";")[2], readed.split(";")[3]);
+						treeList.addPoint(os.getPoint(), os);
 					}
 				}
 				reader.close();
-				Collections.sort(resList);
 			}
 		} catch (IOException ex) {
 			AppLogger.logException(getClass(), ex, "Unable to read LOF file");
@@ -367,12 +373,12 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	public void printFile(File file) {
 		BufferedWriter writer;
 		try {
-			if(resList != null && resList.size() > 0){
+			if(treeList != null && treeList.size() > 0){
 				if(file.exists())
 					file.delete();
 				writer = new BufferedWriter(new FileWriter(file));
 				writer.write("data (enclosed in {});k;odin;distanceToKthNeighbour\n");
-				for(ODINScore ar : resList){
+				for(ODINScore ar : treeList.listItems()){
 					writer.write("{" + ar.getVector().toString() + "};" + (k-1) + ";" + ar.getODIN() + ";" + ar.getDistanceToKthNeighbour() + "\n");
 				}
 				writer.close();
@@ -383,19 +389,13 @@ public class CustomODIN extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	}
 
 	public int size() {
-		return resList.size();
+		return treeList.size();
 	}
-
-	public double getScore(int ratio) {
-		if(ratio >= 1 && ratio <= size()){
-			return resList.get(ratio-1).getODIN();
-		} else return 1.0;
-	}
-
+	
 	@Override
 	public List<Double> getScoresList() {
 		ArrayList<Double> list = new ArrayList<Double>(size());
-		for(ODINScore os : resList){
+		for(ODINScore os : treeList.listItems()){
 			list.add(os.getODIN());
 		}
 		Collections.sort(list);

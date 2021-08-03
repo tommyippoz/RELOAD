@@ -10,6 +10,10 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
+import ippoz.reload.output.LabelledResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -181,6 +185,24 @@ public abstract class DecisionFunction {
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 						return new ClusterDecision(partial, flag, algorithmScores);
 					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
+				} else if (thresholdTag.contains("VALUES")){
+					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						if(partial != null && partial.trim().length() > 0){
+							if(partial.contains(",")){
+								List<String> list = new LinkedList<>();
+								for(String st : partial.split(",")){
+									list.add(st.trim());
+								}
+								return new ValuesDecision(list.toArray(new String[list.size()]), algorithmScores);
+							} else if(AppUtility.isNumber(partial.trim()))
+								return new ValuesDecision(new String[]{partial.trim()}, algorithmScores);
+							else AppLogger.logInfo(DecisionFunction.class, "Parameters of values '" + thresholdTag + "' cannot be parsed");
+						}
+						
+						
+						return new ClusterDecision(partial, flag, algorithmScores);
+					} AppLogger.logInfo(DecisionFunction.class, "Parameters of cluster '" + thresholdTag + "' cannot be parsed");
 				} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "Unable to create decision function '" + thresholdTag + "'");
 			} else AppLogger.logError(DecisionFunction.class, "DecisionFunctionCreation", "null tag for decision function");
 		}
@@ -202,6 +224,11 @@ public abstract class DecisionFunction {
 					return true;
 				} else if(thresholdTag.endsWith("%")) {
 					return true;
+				} else if(thresholdTag.contains("STATIC_THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
+					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+					if(partial != null && partial.length() > 0 && AppUtility.isNumber(partial)){
+						return true;
+					} else return false;
 				} else if(thresholdTag.contains("DOUBLE_THRESHOLD") && thresholdTag.contains("(") && thresholdTag.contains(")")){
 					partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 					if(partial.contains(",")){
@@ -282,6 +309,11 @@ public abstract class DecisionFunction {
 						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
 						return true;
 					}
+				} else if (thresholdTag.contains("VALUES")){
+					if(thresholdTag.contains("(") && thresholdTag.contains(")")){
+						partial = thresholdTag.substring(thresholdTag.indexOf("(")+1, thresholdTag.indexOf(")"));
+						return true;
+					}
 				} else return false;
 			} else return false;
 		}
@@ -323,12 +355,17 @@ public abstract class DecisionFunction {
 	public AnomalyResult assignScore(AlgorithmResult aResult, boolean updateResult){
 		AnomalyResult anRes = null;
 		if(aResult != null){
-			aResult.setDecisionFunction(this);
+			//aResult.setDecisionFunction(this);
 			anRes = classify(aResult);
 			if(updateResult)
 				aResult.setScoreEvaluation(anRes);
 		}
 		return anRes;
+	}
+	
+	public AnomalyResult assignScore(LabelledResult lr, boolean updateResult) {
+		AlgorithmResult ar = new AlgorithmResult(lr);
+		return assignScore(ar, updateResult);
 	}
 
 	/**
@@ -338,6 +375,10 @@ public abstract class DecisionFunction {
 	 * @return the anomaly result
 	 */
 	public abstract AnomalyResult classify(AlgorithmResult aResult);
+	
+	public AnomalyResult classify(LabelledResult lr) {
+		return classify(new AlgorithmResult(lr));
+	}
 
 	/**
 	 * Gets the parameter details. Used by GUIs.
@@ -467,6 +508,10 @@ public abstract class DecisionFunction {
 				conf = conf*2;
 			return conf*0.98 + 0.01;
 		} else return Double.NaN;	
+	}
+
+	public void revert() {
+		revertFlag = !revertFlag;
 	}
 
 }

@@ -79,10 +79,10 @@ public class MetaConfiguration extends BasicConfiguration {
 		Metric met = null;
 		Reputation rep = null;
 		if(hasItem(METRIC)){
-			met = Metric.fromString(getItem(METRIC), "absolute", true);
+			met = Metric.fromString(getItem(METRIC), "absolute");
 		}
 		if(hasItem(REPUTATION)){
-			rep = Reputation.fromString(getItem(REPUTATION), met, true);
+			rep = Reputation.fromString(getItem(REPUTATION), met);
 		}
 		return new MetaData(getItem(SCORES_FOLDER), (int)Double.parseDouble(getItem(K_FOLD)), Boolean.valueOf(getItem(FORCE_META_TRAINING)), getItem(DATASET_NAME), met, rep, baseConfs);
 	}

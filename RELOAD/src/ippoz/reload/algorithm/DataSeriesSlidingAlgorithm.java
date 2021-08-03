@@ -41,7 +41,7 @@ public abstract class DataSeriesSlidingAlgorithm extends DataSeriesDetectionAlgo
 	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
 		AlgorithmResult ar = super.evaluateSnapshot(knowledge, currentIndex);
 		if(currentIndex >= getWindowSize()){
-			logScore(ar.getScore(), ar.hasInjection());
+			logScore(ar.getScore(), ar.isAnomalous());
 		}
 		return ar;
 	}

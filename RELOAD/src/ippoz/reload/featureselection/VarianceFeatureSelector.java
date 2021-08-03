@@ -89,4 +89,22 @@ public class VarianceFeatureSelector extends FeatureSelector {
 		return "VarianceSelector";
 	}
 
+	@Override
+	public double getHighestScore() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getRankedScore(int index) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getRankedAverageScore(int index) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

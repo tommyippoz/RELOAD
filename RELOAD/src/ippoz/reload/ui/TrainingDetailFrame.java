@@ -4,7 +4,6 @@
 package ippoz.reload.ui;
 
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.output.DetectorOutput;
 
@@ -13,6 +12,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -117,7 +117,7 @@ public class TrainingDetailFrame {
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
 		
-		lbl = new JLabel("Metric: " + dOut.getReferenceMetric().getMetricName());
+		lbl = new JLabel("Metric: " + dOut.getReferenceMetric().getName());
 		lbl.setFont(labelFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
 		fPanel.add(lbl);
@@ -174,8 +174,10 @@ public class TrainingDetailFrame {
 	private class MyTableModel extends AbstractTableModel {
 
 		private static final long serialVersionUID = 1L;
+		
+		private final DecimalFormat df = new DecimalFormat("#0.000");
 
-		private String[] columnNames = {"Data Series", "Composed", "Score", "Reputation", "Algorithm", "Decision Function"};
+		private String[] columnNames = {"Data Series", "Algorithm", "Metric Score", "Hyper-Parameters", "Decision Function"};
 		
 		public int getColumnCount() {
 			return columnNames.length;
@@ -195,23 +197,19 @@ public class TrainingDetailFrame {
 				case 0:
 					return av.getDataSeries().getSanitizedName();
 				case 1:
-					return av.getDataSeries().toString().contains("COMPOSITION") ? "Y" : "N";
-				case 2:
-					return Double.valueOf(AppUtility.formatDouble(av.getMetricScore()));
-				case 3:
-					return Double.valueOf(AppUtility.formatDouble(av.getReputationScore()));
-				case 4:
 					return String.valueOf(av.getAlgorithmType());
-				case 5:
+				case 2:
+					return df.format(av.getMetricScore().getDoubleValue());
+				case 3:
+					return av.getMainConfString();
+				case 4:
 					return av.getAlgorithmConfiguration().getItem(BasicConfiguration.THRESHOLD);
 			}
 			return null;
 		}
 
 		public Class<?> getColumnClass(int c) {
-			if(c == 2 || c == 3)
-				return Double.class;
-			else return String.class;
+			return String.class;
 		}
 
 		public boolean isCellEditable(int row, int col) {

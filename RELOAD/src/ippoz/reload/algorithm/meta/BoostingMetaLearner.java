@@ -32,11 +32,11 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 	/** how many times on average each train sample appears in the boosting samples */
 	private static final double SAMPLING_RATIO = 3.0;
 	
-	public static final String N_ENSEMBLES = "ENSEMBLES_NUMBER";
+	public static final String N_ENSEMBLES = "Ensembles";
 	
 	public static final int DEFAULT_ENSEMBLES = 10;
 	
-	public static final String LEARNING_SPEED = "LEARNING_SPEED";
+	public static final String LEARNING_SPEED = "Learn Speed";
 	
 	public static final int DEFAULT_SPEED = 2;
 
@@ -61,6 +61,7 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 				AlgorithmTrainer at = trainWeakLearner(boostedKnowledge, i);
 				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
+					at.saveAlgorithmScores();
 					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
@@ -115,9 +116,10 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 
 	private AlgorithmTrainer trainWeakLearner(List<Knowledge> kList, int iteration){
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
-		for(DataSeries ds : dataSeries.listSubSeries()){
+		mTrainer.addTrainer(getBaseLearner(), dataSeries, kList, false, true, String.valueOf(iteration));
+		/*for(DataSeries ds : dataSeries.listSubSeries()){
 			mTrainer.addTrainer(getBaseLearner(), ds, kList, false, true, String.valueOf(iteration));
-		}
+		}*/
 		try {
 			mTrainer.start();
 			mTrainer.join();
@@ -158,6 +160,14 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 		defPar.put(N_ENSEMBLES, new String[]{String.valueOf(DEFAULT_ENSEMBLES)});
 		defPar.put(LEARNING_SPEED, new String[]{String.valueOf(DEFAULT_SPEED)});
 		return defPar;
+	}
+
+	@Override
+	protected void updateConfiguration() {
+		if(conf != null){
+			conf.addItem(N_ENSEMBLES, getEnsemblesNumber());
+			conf.addItem(LEARNING_SPEED, getLearningSpeed());
+		}
 	}
 
 }

@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -14,8 +16,8 @@ import java.util.List;
  */
 public class Recall_Metric extends BetterMaxMetric {
 
-	public Recall_Metric(boolean validAfter) {
-		super(MetricType.RECALL, validAfter);
+	public Recall_Metric(double noPredTHR) {
+		super(MetricType.RECALL, noPredTHR);
 	}
 
 	/*
@@ -26,13 +28,12 @@ public class Recall_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		if (tp + fn > 0)
-			return 1.0 * tp / (tp + fn);
-		else
-			return 0.0;
+			return new DoubleMetricResult(1.0 * tp / (tp + fn));
+		else return new DoubleMetricResult(0.0);
 	}
 
 	/*

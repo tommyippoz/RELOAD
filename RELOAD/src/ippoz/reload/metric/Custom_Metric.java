@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -16,8 +18,8 @@ import java.util.List;
  */
 public class Custom_Metric extends BetterMaxMetric {
 
-	public Custom_Metric(boolean validAfter) {
-		super(MetricType.CUSTOM, validAfter);
+	public Custom_Metric(double noPredTHR) {
+		super(MetricType.CUSTOM, noPredTHR);
 	}
 
 	/*
@@ -28,10 +30,10 @@ public class Custom_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double ce = new ConfidenceErrorMetric(isValidAfter(), 0.5).evaluateAnomalyResults(anomalyEvaluations);
-		double acc = new Accuracy_Metric(isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		return Math.abs(ce)*acc;
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double ce = new ConfidenceErrorMetric(getNoPredictionThreshold(), 0.5).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		double acc = new Accuracy_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		return new DoubleMetricResult(Math.abs(ce)*acc);
 	}
 
 	/*

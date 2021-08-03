@@ -12,6 +12,7 @@ import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
+import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.meta.MetaLearnerType;
@@ -54,6 +55,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
+				at.saveAlgorithmScores();
 				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			return mTrainer.getTrainers();
@@ -71,9 +73,15 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
-			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null)) == AnomalyResult.ANOMALY){
+			String repString = alg.getConfiguration().getItem(BasicConfiguration.AVG_SCORE);
+			if(AppUtility.isNumber(repString)){
+				double repVal = Double.parseDouble(repString);
+				if(repVal >= 0 && alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY)
+					count++;
+				else if(repVal < 0 && alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.NORMAL)
+					count++;
+			} else if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY)
 				count++;
-			}
 		}
 		return new ObjectPair<Double, Object>(count, scores);
 	}
@@ -90,6 +98,12 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
 		return defPar;
+	}
+
+	@Override
+	protected void updateConfiguration() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

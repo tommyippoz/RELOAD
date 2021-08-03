@@ -100,7 +100,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 		
 		scores = new LinkedList<SOMScore>();
 		for(Snapshot snap : snapList){
-			scores.add(new SOMScore(Snapshot.snapToString(snap, getDataSeries()), calculateSOM(getSnapValueArray(snap))));
+			scores.add(new SOMScore(snap.snapToString(), calculateSOM(getSnapValueArray(snap))));
 		}
 		
 		conf.addItem(TMP_FILE, getFilename());
@@ -110,7 +110,7 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	
 	private double calculateSOM(Double[][] w, double[] row) {		
 	    double[] D = ComputeInput(row, w);
-	    return D[1] / D[0];
+	    return Math.cbrt(D[1] - D[0]);
 	}
 	
 	private double calculateSOM(double row[]){
@@ -204,34 +204,6 @@ public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
 	public void loadFile(String filename) {
 		loadWeightsFile(new File(filename));
 		//loadScoresFile(new File(filename + "scores"));		
-	}
-	
-	/**
-	 * Load scores file.
-	 *
-	 * @param file the file
-	 */
-	private void loadScoresFile(File file) {
-		BufferedReader reader;
-		String readed;
-		try {
-			if(file.exists()){
-				scores = new LinkedList<SOMScore>();
-				reader = new BufferedReader(new FileReader(file));
-				reader.readLine();
-				while(reader.ready()){
-					readed = reader.readLine();
-					if(readed != null){
-						readed = readed.trim();
-						if(readed.length() > 0 && readed.split(";").length >= 2)
-							scores.add(new SOMScore(readed.split(";")[0], Double.parseDouble(readed.split(";")[1])));
-					}
-				}
-				reader.close();
-			}
-		} catch (IOException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to read SOM Scores file");
-		} 
 	}
 	
 	/**

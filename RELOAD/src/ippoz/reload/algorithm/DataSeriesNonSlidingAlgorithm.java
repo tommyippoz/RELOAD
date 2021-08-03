@@ -136,6 +136,6 @@ public abstract class DataSeriesNonSlidingAlgorithm extends DataSeriesDetectionA
 	
 	public abstract List<Double> getTrainScores();
 	
-	public abstract boolean automaticInnerTraining(List<Knowledge> kList);	
+	public abstract boolean automaticInnerTraining(List<Knowledge> kList);
 
 }

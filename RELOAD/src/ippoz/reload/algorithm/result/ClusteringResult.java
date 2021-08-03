@@ -11,8 +11,8 @@ package ippoz.reload.algorithm.result;
  */
 public abstract class ClusteringResult extends AlgorithmResult {
 
-	public ClusteringResult(boolean hasInjection, double score, double confidence) {
-		super(hasInjection, score, confidence, null);
+	public ClusteringResult(boolean hasInjection, double score, double confidence, boolean isUnknown) {
+		super(hasInjection, score, confidence, null, isUnknown);
 		// TODO Auto-generated constructor stub
 	}
 

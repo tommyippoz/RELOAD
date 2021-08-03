@@ -3,14 +3,8 @@
  */
 package ippoz.reload.commons.knowledge.data;
 
-import ippoz.reload.commons.datacategory.DataCategory;
-import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.layers.LayerType;
+import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
-
-import java.util.Date;
-import java.util.HashMap;
 
 /**
  * The Class Observation.
@@ -20,30 +14,23 @@ import java.util.HashMap;
  */
 public class Observation {
 	
-	/** The timestamp. */
-	private Date timestamp;
+	/** The index. */
+	private DatasetIndex index;
 	
 	/** The observed indicators. */
-	private HashMap<Indicator, IndicatorData> observedIndicators;
+	private Object[] observedIndicators;
+	
+	private int values;
 	
 	/**
 	 * Instantiates a new observation.
 	 *
 	 * @param timestamp the timestamp
 	 */
-	public Observation(String timestamp){
-		this.timestamp = AppUtility.convertStringToDate(timestamp);
-		observedIndicators = new HashMap<Indicator, IndicatorData>();
-	}
-	
-	/**
-	 * Instantiates a new observation.
-	 *
-	 * @param timestamp the timestamp
-	 */
-	public Observation(long timestampMs){
-		timestamp = new Date(timestampMs);
-		observedIndicators = new HashMap<Indicator, IndicatorData>();
+	public Observation(DatasetIndex index, int indicatorNumber){
+		this.index = index;
+		observedIndicators = new Object[indicatorNumber];
+		values = 0;
 	}
 	
 	/**
@@ -52,26 +39,10 @@ public class Observation {
 	 * @param newInd the new indicator
 	 * @param newValue the new value of the indicator
 	 */
-	public void addIndicator(Indicator newInd, IndicatorData newValue){
-		observedIndicators.put(newInd, newValue);
-	}
-
-	/**
-	 * Gets the timestamp.
-	 *
-	 * @return the timestamp
-	 */
-	public Date getTimestamp() {
-		return timestamp;
-	}
-	
-	/**
-	 * Gets the indicators of the current observation.
-	 *
-	 * @return the indicators
-	 */
-	public Indicator[] getIndicators(){
-		return observedIndicators.keySet().toArray(new Indicator[observedIndicators.keySet().size()]);
+	public void addIndicator(Object newValue){
+		if(values < observedIndicators.length)
+			observedIndicators[values++] = newValue;
+		else AppLogger.logError(getClass(), "NoSpace", "no space to store observations' data");
 	}
 
 	/**
@@ -81,32 +52,10 @@ public class Observation {
 	 * @param categoryTag the data category (plain, diff)
 	 * @return the indicator value
 	 */
-	public String getValue(Indicator indicator, DataCategory categoryTag) {
-		return observedIndicators.get(indicator).getCategoryValue(categoryTag);
-	}
-	
-	/**
-	 * Gets the value of an indicator for this specific observation.
-	 *
-	 * @param indicator the indicator
-	 * @param categoryTag the data category (plain, diff)
-	 * @return the indicator value
-	 */
-	public String getValue(String indicatorName, DataCategory categoryTag) {
-		for(Indicator ind : getIndicators()){
-			if(ind.getName().equals(indicatorName.trim()))
-				return getValue(ind, categoryTag);
-		}
-		AppLogger.logError(getClass(), "NoSuchIndicator", "Unable to find Indicator '" + indicatorName + "'");
-		return null;
-	}
-	
-	public boolean hasIndicator(String indicatorName, DataCategory categoryTag) {
-		for(Indicator ind : getIndicators()){
-			if(ind.getName().equals(indicatorName.trim()))
-				return true;
-		}
-		return false;
+	public Object getValue(int valueIndex) {
+		if(valueIndex < values && valueIndex >= 0)
+			return observedIndicators[valueIndex];
+		else return null;
 	}
 	
 	/**
@@ -115,13 +64,11 @@ public class Observation {
 	 * @return the number of indicators
 	 */
 	public int getIndicatorNumber(){
-		return observedIndicators.size();
+		return observedIndicators.length;
 	}
-	
-	public void addIndicatorData(String indName, String indData, DataCategory dataTag){
-		if(indName != null && !hasIndicator(indName, dataTag)){
-			observedIndicators.put(new Indicator(indName, LayerType.NO_LAYER, String.class), new IndicatorData(indData, dataTag));
-		} else AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to add indicator '" + indName + "'");
+
+	public DatasetIndex getIndex() {
+		return index;
 	}
 
 }

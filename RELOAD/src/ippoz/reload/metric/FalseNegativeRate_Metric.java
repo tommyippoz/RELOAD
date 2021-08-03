@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -16,8 +18,8 @@ import java.util.List;
  */
 public class FalseNegativeRate_Metric extends BetterMinMetric {
 
-	public FalseNegativeRate_Metric(boolean validAfter) {
-		super(MetricType.FNR, validAfter);
+	public FalseNegativeRate_Metric(double noPredTHR) {
+		super(MetricType.FNR, noPredTHR);
 	}
 
 	/*
@@ -28,13 +30,12 @@ public class FalseNegativeRate_Metric extends BetterMinMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double fn = new FP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double tp = new TN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		double fn = new FP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		if (tp + fn > 0)
-			return 1.0 * fn / (tp + fn);
-		else
-			return 0.0;
+			return new DoubleMetricResult(1.0 * fn / (tp + fn));
+		else return new DoubleMetricResult(0.0);
 	}
 
 	/*

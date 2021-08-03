@@ -6,10 +6,8 @@ package ippoz.reload.algorithm.weka;
 import ippoz.reload.algorithm.DataSeriesExternalSlidingAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.dataseries.MultipleDataSeries;
+import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.knowledge.snapshot.DataSeriesSnapshot;
-import ippoz.reload.commons.knowledge.snapshot.MultipleSnapshot;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
@@ -50,16 +48,11 @@ public abstract class DataSeriesSlidingWEKAAlgorithm extends DataSeriesExternalS
 		String st = "";
 		Instances iList;
 		try {
-			if(getDataSeries().size() == 1){
+			Indicator[] indList = getDataSeries().getIndicators();
+			for(int j=0;j<getDataSeries().size();j++){
 				if(needNormalization)
-					st = st + (((DataSeriesSnapshot)snap).getSnapValue().getFirst() - minmax[0][0])/(minmax[0][1] - minmax[0][0]) + ",";
-				else st = st + ((DataSeriesSnapshot)snap).getSnapValue().getFirst() + ",";
-			} else {
-				for(int j=0;j<getDataSeries().size();j++){
-					if(needNormalization)
-						st = st + (((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() - minmax[j][0])/(minmax[j][1] - minmax[j][0]) + ",";
-					else st = st + ((MultipleSnapshot)snap).getSnapshot(((MultipleDataSeries)getDataSeries()).getSeries(j)).getSnapValue().getFirst() + ",";						
-				}
+					st = st + (snap.getDoubleValueFor(indList[j]) - minmax[j][0])/(minmax[j][1] - minmax[j][0]) + ",";
+				else st = st + snap.getDoubleValueFor(indList[j]) + ",";						
 			}
 			st = WEKAUtils.getStreamHeader(getDataSeries(), true) + st + "no";
 			iList = new Instances(new StringReader(st));

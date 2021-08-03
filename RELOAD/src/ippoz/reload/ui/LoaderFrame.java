@@ -8,20 +8,20 @@ import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
-import ippoz.reload.commons.loader.SimpleLoader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
-import ippoz.reload.loader.MySQLLoader;
 import ippoz.reload.manager.InputManager;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,9 +30,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -110,9 +111,7 @@ public class LoaderFrame {
 		if(loaderTag.equals("train"))
 			runIds = loaderPref.getPreference(Loader.TRAIN_PARTITION);
 		else runIds = loaderPref.getPreference(Loader.VALIDATION_PARTITION);
-		if(loaderType != null && loaderType.toUpperCase().contains("MYSQL"))
-			return new MySQLLoader(null, loaderPref, loaderTag, "NO_LAYER", null);
-		else if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
+		if(loaderType != null && loaderType.toUpperCase().contains("CSV")){
 			return new CSVLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);
 		} else if(loaderType != null && loaderType.toUpperCase().contains("ARFF"))
 			return new ARFFLoader(loaderPref, loaderTag, iManager.getAnomalyWindow(), iManager.getDatasetsFolder(), runIds);
@@ -151,13 +150,8 @@ public class LoaderFrame {
 	private JPanel buildMainPanel() {	
 		JPanel containerPanel = new JPanel();
 		containerPanel.setBackground(Color.WHITE);
-		//containerPanel.setBounds(5, 5, lFrame.getWidth() - 10, lFrame.getHeight() - 10);
-		containerPanel.setLayout(new BorderLayout());
+		containerPanel.setLayout(new GridLayout(4, 1));
 		containerPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
-		
-		JPanel twoRowPanel = new JPanel();
-		twoRowPanel.setBackground(Color.WHITE);
-		twoRowPanel.setLayout(new GridLayout(2, 1, 20, 0));
 		
 		JPanel generalPanel = new JPanel();
 		generalPanel.setBackground(Color.WHITE);
@@ -182,161 +176,12 @@ public class LoaderFrame {
 			} } );
 		
 		showPreference2Labels(generalPanel, bigLabelSpacing, "Loader Path", loaderPref.getFilename(), "", button);
-		
-		showPreference2Labels(generalPanel, 2*bigLabelSpacing, Loader.LOADER_TYPE, 
-				loaderPref.getPreference(Loader.LOADER_TYPE), "Specifies loader type, either CSV, MYSQL or ARFF", null);
-		twoRowPanel.add(generalPanel);
-		
-		JPanel sourcePanel = new JPanel();
-		sourcePanel.setBackground(Color.WHITE);
-		//sourcePanel.setBounds(5, generalPanel.getHeight() + 5, containerPanel.getWidth()-10, 3*bigLabelSpacing + 10);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Sources Setup ", 
-				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
-		sourcePanel.setBorder(tb);
-		sourcePanel.setLayout(new GridLayout(2, 1, 20, 0));
-		
-		JLabel trainDatasetLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch())
-			trainDatasetLabel.setText("Size: " + tLoader.getMBSize() + " MB, " + tLoader.getRowNumber() + " rows");
-		
-		showPreferenceButton(sourcePanel, 1*bigLabelSpacing, FileLoader.TRAIN_FILE, 
-				loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? loaderPref.getPreference(FileLoader.TRAIN_FILE) : loaderPref.getPreference("TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
-				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'", trainDatasetLabel);
-		
-		JLabel validationDatasetLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch())
-			validationDatasetLabel.setText("Size: " + vLoader.getMBSize() + " MB, " + vLoader.getRowNumber() + " rows");
-		
-		showPreferenceButton(sourcePanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FILE, 
-				loaderPref.hasPreference(FileLoader.VALIDATION_FILE) ? loaderPref.getPreference(FileLoader.VALIDATION_FILE) : loaderPref.getPreference("VALIDATION_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
-				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'", validationDatasetLabel);
-		
-		twoRowPanel.add(sourcePanel);
-		
-		containerPanel.add(twoRowPanel, BorderLayout.NORTH);
-		
-		JPanel dataPanel = new JPanel();
-		dataPanel.setBackground(Color.WHITE);
-		//dataPanel.setBounds(5, generalPanel.getHeight() + sourcePanel.getHeight() + 10, containerPanel.getWidth()-10, 5*bigLabelSpacing + 10);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Common Data Setup ", 
-				TitledBorder.RIGHT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
-		dataPanel.setBorder(tb);
-		dataPanel.setLayout(new GridLayout(3, 1, 20, 0));
-		
-		showCheckPreferenceLabels(dataPanel, bigLabelSpacing, FileLoader.BATCH_COLUMN, 
-				FileLoader.getBatchPreference(loaderPref), tLoader.hasBatches(FileLoader.getBatchPreference(loaderPref)),
-				"Specify an integer (> 0) that defines the amount of dataset rows to be considered as single experiment, or a string which identifies the column to be used to derive runs", 
-				null, "Enable if your file is organized in Batches");
-		
-		int featureNumber = 0;
-		if(tLoader != null && tLoader.canFetch())
-			featureNumber = tLoader.getFeatureNames().length;
-		else if(vLoader != null && vLoader.canFetch())
-			featureNumber = vLoader.getFeatureNames().length;
-		
-		JLabel labelColumnLabel = initLabel("Not Defined");
-		if(featureNumber > 0)
-			labelColumnLabel.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
-		
-		showPreferenceLabels(dataPanel, 3*bigLabelSpacing, FileLoader.LABEL_COLUMN, 
-				loaderPref.getPreference(FileLoader.LABEL_COLUMN), 
-				"Specify the index (starting from 0) of the column that contains the label, if any.", labelColumnLabel);
-		
-		JLabel labelColumnLabel2 = initLabel("Not Defined");
-		if(featureNumber > 0)
-			labelColumnLabel2.setText(featureNumber + " features (indexes: 0 - " + (featureNumber - 1) + ")");
-		
-		showPreferenceLabels(dataPanel, 4*bigLabelSpacing, FileLoader.SKIP_COLUMNS, 
-				loaderPref.getPreference(FileLoader.SKIP_COLUMNS), 
-				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.", labelColumnLabel2);
-		
-		containerPanel.add(dataPanel, BorderLayout.CENTER);
-		
-		JPanel threeRowPanel = new JPanel();
-		threeRowPanel.setBackground(Color.WHITE);
-		threeRowPanel.setLayout(new GridLayout(3, 1, 20, 0));
-		
-		JPanel trainPanel = new JPanel();
-		trainPanel.setBackground(Color.WHITE);
-		//trainPanel.setBounds(5, generalPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight() + 15, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Train Setup ", 
-				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
-		trainPanel.setBorder(tb);
-		trainPanel.setLayout(new GridLayout(3, 1, 20, 0));
-		
-		JLabel trainDataPointsLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch()){
-			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
-				trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
-			else trainDataPointsLabel.setText(tLoader.getDataPoints() + " valid runs");
-		}
-		
-		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_PARTITION, 
-				loaderPref.getPreference(Loader.TRAIN_PARTITION), 
-				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", trainDataPointsLabel);
-		
-		JLabel trainAnomalyRateLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch())
-			trainAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(tLoader.getAnomalyRate()) + "%");
-		
-		showPreferenceLabels(trainPanel, 2*bigLabelSpacing, FileLoader.TRAIN_FAULTY_TAGS, 
-				loaderPref.hasPreference(FileLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training", trainAnomalyRateLabel);
-		
-		JLabel trainSkipRateLabel = initLabel("Not Defined");
-		if(tLoader != null && tLoader.canFetch())
-			trainSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(tLoader.getSkipRate()) + "%");
-		
-		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, FileLoader.TRAIN_SKIP_ROWS, 
-				loaderPref.hasPreference(FileLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", trainSkipRateLabel);
-			
-		threeRowPanel.add(trainPanel);
-		
-		JPanel validationPanel = new JPanel();
-		validationPanel.setBackground(Color.WHITE);
-		//validationPanel.setBounds(5, generalPanel.getHeight() + 20 + trainPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight(), containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
-		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Validation Setup ", 
-				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
-		validationPanel.setBorder(tb);
-		validationPanel.setLayout(new GridLayout(3, 1, 20, 0));
-		
-		JLabel validationDataPointsLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch()){
-			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
-				validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
-			else validationDataPointsLabel.setText(vLoader.getDataPoints() + " valid runs");
-		}
-		
-		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_PARTITION, 
-				loaderPref.getPreference(Loader.VALIDATION_PARTITION), 
-				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", validationDataPointsLabel);
-		
-		JLabel validationAnomalyRateLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch())
-			validationAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(vLoader.getAnomalyRate()) + "%");
-		
-		showPreferenceLabels(validationPanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FAULTY_TAGS, 
-				loaderPref.hasPreference(FileLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation", validationAnomalyRateLabel);
-		
-		JLabel validationSkipRateLabel = initLabel("Not Defined");
-		if(vLoader != null && vLoader.canFetch())
-			validationSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(vLoader.getSkipRate()) + "%");
-		
-		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, FileLoader.VALIDATION_SKIP_ROWS, 
-				loaderPref.hasPreference(FileLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
-				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", validationSkipRateLabel);
-		
-		threeRowPanel.add(validationPanel);
-		
-		// FOOTER
-        
-        JPanel fPanel = new JPanel();
+
+		JPanel fPanel = new JPanel();
         fPanel.setBackground(Color.WHITE);
 		//fPanel.setBounds(10, generalPanel.getHeight() + sourcePanel.getHeight() + trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + 10, containerPanel.getWidth()-20, 3*labelSpacing);
 		fPanel.setLayout(new GridLayout(1, 3, 50, 0));
-		fPanel.setBorder(new EmptyBorder(20, 50, 20, 50));
+		fPanel.setBorder(new EmptyBorder(10, 40, 10, 40));
 		
 		button = new JButton("Save Changes");
 		button.setVisible(true);
@@ -378,9 +223,122 @@ public class LoaderFrame {
 			} } );	
 		fPanel.add(button);
 		
-		threeRowPanel.add(fPanel);
+		generalPanel.add(fPanel);
 		
-		containerPanel.add(threeRowPanel, BorderLayout.SOUTH);
+		containerPanel.add(generalPanel);
+		
+		JPanel sourcePanel = new JPanel();
+		sourcePanel.setBackground(Color.WHITE);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Sources Setup ", 
+				TitledBorder.LEFT, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+		sourcePanel.setBorder(tb);
+		sourcePanel.setLayout(new GridLayout(4, 1, 20, 0));
+		
+		JPanel trainDatasetInfoPanel = buildDatasetInfoPanel(tLoader);
+		
+		showPreferenceButton(sourcePanel, 1*bigLabelSpacing, FileLoader.TRAIN_FILE, 
+				loaderPref.hasPreference(FileLoader.TRAIN_FILE) ? loaderPref.getPreference(FileLoader.TRAIN_FILE) : loaderPref.getPreference("TRAIN_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
+				"Specify train file path, starting from '" + iManager.getLoaderFolder() + "'", trainDatasetInfoPanel);
+		
+		JPanel validationDatasetInfoPanel = buildDatasetInfoPanel(vLoader);
+		
+		showPreferenceButton(sourcePanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FILE, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_FILE) ? loaderPref.getPreference(FileLoader.VALIDATION_FILE) : loaderPref.getPreference("VALIDATION_" + loaderPref.getPreference(Loader.LOADER_TYPE) + "_FILE"), 
+				"Specify validation file path, starting from '" + iManager.getLoaderFolder() + "'", validationDatasetInfoPanel);
+
+		String[] features = null;
+		if(tLoader != null && tLoader.canFetch())
+			features = tLoader.getAllFeatureNames();
+		else if(vLoader != null && vLoader.canFetch())
+			features = vLoader.getAllFeatureNames();
+		
+		JLabel labelColumnLabel = initLabel("Not Defined");
+		if(features != null && features.length > 0)
+			labelColumnLabel.setText(features.length + " features");
+		
+		showCBLabels(sourcePanel, 3*bigLabelSpacing, FileLoader.LABEL_COLUMN, 
+				features, loaderPref.getPreference(FileLoader.LABEL_COLUMN), 
+				"Specify the name of the column that contains the label", labelColumnLabel);
+		
+		showPreferenceLabels(sourcePanel, 4*bigLabelSpacing, FileLoader.SKIP_COLUMNS, 
+				loaderPref.getPreference(FileLoader.SKIP_COLUMNS), 
+				"Define columns (starting from 0) to be skipped by algorithms i.e., non numeric ones, columns containing not-so-useful data.", initLabel(features.length + " features"));
+		
+		containerPanel.add(sourcePanel);
+		
+		JPanel trainPanel = new JPanel();
+		trainPanel.setBackground(Color.WHITE);
+		//trainPanel.setBounds(5, generalPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight() + 15, containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Train Setup ", 
+				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+		trainPanel.setBorder(tb);
+		trainPanel.setLayout(new GridLayout(3, 1, 20, 0));
+		
+		JLabel trainDataPointsLabel = initLabel("Not Defined");
+		if(tLoader != null && tLoader.canFetch()){
+			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
+				trainDataPointsLabel.setText(tLoader.getDataPoints() + " data points");
+			else trainDataPointsLabel.setText(tLoader.getDataPoints() + " valid runs");
+		}
+		
+		showPreferenceLabels(trainPanel, 1*bigLabelSpacing, Loader.TRAIN_PARTITION, 
+				loaderPref.getPreference(Loader.TRAIN_PARTITION), 
+				"Specify runs to be used as training set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", trainDataPointsLabel);
+		
+		JLabel trainAnomalyRateLabel = initLabel("Not Defined");
+		if(tLoader != null && tLoader.canFetch())
+			trainAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(tLoader.getAnomalyRate()) + "%");
+		
+		showPreferenceLabels(trainPanel, 2*bigLabelSpacing, FileLoader.TRAIN_FAULTY_TAGS, 
+				loaderPref.hasPreference(FileLoader.TRAIN_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.TRAIN_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for training", trainAnomalyRateLabel);
+		
+		JLabel trainSkipRateLabel = initLabel("Not Defined");
+		if(tLoader != null && tLoader.canFetch())
+			trainSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(tLoader.getSkipRate()) + "%");
+		
+		showPreferenceLabels(trainPanel, 3*bigLabelSpacing, FileLoader.TRAIN_SKIP_ROWS, 
+				loaderPref.hasPreference(FileLoader.TRAIN_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.TRAIN_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", trainSkipRateLabel);
+			
+		containerPanel.add(trainPanel);
+		
+		JPanel validationPanel = new JPanel();
+		validationPanel.setBackground(Color.WHITE);
+		//validationPanel.setBounds(5, generalPanel.getHeight() + 20 + trainPanel.getHeight() + sourcePanel.getHeight() + dataPanel.getHeight(), containerPanel.getWidth()-10, 4*bigLabelSpacing + 10);
+		tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Validation Setup ", 
+				TitledBorder.CENTER, TitledBorder.CENTER, new Font("Times", Font.BOLD, 18), Color.DARK_GRAY);
+		validationPanel.setBorder(tb);
+		validationPanel.setLayout(new GridLayout(3, 1, 20, 0));
+		
+		JLabel validationDataPointsLabel = initLabel("Not Defined");
+		if(vLoader != null && vLoader.canFetch()){
+			if(AppUtility.isNumber(FileLoader.getBatchPreference(loaderPref)))
+				validationDataPointsLabel.setText(vLoader.getDataPoints() + " data points");
+			else validationDataPointsLabel.setText(vLoader.getDataPoints() + " valid runs");
+		}
+		
+		showPreferenceLabels(validationPanel, 1*bigLabelSpacing, Loader.VALIDATION_PARTITION, 
+				loaderPref.getPreference(Loader.VALIDATION_PARTITION), 
+				"Specify runs to be used as validation set, either numbers (e.g., 8) or intervals (e.g., 10-15) separated by commas", validationDataPointsLabel);
+		
+		JLabel validationAnomalyRateLabel = initLabel("Not Defined");
+		if(vLoader != null && vLoader.canFetch())
+			validationAnomalyRateLabel.setText("Anomaly Rate: " + AppUtility.formatDouble(vLoader.getAnomalyRate()) + "%");
+		
+		showPreferenceLabels(validationPanel, 2*bigLabelSpacing, FileLoader.VALIDATION_FAULTY_TAGS, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_FAULTY_TAGS) ? loaderPref.getPreference(FileLoader.VALIDATION_FAULTY_TAGS) : loaderPref.getPreference("FAULTY_TAGS"),  
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to faulty/attack data for validation", validationAnomalyRateLabel);
+		
+		JLabel validationSkipRateLabel = initLabel("Not Defined");
+		if(vLoader != null && vLoader.canFetch())
+			validationSkipRateLabel.setText("Skip Rate: " + AppUtility.formatDouble(vLoader.getSkipRate()) + "%");
+		
+		showPreferenceLabels(validationPanel, 3*bigLabelSpacing, FileLoader.VALIDATION_SKIP_ROWS, 
+				loaderPref.hasPreference(FileLoader.VALIDATION_SKIP_ROWS) ? loaderPref.getPreference(FileLoader.VALIDATION_SKIP_ROWS) : loaderPref.getPreference("SKIP_ROWS"), 
+				"Specify the label(s) of 'LABEL_COLUMN' that identify rows related to be skipped i.e., not relevant for the analysis.", validationSkipRateLabel);
+		
+		containerPanel.add(validationPanel);
 		
 		/*if(lFrame.getHeight() < generalPanel.getHeight() + sourcePanel.getHeight() +  trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70)
 			lFrame.setBounds(lFrame.getX(), lFrame.getY(), lFrame.getWidth(), generalPanel.getHeight() + sourcePanel.getHeight() +  trainPanel.getHeight() + validationPanel.getHeight() + dataPanel.getHeight() + fPanel.getHeight() + 70);
@@ -410,7 +368,7 @@ public class LoaderFrame {
 			output = output + "Wrong TRAIN_RUN_PREFERENCE value: remember to specify runs for training.\n";
 		} else {
 			tLoader = buildLoader("train");
-			if(!SimpleLoader.isValid(tLoader))
+			if(!Loader.isValid(tLoader))
 				output = output + "Portion specified for training is either empty or does not specify a mixture of normal/anomaly data that is needed to tune parameters of algorithms.\n";
 		}
 		if(!loaderPref.hasPreference(FileLoader.VALIDATION_PARTITION) || 
@@ -418,7 +376,7 @@ public class LoaderFrame {
 			output = output + "Wrong VALIDATION_RUN_PREFERENCE value: remember to specify runs for validation.\n";
 		} else {
 			vLoader = buildLoader("validation");
-			if(!SimpleLoader.isValid(vLoader))
+			if(!Loader.isValid(vLoader))
 				output = output + "Portion specified for training is either empty or does not specify a mixture of normal/anomaly data that is needed to correctly calculate confusion matrix.\n";
 		}
 		return output.trim().length() > 0 ? output : null;
@@ -475,75 +433,39 @@ public class LoaderFrame {
 		
 	}
 	
-	private void showCheckPreferenceLabels(JPanel root, int panelY, String prefName, String textFieldText, boolean activated, String description, JComponent additionalInfo, String checkboxText){
+	private void showCBLabels(JPanel root, int panelY, String prefName, String[] items, String selectedItem, String description, JComponent additionalInfo){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, additionalInfo != null ? 4 : 3));
-		
-		JCheckBox cb = new JCheckBox(checkboxText);
-		cb.setHorizontalAlignment(SwingConstants.CENTER);
-		//cb.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
-		cb.setSelected(activated);
-		
+		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));
+				
 		JLabel lbl = new JLabel(prefName);
+		//lbl.setBounds(space, panelY, smallSize, labelSpacing);
 		lbl.setFont(bigFont);
 		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		//lbl.setBounds(space, panelY, smallSize, labelSpacing);
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
 		
 		panel.add(lbl);
 		
-		JTextField textField = new JTextField();
-		textField.setText(textFieldText);
-		//textField.setBounds(smallSize + 2*space, panelY, bigSize, bigLabelSpacing);
-		textField.setFont(labelFont);
-		textField.setEnabled(activated);
-		textField.setColumns(10);
-		textField.getDocument().addDocumentListener(new DocumentListener() {
-			  
-			public void changedUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void removeUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void insertUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-
-			public void workOnUpdate() {
-				if (textField.getText() != null && textField.getText().length() > 0){
-	        		loaderPref.updatePreference(prefName, textField.getText(), true, false);
-	        		if(prefName.equals(FileLoader.BATCH_COLUMN))
-	        			loaderPref.updatePreference(FileLoader.EXPERIMENT_ROWS, textField.getText(), true, false);
-	        	}
-			}
-		});
-		
-		cb.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent event) {
-		        JCheckBox cb = (JCheckBox) event.getSource();
-		        textField.setEnabled(cb.isSelected());		
-		        if (!cb.isSelected() && textField.getText() != null){
-	        		loaderPref.updatePreference(prefName, "", true, false);
-	        		if(prefName.equals(FileLoader.BATCH_COLUMN))
-	        			loaderPref.updatePreference(FileLoader.EXPERIMENT_ROWS, "", true, false);
-	        	}
+		JComboBox<String> cb = new JComboBox<>(items);
+		cb.setSelectedItem(selectedItem);
+		//textField.setBounds(smallSize + space*2, panelY, bigSize, bigLabelSpacing);
+		cb.setFont(labelFont);
+		if(description != null && description.trim().length() > 0)
+			lbl.setToolTipText(description);
+		cb.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+	        	String newValue = cb.getSelectedItem().toString();
+	        	loaderPref.updatePreference(prefName, newValue, true, false);
 		    }
 		});
 		
-		panel.add(textField);
+		panel.add(cb);
 		
 		if(additionalInfo != null){
 			//additionalInfo.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
 			panel.add(additionalInfo);
 		}
-		
-		panel.add(cb);
 		
 		root.add(panel);
 		
@@ -556,6 +478,10 @@ public class LoaderFrame {
 		int bigSize = 3*basicSize;
 		int smallSize = 2*basicSize;
 		
+		JPanel newPanel = new JPanel();
+		newPanel.setBackground(Color.WHITE);
+		newPanel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));
+		
 		JLabel lbl = new JLabel(prefName);
 		lbl.setBounds(space, panelY, smallSize, labelSpacing);
 		lbl.setFont(bigFont);
@@ -563,7 +489,7 @@ public class LoaderFrame {
 		if(description != null && description.trim().length() > 0)
 			lbl.setToolTipText(description);
 		
-		root.add(lbl);
+		newPanel.add(lbl);
 		
 		JButton button = new JButton(textFieldText);
 		button.setVisible(true);
@@ -582,18 +508,21 @@ public class LoaderFrame {
 					} else JOptionPane.showMessageDialog(lFrame, "'" + pathBase.relativize(pathAbsolute).toString() + "' is not a file");
 				}
 			} } );
-		root.add(button);		
+		newPanel.add(button);		
 		
 		if(additionalInfo != null){
 			additionalInfo.setBounds(smallSize + bigSize + space*3, panelY, smallSize, bigLabelSpacing);
-			root.add(additionalInfo);
+			newPanel.add(additionalInfo);
 		}
+		
+		root.add(newPanel);
 	}
 	
 	private void showPreference2Labels(JPanel root, int panelY, String prefName, String textFieldText, String description, JComponent additionalInfo){
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.WHITE);
-		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2));
+		panel.setLayout(new GridLayout(1, additionalInfo != null ? 3 : 2, 20, 20));
+		panel.setBorder(new EmptyBorder(10, 40, 10, 40));
 		
 		JLabel lbl = new JLabel(prefName);
 		//lbl.setBounds(space, panelY, smallSize, labelSpacing);
@@ -620,6 +549,49 @@ public class LoaderFrame {
 		
 		root.add(panel);
 		
+	}
+	
+	private JPanel buildDatasetInfoPanel(Loader loader){
+		JPanel datasetInfoPanel = new JPanel();
+		datasetInfoPanel.setBackground(Color.WHITE);
+		datasetInfoPanel.setLayout(new GridBagLayout());
+		
+		JLabel trainDatasetLabel = initLabel("Not Defined");
+		if(loader != null && loader.canFetch())
+			trainDatasetLabel.setText("Size: " + tLoader.getMBSize() + " MB, " + loader.getRowNumber() + " rows");
+		datasetInfoPanel.add(trainDatasetLabel);
+		
+		ImageIcon it = new ImageIcon(getClass().getResource("/exploreDataset.png"));
+		JButton button = new JButton("", new ImageIcon(it.getImage().getScaledInstance(labelSpacing + 5, labelSpacing + 5, Image.SCALE_DEFAULT)));
+		button.setBorder(BorderFactory.createEmptyBorder());
+		button.setContentAreaFilled(false);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				DatasetInfoFrame dif = new DatasetInfoFrame(loader);
+				dif.setVisible(true);
+			}
+		} );
+		datasetInfoPanel.add(button);
+		
+		GridBagConstraints c = new GridBagConstraints();
+	    c.insets = new Insets(2, 2, 2, 2);
+	    c.weighty = 1.0;
+	    c.weightx = 1.0;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.gridheight = 2;
+	    c.fill = GridBagConstraints.BOTH; // Use both horizontal & vertical
+	    datasetInfoPanel.add(trainDatasetLabel, c);
+	    c.gridx = 1;
+	    c.gridheight = 1;
+	    c.gridwidth = 2;
+	    c.fill = GridBagConstraints.HORIZONTAL; // Horizontal only
+	    datasetInfoPanel.add(button, c);
+	    c.gridy = 1;
+	    c.gridwidth = 1;
+	    c.fill = GridBagConstraints.NONE; // Remember to reset to none
+	    
+	    return datasetInfoPanel;
 	}
 
 }

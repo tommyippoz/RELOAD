@@ -4,6 +4,8 @@
 package ippoz.reload.metric;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.result.DoubleMetricResult;
+import ippoz.reload.metric.result.MetricResult;
 
 import java.util.List;
 
@@ -13,8 +15,12 @@ import java.util.List;
  */
 public class TruePositiveRate_Metric extends BetterMaxMetric {
 
-	public TruePositiveRate_Metric(boolean validAfter) {
-		super(MetricType.TPR, validAfter);
+	public TruePositiveRate_Metric() {
+		super(MetricType.TPR);
+	}
+	
+	public TruePositiveRate_Metric(double noPredTHR) {
+		super(MetricType.TPR, noPredTHR);
 	}
 
 	/*
@@ -25,13 +31,13 @@ public class TruePositiveRate_Metric extends BetterMaxMetric {
 	 * multilayer.detector.data.ExperimentData, java.util.HashMap)
 	 */
 	@Override
-	public double evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
-		double fn = new FN_Metric(true, isValidAfter()).evaluateAnomalyResults(anomalyEvaluations);
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double tp = new TP_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
+		double fn = new FN_Metric(true, getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		if (tp + fn > 0)
-			return 1.0 * tp / (fn + tp);
+			return new DoubleMetricResult(1.0 * tp / (fn + tp));
 		else
-			return 0.0;
+			return new DoubleMetricResult(0.0);
 	}
 
 	/*

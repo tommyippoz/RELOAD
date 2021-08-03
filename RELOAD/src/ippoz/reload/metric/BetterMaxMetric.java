@@ -3,15 +3,21 @@
  */
 package ippoz.reload.metric;
 
+import ippoz.reload.metric.result.MetricResult;
+
 /**
  * The Class BetterMaxMetric. Identifies a metric that is better if it is high.
  *
  * @author Tommy
  */
-public abstract class BetterMaxMetric extends ScoringMetric {
+public abstract class BetterMaxMetric extends Metric {
 
-	public BetterMaxMetric(MetricType mType, boolean validAfter) {
-		super(mType, validAfter);
+	public BetterMaxMetric(MetricType mType) {
+		super(mType);
+	}
+	
+	public BetterMaxMetric(MetricType mType, double noPredTHR) {
+		super(mType, noPredTHR);
 	}
 
 	/*
@@ -21,12 +27,12 @@ public abstract class BetterMaxMetric extends ScoringMetric {
 	 * double)
 	 */
 	@Override
-	public int compareResults(double currentMetricValue, double bestMetricValue) {
-		if(!Double.isFinite(bestMetricValue))
+	public int compareResults(MetricResult currentMetricValue, MetricResult bestMetricValue) {
+		if(!Double.isFinite(bestMetricValue.getDoubleValue()))
 			return 1;
-		else if(!Double.isFinite(currentMetricValue))
+		else if(!Double.isFinite(currentMetricValue.getDoubleValue()))
 			return -1;
-		else return Double.valueOf(currentMetricValue).compareTo(bestMetricValue);
+		else return Double.valueOf(currentMetricValue.getDoubleValue()).compareTo(bestMetricValue.getDoubleValue());
 	}
 
 }
