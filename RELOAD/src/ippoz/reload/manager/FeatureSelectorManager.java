@@ -28,7 +28,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
@@ -159,49 +162,62 @@ public class FeatureSelectorManager {
 		}
 	}
 
+	private static int[] FS_THR = {1, 3, 5, 10};
+	
 	private void calculatePrediction() {
-		double bestChiSQ = 0.0, bestRelief = 0.0, bestPearson = 0.0, bestInfoGain = 0.0, 
-				bestPCA = 0.0, bestRF = 0.0, bestJ48 = 0.0, bestOneR = 0.0;
+		Map<String, Double> map = new TreeMap<>();
 		for(FeatureSelector fs : selectorsList){
 			if(fs instanceof ChiSquaredFeatureRanker){
-				bestChiSQ = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("CS_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof ReliefFeatureSelector){
-				bestRelief = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("REL_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof PearsonFeatureSelector){
-				bestPearson = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("P_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof InformationGainSelector){
-				bestInfoGain = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("IG_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof PrincipalComponentRanker){
-				bestPCA = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("PCA_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof RandomForestFeatureRanker){
-				bestRF = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("RF_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof J48Ranker){
-				bestJ48 = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("J48_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 			if(fs instanceof OneRRanker){
-				bestOneR = fs.getHighestScore();
+				for(int n : FS_THR){
+					map.put("OR_" + n, fs.getRankedAverageScore(n));
+				}
 			}
 		}
 		try {
-			fsInfo.setValuesToPredict(bestChiSQ + "," + bestRelief + "," + bestPearson + "," + 
-					bestInfoGain + "," + bestPCA + "," + bestRF + "," + bestJ48 + "," + bestOneR);
-			MisclassificationPrediction mp = new MisclassificationPrediction(0);
-			fsInfo.setRPrediction(mp.scoreInstance(bestChiSQ, bestRelief, bestPearson, bestInfoGain, 
-					bestPCA, bestRF, bestJ48, bestOneR));
+			fsInfo.setValuesToPredict(Arrays.asList(map.values()).toString());
+			MisclassificationPrediction mp = new MisclassificationPrediction("R");
+			fsInfo.setRPrediction(mp.scoreInstance(map));
 			AppLogger.logInfo(getClass(), "Predicted R is " + fsInfo.getRPrediction());
-			mp = new MisclassificationPrediction(1);
-			fsInfo.setF2Prediction(mp.scoreInstance(bestChiSQ, bestRelief, bestPearson, bestInfoGain, 
-					bestPCA, bestRF, bestJ48, bestOneR));
+			mp = new MisclassificationPrediction("F2");
+			fsInfo.setF2Prediction(mp.scoreInstance(map));
 			AppLogger.logInfo(getClass(), "Predicted F2 is " + fsInfo.getF2Prediction());
-			mp = new MisclassificationPrediction(2);
-			fsInfo.setMCCPrediction(mp.scoreInstance(bestChiSQ, bestRelief, bestPearson, bestInfoGain, 
-					bestPCA, bestRF, bestJ48, bestOneR));
+			mp = new MisclassificationPrediction("MCC");
+			fsInfo.setMCCPrediction(mp.scoreInstance(map));
 			AppLogger.logInfo(getClass(), "Predicted MCC is " + fsInfo.getMCCPrediction());
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Error wile predicting misclassifications");
@@ -246,19 +262,27 @@ public class FeatureSelectorManager {
 		
 		private RandomForest rf;
 		
-		private final String F2File = "/DSN_WEKA_F2.arff";
+		private String targetMetric;
 		
-		private final String MCCFile = "/DSN_WEKA_MCC.arff";
+		private final String baseFile = "/MP_WEKA_";
 		
-		private final String RFile = "/DSN_WEKA_R.arff";
+		private static final int classIndex = 32;
 		
-		public MisclassificationPrediction(int targetMetric) throws Exception{
+		public MisclassificationPrediction(String targetMetric) throws Exception {
+			this.targetMetric = targetMetric;
 			rf = buildMetaClassifier();
-			if(targetMetric == 0)
-				rf.buildClassifier(getData(RFile));
-			else if(targetMetric == 1)
-				rf.buildClassifier(getData(F2File));
-			else rf.buildClassifier(getData(MCCFile));
+			switch(targetMetric){
+				case "P":
+				case "R":
+				case "F1":
+				case "F2":
+				case "MCC":
+				case "ACC":
+					rf.buildClassifier(getData(baseFile + targetMetric + ".arff"));
+					break;
+				default:
+					AppLogger.logError(getClass(), "MetricError", "Unable to recognize '" + targetMetric + "' metric to predict");
+			}
 		}
 		
 		private Instances getData(String fileString) throws FileNotFoundException, IOException {
@@ -266,12 +290,12 @@ public class FeatureSelectorManager {
 			Instances inst = null;
 			if(file.exists()){
 				inst = new Instances(new FileReader(file));
-				inst.setClassIndex(3);
+				inst.setClassIndex(classIndex);
 			} else {
 				InputStream is = getClass().getResourceAsStream(fileString);
 				if(is != null){
 					inst = new Instances(new InputStreamReader(is));
-					inst.setClassIndex(3);
+					inst.setClassIndex(classIndex);
 				}
 			}
 			return inst;
@@ -288,36 +312,27 @@ public class FeatureSelectorManager {
 			return rf;
 		}
 		
-		public double scoreInstance(double chisq, double relief, double pearson, double infogain, double pca, double ranf, double j48, double oner) throws Exception{
-			Instance inst = buildInstance(chisq, relief, pearson, infogain, pca, ranf, j48, oner);
+		public double scoreInstance(Map<String, Double> map) throws Exception{
+			Instance inst = buildInstance(map);
 			return rf.classifyInstance(inst);
 		}
 		
-		private Instance buildInstance(double chisq, double relief, double pearson, double infogain, double pca, double rf, double j48, double oner){
+		private Instance buildInstance(Map<String, Double> map){
 			String st = "";
 			Instances iList;
 			try {
-				st = "@relation predMCC_Full\n\n"
-						+ "@attribute F1_1 numeric\n"
-						+ "@attribute F2_1 numeric\n"
-						+ "@attribute F3_1 numeric\n"
-						+ "@attribute F4_1 numeric\n"
-						+ "@attribute F5_1 numeric\n"
-						+ "@attribute F6_1 numeric\n"
-						+ "@attribute F7_1 numeric\n"
-						+ "@attribute F8_1 numeric\n"
-						+ "@attribute class numeric";
+				st = "@relation pred_" + targetMetric + "\n\n";
+				for(String tag : map.keySet()){
+					st = st + "@attribute " + tag + " numeric\n";
+				}
+				st = st + "@attribute class numeric";
 				st = st + "\n\n@data\n";
-				st = st + chisq + ",";
-				st = st + relief + ",";
-				st = st + pearson + ",";
-				st = st + infogain + ",";
-				st = st + pca + ",";
-				st = st + rf + ",";
-				st = st + j48 + ",";
-				st = st + oner + ",0.0";
+				for(String tag : map.keySet()){
+					st = st + map.get(tag) + ",";
+				}
+				st = st + "0.0";
 				iList = new Instances(new StringReader(st));
-				iList.setClassIndex(8);
+				iList.setClassIndex(classIndex);
 				if(iList != null && iList.size() > 0)
 					return iList.instance(0);
 				else return null;

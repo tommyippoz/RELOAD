@@ -50,16 +50,18 @@ public class DetectorMain {
 				for(PreferencesManager loaderPref : iManager.readLoaders()){
 					Loader trainLoader = iManager.buildLoader("train", loaderPref);
 					Loader evalLoader = iManager.buildLoader("validation", loaderPref);
+					boolean filterFlag = true;
 					for(LearnerType lt : readAlgorithmCombinations(iManager)){
 						if(hasSliding(lt)){
 							for(Integer windowSize : readWindowSizes(iManager)){
 								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
-									dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, windowSize, sPolicy));
+									dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag));
 								}
 							}
 						} else {
-							dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader));
+							dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, filterFlag));
 						}
+						filterFlag = false;
 					}
 					trainLoader.flush();
 					evalLoader.flush();
@@ -118,34 +120,6 @@ public class DetectorMain {
 		}
 		return wList;
 	}
-	
-	
-	
-	/*public static List<PreferencesManager> readLoaders(InputManager iManager) {
-		List<PreferencesManager> lList = new LinkedList<PreferencesManager>();
-		String lPref = iManager.getLoaders();
-		PreferencesManager pManager;
-		if(lPref != null && lPref.trim().length() > 0){
-			for(String s : lPref.trim().split(",")){
-				s = s.trim();
-				if(s.endsWith(".loader")){
-					pManager = iManager.getLoaderPreferences(s);
-					if(pManager != null)
-						lList.add(pManager);
-				} else if(new File(iManager.getLoaderFolder() + s).exists() && new File(iManager.getLoaderFolder() + s).isDirectory()){
-					s = iManager.getLoaderFolder() + s; 
-					if(!s.endsWith("" + File.separatorChar))
-						s = s + File.separatorChar;
-					for(File f : new File(s).listFiles()){
-						if(f.getName().endsWith(".loader")){
-							lList.add(new PreferencesManager(s + f.getName()));
-						}
-					}
-				}
-			}
-		}
-		return lList;
-	}*/
 	
 	public static List<LearnerType> readAlgorithmCombinations(InputManager iManager) {
 		File algTypeFile = new File(iManager.getSetupFolder() + "algorithmPreferences.preferences");

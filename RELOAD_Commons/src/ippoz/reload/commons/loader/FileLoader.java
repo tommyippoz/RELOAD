@@ -29,6 +29,8 @@ public abstract class FileLoader extends Loader {
 	/** The Constant TRAIN_SKIP_ROWS. */
 	public static final String TRAIN_SKIP_ROWS = "TRAIN_SKIP_ROWS";
 	
+	public static final String SKIP_ROWS = "SKIP_ROWS";
+	
 	/** The Constant VALIDATION_SKIP_ROWS. */
 	public static final String VALIDATION_SKIP_ROWS = "VALIDATION_SKIP_ROWS";
 
@@ -222,7 +224,7 @@ public abstract class FileLoader extends Loader {
 					if(obList != null && obList.size() > 0){
 						dataList.add(new MonitoredData(getBatch(currentBatchIndex), obList, injMap, getHeader()));
 					}
-					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows, " + (unkCount*100.0/anomalyCount) + "% of unknown anomalies");
+					AppLogger.logInfo(getClass(), "Read " + rowIndex + " rows, " + (anomalyCount > 0 ? unkCount*100.0/anomalyCount : 0.0) + "% of unknown anomalies");
 					reader.close();
 				}
 
@@ -350,7 +352,7 @@ public abstract class FileLoader extends Loader {
 			return prefManager.getPreference(TRAIN_SKIP_ROWS);
 		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_SKIP_ROWS))
 			return prefManager.getPreference(VALIDATION_SKIP_ROWS);
-		else return prefManager.getPreference("SKIP_ROWS");
+		else return prefManager.getPreference(SKIP_ROWS);
 	}
 	
 	/**

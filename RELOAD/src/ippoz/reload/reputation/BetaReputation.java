@@ -4,6 +4,7 @@
 package ippoz.reload.reputation;
 
 import ippoz.reload.algorithm.result.AlgorithmResult;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.TP_Metric;
 
 import java.util.List;
@@ -37,8 +38,8 @@ public class BetaReputation extends Reputation {
 	}
 
 	@Override
-	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations) {
-		double tp = new TP_Metric(true, Double.NaN).evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+	protected double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		double tp = new TP_Metric(true, Double.NaN).evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		double nInj = countInjections(anomalyEvaluations);
 		double alpha = tp + 1;
 		double beta = nInj + 1;

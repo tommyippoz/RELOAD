@@ -38,7 +38,7 @@ public class NoPredictionArea_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		List<Double> fnList = new LinkedList<>();
 		List<Double> otherList = new LinkedList<>();
 		double min = Double.POSITIVE_INFINITY;

@@ -26,11 +26,11 @@ public class AUC_Metric extends BetterMaxMetric {
 	}
 
 	@Override
-	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		double tpr = new TruePositiveRate_Metric(getNoPredictionThreshold())
-				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+				.evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		double fpr = new FalsePositiveRate_Metric(getNoPredictionThreshold())
-				.evaluateAnomalyResults(anomalyEvaluations).getDoubleValue();
+				.evaluateAnomalyResults(anomalyEvaluations, confusionMatrix).getDoubleValue();
 		double auc = (tpr * fpr) / 2 + (tpr + 1) * (1 - fpr) / 2;
 		return new DoubleMetricResult(auc);
 	}

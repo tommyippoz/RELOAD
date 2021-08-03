@@ -60,6 +60,10 @@ public class MetaTrainer extends ThreadScheduler {
 		addTrainer(algTag, dataSeries, kList, enableReuse, addIndex, String.valueOf(trainerList.size()));
 	}
 	
+	public void addTrainerWithIndex(LearnerType algTag, DataSeries dataSeries, List<Knowledge> kList, boolean enableReuse, boolean addIndex, int index){	
+		addTrainer(algTag, dataSeries, kList, enableReuse, addIndex, String.valueOf(index));
+	}
+	
 	private boolean needsTraining(String scoresFile, boolean forceTraining, boolean enableReuse) {
 		if(forceTraining || !enableReuse)
 			return true;

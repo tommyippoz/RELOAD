@@ -68,17 +68,22 @@ public class DetectionManager {
 	
 	private Loader evalLoader;
 	
+	private boolean filterFlag;
+	
 	/**
 	 * Instantiates a new detection manager.
 	 * @param loaderPref 
+	 * @param filterFlag 
+	 * @param sPolicy2 
+	 * @param windowSize2 
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader){
-		this(iManager, algTypes, loaderPref, trainLoader, evalLoader, null, null);
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, boolean filterFlag){
+		this(iManager, algTypes, loaderPref, trainLoader, evalLoader, null, null, filterFlag);
 	}
 	
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, Integer windowSize, SlidingPolicy sPolicy) {
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, Integer windowSize, SlidingPolicy sPolicy, boolean filterFlag) {
 		this.iManager = iManager;
 		this.mainLearner = algTypes;
 		this.loaderPref = loaderPref;
@@ -86,6 +91,7 @@ public class DetectionManager {
 		this.sPolicy = sPolicy;
 		this.trainLoader = trainLoader;
 		this.evalLoader = evalLoader;
+		this.filterFlag = filterFlag;
 		metric = iManager.getTargetMetric();
 		reputation = iManager.getReputation(metric);
 		if(new File(getDetectorOutputFolder()).exists()){
@@ -166,7 +172,7 @@ public class DetectionManager {
 	}
 	
 	public boolean needFiltering() {
-		return iManager.getFilteringFlag();
+		return iManager.getFilteringFlag() && filterFlag;
 	}
 	
 	public boolean needEvaluation() {
@@ -307,6 +313,7 @@ public class DetectionManager {
 				vInfo.setLoaderName(l.getCompactName());
 				vInfo.setDataPoints(l.getDataPoints());
 				vInfo.setRuns(l.getRuns());
+				vInfo.setValidationTime(eManager.getEvalTime());
 				vInfo.setFaultRatio(eManager.getInjectionsRatio());
 				vInfo.setModels(eManager.getModels());
 				vInfo.setBestScore(score);

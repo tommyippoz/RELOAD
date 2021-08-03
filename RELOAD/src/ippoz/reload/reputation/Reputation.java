@@ -7,6 +7,7 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppUtility;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public abstract class Reputation {
 			double algScore = DetectionAlgorithm.convertResultIntoDouble(aRes.getScoreEvaluation());
 			anomalyEvaluations.add(new AlgorithmResult(knowledge.getInjection(i) != null, algScore, aRes.getScoreEvaluation(), alg.getConfidence(algScore)));
 		}
-		return evaluateExperimentReputation(anomalyEvaluations);
+		return evaluateExperimentReputation(anomalyEvaluations, new ConfusionMatrix(anomalyEvaluations));
 	}
 
 	/**
@@ -65,7 +66,7 @@ public abstract class Reputation {
 	 * @param anomalyEvaluations the anomaly evaluations of each snapshot
 	 * @return the final reputation
 	 */
-	protected abstract double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations);
+	protected abstract double evaluateExperimentReputation(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix);
 
 	public static Reputation fromString(String reputationType, Metric metric) {
 		switch(reputationType.toUpperCase()){

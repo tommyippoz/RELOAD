@@ -5,6 +5,7 @@ package ippoz.reload.featureselection;
 
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppUtility;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -34,9 +35,19 @@ public abstract class FeatureRanker extends FeatureSelector {
 		return getRankedScore(1);
 	}
 
+	@Override
 	public double getRankedScore(int index) {
 		if(sortedScores != null && sortedScores.size() > 0 && index-1 < sortedScores.size()){
 			return sortedScores.get(index-1);
+		} else return 0.0;
+	}
+	
+	@Override
+	public double getRankedAverageScore(int index) {
+		if(sortedScores != null && sortedScores.size() > 0){
+			if(index-1 < sortedScores.size()){
+				return AppUtility.calcAvg(sortedScores.subList(0, index));
+			} else return AppUtility.calcAvg(sortedScores);
 		} else return 0.0;
 	}
 

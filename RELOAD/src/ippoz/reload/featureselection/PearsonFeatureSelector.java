@@ -20,10 +20,10 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  * Pearson correlation between a data series and the true labels exceeds a given threshold.
  *
  * @author Tommy
- */
+ */ 
 public class PearsonFeatureSelector extends FeatureRanker {
 	
-	private static final int BATCH_SIZE = 5000;
+	private static final int BATCH_SIZE = 2000;
 
 	/**
 	 * Instantiates a new pearson feature selector.

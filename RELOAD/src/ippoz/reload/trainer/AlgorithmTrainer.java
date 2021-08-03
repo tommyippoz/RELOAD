@@ -16,6 +16,7 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
 import ippoz.reload.metric.BetterMaxMetric;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.DoubleMetricResult;
 import ippoz.reload.metric.result.MetricResult;
@@ -201,7 +202,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	private MetricResultSeries evaluateMetricScore(Metric met, Map<Knowledge, List<AlgorithmResult>> trainResults){
 		MetricResultSeries metricResults = new MetricResultSeries();
 		for(Knowledge knowledge : trainResults.keySet()){
-			metricResults.addValue(met.evaluateAnomalyResults(trainResults.get(knowledge)));
+			metricResults.addValue(met.evaluateAnomalyResults(trainResults.get(knowledge), new ConfusionMatrix(trainResults.get(knowledge))));
 		}
 		return metricResults;
 	}
@@ -395,7 +396,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 					DecisionFunction df = algorithm.setDecisionFunction(decFunctString);
 					if(df != null){
 						List<AlgorithmResult> updatedList = updateResultWithDecision(df, resultList);
-						MetricResult val = getMetric().evaluateAnomalyResults(updatedList);
+						MetricResult val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 						if(bestScore == null || getMetric().compareResults(val, bestScore) > 0){
 							bestScore = val;
 							bestFunction = decFunctString;

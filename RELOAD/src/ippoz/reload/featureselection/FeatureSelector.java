@@ -302,5 +302,9 @@ public abstract class FeatureSelector {
 	}
 	
 	public abstract double getHighestScore();
+	
+	public abstract double getRankedScore(int index);
+	
+	public abstract double getRankedAverageScore(int index);
 
 }

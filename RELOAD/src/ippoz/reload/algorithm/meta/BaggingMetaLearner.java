@@ -39,7 +39,33 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 	private BaseLearner getBaseLearner(){
 		return ((MetaLearner)getLearnerType()).getBaseLearners()[0];
 	}
-
+	
+	@Override
+	protected List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList) {
+		int i = 0;
+		List<List<Knowledge>> sampledKnowledge = null;
+		List<AlgorithmTrainer> trainers = new LinkedList<>();
+		try {
+			baseLearners = new LinkedList<>();
+			sampledKnowledge = baggingOf(kList, getSamplesNumber());
+			for(List<Knowledge> sKnow : sampledKnowledge){
+				MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
+				mTrainer.addTrainerWithIndex(getBaseLearner(), dataSeries, sKnow, false, true, i++);
+				mTrainer.start();
+				mTrainer.join();
+				for(AlgorithmTrainer at : mTrainer.getTrainers()){
+					at.saveAlgorithmScores();
+					trainers.add(at);
+					baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
+				}
+			}
+			return trainers;
+		} catch (InterruptedException e) {
+			AppLogger.logException(getClass(), e, "Unable to complete Meta-Training for " + getLearnerType());
+		}
+		return null;
+	}
+/*
 	@Override
 	protected List<AlgorithmTrainer> trainMetaLearner(List<Knowledge> kList) {
 		List<List<Knowledge>> sampledKnowledge = null;
@@ -62,7 +88,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 		}
 		return null;
 	}
-
+*/
 	private List<List<Knowledge>> baggingOf(List<Knowledge> kList, int samplesNumber) {
 		List<List<Knowledge>> outList = new ArrayList<>(samplesNumber);
 		for(int i=0;i<samplesNumber;i++){

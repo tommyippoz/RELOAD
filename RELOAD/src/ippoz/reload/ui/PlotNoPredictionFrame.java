@@ -655,7 +655,7 @@ public class PlotNoPredictionFrame {
 		DecimalFormat df = new DecimalFormat("#0.00"); 
 		if(noPredictionFlag){
 			List<AlgorithmResult> arList = dOut.getAlgorithmResults(dFunction);
-			nprMetricResult = (ArrayMetricResult)new NoPredictionArea_Metric(currentTHR).evaluateAnomalyResults(arList);
+			nprMetricResult = (ArrayMetricResult)new NoPredictionArea_Metric(currentTHR).evaluateAnomalyResults(arList, null);
 			if(Double.isFinite(nprMetricResult.getArray()[2]))
 				chartTitle = chartTitle + "\nNo-Prediction Area [" + df.format(nprMetricResult.getArray()[2]) + "," + df.format(nprMetricResult.getArray()[3]) + "]: "
 					+ df.format(nprMetricResult.getArray()[0]) + "% of data points, " + df.format(nprMetricResult.getArray()[1]) + "% of residual FNs";

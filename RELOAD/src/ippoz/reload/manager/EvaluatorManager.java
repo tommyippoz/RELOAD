@@ -16,6 +16,7 @@ import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
 import ippoz.reload.evaluation.ExperimentEvaluator;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.MetricResult;
 
@@ -52,9 +53,11 @@ public class EvaluatorManager extends DataManager {
 	
 	private AlgorithmModel evalModel;
 	
-	private List<List<AlgorithmResult>> detailedEvaluations;
+	private Map<LoaderBatch, List<AlgorithmResult>> detailedEvaluations;
 	
 	private boolean printOutput;
+	
+	private long evalTime;
 	
 	/**
 	 * Instantiates a new evaluator manager.
@@ -97,7 +100,8 @@ public class EvaluatorManager extends DataManager {
 			start();
 			join();
 			if(getThreadList().size() > 0) {
-				AppLogger.logInfo(getClass(), "Detection executed in " + (System.currentTimeMillis() - start) + " ms");
+				evalTime = System.currentTimeMillis() - start;
+				AppLogger.logInfo(getClass(), "Detection executed in " + evalTime + " ms");
 			} else AppLogger.logInfo(getClass(), "Detection not executed");
 			if(printOutput)
 				printDetailedKnowledgeScores();
@@ -108,21 +112,26 @@ public class EvaluatorManager extends DataManager {
 		return getThreadList().size() > 0;
 	}
 	
+	public long getEvalTime(){
+		return evalTime;
+	}
+	
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
 	 */
 	@Override
 	protected void initRun() {
 		List<ExperimentEvaluator> voterList = new ArrayList<ExperimentEvaluator>(experimentsSize());
-		detailedEvaluations = new ArrayList<>(voterList.size());
+		detailedEvaluations = new HashMap<>();
 		if(evalModel != null && evalModel.getAlgorithm() != null){
 			try {
-				int splits = (int)Math.ceil((1.0*getLoadFactor())/experimentsSize());
+				int splits = (int)Math.ceil((1.0*getLoadFactor())/experimentsSize())*4;
+				//int splits = 2;
 				for(int expN = 0; expN < experimentsSize(); expN++){
-					Knowledge bigKnow = getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN);
-					List<Knowledge> kSplit = bigKnow.split(splits);
-					for(Knowledge know : kSplit){
-						voterList.add(new ExperimentEvaluator(evalModel, know));
+					Knowledge know = getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN);
+					List<Integer> kSplit = know.splitInt(splits);
+					for(int i=0; i<kSplit.size()-1;i++){
+						voterList.add(new ExperimentEvaluator(evalModel, know, kSplit.get(i), kSplit.get(i+1)));
 					}
 				}
 			} catch (CloneNotSupportedException e) {
@@ -146,42 +155,10 @@ public class EvaluatorManager extends DataManager {
 	@Override
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentEvaluator ev = (ExperimentEvaluator)t;
-		detailedEvaluations.add(ev.getSingleAlgorithmScores());
-	}
-	
-	
-
-	/**
-	 * Setup results file.
-	 */
-	/*private void setupResultsFile() {
-		File resultsFile;
-		PrintWriter pw;
-		try {
-			resultsFile = new File(outputFolder + "/results.csv");
-			if(!new File(outputFolder).exists())
-				new File(outputFolder).mkdirs();
-			else if(resultsFile.exists())
-				resultsFile.delete();
-			pw = new PrintWriter(new FileOutputStream(resultsFile, true));
-			pw.append("exp_name,exp_obs,");
-			for(Metric met : validationMetrics){
-				pw.append(met.getMetricName() + ",");
-			}
-			pw.close();
-		} catch (FileNotFoundException ex) {
-			AppLogger.logException(getClass(), ex, "Unable to find results file");
-		} 		
-	}*/
-	
-	public Map<LoaderBatch, List<AlgorithmResult>> getVotingEvaluations() {
-		Map<LoaderBatch, List<AlgorithmResult>> outMap = new TreeMap<>();
-		for(Thread t : getThreadList()){
-			ExperimentEvaluator ev = (ExperimentEvaluator)t;
-			outMap.put(ev.getExperimentID(), ev.getExperimentResults());
-		}
-		return outMap;
-	}
+		if(!detailedEvaluations.containsKey(ev.getExperimentID()))
+			detailedEvaluations.put(ev.getExperimentID(), new LinkedList<>());
+		detailedEvaluations.get(ev.getExperimentID()).addAll(ev.getSingleAlgorithmScores());
+	}	
 	
 	public Map<String, MetricResult> getMetricsValues() {
 		if(metricValues == null)
@@ -192,31 +169,17 @@ public class EvaluatorManager extends DataManager {
 	private void computeMetricValues() {
 		metricValues = new HashMap<>();
 		List<AlgorithmResult> allResults = new ArrayList<>();
-		for(List<AlgorithmResult> list : detailedEvaluations){
+		for(List<AlgorithmResult> list : detailedEvaluations.values()){
 			allResults.addAll(list);
 		}
+		ConfusionMatrix cMatrix = new ConfusionMatrix(allResults);
 		for(Metric met : validationMetrics){
-			metricValues.put(met.getName(), met.evaluateAnomalyResults(allResults));
+			metricValues.put(met.getName(), met.evaluateAnomalyResults(allResults, cMatrix));
 		}
 	}
 
 	public Map<LoaderBatch, List<AlgorithmResult>> getDetailedEvaluations() {
-		Map<LoaderBatch, List<AlgorithmResult>> outMap = new TreeMap<>();
-		if(detailedEvaluations != null && detailedEvaluations.size() > 0){
-			for(int i=0;i<getThreadList().size();i++){
-				ExperimentEvaluator ev = (ExperimentEvaluator)getThreadList().get(i);
-				if(ev.getExperimentID() != null) {
-					outMap.put(ev.getExperimentID(), new LinkedList<>());
-					if(i < detailedEvaluations.size()){
-						List<AlgorithmResult> map = detailedEvaluations.get(i);
-						outMap.get(ev.getExperimentID()).addAll(map);
-					} else {
-						System.out.println(ev.getExperimentID());
-					}
-				}
-			}
-		}
-		return outMap;
+		return detailedEvaluations;
 	}
 	
 	public Map<LoaderBatch, List<InjectedElement>> getFailures(){

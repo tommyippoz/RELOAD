@@ -40,7 +40,7 @@ public class Observation {
 	 * @param newValue the new value of the indicator
 	 */
 	public void addIndicator(Object newValue){
-		if(values < observedIndicators.length - 1)
+		if(values < observedIndicators.length)
 			observedIndicators[values++] = newValue;
 		else AppLogger.logError(getClass(), "NoSpace", "no space to store observations' data");
 	}

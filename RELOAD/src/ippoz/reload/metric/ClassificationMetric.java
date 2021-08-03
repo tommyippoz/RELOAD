@@ -39,7 +39,13 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 		
 	@Override
-	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
+		if(confusionMatrix != null && confusionMatrix.hasMetric(getMetricType()))
+			return confusionMatrix.getValueFor(getMetricType(), absolute);
+		else return calculateMetric(anomalyEvaluations);
+	}
+	
+	private MetricResult calculateMetric(List<AlgorithmResult> anomalyEvaluations) {
 		int detectionHits = 0;
 		List<AlgorithmResult> resList = anomalyEvaluations;
 		if(Double.isFinite(getNoPredictionThreshold()))
@@ -56,7 +62,7 @@ public abstract class ClassificationMetric extends BetterMaxMetric {
 	}
 
 	private List<AlgorithmResult> filterResults(List<AlgorithmResult> anomalyEvaluations) {
-		ArrayMetricResult mr = (ArrayMetricResult) new NoPredictionArea_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations);
+		ArrayMetricResult mr = (ArrayMetricResult) new NoPredictionArea_Metric(getNoPredictionThreshold()).evaluateAnomalyResults(anomalyEvaluations, null);
 		double[] arr = mr.getArray();
 		if(mr.getDoubleValue() > 0.0 && !Double.isNaN(arr[2]) && !Double.isNaN(arr[3])){
 			List<AlgorithmResult> resList = new LinkedList<>();

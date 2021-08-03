@@ -117,9 +117,9 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 	private AlgorithmTrainer trainWeakLearner(List<Knowledge> kList, int iteration){
 		MetaTrainer mTrainer = new MetaTrainer(data, (MetaLearner)getLearnerType());
 		mTrainer.addTrainer(getBaseLearner(), dataSeries, kList, false, true, String.valueOf(iteration));
-		for(DataSeries ds : dataSeries.listSubSeries()){
+		/*for(DataSeries ds : dataSeries.listSubSeries()){
 			mTrainer.addTrainer(getBaseLearner(), ds, kList, false, true, String.valueOf(iteration));
-		}
+		}*/
 		try {
 			mTrainer.start();
 			mTrainer.join();

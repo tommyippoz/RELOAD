@@ -22,7 +22,7 @@ public class Overlap_Metric extends BetterMinMetric {
 	}
 
 	@Override
-	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		List<Double> normalList = new LinkedList<>();
 		List<Double> faultyList = new LinkedList<>();
 		for(AlgorithmResult tr : anomalyEvaluations){

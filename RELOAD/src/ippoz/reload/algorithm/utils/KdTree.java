@@ -420,7 +420,7 @@ public abstract class KdTree<T> {
 
             // Check if it's worth descending. Assume it is if it's sibling has
             // not been visited yet.
-            if (cursor.status == Status.ALLVISITED) {
+            if (nextCursor != null && cursor.status == Status.ALLVISITED) {
                 if (nextCursor.locationCount == 0
                         || (!nextCursor.singularity && pointRegionDist(location, nextCursor.minLimit,
                                 nextCursor.maxLimit) > range)) {
@@ -430,8 +430,9 @@ public abstract class KdTree<T> {
 
             // Descend down the tree
             cursor = nextCursor;
-            cursor.status = Status.NONE;
-        } while (cursor.parent != null || cursor.status != Status.ALLVISITED);
+            if(cursor != null)
+            	cursor.status = Status.NONE;
+        } while (cursor != null && (cursor.parent != null || cursor.status != Status.ALLVISITED));
 
         ArrayList<Entry<T>> results = new ArrayList<Entry<T>>(resultHeap.values);
         if (sequentialSorting) {

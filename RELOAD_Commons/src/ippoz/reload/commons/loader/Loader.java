@@ -34,6 +34,8 @@ public abstract class Loader {
 	/** The Constant TRAIN_CSV_FILE. */
 	public static final String TRAIN_FILE = "TRAIN_FILE";
 	
+	public static final String FAULTY_TAGS = "FAULTY_TAGS";
+	
 	/** The Constant TRAIN_FAULTY_TAGS. */
 	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
 	
@@ -367,13 +369,13 @@ public abstract class Loader {
 			return prefManager.getPreference(TRAIN_FAULTY_TAGS);
 		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_FAULTY_TAGS))
 			return prefManager.getPreference(VALIDATION_FAULTY_TAGS);
-		else return prefManager.getPreference("FAULTY_TAGS");
+		else return prefManager.getPreference(FAULTY_TAGS);
 	}
 	
 	protected static String extractKnownAttacks(PreferencesManager prefManager, String tag) {
 		if(prefManager.hasPreference(TRAIN_FAULTY_TAGS))
 			return prefManager.getPreference(TRAIN_FAULTY_TAGS);
-		else return prefManager.getPreference("FAULTY_TAGS");
+		else return prefManager.getPreference(FAULTY_TAGS);
 	}
 	
 	protected static String extractNormalTag(PreferencesManager prefManager, String tag) {

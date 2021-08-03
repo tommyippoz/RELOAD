@@ -285,5 +285,17 @@ public abstract class Knowledge implements Cloneable {
 		}
 		return list;
 	}
+	
+	public List<Integer> splitInt(int n) {
+		List<Integer> list = new LinkedList<>();
+		if(n > 0){
+			int blockSize = (int)Math.ceil((1.0*size())/n);
+			for(int i=0;i<n && i*blockSize<size();i++){
+				list.add(i*blockSize);
+			}
+			list.add(size());
+		}
+		return list;
+	}
 
 }

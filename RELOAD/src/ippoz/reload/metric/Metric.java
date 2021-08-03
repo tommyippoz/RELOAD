@@ -198,15 +198,19 @@ public abstract class Metric implements Comparable<Metric> {
 	/**
 	 * Evaluates anomaly results coming from evaluations of all the snapshot of
 	 * an experiment.
-	 *
-	 * @param expData
-	 *            the experiment data
 	 * @param anomalyEvaluations
 	 *            the anomaly evaluations
+	 * @param confusionMatrix TODO
+	 * @param expData
+	 *            the experiment data
 	 * @return the global anomaly evaluation
 	 */
-	public abstract MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations);
+	public abstract MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix);
 
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations){
+		return evaluateAnomalyResults(anomalyEvaluations, null);
+	}
+	
 	/**
 	 * Compares metric results.
 	 *

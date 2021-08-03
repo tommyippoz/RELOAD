@@ -156,6 +156,7 @@ public class FeatureSelectionFrame {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				iManager.updateFeatureSelectionPolicies(fsList);
+				fsFrame.setVisible(false);
 			} } );	
 		fPanel.add(button);
 		

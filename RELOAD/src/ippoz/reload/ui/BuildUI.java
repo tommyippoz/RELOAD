@@ -347,17 +347,18 @@ public class BuildUI {
 							trainLoader = iManager.buildLoader("train", loaderPref);
 						if(iManager.getEvaluationFlag())
 							evalLoader = iManager.buildLoader("validation", loaderPref);
+						boolean filterFlag = true;
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
 							if(DetectorMain.hasSliding(aList)){
 								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
 									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, windowSize, sPolicy), pBar, index++, tot);
+										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag), pBar, index++, tot);
 									}
 								}
 							} else {
-								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader), pBar, index++, tot);
+								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
 							}
-							//System.gc();
+							filterFlag = false;
 						}
 						if(trainLoader != null)
 							trainLoader.flush();
@@ -672,7 +673,9 @@ public class BuildUI {
 		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				LoaderFrame lf;
+				CreateLoaderFrame clf = new CreateLoaderFrame(iManager);
+				clf.setVisible(true);
+				/*LoaderFrame lf;
 				String loaderName = null;
 				LoaderType loaderType = null;
 				String s = (String)JOptionPane.showInputDialog(
@@ -700,7 +703,7 @@ public class BuildUI {
 					lf.setVisible(true);
 				} catch(Exception ex){
 					AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "' preferences");
-				}
+				}*/
 				
 			} } );
 		seePrefPanel.add(button);

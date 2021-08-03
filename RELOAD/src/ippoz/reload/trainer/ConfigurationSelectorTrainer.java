@@ -17,6 +17,7 @@ import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
+import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.reputation.Reputation;
@@ -212,7 +213,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			double thrValue = (thrRight + thrLeft)/2;
 			String threshold = thrCode + "(" + AppUtility.formatDouble(thrValue) + ")";
 			List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, threshold, false), resultList);
-			MetricResult mScore = getMetric().evaluateAnomalyResults(updatedList);
+			MetricResult mScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 			if(iteration <= LINEAR_SEARCH_MAX_ITERATIONS){
 				ObjectPair<String, MetricResult> leftBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrLeft, thrValue, iteration + 1, resultList);
 				ObjectPair<String, MetricResult> rightBest = linearSearchOptimalSingleThreshold(thrCode, scores, thrValue, thrRight, iteration + 1, resultList);
@@ -239,7 +240,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 		double cThrValue = (thrRight + thrLeft)/2;
 		String cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
 		List<AlgorithmResult> updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
-		MetricResult cScore = getMetric().evaluateAnomalyResults(updatedList);
+		MetricResult cScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 		ObjectPair<String, MetricResult> best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
 		while(thrRight > thrLeft && sameResultCounter < SAME_RESULT_THRESHOLD){
 			//System.out.println(thrLeft + " - " + thrRight + ": " + best.getValue());
@@ -247,12 +248,12 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 			double leftThrValue = thrLeft + (thrRight - thrLeft)/4;
 			String leftThreshold = thrCode + "(" + AppUtility.formatDouble(leftThrValue) + ")";
 			updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, leftThreshold, false), resultList);
-			MetricResult lScore = getMetric().evaluateAnomalyResults(updatedList);
+			MetricResult lScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 			// Test Right
 			double rightThrValue = thrLeft + (thrRight - thrLeft)*3/4;
 			String rightThreshold = thrCode + "(" + AppUtility.formatDouble(rightThrValue) + ")";
 			updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, rightThreshold, false), resultList);
-			MetricResult rScore = getMetric().evaluateAnomalyResults(updatedList);
+			MetricResult rScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 			if(getMetric().compareResults(lScore, rScore) > 0){
 				if(getMetric().compareResults(lScore, cScore) > 0){
 					// Left is highest
@@ -271,7 +272,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 					cThrValue = (thrRight + thrLeft)/2;
 					cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
 					updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
-					cScore = getMetric().evaluateAnomalyResults(updatedList);
+					cScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 					if(getMetric().compareResults(cScore, best.getValue()) > 0)
 						best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
 					else sameResultCounter++;
@@ -294,7 +295,7 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 						cThrValue = (thrRight + thrLeft)/2;
 						cThreshold = thrCode + "(" + AppUtility.formatDouble(cThrValue) + ")";
 						updatedList = updateResultWithDecision(DecisionFunction.buildDecisionFunction(scores, cThreshold, false), resultList);
-						cScore = getMetric().evaluateAnomalyResults(updatedList);
+						cScore = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
 						if(getMetric().compareResults(cScore, best.getValue()) > 0)
 							best = new ObjectPair<String, MetricResult>(cThreshold, cScore);
 						else sameResultCounter++;

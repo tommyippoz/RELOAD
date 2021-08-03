@@ -32,7 +32,7 @@ public abstract class ClassificationConfidenceMetric extends BetterMaxMetric {
 	}
 		
 	@Override
-	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations) {
+	public MetricResult evaluateAnomalyResults(List<AlgorithmResult> anomalyEvaluations, ConfusionMatrix confusionMatrix) {
 		int detectionHits = 0;
 		double confSum = 0.0;
 		for (int i = 0; i < anomalyEvaluations.size(); i++) {

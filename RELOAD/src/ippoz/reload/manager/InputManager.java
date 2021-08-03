@@ -1151,16 +1151,15 @@ public class InputManager {
 		return null;
 	}
 
-	public PreferencesManager generateDefaultLoaderPreferences(String loaderName, LoaderType loaderType) {
-		File file = createDefaultLoader(loaderName, loaderType);
+	public PreferencesManager generateDefaultLoaderPreferences(String loaderName, LoaderType loaderType, String filename) {
+		File file = createDefaultLoader(loaderName, loaderType, filename);
 		return new PreferencesManager(file);
 	}
 
-	private File createDefaultLoader(String loaderName, LoaderType loaderType) {
+	private File createDefaultLoader(String loaderName, LoaderType loaderType, String filename) {
 		BufferedWriter writer = null;
-		File lFile = new File(getLoaderFolder() + loaderName);
+		File lFile = new File(getLoaderFolder() + loaderName + ".loader");
 		try {
-			if(!lFile.exists()){
 				writer = new BufferedWriter(new FileWriter(lFile));
 				
 				writer.write("* Default loader file for '" + loaderName + "'. Comments with '*'.\n");
@@ -1171,33 +1170,32 @@ public class InputManager {
 				writer.write("\n* Data Partitioning.\n\n");
 				
 				writer.write("\n* File Used for Training\n" +
-						FileLoader.TRAIN_FILE + " = \n");
+						FileLoader.TRAIN_FILE + " = " + (filename != null && filename.trim().length() > 0 ? filename.trim() : "") + "\n");
 				writer.write("\n* Train Runs.\n" + 
-						FileLoader.TRAIN_PARTITION + " = 1 - 10\n");
-				writer.write("\n* Train Faulty Tags.\n" + 
-						FileLoader.TRAIN_FAULTY_TAGS + " = attack\n");
-				writer.write("\n* Train Runs.\n" + 
-						FileLoader.TRAIN_SKIP_ROWS + " = \n");
+						FileLoader.TRAIN_PARTITION + " = 0 - 999\n");
+				
 				writer.write("\n* File Used for Validation\n" +
-						FileLoader.VALIDATION_FILE + " = \n");
+						FileLoader.VALIDATION_FILE + " = " + (filename != null && filename.trim().length() > 0 ? filename.trim() : "") + "\n");
 				writer.write("\n* Validation Runs.\n" + 
-						FileLoader.VALIDATION_PARTITION + " = 1 - 10\n");
-				writer.write("\n* Train Faulty Tags.\n" + 
-						FileLoader.VALIDATION_FAULTY_TAGS + " = attack\n");
-				writer.write("\n* Train Runs.\n" + 
-						FileLoader.VALIDATION_SKIP_ROWS + " = \n");
+						FileLoader.VALIDATION_PARTITION + " = 1000 - 1999\n");
+				
+				writer.write("\n* Faulty Tags.\n" + 
+						FileLoader.FAULTY_TAGS + " = attack\n");
+				writer.write("\n* Tags to Skip.\n" + 
+						FileLoader.SKIP_ROWS + " = \n");
 				
 				writer.write("\n* Parsing Dataset.\n\n");
 				
 				writer.write("\n* Features to Skip\n" + 
-						FileLoader.SKIP_COLUMNS + " = 0\n");
+						FileLoader.SKIP_COLUMNS + " = \n");
 				writer.write("\n* Column Containing the 'Label' Feature\n" + 
 						FileLoader.LABEL_COLUMN + " = 1\n");
 				writer.write("\n* Size of Each Experiment.\n" + 
-						FileLoader.BATCH_COLUMN + " = 100\n");	
+						FileLoader.BATCH_COLUMN + " = \n");	
+				writer.write("\n* Size of Each Experiment.\n" + 
+						FileLoader.EXPERIMENT_ROWS + " = \n");	
 				
 				writer.close();
-			}
 		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "'");
 		}
