@@ -675,35 +675,6 @@ public class BuildUI {
 			public void actionPerformed(ActionEvent e) { 
 				CreateLoaderFrame clf = new CreateLoaderFrame(iManager);
 				clf.setVisible(true);
-				/*LoaderFrame lf;
-				String loaderName = null;
-				LoaderType loaderType = null;
-				String s = (String)JOptionPane.showInputDialog(
-	                    frame, "Set name for the new loader", "Create Loader",
-	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
-				if ((s != null) && (s.trim().length() > 0)) {
-					loaderName = s.trim();
-				} else {
-					loaderName = "newLoader";
-					AppLogger.logError(getClass(), "WrongLoaderFilename", "Loader name unspecified. Using default 'newLoader.loader'");
-				}
-				loaderName = loaderName + ".loader";
-				loaderType = (LoaderType)JOptionPane.showInputDialog(
-	                    frame, "Choose type for the new loader", "Create Loader",
-	                    JOptionPane.PLAIN_MESSAGE, null, LoaderType.values(), LoaderType.CSV);
-				if (loaderType == null){
-					loaderType = LoaderType.CSV;
-					AppLogger.logError(getClass(), "WrongLoaderType", "Loader type unspecified. Using default 'CSV'");
-				}
-				try {
-					PreferencesManager newPref = iManager.generateDefaultLoaderPreferences(loaderName, loaderType);
-					iManager.addDataset(Paths.get(newPref.getFile().getAbsolutePath()).toString());
-					reload();
-					lf = new LoaderFrame(iManager, newPref, loaderType);
-					lf.setVisible(true);
-				} catch(Exception ex){
-					AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "' preferences");
-				}*/
 				
 			} } );
 		seePrefPanel.add(button);

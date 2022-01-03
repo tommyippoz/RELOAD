@@ -686,7 +686,7 @@ public class InputManager {
 				writer.write("\n\n* Data Source - Loaders.\n" + 
 						LOADER_FOLDER + " = input" + File.separatorChar + "loaders\n");
 				writer.write("\n* Loaders folder.\n" + 
-						LOADERS + " = iscx\n");
+						LOADERS + " = \n");
 				writer.write("\n* Datasets folder.\n" +
 						DATASETS_FOLDER + " = \n");
 				writer.write("\n* RELOAD Execution.\n\n");
@@ -697,7 +697,7 @@ public class InputManager {
 				writer.write("\n* Perform Evaluation (0 = NO, 1 = YES).\n" + 
 						EVALUATION_NEEDED_FLAG + " = 1\n");
 				writer.write("\n* K for the K-Fold Evaluation (Default is 2).\n" + 
-						KFOLD_COUNTER + " = 2\n");
+						KFOLD_COUNTER + " = 1\n");
 				writer.write("\n* The scoring metric. Accepted values are FP, FN, TP, TN, PRECISION, RECALL, FSCORE(b), FMEASURE, FPR, FNR, MATTHEWS.\n" + 
 						METRIC + " = FMEASURE\n");
 				writer.write("\n* The metric type (absolute/relative). Applies only to FN, FP, TN, TP.\n" + 
@@ -736,6 +736,8 @@ public class InputManager {
 						FORCE_TRAINING_BASELEARNERS + " = 0\n");	
 				writer.write("\n* Training Preferences for base-learners\n" + 
 						FORCE_TRAINING + " = 0\n");	
+				writer.write("\n* Predict Misclassifications\n" + 
+						PREDICT_MISCLASSIFICATIONS + " = 0\n");	
 			}
 			new File("input").mkdir();
 			new File("input" + File.separatorChar + "setup").mkdir();

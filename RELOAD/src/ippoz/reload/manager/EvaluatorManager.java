@@ -59,6 +59,8 @@ public class EvaluatorManager extends DataManager {
 	
 	private long evalTime;
 	
+	private static final int STRING_LENGTH = 5000;
+	
 	/**
 	 * Instantiates a new evaluator manager.
 	 *
@@ -199,6 +201,7 @@ public class EvaluatorManager extends DataManager {
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
+		StringBuilder toPrint = new StringBuilder("");
 		try {
 			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores = getDetailedEvaluations();
 			if(detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
@@ -231,22 +234,30 @@ public class EvaluatorManager extends DataManager {
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
-							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.isAnomalous() ? "anomaly" : "") + ",,");
-							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
+							toPrint.append(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.isAnomalous() ? "anomaly" : "") + ",,");
+							toPrint.append(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
 									res.getScore() + "," + (evalModel.getAlgorithm().getDecisionFunction() != null ? evalModel.getAlgorithm().getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){
 								Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
 								for(Indicator ind : evalModel.getDataSeries().getIndicators()){
-									writer.write(snap.getDoubleValueFor(ind) + ",");
+									toPrint.append(snap.getDoubleValueFor(ind) + ",");
 								}
 							}
 							if(evalModel.getAlgorithmType() instanceof MetaLearner){
 								double[] ob = (double[]) detailedExperimentsScores.get(expName).get(i).getAdditionalScore();
-								writer.write("," + Arrays.toString(ob).replace("[", "").replace("]", ""));
+								toPrint.append("," + Arrays.toString(ob).replace("[", "").replace("]", ""));
 							}
-							writer.write("\n");
+							toPrint.append("\n");
+							if(toPrint != null && toPrint.length() > STRING_LENGTH){
+								writer.write(toPrint.toString());
+								toPrint = new StringBuilder("");
+							}
 						}
 					}
+				}
+				if(toPrint != null && toPrint.length() > 0){
+					writer.write(toPrint.toString());
+					toPrint = null;
 				}
 				writer.close();
 			}

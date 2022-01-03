@@ -6,10 +6,11 @@ package ippoz.reload.featureselection;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +23,6 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  * @author Tommy
  */ 
 public class PearsonFeatureSelector extends FeatureRanker {
-	
-	private static final int BATCH_SIZE = 2000;
 
 	/**
 	 * Instantiates a new pearson feature selector.
@@ -40,52 +39,31 @@ public class PearsonFeatureSelector extends FeatureRanker {
 	 */
 	@Override
 	protected Map<DataSeries, Double> executeSelector(List<DataSeries> seriesList, List<Knowledge> kList) {
-		List<Double> corrArray;
-		List<Double> values = new LinkedList<>();
-		List<Double> labels = new LinkedList<>();
-		List<Snapshot> snapList = null;
 		Map<DataSeries, Double> outMap = new HashMap<DataSeries, Double>();
 		for(DataSeries ds : seriesList){
-			values.clear();
-			labels.clear();
-			corrArray = new LinkedList<>();
 			if(ds.size() == 1){
-				List<Double> tempValues = new LinkedList<>();
-				List<Double> tempLabels = new LinkedList<>();
+				List<Double> tempValues = new ArrayList<>();
+				List<Double> tempLabels = new ArrayList<>();
 				for(Knowledge know : kList){
-					snapList = toSnapList(know, ds);
-					values.addAll(getSnapValues(snapList));
-					labels.addAll(getSnapLabels(snapList));
-				}
-				for(int i=0;i<values.size();i++){
-					if(Double.isFinite(values.get(i)))
-						tempValues.add(values.get(i));
-					else tempValues.add(0.0);
-					if(Double.isFinite(labels.get(i)))
-						tempLabels.add(labels.get(i));
-					else tempLabels.add(0.0);
-					if(i > 0 && i % BATCH_SIZE == 0){
-						double corr = new PearsonsCorrelation().correlation(
-								AppUtility.toPrimitiveArray(tempValues), 
-								AppUtility.toPrimitiveArray(tempLabels));
-						tempValues.clear();
-						tempLabels.clear();
-						if(!Double.isFinite(corr))
-							corr = 0.0;
-						corrArray.add(corr);
+					List<Snapshot> snapList = toSnapList(know, ds);
+					List<Double> values = getSnapValues(snapList);
+					List<Double> labels = getSnapLabels(snapList);
+					for(int i=0;i<values.size();i++){
+						if(Double.isFinite(values.get(i)))
+							tempValues.add(values.get(i));
+						else tempValues.add(0.0);
+						if(Double.isFinite(labels.get(i)))
+							tempLabels.add(labels.get(i));
+						else tempLabels.add(0.0);
 					}
 				}
-				if(tempValues.size() > 0){
-					double corr = new PearsonsCorrelation().correlation(
-							AppUtility.toPrimitiveArray(tempValues), 
-							AppUtility.toPrimitiveArray(tempLabels));
-					if(!Double.isFinite(corr))
-						corr = 0.0;
-					corrArray.add(corr);
-				}
-				if(corrArray.size() > 0)
-					outMap.put(ds, AppUtility.calcAvg(corrArray));
-				else outMap.put(ds, 0.0);
+				double corr = new PearsonsCorrelation().correlation(
+						AppUtility.toPrimitiveArray(tempValues), 
+						AppUtility.toPrimitiveArray(tempLabels));
+				if(!Double.isFinite(corr))
+					corr = 0.0;
+				outMap.put(ds, Math.abs(corr));
+				AppLogger.logInfo(getClass(), "Feature '" + ds.getName() + "' Score: " + outMap.get(ds));
 			}
 		}
 		return outMap;

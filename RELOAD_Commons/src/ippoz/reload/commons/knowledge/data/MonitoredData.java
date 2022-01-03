@@ -54,7 +54,7 @@ public class MonitoredData {
 	}
 	
 	public MonitoredData(LoaderBatch expBatch, List<Observation> obsList, Map<DatasetIndex, InjectedElement> injMap, List<Indicator> indList){
-		this.obsList = obsList;
+		this.obsList = new ArrayList<>(obsList);
 		this.expBatch = expBatch;
 		this.injMap = injMap;
 		this.indicatorList = indList;

@@ -14,14 +14,10 @@ import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.manager.InputManager;
 
 import java.awt.Color;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,11 +26,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -43,8 +37,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -151,7 +143,10 @@ public class CreateLoaderFrame {
 			public void changedUpdate(DocumentEvent e) { workOnUpdate(); }	  
 			public void removeUpdate(DocumentEvent e) { workOnUpdate(); }
 			public void insertUpdate(DocumentEvent e) { workOnUpdate(); }
-			public void workOnUpdate() { loaderPref = null; }  });
+			public void workOnUpdate() { 
+				if(loaderPref != null)
+					loaderPref.renameLoader(textField.getText()); 
+			}  });
 		namePanel.add(textField);
 		
 		containerPanel.add(namePanel);
@@ -306,6 +301,7 @@ public class CreateLoaderFrame {
 			public void actionPerformed(ActionEvent e) { 
 				if(checkParameters()){
 					loaderPref.updateToFile();
+			        iManager.addDataset(Paths.get(loaderPref.getFile().getAbsolutePath()).toString());
 				} else JOptionPane.showMessageDialog(lFrame, "Error while setting parameters",
 					    "Error while setting parameters", JOptionPane.ERROR_MESSAGE);
 				lFrame.setVisible(false);

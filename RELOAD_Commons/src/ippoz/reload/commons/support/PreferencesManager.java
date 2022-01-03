@@ -141,4 +141,15 @@ public class PreferencesManager {
 		return getFilename().substring(0, index);
 	}
 
+	public void renameLoader(String newName) {
+		String newPath = file.getPath();
+		newPath = newPath.replace(file.getName(), newName);
+		if(!newPath.endsWith(".loader"))
+			newPath = newPath + ".loader";
+		File newFile = new File(newPath);
+		AppUtility.copyFile(file, newFile);
+		file.delete();
+		file = newFile;
+	}
+
 }
