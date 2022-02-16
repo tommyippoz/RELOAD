@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.algorithm;
+package ippoz.reload.algorithm; 
 
 import ippoz.reload.commons.knowledge.Knowledge;
 
