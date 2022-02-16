@@ -18,7 +18,7 @@ public class Observation {
 	private DatasetIndex index;
 	
 	/** The observed indicators. */
-	private Object[] observedIndicators;
+	private double[] observedIndicators;
 	
 	private int values;
 	
@@ -29,7 +29,7 @@ public class Observation {
 	 */
 	public Observation(DatasetIndex index, int indicatorNumber){
 		this.index = index;
-		observedIndicators = new Object[indicatorNumber];
+		observedIndicators = new double[indicatorNumber];
 		values = 0;
 	}
 	
@@ -39,7 +39,7 @@ public class Observation {
 	 * @param newInd the new indicator
 	 * @param newValue the new value of the indicator
 	 */
-	public void addIndicator(Object newValue){
+	public void addIndicator(double newValue){
 		if(values < observedIndicators.length)
 			observedIndicators[values++] = newValue;
 		else AppLogger.logError(getClass(), "NoSpace", "no space to store observations' data");

@@ -31,7 +31,7 @@ public class CascadeGeneralizationMetaLearner extends CascadingMetaLearner {
 				List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 				for(int i=0;i<know.size();i++){
 					double[] snapArray = getSnapValueArray(snapList.get(i));
-					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
+					know.addIndicatorData(i, alg.getLearnerType().toCompactString(), Double.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
 				}
 			}
 			currentDs = updateDataSeries(currentDs, alg);

@@ -105,7 +105,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			for(int i=0;i<newKnow.size();i++){
 				double[] snapArray = getSnapValueArray(snapList.get(i));
 				for(DetectionAlgorithm alg : baseLearners){
-					newKnow.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
+					newKnow.addIndicatorData(i, alg.getLearnerType().toCompactString(), Double.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
 				}
 			}
 			updatedList.add(newKnow);

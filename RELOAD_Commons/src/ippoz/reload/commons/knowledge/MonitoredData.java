@@ -169,7 +169,7 @@ public class MonitoredData {
 	public void addIndicatorData(int obId, String indName, Object indData){
 		if(obId >= 0 && obId < obsList.size()){
 			if(indName != null && hasIndicator(indName)){
-				obsList.get(obId).addIndicator(indData);
+				obsList.get(obId).addIndicator((double)indData);
 			} else 
 				AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to find indicator '" + indName + "'");
 		} else AppLogger.logError(getClass(), "ObservationUpdateError", "Unable to find observation '" + obId + "'");

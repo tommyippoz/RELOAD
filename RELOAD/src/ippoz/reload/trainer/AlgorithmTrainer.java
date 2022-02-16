@@ -14,8 +14,10 @@ import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
+import ippoz.reload.metric.Accuracy_Metric;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.ConfusionMatrix;
+import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.DoubleMetricResult;
 import ippoz.reload.metric.result.MetricResult;
@@ -133,12 +135,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		confResults = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
 		if(confResults != null && bestConf != null){
-			
 			valMetricsString = calculateMetrics(validationMetrics, confResults.getKey());
-			//printTrainingResults();
-			//metricScore = evaluateMetricScore(metric);
-			
-			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
 				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 			else bestConf.addItem(BasicConfiguration.WEIGHT, "1.0");
@@ -147,34 +144,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			bestConf.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
 		}
 	}
-	
-	/*public String printTrainingResults(Metric[] validationMetrics){
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
-		if(algorithm instanceof AutomaticTrainingAlgorithm) {
-			((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
-		} else {
-			for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
-				//algorithm.setDecisionFunction(dFunctionString);
-				getMetric().evaluateMetric(algorithm, knowledge);
-			}
-		}
-		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
-		for(Knowledge know : kList){
-			trainResult.put(know, calculateResults(algorithm, know));
-		}
-		/*trainMetricScore = algorithm.getLoggedScores();
-		bestConf.addItem(BasicConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
-		bestConf.addItem(BasicConfiguration.TRAIN_STD, trainMetricScore.getStd());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q0, trainMetricScore.getMin());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q4, trainMetricScore.getMax());
-		
-		if(validationMetrics != null)
-			return calculateMetrics(validationMetrics, trainResult);
-		else return null;
-	}*/
 	
 	public String getDecisionFunctionString(){
 		return bestConf.getItem(BasicConfiguration.THRESHOLD);
@@ -217,12 +186,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	protected List<AlgorithmResult> calculateResults(DetectionAlgorithm alg, Knowledge know) {
-		double snapValue;
 		Knowledge knowledge = know.cloneKnowledge();
-		List<AlgorithmResult> anomalyEvaluations = new ArrayList<AlgorithmResult>(knowledge.size());
+		List<AlgorithmResult> anomalyEvaluations = new ArrayList<>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
 			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
-			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
 			anomalyEvaluations.add(ar);
 		}
 		return anomalyEvaluations;
@@ -390,6 +357,16 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 					if(df != null){
 						List<AlgorithmResult> updatedList = updateResultWithDecision(df, resultList);
 						MetricResult val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
+						if((getMetric() instanceof Matthews_Coefficient && val.getDoubleValue() < 0) || 
+								(getMetric() instanceof Accuracy_Metric && val.getDoubleValue() < 0.5)){
+							df.revert();
+							resultList = new ArrayList<>();
+							for(Knowledge know : kList){
+								resultList.addAll(calculateResults(algorithm, know));
+							}
+							updatedList = updateResultWithDecision(df, resultList);
+							val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
+						}
 						if(bestScore == null || getMetric().compareResults(val, bestScore) > 0){
 							bestScore = val;
 							bestFunction = decFunctString;

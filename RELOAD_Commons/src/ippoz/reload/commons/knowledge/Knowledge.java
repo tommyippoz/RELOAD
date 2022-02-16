@@ -226,7 +226,7 @@ public class Knowledge implements Cloneable {
 		} else return null;
 	}
 	
-	public void addIndicatorData(int obId, String indName, Object indData){
+	public void addIndicatorData(int obId, String indName, double indData){
 		baseData.addIndicatorData(obId, indName, indData);
 	}
 	
