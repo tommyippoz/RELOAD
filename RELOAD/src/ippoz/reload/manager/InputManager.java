@@ -13,9 +13,6 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.ARFFLoader;
 import ippoz.reload.commons.loader.CSVLoader;
 import ippoz.reload.commons.loader.FileLoader;
@@ -379,8 +376,8 @@ public class InputManager {
 		return "";
 	}
 	
-	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
-		return loadConfigurations(at, datasetName, windowSize, sPolicy, true);
+	public List<BasicConfiguration> loadConfiguration(LearnerType at, String datasetName) {
+		return loadConfigurations(at, datasetName, true);
 	}
 
 	/**
@@ -390,12 +387,12 @@ public class InputManager {
 	 *
 	 * @return the map of the configurations
 	 */
-	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, Integer windowSize, SlidingPolicy sPolicy, boolean createMissing) {
-		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
+	public List<BasicConfiguration> loadConfigurations(LearnerType alg, String datasetName, boolean createMissing) {
+		List<BasicConfiguration> confList = readConfigurationsFile(alg, datasetName);
 		if((confList == null || confList.size() == 0) && createMissing && alg != null && alg instanceof BaseLearner){
 			AppLogger.logInfo(getClass(), "Algorithm '" + alg + "' does not have an associated configuration file. Default will be created");
 			generateConfigurationsFile(alg, DetectionAlgorithm.buildAlgorithm(alg, null, BasicConfiguration.buildConfiguration(alg)).getDefaultParameterValues());
-			confList = readConfigurationsFile(alg, datasetName, windowSize, sPolicy);
+			confList = readConfigurationsFile(alg, datasetName);
 		}
 		return confList;
 	}
@@ -465,7 +462,7 @@ public class InputManager {
 		}
 	}
 
-	private List<BasicConfiguration> readConfigurationsFile(LearnerType mainLearner, String datasetName, Integer windowSize, SlidingPolicy sPolicy) {
+	private List<BasicConfiguration> readConfigurationsFile(LearnerType mainLearner, String datasetName) {
 		File confFolder = new File(getConfigurationFolder());
 		List<BasicConfiguration> confList = new LinkedList<>();
 		LearnerType fileLearner;
@@ -508,10 +505,6 @@ public class InputManager {
 										BasicConfiguration alConf = BasicConfiguration.buildConfiguration(fileLearner);
 										for(String element : readed.split(",")){
 											alConf.addItem(header[i++], element);
-										}
-										if(DetectionAlgorithm.isSliding(fileLearner)){
-											alConf.addItem(BasicConfiguration.SLIDING_WINDOW_SIZE, windowSize);
-											alConf.addItem(BasicConfiguration.SLIDING_POLICY, sPolicy.toString());
 										}
 										partialList.add(alConf);
 									}
@@ -865,32 +858,6 @@ public class InputManager {
 			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
 					PEARSON_COMPLEX_THRESHOLD + " not found. Using default value of '0.95'");
 			return 0.95;
-		}
-	}
-
-	public String getSlidingPolicies() {
-		try {
-			if(prefManager.hasPreference(SLIDING_POLICY))
-				return prefManager.getPreference(SLIDING_POLICY).toUpperCase();
-			else {
-				AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-						SLIDING_POLICY + " not found. Using default value of 'FIFO'");
-				return SlidingPolicyType.FIFO.toString();
-			}
-		} catch(Exception ex){
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					SLIDING_POLICY + " cannot be parsed correctly. Using default value of 'FIFO'");
-			return SlidingPolicyType.FIFO.toString();
-		}
-	}
-
-	public String getSlidingWindowSizes() {
-		if(prefManager.hasPreference(SLIDING_WINDOW_SIZE))
-			return prefManager.getPreference(SLIDING_WINDOW_SIZE);
-		else {
-			AppLogger.logError(getClass(), "MissingPreferenceError", "Preference " + 
-					SLIDING_WINDOW_SIZE + " not found. Using default value of '20'");
-			return "20";
 		}
 	}
 
@@ -1380,8 +1347,8 @@ public class InputManager {
 		return featureMap;
 	}
 	
-	public List<DataSeries> generateDataSeries(Map<KnowledgeType, List<Knowledge>> kMap, String filename) {
-		List<DataSeries> ds = createDataSeries(kMap);
+	public List<DataSeries> generateDataSeries(List<Knowledge> kList, String filename) {
+		List<DataSeries> ds = createDataSeries(kList);
 		saveFilteredSeries(ds, filename);
 		return ds;
 	}
@@ -1400,8 +1367,8 @@ public class InputManager {
 		}
 	}
 	
-	public List<DataSeries> createDataSeries(Map<KnowledgeType, List<Knowledge>> kMap) {
-		return DataSeries.basicCombinations(Knowledge.getIndicators(kMap));
+	public List<DataSeries> createDataSeries(List<Knowledge> kList) {
+		return DataSeries.basicCombinations(Knowledge.getIndicators(kList));
 	}
 
 	public FeatureSelectionInfo loadFeatureSelectionInfo(String outFilePrequel) {

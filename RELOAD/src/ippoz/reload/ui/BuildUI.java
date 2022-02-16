@@ -9,8 +9,6 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
@@ -329,13 +327,7 @@ public class BuildUI {
 				int tot = 0;
 				int index = 1;
 				try { 
-					for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
-						if(DetectorMain.hasSliding(aList)){
-							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
-						} else {
-							tot++;
-						}
-					}
+					tot = DetectorMain.readAlgorithmCombinations(iManager).size();
 					List<PreferencesManager> activeLoaders = iManager.readLoaders();
 					tot = tot*activeLoaders.size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
@@ -349,15 +341,7 @@ public class BuildUI {
 							evalLoader = iManager.buildLoader("validation", loaderPref);
 						boolean filterFlag = true;
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
-							if(DetectorMain.hasSliding(aList)){
-								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
-									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag), pBar, index++, tot);
-									}
-								}
-							} else {
-								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
-							}
+							runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
 							filterFlag = false;
 						}
 						if(trainLoader != null)
@@ -469,7 +453,7 @@ public class BuildUI {
 							try {
 								LearnerType at = fromOption(option);
 								if(at != null && at instanceof BaseLearner){
-									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null));
 									asf.setVisible(true);
 								}
 							} catch(Exception ex){
@@ -582,7 +566,7 @@ public class BuildUI {
 						if(!option.contains(".")) {
 							try {
 								LearnerType at = fromOption(option);
-								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null));
 								asf.setVisible(true);
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");

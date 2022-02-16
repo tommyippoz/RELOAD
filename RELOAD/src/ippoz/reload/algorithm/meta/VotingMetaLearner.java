@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -56,7 +55,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
 				at.saveAlgorithmScores();
-				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
+				baseLearners.add(DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			return mTrainer.getTrainers();
 		} catch (InterruptedException e) {
@@ -70,7 +69,7 @@ public class VotingMetaLearner extends DataSeriesMetaLearner {
 		double count = 0;
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 			String repString = alg.getConfiguration().getItem(BasicConfiguration.AVG_SCORE);

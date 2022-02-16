@@ -3,11 +3,11 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.utils.ObjectPair;
@@ -29,7 +29,7 @@ import java.util.Random;
  * @author Tommaso Capecchi, Tommaso Zoppi
  *
  */
-public class SDODetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
+public class SDODetectionAlgorithm extends DetectionAlgorithm {
 	
 	/** The Constant K. */
 	public static final String K = "k";

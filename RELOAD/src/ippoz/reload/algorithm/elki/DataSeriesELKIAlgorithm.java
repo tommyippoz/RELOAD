@@ -3,11 +3,11 @@
  */
 package ippoz.reload.algorithm.elki;
 
-import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
+import ippoz.reload.algorithm.ExternalDetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.externalutils.ELKIUtils;
@@ -24,7 +24,7 @@ import de.lmu.ifi.dbs.elki.math.linearalgebra.Vector;
  *
  * @author Tommy
  */
-public abstract class DataSeriesELKIAlgorithm extends DataSeriesExternalAlgorithm {
+public abstract class DataSeriesELKIAlgorithm extends ExternalDetectionAlgorithm {
 
 	/** The flag to decide on outliers in training. */
 	private boolean outliersInTraining;

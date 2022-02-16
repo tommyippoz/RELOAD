@@ -75,7 +75,6 @@ import de.lmu.ifi.dbs.elki.database.ids.DBIDs;
 import de.lmu.ifi.dbs.elki.database.ids.DoubleDBIDListIter;
 import de.lmu.ifi.dbs.elki.database.ids.KNNList;
 import de.lmu.ifi.dbs.elki.database.ids.ModifiableDoubleDBIDList;
-import de.lmu.ifi.dbs.elki.database.query.distance.DistanceQuery;
 import de.lmu.ifi.dbs.elki.database.query.knn.KNNQuery;
 import de.lmu.ifi.dbs.elki.database.relation.DoubleRelation;
 import de.lmu.ifi.dbs.elki.database.relation.MaterializedDoubleRelation;
@@ -443,10 +442,6 @@ public class CustomISOS extends AbstractDistanceBasedAlgorithm<NumberVector, Out
 	  }
 	  return distances;
   }
-
-  private double getSimilarity(DistanceQuery<NumberVector> sq, NumberVector arg0, NumberVector arg1) {
-		return sq.distance(arg0, arg1);
-	}
 
   private double hasResult(NumberVector newInstance){
 		for(ISOSScore ar : treeList.listItems()){

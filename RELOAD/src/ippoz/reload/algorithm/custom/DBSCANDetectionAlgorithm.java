@@ -3,13 +3,13 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.LabelledValue;
 import ippoz.reload.commons.utils.ObjectPair;
@@ -32,7 +32,7 @@ import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
  * @author Tommy
  *
  */
-public class DBSCANDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
+public class DBSCANDetectionAlgorithm extends DetectionAlgorithm {
 
 	/** The Constant HISTOGRAMS. */
 	public static final String CLUSTERS = "clusters";

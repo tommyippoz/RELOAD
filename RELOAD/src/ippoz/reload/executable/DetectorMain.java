@@ -6,11 +6,8 @@ package ippoz.reload.executable;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
-import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.PreferencesManager;
 import ippoz.reload.manager.DetectionManager;
 import ippoz.reload.manager.InputManager;
@@ -52,15 +49,7 @@ public class DetectorMain {
 					Loader evalLoader = iManager.buildLoader("validation", loaderPref);
 					boolean filterFlag = true;
 					for(LearnerType lt : readAlgorithmCombinations(iManager)){
-						if(hasSliding(lt)){
-							for(Integer windowSize : readWindowSizes(iManager)){
-								for(SlidingPolicy sPolicy : readSlidingPolicies(iManager)){
-									dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag));
-								}
-							}
-						} else {
-							dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, filterFlag));
-						}
+						dmList.add(new DetectionManager(iManager, lt, loaderPref, trainLoader, evalLoader, filterFlag));
 						filterFlag = false;
 					}
 					trainLoader.flush();
@@ -80,45 +69,9 @@ public class DetectorMain {
 	}
 	
 	public static int getMADneSsIterations(InputManager iManager){
-		int count = 0;
-		for(LearnerType lt : readAlgorithmCombinations(iManager)){
-			if(hasSliding(lt)){
-				count = count + readWindowSizes(iManager).size()*readSlidingPolicies(iManager).size();
-			} else {
-				count++;
-			}
-		}
+		int count = readAlgorithmCombinations(iManager).size();
 		count = count * iManager.readLoaders().size();
 		return count;
-	}
-	
-	public static List<SlidingPolicy> readSlidingPolicies(InputManager iManager) {
-		List<SlidingPolicy> wList = new LinkedList<SlidingPolicy>();
-		String wPref = iManager.getSlidingPolicies();
-		if(wPref != null && wPref.trim().length() > 0){
-			for(String s : wPref.trim().split(",")){
-				try {
-					wList.add(SlidingPolicy.getPolicy(SlidingPolicyType.valueOf(s.trim())));
-				} catch(Exception ex){
-					AppLogger.logError(DetectorMain.class, "ParsingError", "Policy '" + s + "' unrecognized");
-				}
-			}
-		}
-		return wList;
-	}
-
-	public static List<Integer> readWindowSizes(InputManager iManager) {
-		List<Integer> wList = new LinkedList<Integer>();
-		String wPref = iManager.getSlidingWindowSizes();
-		if(wPref != null && wPref.trim().length() > 0){
-			for(String s : wPref.trim().split(",")){
-				s = s.trim();
-				if(AppUtility.isInteger(s)){
-					wList.add(Integer.parseInt(s));
-				}
-			}
-		}
-		return wList;
 	}
 	
 	public static List<LearnerType> readAlgorithmCombinations(InputManager iManager) {

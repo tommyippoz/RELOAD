@@ -3,12 +3,12 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.ValueSeries;
@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @author Tommy
  */
-public class HBOSDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
+public class HBOSDetectionAlgorithm extends DetectionAlgorithm {
 
 	/** The Constant HISTOGRAMS. */
 	public static final String HISTOGRAMS = "histograms";

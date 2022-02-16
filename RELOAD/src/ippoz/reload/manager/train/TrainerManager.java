@@ -10,7 +10,6 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.info.TrainInfo;
@@ -27,7 +26,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The Class TrainerManager.
@@ -54,8 +52,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		super(kList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		this.validationMetrics = validationMetrics;
 		this.allowParallel = allowParallel;
 		clearTmpFolders();
@@ -73,8 +71,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		super(kList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		this.validationMetrics = validationMetrics;
 		this.allowParallel = allowParallel;
 		clearTmpFolders();
@@ -92,8 +90,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, kList, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
 		dataSeries = parseSelectedSeries(selectedSeriesString);
 		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}
@@ -228,7 +226,6 @@ public class TrainerManager extends TrainDataManager {
 	protected void initRun(){
 		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
-		KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algTypes);
 		if(confList == null || confList.size() == 0){
 			AppLogger.logError(getClass(), "UnrecognizedConfiguration", algTypes + " does not have an associated configuration: basic will be applied");
 			confList = new LinkedList<BasicConfiguration>();
@@ -239,9 +236,9 @@ public class TrainerManager extends TrainDataManager {
 				int step = (int)Math.ceil(1.0*confList.size() / getLoadFactor());
 				for(int i=0;i<confList.size();i=i+step){
 					List<BasicConfiguration> subList = confList.subList(i, Math.min(i+step, confList.size()));
-					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), subList, getDatasetName(), kfold, validationMetrics));
+					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(), subList, getDatasetName(), kfold, validationMetrics));
 				}
-			} else trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold, validationMetrics));
+			} else trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(), confList, getDatasetName(), kfold, validationMetrics));
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());

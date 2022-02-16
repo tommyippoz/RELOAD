@@ -3,11 +3,11 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 
@@ -26,7 +26,7 @@ import java.util.Map;
  * @author Tommy
  *
  */
-public class SOMDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
+public class SOMDetectionAlgorithm extends DetectionAlgorithm {
 	
 	/** The Constant K. */
 	public static final String DECAY = "decay";

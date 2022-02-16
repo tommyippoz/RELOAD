@@ -4,7 +4,7 @@
 package ippoz.reload.algorithm.support;
 
 import ippoz.reload.commons.dataseries.DataSeries;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 
 import org.apache.commons.math3.ml.clustering.Clusterable;
 

@@ -3,16 +3,10 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.commons.knowledge.GlobalKnowledge;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.SingleKnowledge;
-import ippoz.reload.commons.knowledge.SlidingKnowledge;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
+import ippoz.reload.commons.knowledge.MonitoredData;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -34,9 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The Class DetectionManager.
@@ -60,10 +52,6 @@ public class DetectionManager {
 	
 	protected PreferencesManager loaderPref;
 	
-	protected Integer windowSize;
-	
-	protected SlidingPolicy sPolicy;
-	
 	private Loader trainLoader;
 	
 	private Loader evalLoader;
@@ -79,16 +67,10 @@ public class DetectionManager {
 	 *
 	 * @param prefManager the main preference manager
 	 */
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, boolean filterFlag){
-		this(iManager, algTypes, loaderPref, trainLoader, evalLoader, null, null, filterFlag);
-	}
-	
-	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, Integer windowSize, SlidingPolicy sPolicy, boolean filterFlag) {
+	public DetectionManager(InputManager iManager, LearnerType algTypes, PreferencesManager loaderPref, Loader trainLoader, Loader evalLoader, boolean filterFlag) {
 		this.iManager = iManager;
 		this.mainLearner = algTypes;
 		this.loaderPref = loaderPref;
-		this.windowSize = windowSize;
-		this.sPolicy = sPolicy;
 		this.trainLoader = trainLoader;
 		this.evalLoader = evalLoader;
 		this.filterFlag = filterFlag;
@@ -124,12 +106,6 @@ public class DetectionManager {
 		tag = tag + ",";
 		if(mainLearner != null && mainLearner.toString() != null)
 			tag = tag + mainLearner.toString().replace(",", "");
-		tag = tag + ",";
-		if(windowSize != null)
-			tag = tag + windowSize;
-		tag = tag + ",";
-		if(sPolicy != null)
-			tag = tag + sPolicy.toString();
 		return tag;
 	}
 	
@@ -196,7 +172,7 @@ public class DetectionManager {
 					loader = iManager.buildLoader("train", loaderPref);
 				else loader = trainLoader;
 				if(Loader.isValid(loader)){
-					kList = Knowledge.generateKnowledge(loader.fetch(), KnowledgeType.SINGLE, null, 0);
+					kList = Knowledge.generateKnowledge(loader.fetch());
 					fsm = new FeatureSelectorManager(iManager.getFeatureSelectors(), iManager.getPredictMisclassificationsFlag());
 					fsm.selectFeatures(kList, scoresFolderName, loaderPref.getFilename());
 					fsm.addLoaderInfo(loader);
@@ -221,7 +197,7 @@ public class DetectionManager {
 	 */
 	public void train(){
 		TrainerManager tManager;
-		Map<KnowledgeType, List<Knowledge>> kMap;
+		List<Knowledge> kList;
 		Loader loader;
 		try {
 			if(needTraining()) {
@@ -229,18 +205,18 @@ public class DetectionManager {
 					loader = iManager.buildLoader("train", loaderPref);
 				else loader = trainLoader;
 				if(Loader.isValid(loader)){
-					kMap = generateKnowledge(loader.fetch());
+					kList = generateKnowledge(loader.fetch());
 					if(!new File(buildScoresFolder()).exists())
 						new File(buildScoresFolder()).mkdirs();
 					if(!iManager.filteringResultExists(loaderPref.getFilename().substring(0, loaderPref.getFilename().indexOf('.')))){
-						iManager.generateDataSeries(kMap, iManager.getScoresFolder() + getDatasetName() + File.separatorChar + getDatasetName() + "_filtered.csv");
+						iManager.generateDataSeries(kList, iManager.getScoresFolder() + getDatasetName() + File.separatorChar + getDatasetName() + "_filtered.csv");
 					}
 					tManager = new TrainerManager(iManager.getSetupFolder(), 
 							iManager.getScoresFolder(), 
 							loaderPref.getCompactFilename(), 
 							iManager.getOutputFolder(), 
-							kMap, 
-							iManager.loadConfigurations(mainLearner, getDatasetName(), windowSize, sPolicy, true), 
+							kList, 
+							iManager.loadConfigurations(mainLearner, getDatasetName(), true), 
 							metric, 
 							reputation, 
 							mainLearner, 
@@ -257,22 +233,15 @@ public class DetectionManager {
 		}
 	}
 	
-	protected Map<KnowledgeType, List<Knowledge>> generateKnowledge(List<MonitoredData> expList) {
-		Map<KnowledgeType, List<Knowledge>> map = new HashMap<KnowledgeType, List<Knowledge>>();
+	protected List<Knowledge> generateKnowledge(List<MonitoredData> expList) {
+		List<Knowledge> kList = new ArrayList<>(expList.size());
 		if(expList != null && !expList.isEmpty()){
-			if(!map.containsKey(DetectionAlgorithm.getKnowledgeType(mainLearner)))
-				map.put(DetectionAlgorithm.getKnowledgeType(mainLearner), new ArrayList<Knowledge>(expList.size()));
 			for(int i=0;i<expList.size();i++){
-				if(map.containsKey(KnowledgeType.GLOBAL))
-					map.get(KnowledgeType.GLOBAL).add(new GlobalKnowledge(expList.get(i)));
-				if(map.containsKey(KnowledgeType.SLIDING))
-					map.get(KnowledgeType.SLIDING).add(new SlidingKnowledge(expList.get(i), sPolicy, windowSize));
-				if(map.containsKey(KnowledgeType.SINGLE))
-					map.get(KnowledgeType.SINGLE).add(new SingleKnowledge(expList.get(i)));
+				kList.add(new Knowledge(expList.get(i)));
 			}
 			AppLogger.logInfo(getClass(), expList.size() + " runs loaded (K-Fold:" + iManager.getKFoldCounter() + ")");
 		}
-		return map;
+		return kList;
 	}
 
 	public void flush() {

@@ -1,12 +1,11 @@
 /**
  * 
  */
-package ippoz.reload.commons.knowledge.data;
+package ippoz.reload.commons.knowledge;
 
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
@@ -68,7 +67,7 @@ public class MonitoredData {
 	}
 
 	private List<Indicator> sanitizeIndicators(Collection<Indicator> initialList) {
-		List<Indicator> finalList = new LinkedList<>();
+		List<Indicator> finalList = new ArrayList<>();
 		if(initialList != null){
 			for(Indicator ind : initialList){
 				if(ind != null)
@@ -91,10 +90,6 @@ public class MonitoredData {
 
 	public int size(){
 		return obsList.size();
-	}
-	
-	public List<Observation> getObservationList(){
-		return obsList;
 	}
 
 	/**
@@ -122,7 +117,7 @@ public class MonitoredData {
 	}
 	
 	public boolean hasIndicator(String indicatorName) {
-		for(Indicator ind : getIndicators()){
+		for(Indicator ind : indicatorList){
 			if(ind.getName().compareTo(indicatorName.trim()) == 0)
 				return true;
 		}

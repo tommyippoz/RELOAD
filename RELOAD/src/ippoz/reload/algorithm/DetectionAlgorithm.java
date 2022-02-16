@@ -21,10 +21,6 @@ import ippoz.reload.algorithm.elki.LOFELKI;
 import ippoz.reload.algorithm.elki.ODINELKI;
 import ippoz.reload.algorithm.elki.SOSELKI;
 import ippoz.reload.algorithm.elki.SVMELKI;
-import ippoz.reload.algorithm.elki.sliding.ABODSlidingELKI;
-import ippoz.reload.algorithm.elki.sliding.COFSlidingELKI;
-import ippoz.reload.algorithm.elki.sliding.KMeansSlidingELKI;
-import ippoz.reload.algorithm.elki.sliding.KNNSlidingELKI;
 import ippoz.reload.algorithm.meta.BaggingMetaLearner;
 import ippoz.reload.algorithm.meta.BoostingMetaLearner;
 import ippoz.reload.algorithm.meta.CascadeGeneralizationMetaLearner;
@@ -35,18 +31,17 @@ import ippoz.reload.algorithm.meta.StackingMetaLearner;
 import ippoz.reload.algorithm.meta.VotingMetaLearner;
 import ippoz.reload.algorithm.meta.WeightedVotingMetaLearner;
 import ippoz.reload.algorithm.result.AlgorithmResult;
-import ippoz.reload.algorithm.sliding.SPSSlidingAlgorithm;
+import ippoz.reload.algorithm.result.DBSCANResult;
+import ippoz.reload.algorithm.result.KMeansResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
-import ippoz.reload.algorithm.weka.IsolationForestSlidingWEKA;
 import ippoz.reload.algorithm.weka.IsolationForestWEKA;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
 import ippoz.reload.commons.support.LabelledValue;
@@ -56,17 +51,25 @@ import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.metric.Metric;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import de.lmu.ifi.dbs.elki.data.model.KMeansModel;
 
 /**
  * The Class DetectionAlgorithm.
  *
  * @author Tommy
  */
-public abstract class DetectionAlgorithm {
+public abstract class DetectionAlgorithm implements AutomaticTrainingAlgorithm {
 
 	/** The configuration. */
 	protected BasicConfiguration conf;
@@ -77,16 +80,35 @@ public abstract class DetectionAlgorithm {
 	
 	protected DecisionFunction decisionFunction;
 	
+	/** The Constant TMP_FILE. */
+	protected static final String TMP_FILE = "tmp_file";
+	
+	/** The Constant TMP_FILE. */
+	public static final String TAG = "tag";
+	
+	protected final static int DEFAULT_MINIMUM_ITEMS = 5;
+	
+	/** The indicator. */
+	protected DataSeries dataSeries;
+	
 	/**
 	 * Instantiates a new detection algorithm.
 	 *
 	 * @param conf the configuration
 	 */
-	public DetectionAlgorithm(BasicConfiguration conf){
+	public DetectionAlgorithm(DataSeries dataSeries, BasicConfiguration conf){
 		this.conf = conf;
+		this.dataSeries = dataSeries;
 		loggedScores = new ValueSeries();
 		loggedAnomalyScores = new ValueSeries();
 		decisionFunction = null;
+		if(conf != null && conf.hasItem(TMP_FILE)){
+			clearLoggedScores();
+			loadLoggedScores();
+			if(getDecisionFunction() != null){
+				clearLoggedScores();
+			}
+		}
 	}
 	
 	public double getTrainMetricScore() {
@@ -228,18 +250,6 @@ public abstract class DetectionAlgorithm {
 				return new SVMELKI(dataSeries, conf);
 			case WEKA_ISOLATIONFOREST:
 				return new IsolationForestWEKA(dataSeries, conf);
-			case SLIDING_SPS:
-				return new SPSSlidingAlgorithm(dataSeries, conf);
-			case SLIDING_ELKI_ABOD:
-				return new ABODSlidingELKI(dataSeries, conf);
-			case SLIDING_ELKI_CLUSTERING:
-				return new KMeansSlidingELKI(dataSeries, conf);
-			case SLIDING_ELKI_COF:
-				return new COFSlidingELKI(dataSeries, conf);
-			case SLIDING_ELKI_KNN:
-				return new KNNSlidingELKI(dataSeries, conf);
-			case SLIDING_WEKA_ISOLATIONFOREST:
-				return new IsolationForestSlidingWEKA(dataSeries, conf);
 			case SOM:
 				return new SOMDetectionAlgorithm(dataSeries, conf);		
 		}
@@ -279,7 +289,6 @@ public abstract class DetectionAlgorithm {
 				case ELKI_SOS:
 				case ELKI_ISOS:
 				case HBOS:
-				case SLIDING_SPS:
 					afl.add(AlgorithmFamily.STATISTICAL);
 				default:
 					break;
@@ -287,7 +296,6 @@ public abstract class DetectionAlgorithm {
 			switch(((BaseLearner) lType).getAlgType()){
 				case ELKI_KMEANS:
 				case ELKI_GMEANS:
-				case SLIDING_ELKI_CLUSTERING:
 				case DBSCAN:
 				case LDCOF_KMEANS:
 				case LDCOF_DBSCAN:
@@ -298,7 +306,6 @@ public abstract class DetectionAlgorithm {
 			switch(((BaseLearner) lType).getAlgType()){
 				case ELKI_ABOD:
 				case ELKI_FASTABOD:
-				case SLIDING_ELKI_ABOD:
 					afl.add(AlgorithmFamily.ANGLE);
 				default:
 					break;
@@ -309,7 +316,6 @@ public abstract class DetectionAlgorithm {
 				case ELKI_COF:
 				case LDCOF_KMEANS:
 				case LDCOF_DBSCAN:
-				case SLIDING_ELKI_COF:
 					afl.add(AlgorithmFamily.DENSITY);
 				default:
 					break;
@@ -317,7 +323,6 @@ public abstract class DetectionAlgorithm {
 			switch(((BaseLearner) lType).getAlgType()){
 				case ELKI_KNN:
 				case ELKI_ODIN:
-				case SLIDING_ELKI_KNN:
 				case ELKI_FASTABOD:
 				case ELKI_LOF:
 				case ELKI_COF:
@@ -329,7 +334,6 @@ public abstract class DetectionAlgorithm {
 			switch(((BaseLearner) lType).getAlgType()){
 				case ELKI_SVM:
 				case WEKA_ISOLATIONFOREST:
-				case SLIDING_WEKA_ISOLATIONFOREST:
 					afl.add(AlgorithmFamily.CLASSIFICATION);
 				default:
 					break;
@@ -342,12 +346,6 @@ public abstract class DetectionAlgorithm {
 			}
 		} else afl.add(AlgorithmFamily.META);
 		return afl;
-	}
-	
-	public static KnowledgeType getKnowledgeType(LearnerType algType) {
-		if(algType instanceof BaseLearner && ((BaseLearner)algType).getAlgType().toString().toUpperCase().contains("SLIDING"))
-			return KnowledgeType.SLIDING;
-		else return KnowledgeType.SINGLE;
 	}
 	
 	private boolean usesSimpleSeries(DataSeries container, DataSeries serie) {
@@ -388,7 +386,33 @@ public abstract class DetectionAlgorithm {
 	 * @param knowledge 
 	 * @return the result of the evaluation
 	 */
-	public abstract AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex);
+	public AlgorithmResult evaluateSnapshot(Knowledge knowledge, int currentIndex) {
+		AlgorithmResult ar;
+		ObjectPair<Double, Object> score;
+		Snapshot dsSnap = knowledge.get(currentIndex, getDataSeries());
+		double[] snapArray = getSnapValueArray(dsSnap);
+		if(dsSnap != null && snapArray != null && checkCalculationCondition(snapArray)){
+			boolean isUnknown = dsSnap.getInjectedElement() != null && dsSnap.getInjectedElement().isUnknown();
+			score = calculateSnapshotScore(knowledge, currentIndex, dsSnap, snapArray);
+			if(getLearnerType() instanceof BaseLearner){
+				AlgorithmType at = ((BaseLearner)getLearnerType()).getAlgType(); 
+				if(at == AlgorithmType.DBSCAN) {
+					ar = new DBSCANResult(dsSnap.getInjectedElement() != null, score.getKey(), (Double)score.getValue(), getConfidence(score.getKey()), isUnknown);
+				} else if(score.getValue() != null && score.getValue() instanceof KMeansModel){
+					KMeansModel kms = (KMeansModel)score.getValue();
+					ar = new KMeansResult(dsSnap.getInjectedElement() != null, score.getKey(), kms.getVarianceContribution(), getConfidence(score.getKey()), isUnknown);
+				} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue(), isUnknown);
+			} else ar = new AlgorithmResult(dsSnap.getInjectedElement() != null, score.getKey(), getConfidence(score.getKey()), score.getValue(), isUnknown);
+			getDecisionFunction().assignScore(ar, true);
+			return ar;
+		} else return AlgorithmResult.error(dsSnap.getInjectedElement() != null);
+	}
+	
+	protected double[] getSnapValueArray(Snapshot snap){
+		return snap.getDoubleValues();
+	}
+
+	protected abstract boolean checkCalculationCondition(double[] snapArray);
 	
 	/**
 	 * Prints the results of the detection.
@@ -457,7 +481,9 @@ public abstract class DetectionAlgorithm {
 	 *
 	 * @return the data series
 	 */
-	public abstract DataSeries getDataSeries();
+	public DataSeries getDataSeries() {
+		return dataSeries;
+	}
 
 	public static boolean isSliding(LearnerType algType) {
 		return algType instanceof BaseLearner && ((BaseLearner)algType).getAlgType().toString().contains("SLIDING");
@@ -467,22 +493,16 @@ public abstract class DetectionAlgorithm {
 		switch(algType){
 			case ELKI_ABOD:
 				return "ABOD: Angle-Based Outlier Factor (ELKI)";
-			case SLIDING_ELKI_ABOD:
-				return "ABOD: Angle-Based Outlier Factor (ELKI - Sliding)";
 			case ELKI_LOF:
 				return "LOF: Local Outlier Factor (ELKI)";
 			case ELKI_COF:
 				return "COF: Connectivity-based Outlier Factor (ELKI)";
-			case SLIDING_ELKI_COF:
-				return "COF: Connectivity-based Outlier Factor (ELKI - Sliding)";
 			case ELKI_FASTABOD:
 				return "FastABOD: Fast Angle-Based Outlier Factor (ELKI)";
 			case ELKI_KMEANS:
 				return "K-Means (ELKI)";
 			case ELKI_GMEANS:
 				return "G-Means (builds on K-Means from ELKI)";
-			case SLIDING_ELKI_CLUSTERING:
-				return "K-Means (ELKI - Sliding)";
 			case LDCOF_KMEANS:
 				return "LDCOF: Local Density-based Connectivity Outlier Factor (embeds KMeans)";
 			case ELKI_SVM:
@@ -491,14 +511,8 @@ public abstract class DetectionAlgorithm {
 				return "HBOS: Histogram-based Outlier Score";
 			case ELKI_ODIN:
 				return "ODIN: outlier Detection using Indegree Number (ELKI)";
-			case SLIDING_ELKI_KNN:
-				return "KNN: kk-th Nearest Neighbour (ELKI - Sliding)";
-			case SLIDING_SPS:
-				return "SPS: Statistical Predictor and Safety Margin (Sliding)";
 			case WEKA_ISOLATIONFOREST:
 				return "iForest: Isolation Forest (WEKA)";
-			case SLIDING_WEKA_ISOLATIONFOREST:
-				return "iForest: Isolation Forest (WEKA - Sliding)";
 			case DBSCAN:
 				return "DBSCAN: Density-Based";
 			case LDCOF_DBSCAN:
@@ -510,6 +524,14 @@ public abstract class DetectionAlgorithm {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "@" + dataSeries.getName();
+	}
+	
 	public static String explainAlgorithm(LearnerType algType) {
 		if(algType instanceof BaseLearner){
 			switch(((BaseLearner)algType).getAlgType()){
@@ -518,8 +540,6 @@ public abstract class DetectionAlgorithm {
 							+ "Angles between the new data point and all the possible couples of data points of <br>"
 							+ "the training set are calculated, and then their variance (ABOF) is calsulated. <br>"
 							+ "The smaller the ABOF, the greater the anomality of the data point.";
-				case SLIDING_ELKI_ABOD:
-					return "Sliding version of ABOD.";
 				case ELKI_SOS:
 					return "Stochastic Outlier Selection (SOS), a Statistical algorithm. <br>"
 							+ "It takes as input either a feature matrix or a dissimilarity matrix and outputs for each data point an outlier probability. <br>"
@@ -536,8 +556,6 @@ public abstract class DetectionAlgorithm {
 							+ "COF computes the connectivity-based outlier factor for data points through the comparison <br>"
 							+ "of chaining-distances between data points subject to neighboring observations. <br>"
 							+ "The greater the COF, the greater the anomality of the data point.";
-				case SLIDING_ELKI_COF:
-					return "Sliding version of the COF algorithm.";
 				case ELKI_FASTABOD:
 					return "Fast (Quadratic) version of ABOD, considering agnles with the kNN of the data point.";
 				case ELKI_KMEANS:
@@ -548,8 +566,6 @@ public abstract class DetectionAlgorithm {
 					return "Classic clustering algorithm, automatically finds the optimal K number of clusters. <br>"
 							+ "During training, clusters are created. Then, a new data point is scored as anomalous if it is too far <br>"
 							+ "from the nearest cluster, evaluated using Euclidean Distance.";
-				case SLIDING_ELKI_CLUSTERING:
-					return "Sliding version of K-Means";
 				case ELKI_SVM:
 					return "Support Vector Machines. <br>"
 							+ "Support vectors are the data points that lie closest to the decision surface (or hyperplane), <br>"
@@ -566,15 +582,8 @@ public abstract class DetectionAlgorithm {
 					return "Outlier Detection using Indegree Number. <br>"
 							+ "Calculates the odin according to the KNN graph. <br>"
 							+ "The lower the ODIN, the higher the probability of anomaly.";
-				case SLIDING_ELKI_KNN:
-					return "Sliding version of KNN";
-				case SLIDING_SPS:
-					return "Statistical Predictor and Safety Margin Algorithm. <br> "
-							+ "It predicts an acceptability interval in which the next value must fall.";
 				case WEKA_ISOLATIONFOREST:
 					return "Creates a forest of Isolation Trees, which are evaluated as an ensemble.";
-				case SLIDING_WEKA_ISOLATIONFOREST:
-					return "Sliding version of Isolation Forest";
 				case DBSCAN:
 					return "DBSCAN is based on this intuitive notions of 'clusters' and 'radius'. <br>"
 							+ "The key idea is that for each point of a cluster, the neighborhood of a given radius has to contain at least a minimum number of points.";
@@ -604,18 +613,14 @@ public abstract class DetectionAlgorithm {
 		if(algType instanceof BaseLearner){
 			switch(((BaseLearner)algType).getAlgType()){
 				case ELKI_ABOD:
-				case SLIDING_ELKI_ABOD:
 					return base;
 				case ELKI_LOF:
 				case ELKI_COF:
-				case SLIDING_ELKI_COF:
-					return base + "(k) the number of neighbours.";
 				case ELKI_FASTABOD:
 					return base + "(k) the number of neighbours.";
 				case ELKI_GMEANS:
 					return "no parameters.";
 				case ELKI_KMEANS:
-				case SLIDING_ELKI_CLUSTERING:
 					return base + "(k) the number of clusters.";
 				case LDCOF_KMEANS:
 					return base + "(k) the number of clusters, <br>"
@@ -630,12 +635,7 @@ public abstract class DetectionAlgorithm {
 					return base + "(k) the number of histograms to generate for each indicator.";
 				case ELKI_KNN:
 				case ELKI_ODIN:
-				case SLIDING_ELKI_KNN:
-					return base + "(k) the number of neighbours.";
-				case SLIDING_SPS:
-					return "";
 				case WEKA_ISOLATIONFOREST:
-				case SLIDING_WEKA_ISOLATIONFOREST:
 					return "Parameters: (ntrees) number of trees in the forest, <br>"
 							+ "(sample_size) instances to be sampled to train each tree.";
 				case DBSCAN:
@@ -664,14 +664,9 @@ public abstract class DetectionAlgorithm {
 		} else return "metalearner";
 	}
 	
-	private static AlgorithmType[] temporaryAlgorithms(){
-		return new AlgorithmType[]{AlgorithmType.SLIDING_WEKA_ISOLATIONFOREST};
-	}
-	
 	public static List<AlgorithmType> availableAlgorithms(){
 		List<AlgorithmType> types = new LinkedList<AlgorithmType>();
 		types.addAll(Arrays.asList(AlgorithmType.values()));
-		types.removeAll(Arrays.asList(temporaryAlgorithms()));
 		return types;
 	}
 
@@ -724,12 +719,6 @@ public abstract class DetectionAlgorithm {
 			return null;
 		}
 	}
-	
-	public abstract ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray);
-
-	public abstract void saveLoggedScores();
-	
-	public abstract void loadLoggedScores();
 
 	public static AlgorithmComplexity getMemoryComplexity(AlgorithmType algType) {
 		if(algType != null){
@@ -746,4 +735,135 @@ public abstract class DetectionAlgorithm {
 			}
 		} else return null;
 	}
+	
+	/**
+	 * Gets the filename used to store data about scores and histograms.
+	 *
+	 * @return the filename
+	 */
+	protected String getFilename(){
+		String folder = getDefaultTmpFolder() + File.separatorChar;
+		if(!new File(folder).exists())
+			new File(folder).mkdirs();
+		return folder + getDataSeries().getCompactString().replace("\\", "_").replace("/", "-").replace("*", "_") + "." + getLearnerType().toString().toLowerCase();
+	}
+	
+	/**
+	 * Gets the default folder used to store temporary data.
+	 *
+	 * @return the default temporary folder
+	 */
+	protected String getDefaultTmpFolder(){
+		if(conf.hasItem(BasicConfiguration.DATASET_NAME) && conf.getItem(BasicConfiguration.DATASET_NAME).length() > 0){
+			if(conf.hasItem(TAG))
+				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + conf.getItem(TAG);
+			else if(getLearnerType() instanceof BaseLearner)
+				return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME) + File.separatorChar + getLearnerType().toString();
+			else return "tmp" + File.separatorChar + conf.getItem(BasicConfiguration.DATASET_NAME);
+		} else {
+			if(conf.hasItem(TAG))
+				return "tmp" + File.separatorChar + conf.getItem(TAG);
+			else if(getLearnerType() instanceof BaseLearner)
+				return "tmp" + File.separatorChar + getLearnerType().toString();
+			else return "tmp";
+		}
+	}
+	
+	public void loadLoggedScores() {
+		BufferedReader reader;
+		String readed;
+		try {
+			loggedScores = new ValueSeries();		
+			loggedAnomalyScores = new ValueSeries();	
+			if(new File(getScoresFilename()).exists()){
+				reader = new BufferedReader(new FileReader(new File(getScoresFilename())));
+				reader.readLine();
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null && !readed.startsWith("*") && readed.contains(";")){
+						readed = readed.trim();
+						if(readed.contains(";")){
+							boolean flag = Boolean.valueOf(readed.split(";")[1]);
+							double score = Double.parseDouble(readed.split(";")[0]);
+							if(flag)
+								loggedAnomalyScores.addValue(score);
+							else loggedScores.addValue(score);
+						} else loggedScores.addValue(Double.parseDouble(readed));
+					}
+				}
+				reader.close();
+			} else AppLogger.logError(getClass(), "NoLoggedScoresError", "Unable to find logged scores in '" + getScoresFilename() + "'");
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to read logged scores file");
+		} 
+	}
+	
+	public void saveLoggedScores() {
+		BufferedWriter writer;
+		try {
+			writer = new BufferedWriter(new FileWriter(getScoresFilename()));
+			writer.write("score;anomaly\n");
+			if(loggedScores != null && loggedScores.size() > 0){
+				for(Double d : loggedScores.getValues()){
+					writer.write(d + ";false\n");
+				}
+			}
+			if(loggedAnomalyScores != null && loggedAnomalyScores.size() > 0){
+				for(Double d : loggedAnomalyScores.getValues()){
+					writer.write(d + ";true\n");
+				}
+			}
+			writer.close();
+		} catch (IOException ex) {
+			AppLogger.logException(getClass(), ex, "Unable to write logged scores file");
+		} 
+	}
+	
+	protected String getScoresFilename(){
+		String base = getFilename();
+		base = base.substring(0, base.indexOf("."));
+		base = base + "_logged_scores." + getLearnerType().toString().toLowerCase();
+		return base;
+	}
+
+	@Override
+	public boolean automaticTraining(List<Knowledge> kList) {
+		boolean trainOut;
+		trainOut = automaticInnerTraining(kList);
+		if(trainOut){
+			ValueSeries vs = new ValueSeries(getTrainScores());
+			if(vs.size() > 0)
+				setDecisionFunction("IQR", vs, false);
+			else setDecisionFunction("STATIC_THRESHOLD_GREATERTHAN(1)", vs, false);
+			
+			clearLoggedScores();
+			for(Knowledge know : kList){
+				for(int i=0;i<know.size();i++){
+					Snapshot snap = know.buildSnapshotFor(i, getDataSeries());
+					AlgorithmResult ar = evaluateSnapshot(know, i);
+					logScore(ar.getScore(), snap.isAnomalous());
+				}
+			}
+			
+			conf.addItem(TMP_FILE, getFilename());		    
+		    storeAdditionalPreferences();
+		    
+		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getLearnerType() + " to dataseries " + getDataSeries().getName());
+		return trainOut;
+	}
+	
+	public ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
+		return calculateSnapshotScore(snapArray);
+	}
+
+	public abstract ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray);
+
+	/**
+	 * Stores additional preferences (if any).
+	 */
+	protected abstract void storeAdditionalPreferences();
+	
+	public abstract List<Double> getTrainScores();
+	
+	public abstract boolean automaticInnerTraining(List<Knowledge> kList);
 }

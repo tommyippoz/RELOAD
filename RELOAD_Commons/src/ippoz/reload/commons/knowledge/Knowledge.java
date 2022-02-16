@@ -7,22 +7,18 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
 import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.loader.LoaderBatch;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Tommy
  *
  */
-public abstract class Knowledge implements Cloneable {
+public class Knowledge implements Cloneable {
 	
 	private static int MAX_RANGE = 100;
 	
@@ -101,10 +97,6 @@ public abstract class Knowledge implements Cloneable {
 	public LoaderBatch getID(){
 		return baseData.getDataID();
 	}
-	
-	public abstract List<Snapshot> toArray(DataSeries dataSeries);
-	
-	public abstract KnowledgeType getKnowledgeType();
 
 	public InjectedElement getInjection(DatasetIndex obIndex) {
 		return baseData.getInjectionAt(obIndex);
@@ -127,7 +119,17 @@ public abstract class Knowledge implements Cloneable {
 		return count;
 	}
  
-	public abstract Knowledge cloneKnowledge();
+	public List<Snapshot> toArray(DataSeries dataSeries) {
+		List<Snapshot> snapArray = new ArrayList<Snapshot>(baseData.size());
+		for(int i=0;i<baseData.size();i++){
+			snapArray.add(buildSnapshotFor(i, dataSeries));
+		}
+		return snapArray;
+	}
+
+	public Knowledge cloneKnowledge() {
+		return new Knowledge(baseData);
+	}
 	
 	public static double[][] convertKnowledgeIntoMatrix(List<Knowledge> kList, DataSeries ds, boolean includeFaulty, boolean needNormalization) {
 		return convertSnapshotListIntoMatrix(toSnapList(kList, ds), ds, includeFaulty, needNormalization);
@@ -204,39 +206,24 @@ public abstract class Knowledge implements Cloneable {
 		return kSnapList;
 	}
 	
-	public static List<Knowledge> generateKnowledge(List<MonitoredData> expList, KnowledgeType kt, SlidingPolicyType sPolicy, int windowSize) {
+	public static List<Knowledge> generateKnowledge(List<MonitoredData> expList) {
 		List<Knowledge> map = new LinkedList<Knowledge>();
 		for(int i=0;i<expList.size();i++){
-			Knowledge know = generateKnowledge(expList.get(i), kt, sPolicy, windowSize);
+			Knowledge know = generateKnowledge(expList.get(i));
 			if(know != null)
 				map.add(know);
 		}
 		return map;
 	}
 	
-	public static Knowledge generateKnowledge(MonitoredData data, KnowledgeType kt, SlidingPolicyType sPolicy, int windowSize) {
-		if(kt == KnowledgeType.GLOBAL)
-			return new GlobalKnowledge(data);
-		if(kt == KnowledgeType.SLIDING)
-			return new SlidingKnowledge(data, sPolicy, windowSize);
-		if(kt == KnowledgeType.SINGLE)
-			return new SingleKnowledge(data);
-		return null;
+	public static Knowledge generateKnowledge(MonitoredData data) {
+		return new Knowledge(data);
 	}
 	
-	public static List<Knowledge> generateKnowledge(List<MonitoredData> data) {
-		return generateKnowledge(data, KnowledgeType.SINGLE, null, 0);
-	}
-	
-	public static Indicator[] getIndicators(Map<KnowledgeType, List<Knowledge>> kMap) {
-		List<Knowledge> kList;
-		if(kMap.size() > 0){
-			kList = kMap.get(kMap.keySet().iterator().next());
-			if(kList.size() > 0){
-				return kList.get(0).getIndicators();
-			} else return null;
+	public static Indicator[] getIndicators(List<Knowledge> kList) {
+		if(kList.size() > 0){
+			return kList.get(0).getIndicators();
 		} else return null;
-
 	}
 	
 	public void addIndicatorData(int obId, String indName, Object indData){
@@ -258,7 +245,7 @@ public abstract class Knowledge implements Cloneable {
 				sampled.addObservation(baseData.get(i), baseData.getInjectionAt(i));
 			}
 		}
-		return new SingleKnowledge(sampled);
+		return new Knowledge(sampled);
 	}
 	
 	public Knowledge sample(List<Double> ratios) {
@@ -268,7 +255,7 @@ public abstract class Knowledge implements Cloneable {
 				sampled.addObservation(baseData.get(i), baseData.getInjectionAt(i));
 			}
 		}
-		return new SingleKnowledge(sampled);
+		return new Knowledge(sampled);
 	}
 
 	public void addIndicator(Indicator indicator) {
@@ -280,7 +267,7 @@ public abstract class Knowledge implements Cloneable {
 		if(n > 0){
 			int blockSize = (int)Math.ceil((1.0*size())/n);
 			for(int i=0;i<n && i*blockSize<size();i++){
-				list.add(Knowledge.generateKnowledge(baseData.subData("", i*blockSize, (i+1)*blockSize), KnowledgeType.SINGLE, null, 0));
+				list.add(Knowledge.generateKnowledge(baseData.subData("", i*blockSize, (i+1)*blockSize)));
 			}
 		}
 		return list;

@@ -3,7 +3,7 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -28,7 +28,7 @@ public class WeightedVotingMetaLearner extends VotingMetaLearner {
 		double count = 0;
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 			if(alg.getDecisionFunction().classify(new AlgorithmResult(false, score, 0.0, null, false)) == AnomalyResult.ANOMALY){

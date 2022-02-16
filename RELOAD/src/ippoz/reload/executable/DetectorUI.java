@@ -16,7 +16,7 @@ public class DetectorUI {
 	
 	private static final String DEFAULT_PREF_FILE = "reload.preferences";
 
-	private JFrame frame;
+	private JFrame frame;  
 
 	/**
 	 * Launch the application.

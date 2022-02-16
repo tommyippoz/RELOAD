@@ -9,7 +9,6 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
@@ -225,12 +224,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
 			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
 			anomalyEvaluations.add(ar);
-			if (knowledge instanceof SlidingKnowledge) {
-				((SlidingKnowledge) knowledge).slide(i, snapValue);
-			}
-		}
-		if (knowledge instanceof SlidingKnowledge) {
-			((SlidingKnowledge) knowledge).reset();
 		}
 		return anomalyEvaluations;
 	}

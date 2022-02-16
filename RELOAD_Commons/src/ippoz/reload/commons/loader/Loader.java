@@ -4,7 +4,7 @@
 package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.indicator.Indicator;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
+import ippoz.reload.commons.knowledge.MonitoredData;
 import ippoz.reload.commons.loader.info.DatasetInfo;
 import ippoz.reload.commons.support.PreferencesManager;
 

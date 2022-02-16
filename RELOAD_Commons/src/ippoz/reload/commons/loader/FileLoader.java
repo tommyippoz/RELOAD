@@ -4,8 +4,8 @@
 package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.knowledge.MonitoredData;
+import ippoz.reload.commons.knowledge.Observation;
 import ippoz.reload.commons.loader.info.DatasetInfo;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;

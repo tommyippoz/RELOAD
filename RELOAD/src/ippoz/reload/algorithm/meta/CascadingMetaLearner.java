@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -58,10 +57,9 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 			while (lList != null && i < lList.length){
 				List<Knowledge> boostedKnowledge = BoostingMetaLearner.deriveKnowledge(kList, weights, lList.length);
 				AlgorithmTrainer at = trainWeakLearner(lList[i], boostedKnowledge, currentDs, i);
-				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
 					at.saveAlgorithmScores();
-					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(lList[i], at.getDataSeries(), at.getBestConfiguration());
+					DetectionAlgorithm alg = DetectionAlgorithm.buildAlgorithm(lList[i], at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
 					updateKnowledge(kList, alg, currentDs);
@@ -76,7 +74,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		return null;
 	}
 	
-	protected void updateKnowledge(List<Knowledge> kList, DataSeriesNonSlidingAlgorithm alg, DataSeries currentDs) {
+	protected void updateKnowledge(List<Knowledge> kList, DetectionAlgorithm alg, DataSeries currentDs) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -106,7 +104,7 @@ public class CascadingMetaLearner extends DataSeriesMetaLearner {
 		int i = 0;
 		double threshold = getStopThreshold();
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;

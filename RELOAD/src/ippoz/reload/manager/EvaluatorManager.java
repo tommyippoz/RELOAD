@@ -3,15 +3,13 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
@@ -72,8 +70,8 @@ public class EvaluatorManager extends DataManager {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(String outputFolder, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, boolean printOutput) {
-		super(map);
+	public EvaluatorManager(String outputFolder, String scoresFile, List<Knowledge> kList, Metric[] validationMetrics, boolean printOutput) {
+		super(kList);
 		this.scoresFile = scoresFile + File.separatorChar + "scores.csv";
 		this.validationMetrics = validationMetrics;
 		this.printOutput = printOutput;
@@ -81,7 +79,7 @@ public class EvaluatorManager extends DataManager {
 		evalModel = buildEvaluationModel();
 		if(!new File(outputFolder).exists())
 			new File(outputFolder).mkdirs();
-		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments");
+		AppLogger.logInfo(getClass(), "Evaluating " + kList.size() + " experiments");
 	}
 	
 	private AlgorithmModel buildEvaluationModel(){
@@ -130,7 +128,7 @@ public class EvaluatorManager extends DataManager {
 				int splits = (int)Math.ceil((1.0*getLoadFactor())/experimentsSize())*4;
 				//int splits = 2;
 				for(int expN = 0; expN < experimentsSize(); expN++){
-					Knowledge know = getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN);
+					Knowledge know = getKnowledge().get(expN);
 					List<Integer> kSplit = know.splitInt(splits);
 					for(int i=0; i<kSplit.size()-1;i++){
 						voterList.add(new ExperimentEvaluator(evalModel, know, kSplit.get(i), kSplit.get(i+1)));
