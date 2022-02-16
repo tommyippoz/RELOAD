@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Tommy
  */
-public interface AutomaticTrainingAlgorithm {
+public interface AutomaticTrainingAlgorithm { 
 
 	/**
 	 * Automatic training.
