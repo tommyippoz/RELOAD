@@ -393,7 +393,7 @@ public abstract class DetectionAlgorithm implements AutomaticTrainingAlgorithm {
 		double[] snapArray = getSnapValueArray(dsSnap);
 		if(dsSnap != null && snapArray != null && checkCalculationCondition(snapArray)){
 			boolean isUnknown = dsSnap.getInjectedElement() != null && dsSnap.getInjectedElement().isUnknown();
-			score = calculateSnapshotScore(knowledge, currentIndex, dsSnap, snapArray);
+			score = calculateSnapshotScore(snapArray);
 			if(getLearnerType() instanceof BaseLearner){
 				AlgorithmType at = ((BaseLearner)getLearnerType()).getAlgType(); 
 				if(at == AlgorithmType.DBSCAN) {
@@ -850,10 +850,6 @@ public abstract class DetectionAlgorithm implements AutomaticTrainingAlgorithm {
 		    
 		} else AppLogger.logError(getClass(), "UnvalidDataSeries", "Unable to apply " + getLearnerType() + " to dataseries " + getDataSeries().getName());
 		return trainOut;
-	}
-	
-	public ObjectPair<Double, Object> calculateSnapshotScore(Knowledge knowledge, int currentIndex, Snapshot sysSnapshot, double[] snapArray) {
-		return calculateSnapshotScore(snapArray);
 	}
 
 	public abstract ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray);

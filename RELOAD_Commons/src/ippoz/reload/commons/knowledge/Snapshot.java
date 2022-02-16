@@ -9,6 +9,8 @@ import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.loader.DatasetIndex;
 import ippoz.reload.commons.support.AppUtility;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,14 +26,14 @@ public class Snapshot {
 	/** The injection at that time instant. */
 	private InjectedElement injEl;
 	
-	private Map<Indicator, Object> snapValues;
+	private Map<Indicator, Double> snapValues;
 	
 	/**
 	 * Instantiates a new snapshot.
 	 *
 	 * @param injEl the injection
 	 */
-	public Snapshot(Map<Indicator, Object> snapValues, InjectedElement injEl, DataSeries dataSeries) {
+	public Snapshot(Map<Indicator, Double> snapValues, InjectedElement injEl, DataSeries dataSeries) {
 		this.dataSeries = dataSeries;
 		this.injEl = injEl;
 		this.snapValues = snapValues;
@@ -57,7 +59,15 @@ public class Snapshot {
 		} else return null;
 	}
 	
-	public Object getValueFor(Indicator indicator) {
+	/*
+	 public double[] getDoubleValues() {
+		if(snapValues != null){
+			return ArrayUtils.toPrimitive(snapValues.values().toArray(new Double[snapValues.size()]));
+		} else return null;
+	}
+	 */
+	
+	public Double getValueFor(Indicator indicator) {
 		if(indicator != null && snapValues != null){
 			if(snapValues.keySet().contains(indicator)){
 				return snapValues.get(indicator);
@@ -72,9 +82,9 @@ public class Snapshot {
 	}
 	
 	public double getDoubleValueFor(Indicator indicator) {
-		Object ob = getValueFor(indicator);
-		if(ob != null && AppUtility.isNumber(ob.toString()))
-			return Double.valueOf(ob.toString());
+		Double ob = getValueFor(indicator);
+		if(ob != null)
+			return ob;
 		else return 0.0;
 	}
 	
@@ -86,17 +96,6 @@ public class Snapshot {
 	public InjectedElement getInjectedElement() {
 		return injEl;
 	}
-	
-	/*
-	public List<Double> listValues(boolean first){
-		List<Double> list = new LinkedList<Double>();
-		for(SnapshotValue sv : listValues()){
-			if(first)
-				list.add(sv.getFirst());
-			else list.add(sv.getLast());
-		}
-		return list;
-	}*/
 
 	/**
 	 * Converts a snapshot to string.

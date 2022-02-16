@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -156,7 +155,7 @@ public class EvaluatorManager extends DataManager {
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentEvaluator ev = (ExperimentEvaluator)t;
 		if(!detailedEvaluations.containsKey(ev.getExperimentID()))
-			detailedEvaluations.put(ev.getExperimentID(), new LinkedList<>());
+			detailedEvaluations.put(ev.getExperimentID(), new ArrayList<>());
 		detailedEvaluations.get(ev.getExperimentID()).addAll(ev.getSingleAlgorithmScores());
 	}	
 	

@@ -70,7 +70,7 @@ public class AlgorithmModel implements Cloneable, Comparable<AlgorithmModel> {
 	}
 	
 	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray){
-		return alg.calculateSnapshotScore(null, 0, null, snapArray);
+		return alg.calculateSnapshotScore(snapArray);
 	}
 
 	/**

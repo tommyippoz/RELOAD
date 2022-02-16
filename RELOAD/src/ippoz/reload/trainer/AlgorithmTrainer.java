@@ -14,10 +14,8 @@ import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
-import ippoz.reload.metric.Accuracy_Metric;
 import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.ConfusionMatrix;
-import ippoz.reload.metric.Matthews_Coefficient;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.DoubleMetricResult;
 import ippoz.reload.metric.result.MetricResult;
@@ -25,8 +23,6 @@ import ippoz.reload.metric.result.MetricResultSeries;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +42,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", 
 		"CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", 
 		"LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", 
-		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)", 
-		"STATIC_THRESHOLD_GREATERTHAN(0.9)", "STATIC_THRESHOLD_GREATERTHAN(2.9)", "STATIC_THRESHOLD_GREATERTHAN(4.9)"};
+		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)"};
 	
 	/** The algorithm tag. */
 	private LearnerType algTag;	
@@ -189,8 +184,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		Knowledge knowledge = know.cloneKnowledge();
 		List<AlgorithmResult> anomalyEvaluations = new ArrayList<>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
-			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
-			anomalyEvaluations.add(ar);
+			anomalyEvaluations.add(alg.snapshotAnomalyRate(knowledge, i));
 		}
 		return anomalyEvaluations;
 	}
@@ -220,42 +214,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	public Reputation getReputation() {
 		return reputation;
-	}
-
-	/**
-	 * Gets the exp list, considering the kfold parameter.
-	 *
-	 * @return the exp list
-	 */
-	protected List<Map<String, List<Knowledge>>> getKnowledgeList() {
-		List<Map<String, List<Knowledge>>> outList = new LinkedList<Map<String, List<Knowledge>>>();
-		List<List<Knowledge>> subsets = new ArrayList<List<Knowledge>>(kfold);
-		List<Knowledge> partialList;
-		Map<String, List<Knowledge>> map;
-		if(kfold <= 1 || kfold == Integer.MAX_VALUE || kfold > kList.size()){
-			map = new HashMap<String, List<Knowledge>>();
-			map.put("TRAIN", kList);
-			map.put("TEST", kList);
-			outList.add(map);
-		} else {
-			for(int i=0;i<kList.size();i++){
-				if(subsets.size() <= i%kfold || subsets.get(i%kfold) == null)
-					subsets.add(i%kfold, new LinkedList<Knowledge>());
-				subsets.get(i%kfold).add(kList.get(i));
-			}
-			for(int k=0;k<kfold;k++){
-				map = new HashMap<String, List<Knowledge>>();
-				partialList = new LinkedList<Knowledge>();
-				for(int i=0;i<kfold;i++){
-					if(i==k)
-						map.put("TEST", subsets.get(k));
-					else partialList.addAll(subsets.get(i));
-				}
-				map.put("TRAIN", partialList);
-				outList.add(map);
-			}
-		}
-		return outList;
 	}
 	
 	public int getExpNumber(){
@@ -357,16 +315,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 					if(df != null){
 						List<AlgorithmResult> updatedList = updateResultWithDecision(df, resultList);
 						MetricResult val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
-						if((getMetric() instanceof Matthews_Coefficient && val.getDoubleValue() < 0) || 
-								(getMetric() instanceof Accuracy_Metric && val.getDoubleValue() < 0.5)){
-							df.revert();
-							resultList = new ArrayList<>();
-							for(Knowledge know : kList){
-								resultList.addAll(calculateResults(algorithm, know));
-							}
-							updatedList = updateResultWithDecision(df, resultList);
-							val = getMetric().evaluateAnomalyResults(updatedList, new ConfusionMatrix(updatedList));
-						}
 						if(bestScore == null || getMetric().compareResults(val, bestScore) > 0){
 							bestScore = val;
 							bestFunction = decFunctString;
@@ -380,7 +328,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	protected static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, List<AlgorithmResult> oldList){
-		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
+		List<AlgorithmResult> newList = new ArrayList<>(oldList.size());
 		for(AlgorithmResult ar : oldList){
 			AnomalyResult anr = dFunction.classify(ar);
 			newList.add(new AlgorithmResult(ar.isAnomalous(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, ar.getConfidence()));

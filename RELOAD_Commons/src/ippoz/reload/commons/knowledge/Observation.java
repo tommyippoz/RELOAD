@@ -52,7 +52,7 @@ public class Observation {
 	 * @param categoryTag the data category (plain, diff)
 	 * @return the indicator value
 	 */
-	public Object getValue(int valueIndex) {
+	public Double getValue(int valueIndex) {
 		if(valueIndex < values && valueIndex >= 0)
 			return observedIndicators[valueIndex];
 		else return null;

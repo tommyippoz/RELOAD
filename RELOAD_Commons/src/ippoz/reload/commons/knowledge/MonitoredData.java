@@ -125,7 +125,7 @@ public class MonitoredData {
 	}
 
 	public Snapshot generateSnapshot(DataSeries dataSeries, int index) {
-		Map<Indicator, Object> sv = new HashMap<>();
+		Map<Indicator, Double> sv = new HashMap<>();
 		if(dataSeries != null && index < obsList.size() && index >= 0){
 			Observation obs = obsList.get(index);
 			for(Indicator ind : dataSeries.getIndicators()){

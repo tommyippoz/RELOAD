@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -164,67 +165,12 @@ public class TrainerManager extends TrainDataManager {
 		return best;
 	}
 
-	/*private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
-		BufferedWriter thresholdRelevanceWriter;
-		BasicConfiguration conf;
-		AlgorithmTrainer trainer;
-		Map<String,Integer> statMap = new HashMap<String, Integer>();
-		try {
-			for(Thread tThread : list){
-				trainer = (AlgorithmTrainer)tThread;
-				conf = trainer.getBestConfiguration();
-				if(conf != null && conf.hasItem(BasicConfiguration.THRESHOLD)) {
-					if(statMap.containsKey(conf.getItem(BasicConfiguration.THRESHOLD))){
-						statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), statMap.get(conf.getItem(BasicConfiguration.THRESHOLD)) + 1);
-					} else statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), 1);
-				}		
-			}
-			if(statMap.size() > 0) {
-				statMap = sortByComparator(statMap, false);
-				thresholdRelevanceWriter = new BufferedWriter(new FileWriter(new File(filename)));
-				thresholdRelevanceWriter.write("threshold,optimal_configurations\n");
-				for(String thresholdKey : statMap.keySet()){
-					thresholdRelevanceWriter.write(thresholdKey + "," + statMap.get(thresholdKey) + "\n");
-				}
-				thresholdRelevanceWriter.close();	
-			}
-		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to write scores");
-		}
-	}
-	
-	private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, boolean ascending)
-    {
-
-        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
-
-        // Sorting the list based on values
-        Collections.sort(list, new Comparator<Entry<String, Integer>>()
-        {
-            public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-                if (ascending) {
-                    return o1.getValue().compareTo(o2.getValue());
-                } else {
-                    return o2.getValue().compareTo(o1.getValue());
-                }
-            }
-        });
-
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-        for (Entry<String, Integer> entry : list) {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedMap;
-    }*/
-
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
 	 */
 	@Override
 	protected void initRun(){
-		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
+		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
 		if(confList == null || confList.size() == 0){
 			AppLogger.logError(getClass(), "UnrecognizedConfiguration", algTypes + " does not have an associated configuration: basic will be applied");
