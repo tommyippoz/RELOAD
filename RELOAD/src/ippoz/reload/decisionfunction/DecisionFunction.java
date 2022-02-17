@@ -355,7 +355,6 @@ public abstract class DecisionFunction {
 	public AnomalyResult assignScore(AlgorithmResult aResult, boolean updateResult){
 		AnomalyResult anRes = null;
 		if(aResult != null){
-			//aResult.setDecisionFunction(this);
 			anRes = classify(aResult);
 			if(updateResult)
 				aResult.setScoreEvaluation(anRes);

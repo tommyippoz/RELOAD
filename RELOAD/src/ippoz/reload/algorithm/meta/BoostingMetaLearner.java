@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -59,10 +58,9 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 			while (i < ensembles){
 				List<Knowledge> boostedKnowledge = deriveKnowledge(kList, weights, ensembles);
 				AlgorithmTrainer at = trainWeakLearner(boostedKnowledge, i);
-				DataSeriesNonSlidingAlgorithm alg = null;
 				if(at != null){
 					at.saveAlgorithmScores();
-					alg = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), at.getDataSeries(), at.getBestConfiguration());
+					DetectionAlgorithm alg = DetectionAlgorithm.buildAlgorithm(getBaseLearner(), at.getDataSeries(), at.getBestConfiguration());
 					baseLearners.add(alg);
 					trainers.add(at);
 					weights = updateWeights(alg, weights, getLearningSpeed());
@@ -76,7 +74,7 @@ public class BoostingMetaLearner extends DataSeriesMetaLearner {
 		return null;
 	}
 	
-	public static Map<Knowledge, List<Double>> updateWeights(DataSeriesNonSlidingAlgorithm alg, Map<Knowledge, List<Double>> weights, int learningSpeed) {
+	public static Map<Knowledge, List<Double>> updateWeights(DetectionAlgorithm alg, Map<Knowledge, List<Double>> weights, int learningSpeed) {
 		for(Knowledge know : weights.keySet()){
 			double wSum = 0.0;
 			List<Double> weightList = weights.get(know);

@@ -32,12 +32,16 @@ public class ThresholdDecision extends DecisionFunction {
 	 */
 	@Override
 	public AnomalyResult classify(AlgorithmResult value) {
+		AnomalyResult aRes = null;
 		int index = (int)(threshold*getRefScores().size())-1;
 		if(index < 0)
 			index = 0;
 		if(index < getRefScores().size())
-			return value.getScore() >= getRefScores().get(index) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
-		else return value.getScore() >= getRefScores().get(getRefScores().size()-1) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+			aRes = value.getScore() >= getRefScores().get(index) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		else aRes = value.getScore() >= getRefScores().get(getRefScores().size()-1) ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		if(getRevertFlag()){
+			return aRes == AnomalyResult.NORMAL ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
+		} else return aRes;
 	}
 
 	/* (non-Javadoc)

@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -13,7 +12,7 @@ import ippoz.reload.commons.algorithm.AlgorithmType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.meta.MetaLearnerType;
@@ -35,7 +34,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	
 	public static final BaseLearner DEFAULT_META_LEARNER = new BaseLearner(AlgorithmType.ELKI_ODIN);
 	
-	private DataSeriesNonSlidingAlgorithm metaLearner;
+	private DetectionAlgorithm metaLearner;
 	
 	private MetaTrainer sTrainer;
 
@@ -46,7 +45,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	public StackingMetaLearner(DataSeries dataSeries, BasicConfiguration conf, MetaLearnerType mlType) {
 		super(dataSeries, conf, mlType);
 		if(conf.hasItem(TMP_FILE)){
-			List<DataSeriesNonSlidingAlgorithm> mlList = loadLearners(conf.getItem(TMP_FILE) + "stackingPreferences.csv");
+			List<DetectionAlgorithm> mlList = loadLearners(conf.getItem(TMP_FILE) + "stackingPreferences.csv");
 			if(mlList != null && mlList.size() > 0)
 				metaLearner = mlList.get(0);
 		}
@@ -74,7 +73,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
 				at.saveAlgorithmScores();
-				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
+				baseLearners.add(DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			
 			// Train Meta-Learner
@@ -84,7 +83,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 			sTrainer.join();
 			for(AlgorithmTrainer at : sTrainer.getTrainers()){
 				at.saveAlgorithmScores();
-				metaLearner = (DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), at.getDataSeries(), at.getBestConfiguration());
+				metaLearner = DetectionAlgorithm.buildAlgorithm(at.getAlgType(), at.getDataSeries(), at.getBestConfiguration());
 			}
 			
 			return mTrainer.getTrainers();
@@ -99,14 +98,14 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 		List<Knowledge> updatedList = new LinkedList<>();
 		for(Knowledge know : kList){
 			Knowledge newKnow = know.cloneKnowledge();
-			for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+			for(DetectionAlgorithm alg : baseLearners){
 				newKnow.addIndicator(new Indicator(alg.getLearnerType().toCompactString(), Double.class));
 			}
 			List<Snapshot> snapList = Knowledge.toSnapList(kList, getDataSeries());
 			for(int i=0;i<newKnow.size();i++){
 				double[] snapArray = getSnapValueArray(snapList.get(i));
-				for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
-					newKnow.addIndicatorData(i, alg.getLearnerType().toCompactString(), String.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
+				for(DetectionAlgorithm alg : baseLearners){
+					newKnow.addIndicatorData(i, alg.getLearnerType().toCompactString(), Double.valueOf(alg.calculateSnapshotScore(parseArray(snapArray, alg.getDataSeries())).getKey()));
 				}
 			}
 			updatedList.add(newKnow);
@@ -116,7 +115,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 
 	protected DataSeries getStackingDataSeries() {
 		List<DataSeries> sList = new LinkedList<>();
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			sList.add(new DataSeries(new Indicator(alg.getLearnerType().toCompactString(), Double.class)));
 		}
 		return new DataSeries(sList);
@@ -132,7 +131,7 @@ public class StackingMetaLearner extends DataSeriesMetaLearner {
 	public ObjectPair<Double, Object> calculateSnapshotScore(double[] snapArray) {
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			double score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 		}

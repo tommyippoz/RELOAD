@@ -95,6 +95,34 @@ public class PreferencesManager {
 				updatePreferencesFile(tag, newValue);
 		}
 	}
+	
+	private void removeFromPreferencesFile(String tag) {
+		BufferedReader reader = null;
+		BufferedWriter writer = null;
+		String readed;
+		List<String> fileLines = new LinkedList<String>();
+		try {  
+			if(file.exists()){
+				reader = new BufferedReader(new FileReader(file));
+				while(reader.ready()){
+					readed = reader.readLine();
+					if(readed != null){
+						readed = readed.trim();
+						if(! (readed.length() > 0 && (readed.trim().startsWith(tag + " ") || readed.trim().startsWith(tag + "="))))
+							fileLines.add(readed);
+					}
+				}
+				reader.close();
+				writer = new BufferedWriter(new FileWriter(file));
+				for(String st : fileLines){
+					writer.write(st + "\n");
+				}
+				writer.close();
+			}
+		} catch(Exception ex){
+			AppLogger.logException(getClass(), ex, "Unable to read data types");
+		} 
+	}
 
 	private void updatePreferencesFile(String tag, String newValue) {
 		BufferedReader reader = null;
@@ -139,6 +167,25 @@ public class PreferencesManager {
 		String extendedName = getFilename();
 		int index = extendedName.indexOf('.');
 		return getFilename().substring(0, index);
+	}
+
+	public void renameLoader(String newName) {
+		String newPath = file.getPath();
+		newPath = newPath.replace(file.getName(), newName);
+		if(!newPath.endsWith(".loader"))
+			newPath = newPath + ".loader";
+		File newFile = new File(newPath);
+		AppUtility.copyFile(file, newFile);
+		file.delete();
+		file = newFile;
+	}
+
+	public void removePreference(String tag, boolean updateToFile) {
+		if(hasPreference(tag)){
+			preferences.remove(tag);
+			if(updateToFile)
+				removeFromPreferencesFile(tag);
+		}
 	}
 
 }

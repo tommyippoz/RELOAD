@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
@@ -52,7 +51,7 @@ public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 			mTrainer.join();
 			baseLearners = new LinkedList<>();
 			for(AlgorithmTrainer at : mTrainer.getTrainers()){
-				baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
+				baseLearners.add(DetectionAlgorithm.buildAlgorithm(at.getAlgType(), dataSeries, at.getBestConfiguration()));
 			}
 			return mTrainer.getTrainers();
 		} catch (InterruptedException e) {
@@ -67,7 +66,7 @@ public class DelegatingMetaLearner extends DataSeriesMetaLearner {
 		double score = Double.NaN;
 		double thr = getStopThreshold();
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			score = alg.calculateSnapshotScore(snapArray).getKey();
 			scores[i++] = score;
 			//System.out.println(alg.getConfidence(score));

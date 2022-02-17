@@ -37,8 +37,8 @@ public class DoubleThresholdExtern extends DecisionFunction {
 	 */
 	public AnomalyResult classify(AlgorithmResult value) {
 		if(value.getScore() >= lowerThreshold && value.getScore() <= upperThreshold)
-			return AnomalyResult.NORMAL;
-		else return AnomalyResult.ANOMALY;
+			return !getRevertFlag() ? AnomalyResult.NORMAL : AnomalyResult.ANOMALY;
+		else return !getRevertFlag() ? AnomalyResult.ANOMALY : AnomalyResult.NORMAL;
 	}
 	
 	/* (non-Javadoc)

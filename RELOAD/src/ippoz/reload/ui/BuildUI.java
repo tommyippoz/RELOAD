@@ -9,8 +9,6 @@ import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.algorithm.AlgorithmFamily;
 import ippoz.reload.commons.algorithm.AlgorithmType;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicy;
-import ippoz.reload.commons.knowledge.sliding.SlidingPolicyType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.loader.LoaderType;
 import ippoz.reload.commons.support.AppLogger;
@@ -59,14 +57,11 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 /**
  * @author Tommy
@@ -83,12 +78,6 @@ public class BuildUI {
 	private static final String SETUP_LABEL_FILTERING = "Feature Selection";
 	
 	private static final String SETUP_LABEL_TRAINING = "Training";
-	
-	private static final String SETUP_KFOLD_VALIDATION = "K-Fold Cross Validation";
-	
-	private static final String SETUP_LABEL_SLIDING_POLICY = "Sliding Policy";
-	
-	private static final String SETUP_LABEL_WINDOW_SIZE = "Window Size";
 	
 	private static final String PATH_LABEL_INPUT_FOLDER = "Input Folder";
 	
@@ -203,10 +192,6 @@ public class BuildUI {
 				return InputManager.FILTERING_NEEDED_FLAG;
 			case SETUP_LABEL_TRAINING:
 				return InputManager.TRAIN_NEEDED_FLAG;
-			case SETUP_LABEL_SLIDING_POLICY:
-				return InputManager.SLIDING_POLICY;
-			case SETUP_LABEL_WINDOW_SIZE:
-				return InputManager.SLIDING_WINDOW_SIZE;
 			case PATH_LABEL_INPUT_FOLDER:
 				return InputManager.INPUT_FOLDER;
 			case PATH_LABEL_DATASETS_FOLDER:
@@ -329,13 +314,7 @@ public class BuildUI {
 				int tot = 0;
 				int index = 1;
 				try { 
-					for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
-						if(DetectorMain.hasSliding(aList)){
-							tot = tot + DetectorMain.readWindowSizes(iManager).size() + DetectorMain.readSlidingPolicies(iManager).size();
-						} else {
-							tot++;
-						}
-					}
+					tot = DetectorMain.readAlgorithmCombinations(iManager).size();
 					List<PreferencesManager> activeLoaders = iManager.readLoaders();
 					tot = tot*activeLoaders.size();
 					AppLogger.logInfo(DetectorMain.class, tot + " RELOAD instances found.");
@@ -349,15 +328,7 @@ public class BuildUI {
 							evalLoader = iManager.buildLoader("validation", loaderPref);
 						boolean filterFlag = true;
 						for(LearnerType aList : DetectorMain.readAlgorithmCombinations(iManager)){
-							if(DetectorMain.hasSliding(aList)){
-								for(Integer windowSize : DetectorMain.readWindowSizes(iManager)){
-									for(SlidingPolicy sPolicy : DetectorMain.readSlidingPolicies(iManager)){
-										runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, windowSize, sPolicy, filterFlag), pBar, index++, tot);
-									}
-								}
-							} else {
-								runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
-							}
+							runRELOAD(outList, new DetectionManager(iManager, aList, loaderPref, trainLoader, evalLoader, filterFlag), pBar, index++, tot);
 							filterFlag = false;
 						}
 						if(trainLoader != null)
@@ -469,7 +440,7 @@ public class BuildUI {
 							try {
 								LearnerType at = fromOption(option);
 								if(at != null && at instanceof BaseLearner){
-									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+									AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null));
 									asf.setVisible(true);
 								}
 							} catch(Exception ex){
@@ -582,7 +553,7 @@ public class BuildUI {
 						if(!option.contains(".")) {
 							try {
 								LearnerType at = fromOption(option);
-								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null, 0, SlidingPolicy.getPolicy(SlidingPolicyType.FIFO)));
+								AlgorithmSetupFrame asf = new AlgorithmSetupFrame(iManager, at, iManager.loadConfiguration(at, null));
 								asf.setVisible(true);
 							} catch(Exception ex){
 								AppLogger.logException(getClass(), ex, "Unable to open algorithm '" + option + "' preferences");
@@ -663,8 +634,8 @@ public class BuildUI {
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setLayout(new GridLayout(1, 3, 50, 0));
-		seePrefPanel.setBorder(new EmptyBorder(0, 40, 0, 40));
+		seePrefPanel.setLayout(new GridLayout(1, 4, 10, 0));
+		seePrefPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
 		//seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.02), (int)(labelSpacing*(getDatasets().length + 1) + bigLabelSpacing), (int) (dataAlgPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Create Loader");
@@ -675,35 +646,18 @@ public class BuildUI {
 			public void actionPerformed(ActionEvent e) { 
 				CreateLoaderFrame clf = new CreateLoaderFrame(iManager);
 				clf.setVisible(true);
-				/*LoaderFrame lf;
-				String loaderName = null;
-				LoaderType loaderType = null;
-				String s = (String)JOptionPane.showInputDialog(
-	                    frame, "Set name for the new loader", "Create Loader",
-	                    JOptionPane.PLAIN_MESSAGE, null, null, "");
-				if ((s != null) && (s.trim().length() > 0)) {
-					loaderName = s.trim();
-				} else {
-					loaderName = "newLoader";
-					AppLogger.logError(getClass(), "WrongLoaderFilename", "Loader name unspecified. Using default 'newLoader.loader'");
-				}
-				loaderName = loaderName + ".loader";
-				loaderType = (LoaderType)JOptionPane.showInputDialog(
-	                    frame, "Choose type for the new loader", "Create Loader",
-	                    JOptionPane.PLAIN_MESSAGE, null, LoaderType.values(), LoaderType.CSV);
-				if (loaderType == null){
-					loaderType = LoaderType.CSV;
-					AppLogger.logError(getClass(), "WrongLoaderType", "Loader type unspecified. Using default 'CSV'");
-				}
-				try {
-					PreferencesManager newPref = iManager.generateDefaultLoaderPreferences(loaderName, loaderType);
-					iManager.addDataset(Paths.get(newPref.getFile().getAbsolutePath()).toString());
-					reload();
-					lf = new LoaderFrame(iManager, newPref, loaderType);
-					lf.setVisible(true);
-				} catch(Exception ex){
-					AppLogger.logException(getClass(), ex, "Unable to create loader '" + loaderName + "' preferences");
-				}*/
+				
+			} } );
+		seePrefPanel.add(button);
+		
+		button = new JButton("Create From Folder");
+		button.setVisible(true);
+		button.setFont(labelFont);
+		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				CreateLoadersFrame clf = new CreateLoadersFrame(iManager);
+				clf.setVisible(true);
 				
 			} } );
 		seePrefPanel.add(button);
@@ -901,17 +855,16 @@ public class BuildUI {
 	}
 	
 	private JPanel buildSetupTab(int tabY){
-		int optionSpacing = (int)((bigLabelSpacing + labelSpacing) / 2); 
 		JPanel comp;
 		setupPanel.setBackground(Color.WHITE);
 		
 		TitledBorder tb = new TitledBorder(new LineBorder(Color.DARK_GRAY, 2), " Setup ", TitledBorder.LEFT, TitledBorder.CENTER, titleFont, Color.DARK_GRAY);
 		//setupPanel.setBounds(10, tabY, frame.getWidth()/3 - 20, 7*optionSpacing + 6*bigLabelSpacing);
 		setupPanel.setBorder(new CompoundBorder(tb, new EmptyBorder(0, 20, 0, 20)));
-		setupPanel.setLayout(new GridLayout(11, 1, 50, 0));
+		setupPanel.setLayout(new GridLayout(10, 1, 50, 0));
 		
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, optionSpacing, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
-		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, optionSpacing, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_METRIC, setupPanel, MetricType.values(), iManager.getMetricType(), InputManager.METRIC, "Reference metric to be used to decide if a combination of algorithms' parameters is better than another."), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_METRIC, createLCBPanel(SETUP_LABEL_OUTPUT, setupPanel, new String[]{"ui", "basic", "text", "image"}, iManager.getOutputFormat(), InputManager.OUTPUT_FORMAT, "Output Type, either i) ui, ii) print just final results, iii) text verbose, iv) image files"), setupMap);
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
@@ -934,10 +887,10 @@ public class BuildUI {
 		seePrefPanel.add(button);
 		seePrefPanel.setVisible(iManager.getFilteringFlag());		
 		
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, 3*optionSpacing, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed.", true, true), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_FILTERING, setupPanel, iManager.getFilteringFlag(), new JPanel[]{seePrefPanel}, InputManager.FILTERING_NEEDED_FLAG, "Specifies if Feature Selection is needed.", true, true), setupMap);
 		setupPanel.add(seePrefPanel);
 		
-		comp = createLCKPanel(SETUP_PREDICT, setupPanel, 2*optionSpacing, iManager.getPredictMisclassificationsFlag(), new JPanel[]{}, InputManager.PREDICT_MISCLASSIFICATIONS, "Specifies if Misclassification Prediction should be applied.", true, false);
+		comp = createLCKPanel(SETUP_PREDICT, setupPanel, iManager.getPredictMisclassificationsFlag(), new JPanel[]{}, InputManager.PREDICT_MISCLASSIFICATIONS, "Specifies if Misclassification Prediction should be applied.", true, false);
 		comp.setVisible(iManager.getFilteringFlag());
 		addToPanel(setupPanel, SETUP_PREDICT, comp, setupMap);
 		
@@ -945,60 +898,26 @@ public class BuildUI {
 		//comp.setVisible(iManager.getTrainingFlag());
 		//addToPanel(setupPanel, SETUP_IND_SELECTION, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_KFOLD_VALIDATION, setupPanel, 7*optionSpacing, Integer.toString(iManager.getKFoldCounter()), InputManager.KFOLD_COUNTER, iManager, "<html><p>Specifies the K value for the K-Fold parameter. <br> Briefly, k-fold cross-validation is a resampling procedure used to evaluate machine learning models on a limited data sample. <br> The procedure has a single parameter called k that refers to the number of groups that a given data sample is to be split into. <br> As such, the procedure is often called k-fold cross-validation. <br> When a specific value for k is chosen, it may be used in place of k in the reference to the model, such as k=10 becoming 10-fold cross-validation.</p></html>", true);
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_TRAINING, createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, 5*optionSpacing, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed.", true, true), setupMap);
-		addToPanel(setupPanel, SETUP_KFOLD_VALIDATION, comp, setupMap);
+		comp = createLCKPanel(SETUP_LABEL_TRAINING, setupPanel, iManager.getTrainingFlag(), comp, InputManager.TRAIN_NEEDED_FLAG, "Specifies if Training is needed.", true, true);
+		addToPanel(setupPanel, SETUP_LABEL_TRAINING, comp, setupMap);
 		
 		boolean[] result = hasAlgorithmType();
 		boolean hasBase = result[0];
 		boolean hasMeta = result[1];
 		//boolean hasSliding = result[2];
-		comp = createLCKPanel(SETUP_FORCE_TRAINING, setupPanel, 5*optionSpacing, iManager.getForceTrainingFlag(), comp, InputManager.FORCE_TRAINING, "Specifies if existing data about a past training of this algorithm can be re-used.", hasBase, false);
+		comp = createLCKPanel(SETUP_FORCE_TRAINING, setupPanel, iManager.getForceTrainingFlag(), comp, InputManager.FORCE_TRAINING, "Specifies if existing data about a past training of this algorithm can be re-used.", hasBase, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_TRAINING, comp, setupMap);
 		
-		comp = createLCKPanel(SETUP_FORCE_PARALLEL, setupPanel, 5*optionSpacing, iManager.getParallelTrainingFlag(), comp, InputManager.PARALLEL_TRAINING, "Specifies if explouts CPU multi-threading.", iManager.getForceTrainingFlag(), false);
+		comp = createLCKPanel(SETUP_FORCE_PARALLEL, setupPanel, iManager.getParallelTrainingFlag(), comp, InputManager.PARALLEL_TRAINING, "Specifies if explouts CPU multi-threading.", iManager.getForceTrainingFlag(), false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_PARALLEL, comp, setupMap);
 		
-		comp = createLCKPanel(SETUP_FORCE_BASELEARNERS, setupPanel, 5*optionSpacing, iManager.getForceBaseLearnersFlag(), comp, InputManager.FORCE_TRAINING_BASELEARNERS, "Specifies if, during training of a meta-learner, all base-learners need to be trained or if existring results could be used to speedup the process.", hasMeta, false);
+		comp = createLCKPanel(SETUP_FORCE_BASELEARNERS, setupPanel, iManager.getForceBaseLearnersFlag(), comp, InputManager.FORCE_TRAINING_BASELEARNERS, "Specifies if, during training of a meta-learner, all base-learners need to be trained or if existring results could be used to speedup the process.", hasMeta, false);
 		comp.setVisible(iManager.getTrainingFlag());
 		addToPanel(setupPanel, SETUP_FORCE_BASELEARNERS, comp, setupMap);
-	
-		/*comp = createLTPanel(SETUP_LABEL_SLIDING_POLICY, setupPanel, 8*optionSpacing, iManager.getSlidingPolicies(), InputManager.SLIDING_POLICY, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the policy that makes the window slide.</p></html>", hasSliding);
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_SLIDING_POLICY, comp, setupMap);
 		
-		comp = createLTPanel(SETUP_LABEL_WINDOW_SIZE, setupPanel, 9*optionSpacing, iManager.getSlidingWindowSizes(), InputManager.SLIDING_WINDOW_SIZE, iManager, "<html><p>(ONLY if using sliding window algorithms) <br> Specifies the size of the sliding window.</p></html>", hasSliding);
-		comp.setVisible(iManager.getTrainingFlag());
-		addToPanel(setupPanel, SETUP_LABEL_WINDOW_SIZE, comp, setupMap);
-		
-		seePrefPanel = new JPanel();
-		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setLayout(new GridLayout(1, 1));
-		//seePrefPanel.setBounds((int) (setupPanel.getWidth()*0.02), 11*optionSpacing, (int) (setupPanel.getWidth()*0.96), bigLabelSpacing);
-		
-		button = new JButton("Open Optimization Preferences");
-		button.setVisible(true);
-		button.setFont(labelFont);
-		//button.setBounds(0, 0, setupPanel.getWidth()*3/5, labelSpacing);
-		button.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				try {
-					Desktop.getDesktop().open(new File(iManager.getInputFolder() + iManager.getDetectionPreferencesFile()));
-				} catch (IOException e1) {
-					AppLogger.logException(getClass(), e1, "");
-				}
-			} } );
-		seePrefPanel.setVisible(iManager.getOptimizationFlag());
-		seePrefPanel.add(button);
-		
-		addToPanel(setupPanel, SETUP_LABEL_FILTERING, createLCKPanel(SETUP_LABEL_OPTIMIZATION, setupPanel, 10*optionSpacing, iManager.getOptimizationFlag(), seePrefPanel, InputManager.OPTIMIZATION_NEEDED_FLAG, "Specifies if Optimization is needed."), setupMap);
-		
-		setupPanel.add(seePrefPanel);*/
-		
-		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, (int)(12.5*optionSpacing), iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed.", true, true), setupMap);
+		addToPanel(setupPanel, SETUP_LABEL_EVALUATION, createLCKPanel(SETUP_LABEL_EVALUATION, setupPanel, iManager.getEvaluationFlag(), new JPanel[]{}, InputManager.EVALUATION_NEEDED_FLAG, "Specifies if Evaluation is needed.", true, true), setupMap);
 		
 		return setupPanel;
 	}
@@ -1048,52 +967,6 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLTPanel(String textName, JPanel root, int panelY, String textFieldText, String fileTag, InputManager iManager, String tooltipText, boolean isEnabled){
-		JPanel panel = new JPanel();
-		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
-		panel.setLayout(new GridLayout(1, 2));
-		
-		JLabel lbl = new JLabel(textName);
-		lbl.setFont(labelFont);
-		//lbl.setBounds(root.getWidth()/10, 0, root.getWidth()*2/5, labelSpacing);
-		lbl.setHorizontalAlignment(SwingConstants.CENTER);
-		if(tooltipText != null)
-			lbl.setToolTipText(tooltipText);
-		panel.add(lbl);
-		
-		JTextField textField = new JTextField();
-		textField.setText(textFieldText);
-		textField.setFont(labelFont);
-		//textField.setBounds(root.getWidth()/2, 0, root.getWidth()*2/5, labelSpacing);
-		textField.setEnabled(isEnabled);
-		textField.setColumns(10);
-		textField.getDocument().addDocumentListener(new DocumentListener() {
-			  
-			public void changedUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void removeUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-			  
-			public void insertUpdate(DocumentEvent e) {
-				workOnUpdate();
-			}
-
-			public void workOnUpdate() {
-				if (textField.getText() != null && textField.getText().length() > 0){
-	        		iManager.updatePreference(fileTag, textField.getText(), false, true);
-	        	}
-			}
-		});
-		
-		panel.add(textField);
-		root.add(panel);
-		
-		return panel;
-	}
-	
 	private JPanel createFCHPanel(String textName, JPanel root, int panelY, String textFieldText, boolean folderFlag, String tooltipText){
 		JPanel panel = new JPanel();
 		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), bigLabelSpacing);
@@ -1132,11 +1005,11 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
-		return createLCKPanel(textName, root, panelY, checked, new JPanel[]{comp}, fileTag, tooltipText, isEnabled, isBold);
+	private JPanel createLCKPanel(String textName, JPanel root, boolean checked, JPanel comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
+		return createLCKPanel(textName, root, checked, new JPanel[]{comp}, fileTag, tooltipText, isEnabled, isBold);
 	}
 	
-	private JPanel createLCKPanel(String textName, JPanel root, int panelY, boolean checked, JPanel[] comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
+	private JPanel createLCKPanel(String textName, JPanel root, boolean checked, JPanel[] comp, String fileTag, String tooltipText, boolean isEnabled, boolean isBold){
 		JPanel panel = new JPanel();
 		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(new GridLayout(1, 1));
@@ -1176,7 +1049,7 @@ public class BuildUI {
 		return panel;
 	}
 	
-	private JPanel createLCBPanel(String textName, JPanel root, int panelY, Object[] itemList, Object selected, String fileTag, String tooltipText){
+	private JPanel createLCBPanel(String textName, JPanel root, Object[] itemList, Object selected, String fileTag, String tooltipText){
 		JPanel panel = new JPanel();
 		//panel.setBounds((int) (root.getWidth()*0.02), panelY, (int) (root.getWidth()*0.96), labelSpacing);
 		panel.setLayout(new GridLayout(1, 2));

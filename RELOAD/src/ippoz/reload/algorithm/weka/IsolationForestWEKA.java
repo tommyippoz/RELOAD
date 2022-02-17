@@ -48,7 +48,7 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	 * @param conf the configuration
 	 */
 	public IsolationForestWEKA(DataSeries dataSeries, BasicConfiguration conf) {
-		super(dataSeries, conf, true, false);
+		super(dataSeries, conf, false, false);
 		if(conf.hasItem(TMP_FILE)){
 			iForest = loadSerialized(conf.getItem(TMP_FILE));
 			iForest.loadScores(new File(conf.getItem(TMP_FILE) + "scores"));
@@ -156,8 +156,8 @@ public class IsolationForestWEKA extends DataSeriesWEKAAlgorithm {
 	@Override
 	public Map<String, String[]> getDefaultParameterValues() {
 		Map<String, String[]> defPar = new HashMap<String, String[]>();
-		defPar.put("n_trees", new String[]{"1", "2", "3", "5"});
-		defPar.put("sample_size", new String[]{"10", "20", "50", "100"});
+		defPar.put("n_trees", new String[]{"10", "20", "50", "100"});
+		defPar.put("sample_size", new String[]{"100", "200", "500", "1000"});
 		return defPar;
 	}
 

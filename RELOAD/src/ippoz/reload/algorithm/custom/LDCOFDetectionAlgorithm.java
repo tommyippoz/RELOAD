@@ -3,13 +3,13 @@
  */
 package ippoz.reload.algorithm.custom;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.support.ClusterableSnapshot;
 import ippoz.reload.algorithm.support.GenericCluster;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 
@@ -27,7 +27,7 @@ import java.util.Map;
  * @author Tommaso Capecchi, Tommaso Zoppi
  *
  */
-public abstract class LDCOFDetectionAlgorithm extends DataSeriesNonSlidingAlgorithm {
+public abstract class LDCOFDetectionAlgorithm extends DetectionAlgorithm {
 	
 	/** The Constant HISTOGRAMS. */
 	public static final String CLUSTERS = "clusters";

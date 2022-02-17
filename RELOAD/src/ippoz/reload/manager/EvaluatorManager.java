@@ -3,15 +3,13 @@
  */
 package ippoz.reload.manager;
 
-import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.evaluation.AlgorithmModel;
@@ -27,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,6 +56,8 @@ public class EvaluatorManager extends DataManager {
 	
 	private long evalTime;
 	
+	private static final int STRING_LENGTH = 5000;
+	
 	/**
 	 * Instantiates a new evaluator manager.
 	 *
@@ -70,8 +69,8 @@ public class EvaluatorManager extends DataManager {
 	 * @param algConvergence the algorithm convergence
 	 * @param detectorScoreTreshold the detector score threshold
 	 */
-	public EvaluatorManager(String outputFolder, String scoresFile, Map<KnowledgeType, List<Knowledge>> map, Metric[] validationMetrics, boolean printOutput) {
-		super(map);
+	public EvaluatorManager(String outputFolder, String scoresFile, List<Knowledge> kList, Metric[] validationMetrics, boolean printOutput) {
+		super(kList);
 		this.scoresFile = scoresFile + File.separatorChar + "scores.csv";
 		this.validationMetrics = validationMetrics;
 		this.printOutput = printOutput;
@@ -79,7 +78,7 @@ public class EvaluatorManager extends DataManager {
 		evalModel = buildEvaluationModel();
 		if(!new File(outputFolder).exists())
 			new File(outputFolder).mkdirs();
-		AppLogger.logInfo(getClass(), "Evaluating " + map.get(map.keySet().iterator().next()).size() + " experiments");
+		AppLogger.logInfo(getClass(), "Evaluating " + kList.size() + " experiments");
 	}
 	
 	private AlgorithmModel buildEvaluationModel(){
@@ -128,7 +127,7 @@ public class EvaluatorManager extends DataManager {
 				int splits = (int)Math.ceil((1.0*getLoadFactor())/experimentsSize())*4;
 				//int splits = 2;
 				for(int expN = 0; expN < experimentsSize(); expN++){
-					Knowledge know = getKnowledge(DetectionAlgorithm.getKnowledgeType(evalModel.getAlgorithmType())).get(expN);
+					Knowledge know = getKnowledge().get(expN);
 					List<Integer> kSplit = know.splitInt(splits);
 					for(int i=0; i<kSplit.size()-1;i++){
 						voterList.add(new ExperimentEvaluator(evalModel, know, kSplit.get(i), kSplit.get(i+1)));
@@ -156,7 +155,7 @@ public class EvaluatorManager extends DataManager {
 	protected void threadComplete(Thread t, int tIndex) {
 		ExperimentEvaluator ev = (ExperimentEvaluator)t;
 		if(!detailedEvaluations.containsKey(ev.getExperimentID()))
-			detailedEvaluations.put(ev.getExperimentID(), new LinkedList<>());
+			detailedEvaluations.put(ev.getExperimentID(), new ArrayList<>());
 		detailedEvaluations.get(ev.getExperimentID()).addAll(ev.getSingleAlgorithmScores());
 	}	
 	
@@ -199,6 +198,7 @@ public class EvaluatorManager extends DataManager {
 		BufferedWriter writer;
 		String header1 = "";
 		String header2 = "";
+		StringBuilder toPrint = new StringBuilder("");
 		try {
 			Map<LoaderBatch, List<AlgorithmResult>> detailedExperimentsScores = getDetailedEvaluations();
 			if(detailedExperimentsScores != null && detailedExperimentsScores.size() > 0){
@@ -231,22 +231,30 @@ public class EvaluatorManager extends DataManager {
 						Knowledge knowledge = Knowledge.findKnowledge(getKnowledge(), expName);
 						for(int i=0;i<detailedExperimentsScores.get(expName).size();i++){
 							AlgorithmResult res = detailedExperimentsScores.get(expName).get(i);
-							writer.write(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.isAnomalous() ? "anomaly" : "") + ",,");
-							writer.write(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
+							toPrint.append(expName.getTag() + "," + i + "," + (expName.getFrom() + i) + "," + (res.isAnomalous() ? "anomaly" : "") + ",,");
+							toPrint.append(res.getScoreEvaluation() + "," + res.getConfidence() + "," +
 									res.getScore() + "," + (evalModel.getAlgorithm().getDecisionFunction() != null ? evalModel.getAlgorithm().getDecisionFunction().toCompactStringComplete() : "CUSTOM") + ",,");
 							if(knowledge != null){
 								Snapshot snap = knowledge.buildSnapshotFor(i, evalModel.getDataSeries());
 								for(Indicator ind : evalModel.getDataSeries().getIndicators()){
-									writer.write(snap.getDoubleValueFor(ind) + ",");
+									toPrint.append(snap.getDoubleValueFor(ind) + ",");
 								}
 							}
 							if(evalModel.getAlgorithmType() instanceof MetaLearner){
 								double[] ob = (double[]) detailedExperimentsScores.get(expName).get(i).getAdditionalScore();
-								writer.write("," + Arrays.toString(ob).replace("[", "").replace("]", ""));
+								toPrint.append("," + Arrays.toString(ob).replace("[", "").replace("]", ""));
 							}
-							writer.write("\n");
+							toPrint.append("\n");
+							if(toPrint != null && toPrint.length() > STRING_LENGTH){
+								writer.write(toPrint.toString());
+								toPrint = new StringBuilder("");
+							}
 						}
 					}
+				}
+				if(toPrint != null && toPrint.length() > 0){
+					writer.write(toPrint.toString());
+					toPrint = null;
 				}
 				writer.close();
 			}

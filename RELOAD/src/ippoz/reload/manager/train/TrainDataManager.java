@@ -7,14 +7,12 @@ import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.manager.DataManager;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.reputation.Reputation;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Tommy
@@ -51,8 +49,8 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> map, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
-		super(map);
+	public TrainDataManager(List<Knowledge> kList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold) {
+		super(kList);
 		this.setupFolder = setupFolder;
 		this.scoresFolder = scoresFolder;
 		this.datasetName = datasetName;
@@ -67,8 +65,8 @@ public abstract class TrainDataManager extends DataManager {
 	 * Instantiates a new trainer data manager.
 	 *
 	 */
-	public TrainDataManager(Map<KnowledgeType, List<Knowledge>> expList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold) {
-		this(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+	public TrainDataManager(List<Knowledge> kList, String setupFolder, String scoresFolder, String datasetName, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold) {
+		this(kList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		dataSeries = selectedSeries;
 		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ippoz.reload.algorithm;
+package ippoz.reload.algorithm; 
 
 import ippoz.reload.commons.knowledge.Knowledge;
 
@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Tommy
  */
-public interface AutomaticTrainingAlgorithm {
+public interface AutomaticTrainingAlgorithm { 
 
 	/**
 	 * Automatic training.

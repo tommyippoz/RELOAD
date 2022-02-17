@@ -112,7 +112,7 @@ public class WEKAUtils {
 	 * @return the train arff reader
 	 */
 	private static Reader getTrainARFFReader(double[][] data, String[] label, DataSeries ds) {
-		String arff = getStreamHeader(ds, true);
+		StringBuffer arff = new StringBuffer(getStreamHeader(ds, true));
 		String str = "";
 		String inner = "";
 		for(int i=0;i<label.length;i++){
@@ -124,11 +124,12 @@ public class WEKAUtils {
 			}
 			inner = inner + str + label[i] + "\n";
 			if(i % STRING_BATCHES == 0){
-				arff = arff + inner;
+				arff.append(inner);
 				inner = "";
 			}
 		}		
-		return new StringReader(arff + inner);
+		arff.append(inner);
+		return new StringReader(arff.toString());
 	}
 	
 	/**

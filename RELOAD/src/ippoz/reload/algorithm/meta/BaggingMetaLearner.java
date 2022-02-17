@@ -3,7 +3,6 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.BaseLearner;
@@ -56,7 +55,7 @@ public class BaggingMetaLearner extends DataSeriesMetaLearner {
 				for(AlgorithmTrainer at : mTrainer.getTrainers()){
 					at.saveAlgorithmScores();
 					trainers.add(at);
-					baseLearners.add((DataSeriesNonSlidingAlgorithm)DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
+					baseLearners.add(DetectionAlgorithm.buildAlgorithm(getBaseLearner(), dataSeries, at.getBestConfiguration()));
 				}
 			}
 			return trainers;

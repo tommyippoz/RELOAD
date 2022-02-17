@@ -3,14 +3,13 @@
  */
 package ippoz.reload.algorithm.meta;
 
-import ippoz.reload.algorithm.DataSeriesNonSlidingAlgorithm;
 import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.configuration.MetaConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.snapshot.Snapshot;
+import ippoz.reload.commons.knowledge.Snapshot;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
@@ -32,7 +31,7 @@ import java.util.List;
  * @author Tommy
  *
  */
-public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorithm {
+public abstract class DataSeriesMetaLearner extends DetectionAlgorithm {
 	
 	public static final String BASE_LEARNERS = "BASE_LEARNERS";
 	
@@ -40,7 +39,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 	
 	protected MetaData data;
 	
-	protected List<DataSeriesNonSlidingAlgorithm> baseLearners;
+	protected List<DetectionAlgorithm> baseLearners;
 	
 	private List<MetaScore> scores;
 	
@@ -56,15 +55,15 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		}
 	}
 	
-	protected List<DataSeriesNonSlidingAlgorithm> loadLearners(String filename){
+	protected List<DetectionAlgorithm> loadLearners(String filename){
 		List<AlgorithmModel> modelList = AlgorithmModel.fromFile(filename);
-		List<DataSeriesNonSlidingAlgorithm> retList = new LinkedList<>();
+		List<DetectionAlgorithm> retList = new LinkedList<>();
 		if(modelList != null && modelList.size() > 0){
 			for(AlgorithmModel model : modelList){
 				if(model != null){
 					DetectionAlgorithm alg = model.getAlgorithm();
-					if(alg != null && alg instanceof DataSeriesNonSlidingAlgorithm)
-						retList.add((DataSeriesNonSlidingAlgorithm) alg);
+					if(alg != null)
+						retList.add((DetectionAlgorithm) alg);
 					else AppLogger.logError(getClass(), "ModelLoadingError", "Unable to decode model " + model.toString());
 				} else AppLogger.logError(getClass(), "ModelLoadingError", "Unable to decode model");
 			}
@@ -132,7 +131,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(new File(filefolder + filename)));
-			writer.write("*This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
+			writer.write("* This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
 			writer.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + data.getTargetMetric().getName() + "),std_metric_score(" + data.getTargetMetric().getName() + "),dataset,configuration\n");
 			for(AlgorithmTrainer trainer : tList){
 				if(trainer.getBestConfiguration() != null) {
@@ -191,7 +190,7 @@ public abstract class DataSeriesMetaLearner extends DataSeriesNonSlidingAlgorith
 		double count = 0.0;
 		int i = 0;
 		double[] scores = new double[baseLearners.size()];
-		for(DataSeriesNonSlidingAlgorithm alg : baseLearners){
+		for(DetectionAlgorithm alg : baseLearners){
 			double[] algArray = parseArray(snapArray, alg.getDataSeries());
 			double score = alg.calculateSnapshotScore(algArray).getKey();
 			scores[i++] = score;

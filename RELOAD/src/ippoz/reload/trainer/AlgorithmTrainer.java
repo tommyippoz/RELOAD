@@ -9,13 +9,12 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.SlidingKnowledge;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
-import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.DoubleMetricResult;
@@ -23,9 +22,11 @@ import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.metric.result.MetricResultSeries;
 import ippoz.reload.reputation.Reputation;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,8 +46,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		"IQR", "IQR(1)", "IQR(0.5)", "IQR(0.2)", "IQR(0)", 
 		"CONFIDENCE_INTERVAL","CONFIDENCE_INTERVAL(1)", "CONFIDENCE_INTERVAL(0.5)", "CONFIDENCE_INTERVAL(0.2)", 
 		"LEFT_POSITIVE_IQR", "LEFT_POSITIVE_IQR(0)", "LEFT_IQR(1)", "LEFT_IQR(0.5)", 
-		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)", 
-		"STATIC_THRESHOLD_GREATERTHAN(0.9)", "STATIC_THRESHOLD_GREATERTHAN(2.9)", "STATIC_THRESHOLD_GREATERTHAN(4.9)"};
+		"RIGHT_IQR(1)", "RIGHT_IQR(0.5)"};
 	
 	/** The algorithm tag. */
 	private LearnerType algTag;	
@@ -134,12 +134,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 		confResults = lookForBestConfiguration();
 		trainingTime = System.currentTimeMillis() - trainingTime;
 		if(confResults != null && bestConf != null){
-			
 			valMetricsString = calculateMetrics(validationMetrics, confResults.getKey());
-			//printTrainingResults();
-			//metricScore = evaluateMetricScore(metric);
-			
-			//reputationScore = evaluateReputationScore();
 			if(getReputationScore() > 0.0)
 				bestConf.addItem(BasicConfiguration.WEIGHT, String.valueOf(getReputationScore()));
 			else bestConf.addItem(BasicConfiguration.WEIGHT, "1.0");
@@ -148,34 +143,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 			bestConf.addItem(BasicConfiguration.DATASET_NAME, getDatasetName());
 		}
 	}
-	
-	/*public String printTrainingResults(Metric[] validationMetrics){
-		DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), bestConf);
-		if(algorithm instanceof AutomaticTrainingAlgorithm) {
-			((AutomaticTrainingAlgorithm)algorithm).automaticTraining(getKnowledgeList().get(0).get("TEST"), true);
-		} else {
-			for(Knowledge knowledge : getKnowledgeList().get(0).get("TEST")){
-				//algorithm.setDecisionFunction(dFunctionString);
-				getMetric().evaluateMetric(algorithm, knowledge);
-			}
-		}
-		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
-		for(Knowledge know : kList){
-			trainResult.put(know, calculateResults(algorithm, know));
-		}
-		/*trainMetricScore = algorithm.getLoggedScores();
-		bestConf.addItem(BasicConfiguration.TRAIN_AVG, trainMetricScore.getAvg());
-		bestConf.addItem(BasicConfiguration.TRAIN_STD, trainMetricScore.getStd());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q0, trainMetricScore.getMin());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q1, trainMetricScore.getQ1());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q2, trainMetricScore.getMedian());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q3, trainMetricScore.getQ3());
-		bestConf.addItem(BasicConfiguration.TRAIN_Q4, trainMetricScore.getMax());
-		
-		if(validationMetrics != null)
-			return calculateMetrics(validationMetrics, trainResult);
-		else return null;
-	}*/
 	
 	public String getDecisionFunctionString(){
 		return bestConf.getItem(BasicConfiguration.THRESHOLD);
@@ -218,19 +185,10 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	protected List<AlgorithmResult> calculateResults(DetectionAlgorithm alg, Knowledge know) {
-		double snapValue;
 		Knowledge knowledge = know.cloneKnowledge();
-		List<AlgorithmResult> anomalyEvaluations = new ArrayList<AlgorithmResult>(knowledge.size());
+		List<AlgorithmResult> anomalyEvaluations = new ArrayList<>(knowledge.size());
 		for (int i = 0; i < knowledge.size(); i++) {
-			AlgorithmResult ar = alg.snapshotAnomalyRate(knowledge, i);
-			snapValue = DetectionAlgorithm.convertResultIntoDouble(ar.getScoreEvaluation());
-			anomalyEvaluations.add(ar);
-			if (knowledge instanceof SlidingKnowledge) {
-				((SlidingKnowledge) knowledge).slide(i, snapValue);
-			}
-		}
-		if (knowledge instanceof SlidingKnowledge) {
-			((SlidingKnowledge) knowledge).reset();
+			anomalyEvaluations.add(alg.snapshotAnomalyRate(knowledge, i));
 		}
 		return anomalyEvaluations;
 	}
@@ -260,42 +218,6 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	public Reputation getReputation() {
 		return reputation;
-	}
-
-	/**
-	 * Gets the exp list, considering the kfold parameter.
-	 *
-	 * @return the exp list
-	 */
-	protected List<Map<String, List<Knowledge>>> getKnowledgeList() {
-		List<Map<String, List<Knowledge>>> outList = new LinkedList<Map<String, List<Knowledge>>>();
-		List<List<Knowledge>> subsets = new ArrayList<List<Knowledge>>(kfold);
-		List<Knowledge> partialList;
-		Map<String, List<Knowledge>> map;
-		if(kfold <= 1 || kfold == Integer.MAX_VALUE || kfold > kList.size()){
-			map = new HashMap<String, List<Knowledge>>();
-			map.put("TRAIN", kList);
-			map.put("TEST", kList);
-			outList.add(map);
-		} else {
-			for(int i=0;i<kList.size();i++){
-				if(subsets.size() <= i%kfold || subsets.get(i%kfold) == null)
-					subsets.add(i%kfold, new LinkedList<Knowledge>());
-				subsets.get(i%kfold).add(kList.get(i));
-			}
-			for(int k=0;k<kfold;k++){
-				map = new HashMap<String, List<Knowledge>>();
-				partialList = new LinkedList<Knowledge>();
-				for(int i=0;i<kfold;i++){
-					if(i==k)
-						map.put("TEST", subsets.get(k));
-					else partialList.addAll(subsets.get(i));
-				}
-				map.put("TRAIN", partialList);
-				outList.add(map);
-			}
-		}
-		return outList;
 	}
 	
 	public int getExpNumber(){
@@ -367,9 +289,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
-		if(metric instanceof BetterMaxMetric)
-			return getMetricAvgScore().compareTo(other.getMetricAvgScore());
-		else return -1*getMetricAvgScore().compareTo(other.getMetricAvgScore());
+		return metric.compareResults(getMetricAvgScore(), other.getMetricAvgScore());
 	}
 
 	/**
@@ -410,7 +330,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	protected static List<AlgorithmResult> updateResultWithDecision(DecisionFunction dFunction, List<AlgorithmResult> oldList){
-		List<AlgorithmResult> newList = new LinkedList<AlgorithmResult>();
+		List<AlgorithmResult> newList = new ArrayList<>(oldList.size());
 		for(AlgorithmResult ar : oldList){
 			AnomalyResult anr = dFunction.classify(ar);
 			newList.add(new AlgorithmResult(ar.isAnomalous(), DetectionAlgorithm.convertResultIntoDouble(anr), anr, ar.getConfidence()));
@@ -423,5 +343,28 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	public abstract void saveAlgorithmScores();
+	
+	public static void saveTrainer(AlgorithmTrainer trainer, String filename, String metricName, boolean saveModel){
+		BufferedWriter scoreWriter;
+		try {
+			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
+			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
+			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + metricName + "),std_metric_score(" + metricName + "),dataset,configuration\n");
+			if(trainer != null && trainer.getBestConfiguration() != null) {
+				if(saveModel)
+					trainer.saveAlgorithmScores();
+				scoreWriter.write(trainer.getSeriesDescription() + "§" + 
+						trainer.getAlgType() + "§" +
+						trainer.getReputationScore() + "§" + 
+						trainer.getMetricAvgScore() + "§" +  
+						trainer.getMetricStdScore() + "§" + 
+						trainer.getDatasetName() + "§" +
+						trainer.getBestConfiguration().toFileRow(false) + "\n");		
+			}
+			scoreWriter.close();			
+		} catch(IOException ex){
+			AppLogger.logException(AlgorithmTrainer.class, ex, "Unable to write scores");
+		}
+	}
 	
 }

@@ -3,9 +3,9 @@
  */
 package ippoz.reload.commons.support;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +15,6 @@ import java.util.Map;
  */
 public class ValueSeries {
 	
-	private List<Double> allValues;
-	
 	private List<Double> values;
 	
 	private Map<Double, Integer> frequencies;
@@ -24,15 +22,13 @@ public class ValueSeries {
 	private boolean sorted;
 	
 	public ValueSeries(){
-		values = new LinkedList<Double>();
-		allValues = new LinkedList<Double>();
+		values = new ArrayList<>();
 		frequencies = new HashMap<Double, Integer>();
 		sorted = true;
 	}
 	
 	public ValueSeries(List<Double> scoresList) {
-		values = new LinkedList<Double>();
-		allValues = new LinkedList<Double>();
+		values = new ArrayList<Double>();
 		frequencies = new HashMap<Double, Integer>();
 		for(Double d : scoresList){
 			addValue(d);
@@ -47,7 +43,6 @@ public class ValueSeries {
 	}
 	
 	public void addValue(double newValue){
-		allValues.add(newValue);
 		if(frequencies.containsKey(newValue)){
 			frequencies.put(newValue, frequencies.get(newValue) + 1);
 		} else frequencies.put(newValue, 1);

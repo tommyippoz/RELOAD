@@ -3,7 +3,7 @@
  */
 package ippoz.reload.meta;
 
-import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.algorithm.type.MetaLearner;
@@ -79,8 +79,8 @@ public class MetaTrainer extends ThreadScheduler {
 				BasicConfiguration ac = (BasicConfiguration) conf.clone();
 				ac.addItem(BasicConfiguration.DATASET_NAME, data.getDatasetName());
 				if(addIndex)
-					ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + tag);
-				else ac.addItem(DataSeriesDetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString());
+					ac.addItem(DetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString() + "_" + tag);
+				else ac.addItem(DetectionAlgorithm.TAG, learner.toCompactString() + File.separatorChar + algTag.toString());
 				list.add(ac);
 			}
 		} catch (CloneNotSupportedException ex) {

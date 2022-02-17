@@ -3,7 +3,7 @@
  */
 package ippoz.reload.algorithm.weka;
 
-import ippoz.reload.algorithm.DataSeriesExternalAlgorithm;
+import ippoz.reload.algorithm.ExternalDetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
@@ -24,7 +24,7 @@ import weka.core.Instances;
  *
  * @author Tommy
  */
-public abstract class DataSeriesWEKAAlgorithm extends DataSeriesExternalAlgorithm {
+public abstract class DataSeriesWEKAAlgorithm extends ExternalDetectionAlgorithm {
 
 	/** Flag to specify if faulty items should be used for training. */
 	private boolean outliersInTraining;

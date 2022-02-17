@@ -10,7 +10,6 @@ import ippoz.reload.algorithm.type.BaseLearner;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
 import ippoz.reload.commons.loader.Loader;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.info.TrainInfo;
@@ -19,15 +18,12 @@ import ippoz.reload.reputation.Reputation;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The Class TrainerManager.
@@ -54,8 +50,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param reputation the chosen reputation metric
 	 * @param algTypes the algorithm types
 	 */
-	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		super(map, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
+	private TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		super(kList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, kfold);
 		this.validationMetrics = validationMetrics;
 		this.allowParallel = allowParallel;
 		clearTmpFolders();
@@ -73,8 +69,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> expList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		super(expList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, DataSeries selectedSeries, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		super(kList, setupFolder, scoresFolder, datasetName, confList, metric, reputation, algTypes, selectedSeries, kfold);
 		this.validationMetrics = validationMetrics;
 		this.allowParallel = allowParallel;
 		clearTmpFolders();
@@ -92,8 +88,8 @@ public class TrainerManager extends TrainDataManager {
 	 * @param dataTypes the data types
 	 * @param algTypes the algorithm types
 	 */
-	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, Map<KnowledgeType, List<Knowledge>> map, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
-		this(setupFolder, scoresFolder, datasetName, outputFolder, map, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
+	public TrainerManager(String setupFolder, String scoresFolder, String datasetName, String outputFolder, List<Knowledge> kList, List<BasicConfiguration> confList, Metric metric, Reputation reputation, LearnerType algTypes, String[] selectedSeriesString, int kfold, Metric[] validationMetrics, boolean allowParallel) {
+		this(setupFolder, scoresFolder, datasetName, outputFolder, kList, confList, metric, reputation, algTypes, kfold, validationMetrics, allowParallel);
 		dataSeries = parseSelectedSeries(selectedSeriesString);
 		AppLogger.logInfo(getClass(), dataSeries.size() + " Data Series Loaded");
 	}
@@ -166,69 +162,13 @@ public class TrainerManager extends TrainDataManager {
 		return best;
 	}
 
-	/*private void saveThresholdRelevance(List<? extends Thread> list, String filename) {
-		BufferedWriter thresholdRelevanceWriter;
-		BasicConfiguration conf;
-		AlgorithmTrainer trainer;
-		Map<String,Integer> statMap = new HashMap<String, Integer>();
-		try {
-			for(Thread tThread : list){
-				trainer = (AlgorithmTrainer)tThread;
-				conf = trainer.getBestConfiguration();
-				if(conf != null && conf.hasItem(BasicConfiguration.THRESHOLD)) {
-					if(statMap.containsKey(conf.getItem(BasicConfiguration.THRESHOLD))){
-						statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), statMap.get(conf.getItem(BasicConfiguration.THRESHOLD)) + 1);
-					} else statMap.put(conf.getItem(BasicConfiguration.THRESHOLD), 1);
-				}		
-			}
-			if(statMap.size() > 0) {
-				statMap = sortByComparator(statMap, false);
-				thresholdRelevanceWriter = new BufferedWriter(new FileWriter(new File(filename)));
-				thresholdRelevanceWriter.write("threshold,optimal_configurations\n");
-				for(String thresholdKey : statMap.keySet()){
-					thresholdRelevanceWriter.write(thresholdKey + "," + statMap.get(thresholdKey) + "\n");
-				}
-				thresholdRelevanceWriter.close();	
-			}
-		} catch(IOException ex){
-			AppLogger.logException(getClass(), ex, "Unable to write scores");
-		}
-	}
-	
-	private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, boolean ascending)
-    {
-
-        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
-
-        // Sorting the list based on values
-        Collections.sort(list, new Comparator<Entry<String, Integer>>()
-        {
-            public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-                if (ascending) {
-                    return o1.getValue().compareTo(o2.getValue());
-                } else {
-                    return o2.getValue().compareTo(o1.getValue());
-                }
-            }
-        });
-
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-        for (Entry<String, Integer> entry : list) {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedMap;
-    }*/
-
 	/* (non-Javadoc)
 	 * @see ippoz.multilayer.detector.support.ThreadScheduler#initRun()
 	 */
 	@Override
 	protected void initRun(){
-		List<AlgorithmTrainer> trainerList = new LinkedList<AlgorithmTrainer>();
+		List<AlgorithmTrainer> trainerList = new ArrayList<AlgorithmTrainer>();
 		AppLogger.logInfo(getClass(), "Initializing Train...");
-		KnowledgeType kType = DetectionAlgorithm.getKnowledgeType(algTypes);
 		if(confList == null || confList.size() == 0){
 			AppLogger.logError(getClass(), "UnrecognizedConfiguration", algTypes + " does not have an associated configuration: basic will be applied");
 			confList = new LinkedList<BasicConfiguration>();
@@ -239,9 +179,9 @@ public class TrainerManager extends TrainDataManager {
 				int step = (int)Math.ceil(1.0*confList.size() / getLoadFactor());
 				for(int i=0;i<confList.size();i=i+step){
 					List<BasicConfiguration> subList = confList.subList(i, Math.min(i+step, confList.size()));
-					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), subList, getDatasetName(), kfold, validationMetrics));
+					trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(), subList, getDatasetName(), kfold, validationMetrics));
 				}
-			} else trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(kType), confList, getDatasetName(), kfold, validationMetrics));
+			} else trainerList.add(new ConfigurationSelectorTrainer(algTypes, dataSeries, getMetric(), getReputation(), getKnowledge(), confList, getDatasetName(), kfold, validationMetrics));
 		}
 		setThreadList(trainerList);
 		AppLogger.logInfo(getClass(), "Train of '" + algTypes.toString() + "' is Starting at " + new Date());
@@ -321,7 +261,6 @@ public class TrainerManager extends TrainDataManager {
 	 * @param list the list of algorithm trainers
 	 */
 	private void saveBestModel(List<? extends Thread> list, String filename) {
-		BufferedWriter scoreWriter;
 		AlgorithmTrainer bestTrainer = null;
 		try {
 			for(Thread tThread : list){
@@ -329,21 +268,8 @@ public class TrainerManager extends TrainDataManager {
 				if(bestTrainer == null || bestTrainer.getMetricAvgScore().compareTo(trainer.getMetricAvgScore()) < 0)
 					bestTrainer = trainer;
 			}
-			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
-			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getName() + "),std_metric_score(" + getMetric().getName() + "),dataset,configuration\n");
-			if(bestTrainer != null && bestTrainer.getBestConfiguration() != null) {
-				bestTrainer.saveAlgorithmScores();
-				scoreWriter.write(bestTrainer.getSeriesDescription() + "§" + 
-						bestTrainer.getAlgType() + "§" +
-						bestTrainer.getReputationScore() + "§" + 
-						bestTrainer.getMetricAvgScore() + "§" +  
-						bestTrainer.getMetricStdScore() + "§" + 
-						bestTrainer.getDatasetName() + "§" +
-						bestTrainer.getBestConfiguration().toFileRow(false) + "\n");		
-			}
-			scoreWriter.close();			
-		} catch(IOException ex){
+			AlgorithmTrainer.saveTrainer(bestTrainer, filename, getMetric().getName(), true);
+		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}
 	}

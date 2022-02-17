@@ -6,8 +6,6 @@ package ippoz.reload.evaluation;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.knowledge.Knowledge;
-import ippoz.reload.commons.knowledge.KnowledgeType;
-import ippoz.reload.commons.knowledge.SlidingKnowledge;
 import ippoz.reload.commons.loader.LoaderBatch;
 import ippoz.reload.commons.support.AppLogger;
 
@@ -79,12 +77,6 @@ public class ExperimentEvaluator extends Thread {
 			for(int i=startIndex;i<endIndex;i++){
 				AlgorithmResult modelResult = evalModel.voteKnowledgeSnapshot(evalKnowledge, i);
 				modelResults.add(modelResult);
-				if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
-					((SlidingKnowledge)evalKnowledge).slide(i, modelResult.getScore());
-				}
-			}
-			if(evalKnowledge.getKnowledgeType() == KnowledgeType.SLIDING){
-				((SlidingKnowledge)evalKnowledge).reset();
 			}
 			AppLogger.logInfo(getClass(), "Evaluator Thread [" + startIndex + " - " + endIndex + "] Completed.");
 		}

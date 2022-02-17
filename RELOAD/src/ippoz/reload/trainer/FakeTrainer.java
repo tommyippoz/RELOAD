@@ -3,7 +3,7 @@
  */
 package ippoz.reload.trainer;
 
-import ippoz.reload.algorithm.DataSeriesDetectionAlgorithm;
+import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
@@ -38,7 +38,7 @@ public class FakeTrainer extends AlgorithmTrainer {
 	protected ObjectPair<Map<Knowledge, List<AlgorithmResult>>, MetricResult> lookForBestConfiguration() {
 		Map<Knowledge, List<AlgorithmResult>> trainResult = new HashMap<>();
 		aModel.getAlgorithm().loadLoggedScores();
-		aModel.getAlgorithm().getConfiguration().addItem(DataSeriesDetectionAlgorithm.TAG, confTmp);
+		aModel.getAlgorithm().getConfiguration().addItem(DetectionAlgorithm.TAG, confTmp);
 		bestConf = aModel.getAlgorithmConfiguration(); 
 		// HERE
 		for(Knowledge know : kList){

@@ -4,8 +4,8 @@
 package ippoz.reload.commons.loader;
 
 import ippoz.reload.commons.failure.InjectedElement;
-import ippoz.reload.commons.knowledge.data.MonitoredData;
-import ippoz.reload.commons.knowledge.data.Observation;
+import ippoz.reload.commons.knowledge.MonitoredData;
+import ippoz.reload.commons.knowledge.Observation;
 import ippoz.reload.commons.loader.info.DatasetInfo;
 import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.AppUtility;
@@ -204,7 +204,7 @@ public abstract class FileLoader extends Loader {
 									}
 									for(String splitted : splitLine){
 										if(i < headBool.length && headBool[i]){
-											Double indData = 0.0;
+											double indData = 0.0;
 											if(splitted != null && splitted.trim().length() > 0){	
 												splitted = splitted.replace("\"", "").trim();
 												if(AppUtility.isNumber(splitted)){

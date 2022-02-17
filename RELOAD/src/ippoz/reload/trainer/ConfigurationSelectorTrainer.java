@@ -8,7 +8,6 @@ import ippoz.reload.algorithm.DetectionAlgorithm;
 import ippoz.reload.algorithm.configuration.BasicConfiguration;
 import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
-import ippoz.reload.algorithm.type.MetaLearner;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
 import ippoz.reload.commons.support.AppLogger;
@@ -94,66 +93,27 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				
 				AppLogger.logInfo(getClass(), "Analyzing configuration: '" + conf.toString() + "'");
 				
-				/* Iterates for K-Fold. Not needed for meta-learning, which internally k-folds base learners. */
-				if(getAlgType() instanceof MetaLearner){
-					BasicConfiguration currentConf = (BasicConfiguration)conf.clone();
-					// eventually has metadata
-					DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
-					
-					/* Automatic Training */
-					boolean trainingResult = false;
-					if(algorithm instanceof AutomaticTrainingAlgorithm) {
-						trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(kList);
+				BasicConfiguration currentConf = (BasicConfiguration)conf.clone();
+				DetectionAlgorithm algorithm = 
+						DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
+				boolean trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(kList);
+				
+				if(trainingResult){
+					vs = algorithm.getLoggedScores();
+					resultList = new ArrayList<>();
+					for(Knowledge know : kList){
+						resultList.addAll(calculateResults(algorithm, know));
 					}
-					
-					if(trainingResult){
-						vs = algorithm.getLoggedScores();
-						resultList = new ArrayList<>();
-						for(Knowledge know : kList){
-							resultList.addAll(calculateResults(algorithm, know));
-						}
-						ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
-						if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-							currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-							algorithm.setDecisionFunction(value.getKey());
-							bestAlgorithm = algorithm;
-							bestScore = value.getValue();
-							bestConf = currentConf;
-						}
+					ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
+					if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+						currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
+						algorithm.setDecisionFunction(value.getKey());
+						bestAlgorithm = algorithm;
+						bestScore = value.getValue();
+						bestConf = currentConf;
 					}
-				} else {
-					for(Map<String, List<Knowledge>> knMap : getKnowledgeList()){
-						BasicConfiguration currentConf = (BasicConfiguration)conf.clone();
-						DetectionAlgorithm algorithm = DetectionAlgorithm.buildAlgorithm(getAlgType(), getDataSeries(), currentConf);
-						
-						/* Automatic Training */
-						boolean trainingResult = false;
-						if(algorithm instanceof AutomaticTrainingAlgorithm) {
-							trainingResult = ((AutomaticTrainingAlgorithm)algorithm).automaticTraining(knMap.get("TRAIN"));
-						}
-						
-						vs = algorithm.getLoggedScores();
-						
-						/* If training succeeded */
-						if(!(algorithm instanceof AutomaticTrainingAlgorithm) || trainingResult){
-							
-							/* Calculates Algorithm Scores (just numbers, no threshold applied) */
-							resultList = new ArrayList<>();
-							for(Knowledge know : knMap.get("TEST")){
-								resultList.addAll(calculateResults(algorithm, know));
-							}
-							
-							ObjectPair<String, MetricResult> value = electBestDecisionFunction(algorithm, resultList, vs);
-							if(value != null && value.getKey() != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-								currentConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-								algorithm.setDecisionFunction(value.getKey());
-								bestAlgorithm = algorithm;
-								bestScore = value.getValue();
-								bestConf = currentConf;
-							}
-						}	/* end if */						
-					} /* end kfold for */
-				} /* end else */
+				}
+				
 			} /* end conf for */
 			
 			// Check decision functions based on Static Thresholds
@@ -169,20 +129,17 @@ public class ConfigurationSelectorTrainer extends AlgorithmTrainer {
 				bestConf.addItem(BasicConfiguration.THRESHOLD, valueL.getKey());
 				bestAlgorithm.setDecisionFunction(valueL.getKey());
 			}
-			
-			if(getAlgType() instanceof MetaLearner){
-				ObjectPair<String, MetricResult> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-				if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-					bestScore = value.getValue();
-					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-					bestAlgorithm.setDecisionFunction(value.getKey());
-				}
-				value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
-				if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
-					bestScore = value.getValue();
-					bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
-					bestAlgorithm.setDecisionFunction(value.getKey());
-				}
+			ObjectPair<String, MetricResult> value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_GREATER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+			if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+				bestScore = value.getValue();
+				bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
+				bestAlgorithm.setDecisionFunction(value.getKey());
+			}
+			value = linearSearchOptimalSingleThreshold("STATIC_THRESHOLD_LOWER", vs, vs.getMin(), vs.getMax(), 0, resultList);
+			if(value != null && (bestScore == null || getMetric().compareResults(value.getValue(), bestScore) > 0)){
+				bestScore = value.getValue();
+				bestConf.addItem(BasicConfiguration.THRESHOLD, value.getKey());
+				bestAlgorithm.setDecisionFunction(value.getKey());
 			}
 			
 			// Final Operations, assume 'algorithm', 'vs' and 'bestConf' are set
