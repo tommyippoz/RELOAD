@@ -40,6 +40,8 @@ public abstract class Loader {
 	public static final String TRAIN_FAULTY_TAGS = "TRAIN_FAULTY_TAGS";
 	
 	public static final String TRAIN_NORMAL_TAG = "TRAIN_NORMAL_TAG";
+	
+	public static final String NORMAL_TAG = "NORMAL_TAG";
 
 	/** The Constant VALIDATION_CSV_FILE. */
 	public static final String VALIDATION_FILE = "VALIDATION_FILE";
@@ -383,7 +385,7 @@ public abstract class Loader {
 			return prefManager.getPreference(TRAIN_NORMAL_TAG);
 		else if(!tag.equals("train") && prefManager.hasPreference(VALIDATION_NORMAL_TAG))
 			return prefManager.getPreference(VALIDATION_NORMAL_TAG);
-		else return prefManager.getPreference("NORMAL_TAG");
+		else return prefManager.getPreference(NORMAL_TAG);
 	}
 	
 	public static boolean isValid(Loader loader) {

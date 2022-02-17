@@ -18,10 +18,7 @@ import ippoz.reload.reputation.Reputation;
 import ippoz.reload.trainer.AlgorithmTrainer;
 import ippoz.reload.trainer.ConfigurationSelectorTrainer;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -264,7 +261,6 @@ public class TrainerManager extends TrainDataManager {
 	 * @param list the list of algorithm trainers
 	 */
 	private void saveBestModel(List<? extends Thread> list, String filename) {
-		BufferedWriter scoreWriter;
 		AlgorithmTrainer bestTrainer = null;
 		try {
 			for(Thread tThread : list){
@@ -272,21 +268,8 @@ public class TrainerManager extends TrainDataManager {
 				if(bestTrainer == null || bestTrainer.getMetricAvgScore().compareTo(trainer.getMetricAvgScore()) < 0)
 					bestTrainer = trainer;
 			}
-			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
-			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
-			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + getMetric().getName() + "),std_metric_score(" + getMetric().getName() + "),dataset,configuration\n");
-			if(bestTrainer != null && bestTrainer.getBestConfiguration() != null) {
-				bestTrainer.saveAlgorithmScores();
-				scoreWriter.write(bestTrainer.getSeriesDescription() + "§" + 
-						bestTrainer.getAlgType() + "§" +
-						bestTrainer.getReputationScore() + "§" + 
-						bestTrainer.getMetricAvgScore() + "§" +  
-						bestTrainer.getMetricStdScore() + "§" + 
-						bestTrainer.getDatasetName() + "§" +
-						bestTrainer.getBestConfiguration().toFileRow(false) + "\n");		
-			}
-			scoreWriter.close();			
-		} catch(IOException ex){
+			AlgorithmTrainer.saveTrainer(bestTrainer, filename, getMetric().getName(), true);
+		} catch(Exception ex){
 			AppLogger.logException(getClass(), ex, "Unable to write scores");
 		}
 	}

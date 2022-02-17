@@ -9,12 +9,12 @@ import ippoz.reload.algorithm.result.AlgorithmResult;
 import ippoz.reload.algorithm.type.LearnerType;
 import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.knowledge.Knowledge;
+import ippoz.reload.commons.support.AppLogger;
 import ippoz.reload.commons.support.ValueSeries;
 import ippoz.reload.commons.utils.ObjectPair;
 import ippoz.reload.decisionfunction.AnomalyResult;
 import ippoz.reload.decisionfunction.DecisionFunction;
 import ippoz.reload.meta.MetaData;
-import ippoz.reload.metric.BetterMaxMetric;
 import ippoz.reload.metric.ConfusionMatrix;
 import ippoz.reload.metric.Metric;
 import ippoz.reload.metric.result.DoubleMetricResult;
@@ -22,6 +22,10 @@ import ippoz.reload.metric.result.MetricResult;
 import ippoz.reload.metric.result.MetricResultSeries;
 import ippoz.reload.reputation.Reputation;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -339,5 +343,28 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	}
 	
 	public abstract void saveAlgorithmScores();
+	
+	public static void saveTrainer(AlgorithmTrainer trainer, String filename, String metricName, boolean saveModel){
+		BufferedWriter scoreWriter;
+		try {
+			scoreWriter = new BufferedWriter(new FileWriter(new File(filename)));
+			scoreWriter.write("*This file contains the details and the scores of each individual anomaly checker that was evaluated during training. \n");
+			scoreWriter.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + metricName + "),std_metric_score(" + metricName + "),dataset,configuration\n");
+			if(trainer != null && trainer.getBestConfiguration() != null) {
+				if(saveModel)
+					trainer.saveAlgorithmScores();
+				scoreWriter.write(trainer.getSeriesDescription() + "§" + 
+						trainer.getAlgType() + "§" +
+						trainer.getReputationScore() + "§" + 
+						trainer.getMetricAvgScore() + "§" +  
+						trainer.getMetricStdScore() + "§" + 
+						trainer.getDatasetName() + "§" +
+						trainer.getBestConfiguration().toFileRow(false) + "\n");		
+			}
+			scoreWriter.close();			
+		} catch(IOException ex){
+			AppLogger.logException(AlgorithmTrainer.class, ex, "Unable to write scores");
+		}
+	}
 	
 }

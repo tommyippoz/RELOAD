@@ -16,8 +16,6 @@ import java.util.List;
  * @author Tommy
  */
 public class BetaReputation extends Reputation {
-	
-	private boolean validAfter;
 
 	/**
 	 * Instantiates a new Beta reputation.

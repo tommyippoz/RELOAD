@@ -1530,8 +1530,6 @@ public class InputManager {
 			return buildSingleLoader(loaderPref, loaderTag, anomalyWindow, runsString);
 		} else AppLogger.logError(getClass(), "LoaderError", "Unable to find run preference");
 		return null;
-	}
-
-	
+	}	
 	
 }

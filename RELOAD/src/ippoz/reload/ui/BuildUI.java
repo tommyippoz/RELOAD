@@ -57,14 +57,11 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 /**
  * @author Tommy
@@ -637,8 +634,8 @@ public class BuildUI {
 		
 		JPanel seePrefPanel = new JPanel();
 		seePrefPanel.setBackground(Color.WHITE);
-		seePrefPanel.setLayout(new GridLayout(1, 3, 50, 0));
-		seePrefPanel.setBorder(new EmptyBorder(0, 40, 0, 40));
+		seePrefPanel.setLayout(new GridLayout(1, 4, 10, 0));
+		seePrefPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
 		//seePrefPanel.setBounds((int) (dataAlgPanel.getWidth()*0.02), (int)(labelSpacing*(getDatasets().length + 1) + bigLabelSpacing), (int) (dataAlgPanel.getWidth()*0.96), bigLabelSpacing);
 		
 		JButton button = new JButton("Create Loader");
@@ -648,6 +645,18 @@ public class BuildUI {
 		button.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				CreateLoaderFrame clf = new CreateLoaderFrame(iManager);
+				clf.setVisible(true);
+				
+			} } );
+		seePrefPanel.add(button);
+		
+		button = new JButton("Create From Folder");
+		button.setVisible(true);
+		button.setFont(labelFont);
+		//button.setBounds(labelSpacing, 0, pathPanel.getWidth()/5, labelSpacing);
+		button.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent e) { 
+				CreateLoadersFrame clf = new CreateLoadersFrame(iManager);
 				clf.setVisible(true);
 				
 			} } );

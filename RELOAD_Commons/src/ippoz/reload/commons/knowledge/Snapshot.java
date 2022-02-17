@@ -7,10 +7,7 @@ import ippoz.reload.commons.dataseries.DataSeries;
 import ippoz.reload.commons.failure.InjectedElement;
 import ippoz.reload.commons.indicator.Indicator;
 import ippoz.reload.commons.loader.DatasetIndex;
-import ippoz.reload.commons.support.AppUtility;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
