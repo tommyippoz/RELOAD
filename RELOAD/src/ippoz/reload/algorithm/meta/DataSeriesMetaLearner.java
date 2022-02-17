@@ -131,7 +131,7 @@ public abstract class DataSeriesMetaLearner extends DetectionAlgorithm {
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(new File(filefolder + filename)));
-			writer.write("*This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
+			writer.write("* This file contains the details and the scores of each individual base learner that builds the ensemble. \n");
 			writer.write("data_series,algorithm_type,reputation_score,avg_metric_score(" + data.getTargetMetric().getName() + "),std_metric_score(" + data.getTargetMetric().getName() + "),dataset,configuration\n");
 			for(AlgorithmTrainer trainer : tList){
 				if(trainer.getBestConfiguration() != null) {

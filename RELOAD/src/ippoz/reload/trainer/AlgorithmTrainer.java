@@ -285,9 +285,7 @@ public abstract class AlgorithmTrainer extends Thread implements Comparable<Algo
 	 */
 	@Override
 	public int compareTo(AlgorithmTrainer other) {
-		if(metric instanceof BetterMaxMetric)
-			return getMetricAvgScore().compareTo(other.getMetricAvgScore());
-		else return -1*getMetricAvgScore().compareTo(other.getMetricAvgScore());
+		return metric.compareResults(getMetricAvgScore(), other.getMetricAvgScore());
 	}
 
 	/**
