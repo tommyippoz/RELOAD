@@ -101,7 +101,7 @@ public class PreferencesManager {
 		BufferedWriter writer = null;
 		String readed;
 		List<String> fileLines = new LinkedList<String>();
-		try {
+		try {  
 			if(file.exists()){
 				reader = new BufferedReader(new FileReader(file));
 				while(reader.ready()){
