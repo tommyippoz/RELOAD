@@ -15,6 +15,6 @@ public enum MetricType {
 	
 	TN_CONF, TP_CONF, FP_CONF, FN_CONF, 
 	
-	TP_UNK, FN_UNK
+	TP_UNK, FN_UNK, REC_UNK
 
 }
