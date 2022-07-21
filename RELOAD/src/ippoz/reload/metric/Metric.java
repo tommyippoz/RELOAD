@@ -84,7 +84,7 @@ public abstract class Metric implements Comparable<Metric> {
 			case "TRUEPOSITIVE_UNK":
 				return new TP_Unk_Metric(absolute, noPredictionTHR);
 			case "FNUNK":
-			case "FN_UNK":
+			case "FN_UNK": 
 			case "FALSENEGATIVE_UNK":
 				return new FN_Unk_Metric(absolute, noPredictionTHR);
 			case "RECUNK":
